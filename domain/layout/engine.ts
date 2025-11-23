@@ -323,3 +323,4 @@ function rectsIntersect(
   if (r1s >= r2e || r2s >= r1e) return false;
   return true;
 }
+

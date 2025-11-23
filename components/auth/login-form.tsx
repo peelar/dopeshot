@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { getBrowserSupabaseClient } from "@/lib/supabase/client";
+import { getBrowserSupabaseClient } from "@/infra/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

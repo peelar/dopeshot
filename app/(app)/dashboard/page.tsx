@@ -5,11 +5,10 @@ import { ArrowRight, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { createProjectAction, signOut } from "./actions";
-import { listProjectsForUser } from "@/lib/projects";
-import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { createServerSupabaseClient } from "@/infra/supabase/server";
 
 export default async function DashboardPage() {
-  const supabase = createServerSupabaseClient();
+  const supabase = await createServerSupabaseClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -18,7 +17,11 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const projects = listProjectsForUser(user.id);
+  const { data: projects } = await supabase
+    .from("projects")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("updated_at", { ascending: false });
 
   return (
     <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-12">
@@ -43,25 +46,21 @@ export default async function DashboardPage() {
       </div>
 
       <section className="grid gap-4 sm:grid-cols-2">
-        {projects.map((project) => (
+        {projects?.map((project) => (
           <Card key={project.id}>
             <CardHeader>
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs uppercase text-slate-500">Last updated</p>
                   <p className="text-sm text-slate-600">
-                    {new Date(project.updatedAt).toLocaleString()}
+                    {new Date(project.updated_at).toLocaleString()}
                   </p>
                 </div>
-                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-700">
-                  {project.id}
-                </span>
               </div>
             </CardHeader>
             <CardContent className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-slate-900">{project.name}</h2>
-                <p className="text-sm text-slate-600">Owner: {project.userId}</p>
               </div>
               <Link href={`/project/${project.id}/editor`} className="text-sm">
                 <Button variant="outline" className="gap-2">
@@ -72,6 +71,11 @@ export default async function DashboardPage() {
             </CardContent>
           </Card>
         ))}
+        {(!projects || projects.length === 0) && (
+          <div className="col-span-2 py-10 text-center text-slate-500">
+            No projects yet. Create one to get started!
+          </div>
+        )}
       </section>
     </main>
   );
