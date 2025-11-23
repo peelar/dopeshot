@@ -14,8 +14,9 @@ const config: Config = {
         surface: "rgb(248 250 252)",
       },
       fontFamily: {
-        sans: ["var(--font-geist-sans)", "system-ui", "sans-serif"],
-        mono: ["var(--font-geist-mono)", "SFMono-Regular", "monospace"],
+        sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "Inter", "system-ui", "sans-serif"],
+        mono: ["SFMono-Regular", "monospace"],
       },
     },
   },

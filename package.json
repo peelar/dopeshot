@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.1.14",
+    "@ai-sdk/react": "^1.1.14",
     "@radix-ui/react-slot": "^1.1.1",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.48.0",
