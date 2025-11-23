@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Whenever you are given a task, you should always look for ways to simplify the implementation. Don't add unnecessary complexity to the implementation. That doesn't mean you should ignore the spec, but you should always look for ways to simplify the implementation. Same goes for refactoring: when you touch a file, you should always look for ways to simplify the implementation and remove unnecessary complexity.
