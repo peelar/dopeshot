@@ -66,7 +66,7 @@ export const TEMPLATES: Template[] = [
       const screenshot: ScreenshotPrimitive = {
         id: generateId(),
         type: "screenshot",
-        assetId: "", // Placeholder
+        assetId: "default-asset",
         gridColumnStart: 7,
         gridColumnEnd: 13,
         gridRowStart: 2,
@@ -131,7 +131,7 @@ export const TEMPLATES: Template[] = [
       const screenshot: ScreenshotPrimitive = {
         id: generateId(),
         type: "screenshot",
-        assetId: "",
+        assetId: "default-asset",
         gridColumnStart: 3,
         gridColumnEnd: 11,
         gridRowStart: 3,

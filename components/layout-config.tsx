@@ -14,20 +14,40 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/utils";
+import { Asset } from "@/domain/asset/types";
 
 interface LayoutConfigProps {
   config: LayoutConfig;
   onChange: (newConfig: LayoutConfig) => void;
+  assets?: Asset[];
+  activeAssetId?: string;
 }
 
-export const LayoutConfigPanel = ({ config, onChange }: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({
+  config,
+  onChange,
+  assets = [],
+  activeAssetId,
+}: LayoutConfigProps) => {
   const [selectedPrimitiveId, setSelectedPrimitiveId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"templates" | "customize">("templates");
 
   const handleTemplateSelect = (templateId: string) => {
     const template = TEMPLATES.find((t) => t.id === templateId);
     if (template) {
-      onChange(template.createConfig());
+      const newConfig = template.createConfig();
+
+      // If we have an active asset, preserve it in the new template's screenshot primitive
+      if (activeAssetId) {
+        const screenshotPrim = newConfig.primitives.find((p) => p.type === "screenshot");
+        if (screenshotPrim) {
+          newConfig.primitives = newConfig.primitives.map((p) =>
+            p.id === screenshotPrim.id ? { ...p, assetId: activeAssetId } : p,
+          );
+        }
+      }
+
+      onChange(newConfig);
       setSelectedPrimitiveId(null);
     }
   };
@@ -122,6 +142,7 @@ export const LayoutConfigPanel = ({ config, onChange }: LayoutConfigProps) => {
                 <ScreenshotEditor
                   primitive={selectedPrimitive as ScreenshotPrimitive}
                   onChange={(updates) => handlePrimitiveUpdate(selectedPrimitive.id, updates)}
+                  assets={assets}
                 />
               )}
 
@@ -321,12 +342,25 @@ const TextBlockEditor = ({
 const ScreenshotEditor = ({
   primitive,
   onChange,
+  assets,
 }: {
   primitive: ScreenshotPrimitive;
   onChange: (updates: Partial<ScreenshotPrimitive>) => void;
+  assets: Asset[];
 }) => {
   return (
     <div className="space-y-3">
+      <div>
+        <Label className="text-xs text-slate-500">Image Asset</Label>
+        <NativeSelect
+          value={primitive.assetId || ""}
+          onChange={(v) => onChange({ assetId: v })}
+          options={[
+            { value: "", label: "None" },
+            ...assets.map((a) => ({ value: a.id, label: a.name })),
+          ]}
+        />
+      </div>
       <div>
         <Label className="text-xs text-slate-500">Shadow</Label>
         <NativeSelect

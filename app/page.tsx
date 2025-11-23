@@ -1,54 +1,119 @@
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
+"use client";
 
-export default function Home() {
+import { useState } from "react";
+import { TEMPLATES } from "@/domain/layout/templates";
+import { LayoutConfigPanel } from "@/components/layout-config";
+import { CoverPreview } from "@/components/cover-preview";
+import { UploadDropzone } from "@/components/upload-dropzone";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Asset } from "@/domain/asset/types";
+import { RefreshCw, Upload } from "lucide-react";
+
+const DEFAULT_ASSETS: Asset[] = [];
+
+export default function PlaygroundPage() {
+  const [config, setConfig] = useState(TEMPLATES[0].createConfig());
+  const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
+  const [hasUploaded, setHasUploaded] = useState(false);
+
+  const handleReset = () => {
+    setConfig(TEMPLATES[0].createConfig());
+    setAssets([]);
+    setHasUploaded(false);
+  };
+
+  const handleFileProcess = (file: File) => {
+    const newAsset: Asset = {
+      id: Math.random().toString(36).substring(7),
+      projectId: "playground",
+      userId: "playground-user",
+      name: file.name,
+      url: URL.createObjectURL(file),
+      kind: "screenshot",
+      createdAt: new Date().toISOString(),
+    };
+    setAssets((prev) => [...prev, newAsset]);
+    setHasUploaded(true);
+
+    // Auto-assign to first screenshot primitive if available
+    const screenshotPrim = config.primitives.find((p) => p.type === "screenshot");
+    if (screenshotPrim) {
+      const newPrimitives = config.primitives.map((p) =>
+        p.id === screenshotPrim.id ? { ...p, assetId: newAsset.id } : p,
+      );
+      setConfig({ ...config, primitives: newPrimitives });
+    }
+  };
+
+  const handleAssetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      handleFileProcess(e.target.files[0]);
+    }
+  };
+
   return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col justify-center gap-12 px-6 py-16">
-      <div className="space-y-6">
-        <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600">
-          Cover Forge
-        </span>
-        <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-          Build cover art with a focused editor and Supabase auth.
-        </h1>
-        <p className="max-w-2xl text-lg text-slate-600">
-          A lean starting point wired with Next.js 15, Tailwind, shadcn/ui, and Supabase for auth,
-          storage, and data.
-        </p>
-        <div className="flex flex-wrap gap-3">
-          <Link href="/dashboard">
-            <Button size="lg">
-              Go to dashboard
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href="/project/demo-1/editor">
-            <Button variant="outline" size="lg">
-              View sample editor
-            </Button>
-          </Link>
+    <main className="flex h-screen w-full flex-col overflow-hidden bg-slate-50">
+      {/* Header */}
+      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+        <div className="flex items-center gap-2">
+          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600">
+            Cover Forge
+          </span>
+          <span className="text-sm text-slate-500">Playground</span>
         </div>
-      </div>
-      <div className="grid gap-6 rounded-2xl border border-slate-200 bg-white p-8 shadow-sm sm:grid-cols-3">
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-slate-700">Realtime auth</p>
-          <p className="text-sm text-slate-600">
-            Supabase email magic links with session persistence handled via server components.
-          </p>
+        <div className="flex items-center gap-2">
+          {hasUploaded && (
+            <div className="relative">
+              <input
+                type="file"
+                id="file-upload-header"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAssetUpload}
+              />
+              <label htmlFor="file-upload-header">
+                <Button variant="outline" size="sm" asChild className="cursor-pointer">
+                  <span>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Replace Image
+                  </span>
+                </Button>
+              </label>
+            </div>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-500">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Reset
+          </Button>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-slate-700">Design workflow</p>
-          <p className="text-sm text-slate-600">
-            Dashboard lists your projects and jumps into an editor for manual layout configuration.
-          </p>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Main Preview Area */}
+        <div className="flex flex-1 items-center justify-center overflow-auto p-8">
+          <Card className="flex w-full max-w-4xl items-center justify-center overflow-hidden bg-white p-8 shadow-sm">
+            {!hasUploaded ? (
+              <div className="h-[600px] w-full">
+                <UploadDropzone onUpload={handleFileProcess} />
+              </div>
+            ) : (
+              <CoverPreview config={config} assets={assets} />
+            )}
+          </Card>
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-semibold text-slate-700">Layout controls</p>
-          <p className="text-sm text-slate-600">
-            Configure text positioning, grid layout, and visual elements with manual controls.
-          </p>
-        </div>
+
+        {/* Right Sidebar - Controls */}
+        {hasUploaded && (
+          <div className="w-80 border-l border-slate-200 bg-white">
+            <LayoutConfigPanel
+              config={config}
+              onChange={setConfig}
+              assets={assets}
+              activeAssetId={assets.length > 0 ? assets[assets.length - 1].id : undefined}
+            />
+          </div>
+        )}
       </div>
     </main>
   );
