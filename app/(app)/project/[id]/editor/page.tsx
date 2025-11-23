@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { DesignChat } from "@/components/design-chat";
+import { LayoutConfig } from "@/components/layout-config";
 import { UploadPlaceholder } from "@/components/upload-placeholder";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -39,7 +39,7 @@ export default async function ProjectEditorPage({ params }: ProjectEditorPagePro
           <p className="text-lg font-semibold">Cover preview will go here</p>
         </Card>
         <div className="space-y-4">
-          <DesignChat />
+          <LayoutConfig />
           <UploadPlaceholder />
         </div>
       </section>

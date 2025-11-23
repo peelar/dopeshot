@@ -10,10 +10,10 @@ export default function Home() {
           Cover Forge
         </span>
         <h1 className="text-4xl font-semibold leading-tight text-slate-900 sm:text-5xl">
-          Build AI-assisted cover art with a focused editor and Supabase auth.
+          Build cover art with a focused editor and Supabase auth.
         </h1>
         <p className="max-w-2xl text-lg text-slate-600">
-          A lean starting point wired with Next.js 15, Tailwind, shadcn/ui, Vercel AI SDK,
+          A lean starting point wired with Next.js 15, Tailwind, shadcn/ui,
           and Supabase for auth, storage, and data.
         </p>
         <div className="flex flex-wrap gap-3">
@@ -40,13 +40,13 @@ export default function Home() {
         <div className="space-y-2">
           <p className="text-sm font-semibold text-slate-700">Design workflow</p>
           <p className="text-sm text-slate-600">
-            Dashboard lists your projects and jumps into an editor built for AI-guided covers.
+            Dashboard lists your projects and jumps into an editor for manual layout configuration.
           </p>
         </div>
         <div className="space-y-2">
-          <p className="text-sm font-semibold text-slate-700">AI hook</p>
+          <p className="text-sm font-semibold text-slate-700">Layout controls</p>
           <p className="text-sm text-slate-600">
-            Vercel AI SDK chat endpoint is wired for tool calls with a safe fallback message.
+            Configure text positioning, grid layout, and visual elements with manual controls.
           </p>
         </div>
       </div>

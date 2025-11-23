@@ -16,7 +16,7 @@ const display = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Cover Forge",
-  description: "Design AI-powered cover art with Supabase + Vercel AI",
+  description: "Design cover art with manual layout configuration and Supabase",
 };
 
 export default function RootLayout({
@@ -26,9 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${sans.variable} ${display.variable} min-h-screen bg-surface font-sans`}
-      >
+      <body className={`${sans.variable} ${display.variable} min-h-screen bg-surface font-sans`}>
         {children}
       </body>
     </html>
