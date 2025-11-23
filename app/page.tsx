@@ -14,6 +14,7 @@ import { exportLayoutAsPng } from "@/domain/layout/export";
 const DEFAULT_ASSETS: Asset[] = [];
 
 export default function PlaygroundPage() {
+  // Use the first available template (now "popup-gradient")
   const [config, setConfig] = useState(TEMPLATES[0].createConfig());
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
@@ -26,7 +27,7 @@ export default function PlaygroundPage() {
   };
 
   const handleExport = async () => {
-    const hasScreenshot = config.primitives.some((p) => p.type === "screenshot" && p.assetId);
+    const hasScreenshot = !!config.assets.screenshot;
 
     if (!hasScreenshot) {
       alert("Please render a layout with a screenshot before exporting.");
@@ -65,17 +66,14 @@ export default function PlaygroundPage() {
       setAssets((prev) => [...prev, newAsset]);
       setHasUploaded(true);
 
-      // Auto-assign to first screenshot primitive if available
-      setConfig((currentConfig) => {
-        const screenshotPrim = currentConfig.primitives.find((p) => p.type === "screenshot");
-        if (screenshotPrim) {
-          const newPrimitives = currentConfig.primitives.map((p) =>
-            p.id === screenshotPrim.id ? { ...p, assetId: newAsset.id } : p,
-          );
-          return { ...currentConfig, primitives: newPrimitives };
-        }
-        return currentConfig;
-      });
+      // Auto-assign to screenshot asset if available
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        assets: {
+          ...currentConfig.assets,
+          screenshot: newAsset.id,
+        },
+      }));
     };
     reader.readAsDataURL(file);
   };
