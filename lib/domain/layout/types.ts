@@ -89,3 +89,4 @@ export type LayoutConfig = {
   theme: LayoutTheme; // Color and font theme for this layout
   primitives: LayoutPrimitive[]; // All layout primitives positioned on the grid
 };
+

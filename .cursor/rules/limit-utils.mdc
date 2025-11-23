@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Whenever possible, try to avoid creating "utils.ts". Instead, collocate the utility functions in the file where they are used or create domaim-specific modules.

@@ -8,11 +8,9 @@ interface UploadDropzoneProps {
   onUpload: (file: File) => void;
 }
 
-
 export const UploadDropzone = ({ onUpload }: UploadDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -67,4 +65,3 @@ export const UploadDropzone = ({ onUpload }: UploadDropzoneProps) => {
     </div>
   );
 };
-

@@ -151,6 +151,7 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
                           src={asset.url}
                           alt="Screenshot"
                           className="h-full w-full object-cover"
+                          crossOrigin="anonymous"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">

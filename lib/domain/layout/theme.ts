@@ -112,3 +112,4 @@ export function resolveVerticalAlign(align: "top" | "middle" | "bottom"): string
       return "justify-start";
   }
 }
+

@@ -8,3 +8,4 @@ export type Asset = {
   kind: "screenshot" | "logo" | "icon" | "background" | "other";
   createdAt: string;
 };
+

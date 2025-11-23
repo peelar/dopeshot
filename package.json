@@ -17,6 +17,7 @@
     "ai": "^5.0.100",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.473.0",
     "next": "15.0.3",
     "react": "18.3.1",

@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+Whenever you have to build a UI component, you should always search if it already exists in the shadcn-style UI library. If it does, you should use it. If it doesn't, you should build it yourself.

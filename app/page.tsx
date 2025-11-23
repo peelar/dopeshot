@@ -8,7 +8,8 @@ import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Asset } from "@/domain/asset/types";
-import { RefreshCw, Upload } from "lucide-react";
+import { RefreshCw, Upload, Download } from "lucide-react";
+import { exportLayoutAsPng } from "@/domain/layout/export";
 
 const DEFAULT_ASSETS: Asset[] = [];
 
@@ -16,6 +17,7 @@ export default function PlaygroundPage() {
   const [config, setConfig] = useState(TEMPLATES[0].createConfig());
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleReset = () => {
     setConfig(TEMPLATES[0].createConfig());
@@ -23,27 +25,59 @@ export default function PlaygroundPage() {
     setHasUploaded(false);
   };
 
-  const handleFileProcess = (file: File) => {
-    const newAsset: Asset = {
-      id: Math.random().toString(36).substring(7),
-      projectId: "playground",
-      userId: "playground-user",
-      name: file.name,
-      url: URL.createObjectURL(file),
-      kind: "screenshot",
-      createdAt: new Date().toISOString(),
-    };
-    setAssets((prev) => [...prev, newAsset]);
-    setHasUploaded(true);
+  const handleExport = async () => {
+    const hasScreenshot = config.primitives.some((p) => p.type === "screenshot" && p.assetId);
 
-    // Auto-assign to first screenshot primitive if available
-    const screenshotPrim = config.primitives.find((p) => p.type === "screenshot");
-    if (screenshotPrim) {
-      const newPrimitives = config.primitives.map((p) =>
-        p.id === screenshotPrim.id ? { ...p, assetId: newAsset.id } : p,
-      );
-      setConfig({ ...config, primitives: newPrimitives });
+    if (!hasScreenshot) {
+      alert("Please render a layout with a screenshot before exporting.");
+      return;
     }
+
+    setIsExporting(true);
+    try {
+      await exportLayoutAsPng("export-container", "cover-image.png");
+    } catch (error) {
+      console.error("Export Error Handler:", error);
+      const msg = error instanceof Error ? error.message : "Unknown error occurred";
+      alert(`Failed to export image: ${msg}`);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleFileProcess = (file: File) => {
+    // Use FileReader to create a data URL (base64) instead of blob URL
+    // This avoids issues with html-to-image fetching blob resources
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataUrl = e.target?.result as string;
+      if (!dataUrl) return;
+
+      const newAsset: Asset = {
+        id: Math.random().toString(36).substring(7),
+        projectId: "playground",
+        userId: "playground-user",
+        name: file.name,
+        url: dataUrl,
+        kind: "screenshot",
+        createdAt: new Date().toISOString(),
+      };
+      setAssets((prev) => [...prev, newAsset]);
+      setHasUploaded(true);
+
+      // Auto-assign to first screenshot primitive if available
+      setConfig((currentConfig) => {
+        const screenshotPrim = currentConfig.primitives.find((p) => p.type === "screenshot");
+        if (screenshotPrim) {
+          const newPrimitives = currentConfig.primitives.map((p) =>
+            p.id === screenshotPrim.id ? { ...p, assetId: newAsset.id } : p,
+          );
+          return { ...currentConfig, primitives: newPrimitives };
+        }
+        return currentConfig;
+      });
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleAssetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -86,6 +120,15 @@ export default function PlaygroundPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Reset
           </Button>
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleExport}
+            disabled={!hasUploaded || isExporting}
+          >
+            <Download className="mr-2 h-4 w-4" />
+            {isExporting ? "Exporting..." : "Export PNG"}
+          </Button>
         </div>
       </header>
 
@@ -114,6 +157,29 @@ export default function PlaygroundPage() {
             />
           </div>
         )}
+      </div>
+
+      {/* Hidden Export Container */}
+      <div
+        id="export-container"
+        style={{
+          position: "fixed", // Fixed position to ensure it's relative to the viewport
+          top: 0,
+          left: 0, // In the viewport
+          width: "1200px",
+          height: "630px",
+          zIndex: -100, // Behind everything
+          visibility: "visible", // Explicitly visible
+          background: "white", // Ensure background is present
+        }}
+      >
+        {/* We render the preview without the border/radius for the final export if desired,
+            but CoverPreview has them hardcoded. Ideally we might want to remove them for export
+            so the user gets clean corners, but for now we'll keep consistent with preview.
+            However, CoverPreview adds a border-slate-200.
+            To make it clean, we might want to override className to remove border/radius.
+        */}
+        <CoverPreview config={config} assets={assets} className="rounded-none border-0" />
       </div>
     </main>
   );
