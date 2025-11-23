@@ -6,10 +6,15 @@ import { EditorClient } from "./editor-client";
 
 interface ProjectEditorPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ compositionId?: string }>;
 }
 
-export default async function ProjectEditorPage({ params }: ProjectEditorPageProps) {
+export default async function ProjectEditorPage({
+  params,
+  searchParams,
+}: ProjectEditorPageProps) {
   const { id } = await params;
+  const { compositionId } = await searchParams;
 
   const supabase = await createServerSupabaseClient();
   const {
@@ -32,14 +37,27 @@ export default async function ProjectEditorPage({ params }: ProjectEditorPagePro
     redirect("/dashboard");
   }
 
-  // Fetch composition
-  const { data: rawComposition } = await supabase
-    .from("compositions")
-    .select("*")
-    .eq("project_id", id)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Fetch composition by ID if provided, otherwise get most recent
+  let rawComposition;
+  if (compositionId) {
+    const { data } = await supabase
+      .from("compositions")
+      .select("*")
+      .eq("id", compositionId)
+      .eq("project_id", id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    rawComposition = data;
+  } else {
+    const { data } = await supabase
+      .from("compositions")
+      .select("*")
+      .eq("project_id", id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    rawComposition = data;
+  }
 
   let composition: Composition;
   if (rawComposition) {
@@ -67,12 +85,20 @@ export default async function ProjectEditorPage({ params }: ProjectEditorPagePro
     };
   }
 
+  // Fetch assets for this project to check for screenshots
+  const { data: assets } = await supabase
+    .from("assets")
+    .select("*")
+    .eq("project_id", id)
+    .eq("user_id", user.id);
+
   return (
     <EditorClient
       initialConfig={composition.layoutConfig}
       compositionId={composition.id}
       projectId={id}
       projectName={projectData.name || "Untitled Project"}
+      assets={assets || []}
     />
   );
 }

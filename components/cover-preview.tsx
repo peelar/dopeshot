@@ -16,15 +16,21 @@ import {
   resolveVerticalAlign,
   tokenToCssColor,
 } from "@/domain/layout/theme";
+import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 
 interface CoverPreviewProps {
   config: LayoutConfig;
   className?: string;
+  assets?: Asset[];
 }
 
-export function CoverPreview({ config, className }: CoverPreviewProps) {
+export function CoverPreview({ config, className, assets = [] }: CoverPreviewProps) {
   const { primitives, gridColumns, gridRows, theme } = config;
+
+  // Create asset map for quick lookup
+  const assetMap = new Map<string, Asset>();
+  assets.forEach((asset) => assetMap.set(asset.id, asset));
 
   // Sort primitives by zIndex
   const sortedPrimitives = [...primitives].sort((a, b) => a.zIndex - b.zIndex);
@@ -138,8 +144,20 @@ export function CoverPreview({ config, className }: CoverPreviewProps) {
                   }}
                 >
                   {p.assetId ? (
-                    // In a real app, we'd resolve assetId to a URL. For now, placeholder.
-                    <img src={p.assetId} alt="Screenshot" className="h-full w-full object-cover" />
+                    (() => {
+                      const asset = assetMap.get(p.assetId);
+                      return asset ? (
+                        <img
+                          src={asset.url}
+                          alt="Screenshot"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
+                          <span className="text-xs">Asset not found</span>
+                        </div>
+                      );
+                    })()
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-400">
                       <span className="text-xs">No Image</span>

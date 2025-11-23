@@ -1,11 +1,6 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, LogOut } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { createProjectAction, signOut } from "./actions";
 import { createServerSupabaseClient } from "@/infra/supabase/server";
+import { createDefaultLayoutConfig } from "@/domain/layout/engine";
 
 export default async function DashboardPage() {
   const supabase = await createServerSupabaseClient();
@@ -17,66 +12,48 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const { data: projects } = await supabase
-    .from("projects")
-    .select("*")
+  // Find most recently updated composition
+  const { data: compositions } = await supabase
+    .from("compositions")
+    .select("id, project_id")
     .eq("user_id", user.id)
-    .order("updated_at", { ascending: false });
+    .order("updated_at", { ascending: false })
+    .limit(1);
 
-  return (
-    <main className="mx-auto flex min-h-screen max-w-5xl flex-col gap-6 px-6 py-12">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-sm uppercase text-slate-500">Dashboard</p>
-          <h1 className="text-2xl font-semibold text-slate-900">Projects</h1>
-        </div>
-        <form action={signOut}>
-          <Button variant="ghost" type="submit" className="gap-2 text-slate-600">
-            <LogOut className="h-4 w-4" />
-            Sign out
-          </Button>
-        </form>
-      </div>
+  if (compositions && compositions.length > 0) {
+    const composition = compositions[0];
+    redirect(`/project/${composition.project_id}/editor?compositionId=${composition.id}`);
+  }
 
-      <div className="flex items-center justify-between gap-4 rounded-xl border border-dashed border-slate-200 bg-white/60 px-4 py-3">
-        <p className="text-sm text-slate-600">Start a fresh cover concept.</p>
-        <form action={createProjectAction}>
-          <Button type="submit">New project</Button>
-        </form>
-      </div>
+  // No compositions exist, create new project + default composition
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .insert({
+      user_id: user.id,
+      name: "Untitled Project",
+    })
+    .select()
+    .single();
 
-      <section className="grid gap-4 sm:grid-cols-2">
-        {projects?.map((project) => (
-          <Card key={project.id}>
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs uppercase text-slate-500">Last updated</p>
-                  <p className="text-sm text-slate-600">
-                    {new Date(project.updated_at).toLocaleString()}
-                  </p>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-slate-900">{project.name}</h2>
-              </div>
-              <Link href={`/project/${project.id}/editor`} className="text-sm">
-                <Button variant="outline" className="gap-2">
-                  Open
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
-        {(!projects || projects.length === 0) && (
-          <div className="col-span-2 py-10 text-center text-slate-500">
-            No projects yet. Create one to get started!
-          </div>
-        )}
-      </section>
-    </main>
-  );
+  if (projectError || !project) {
+    throw new Error("Failed to create project");
+  }
+
+  const defaultLayout = createDefaultLayoutConfig();
+  const { data: composition, error: compositionError } = await supabase
+    .from("compositions")
+    .insert({
+      project_id: project.id,
+      user_id: user.id,
+      name: "Default Composition",
+      layout_config: defaultLayout,
+    })
+    .select()
+    .single();
+
+  if (compositionError || !composition) {
+    throw new Error("Failed to create composition");
+  }
+
+  redirect(`/project/${project.id}/editor?compositionId=${composition.id}`);
 }
