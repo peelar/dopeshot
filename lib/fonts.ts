@@ -135,4 +135,3 @@ export function getFontsByCategory(category: FontCategory): FontDefinition[] {
 export function getAllFonts(): FontDefinition[] {
   return [...fontRegistry.fonts];
 }
-

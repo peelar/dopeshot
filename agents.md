@@ -40,3 +40,4 @@
 - Focus is on manual layout configuration; AI features will be added later.
 - Node in repo was v18.13 during setup; upgrade locally to satisfy Next/Supabase engine warnings.
 - In the UI, don't mention what technology is used ("Upload with Supabase"). Write copy as you would for a real product. If you see an example of that, update it.
+- The workflow is as follows: you are handed over a spec that you should follow in the implementation. However, you have the authority to deviate from the spec if you think it's necessary to improve the product. Especially on the implementation details. Just make sure to communicate your decisions to the user.
