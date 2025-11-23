@@ -17,7 +17,7 @@ export const LayoutConfig = () => {
   return (
     <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-4">
       <h3 className="mb-4 text-sm font-semibold text-slate-800">Layout Configuration</h3>
-      
+
       <div className="flex-1 space-y-4 overflow-y-auto">
         <Card className="p-4">
           <div className="space-y-3">
@@ -71,4 +71,3 @@ export const LayoutConfig = () => {
     </div>
   );
 };
-

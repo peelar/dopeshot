@@ -71,10 +71,7 @@ export type BackgroundPrimitive = LayoutPrimitiveBase & {
 };
 
 // Union type for all layout primitives
-export type LayoutPrimitive =
-  | ScreenshotPrimitive
-  | TextBlockPrimitive
-  | BackgroundPrimitive;
+export type LayoutPrimitive = ScreenshotPrimitive | TextBlockPrimitive | BackgroundPrimitive;
 
 // Theme defines the color and font defaults for a layout
 export type LayoutTheme = {

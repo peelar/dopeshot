@@ -13,8 +13,8 @@ export default function Home() {
           Build cover art with a focused editor and Supabase auth.
         </h1>
         <p className="max-w-2xl text-lg text-slate-600">
-          A lean starting point wired with Next.js 15, Tailwind, shadcn/ui,
-          and Supabase for auth, storage, and data.
+          A lean starting point wired with Next.js 15, Tailwind, shadcn/ui, and Supabase for auth,
+          storage, and data.
         </p>
         <div className="flex flex-wrap gap-3">
           <Link href="/dashboard">
