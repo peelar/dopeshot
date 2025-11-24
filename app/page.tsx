@@ -74,18 +74,32 @@ export default function PlaygroundPage() {
   };
 
   return (
-    <main className="flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-900">
+    <main className="bg-background text-foreground flex h-screen w-full flex-col overflow-hidden">
       {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
+      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 flex h-14 items-center justify-between border-b border-border px-4 backdrop-blur">
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-slate-800 dark:text-slate-400">
-            Dopeshot
-          </span>
+          <div className="bg-foreground text-background flex h-5 w-5 items-center justify-center rounded-sm">
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
+            </svg>
+          </div>
+          <span className="text-sm font-bold tracking-tight">dopeshot</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
-          <Button variant="primary" onClick={handleExport} disabled={!hasUploaded || isExporting}>
-            <Download className="mr-2 h-4 w-4" />
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleExport}
+            disabled={!hasUploaded || isExporting}
+          >
+            <Download className="mr-2 h-3.5 w-3.5" />
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         </div>
@@ -93,10 +107,10 @@ export default function PlaygroundPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main Preview Area */}
-        <div className="flex flex-1 items-center justify-center overflow-auto p-8">
+        <div className="bg-background flex flex-1 items-center justify-center overflow-auto p-8">
           <div className="flex w-full max-w-4xl items-center justify-center">
             {!hasUploaded ? (
-              <div className="h-[600px] w-full">
+              <div className="w-full max-w-md">
                 <UploadDropzone onUpload={handleFileProcess} />
               </div>
             ) : (
@@ -109,7 +123,7 @@ export default function PlaygroundPage() {
 
         {/* Right Sidebar - Controls */}
         {hasUploaded && (
-          <div className="w-80 border-l border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+          <div className="bg-background w-80 border-l border-border">
             <LayoutConfigPanel
               config={config}
               onConfigChangeAction={setConfig}
@@ -128,8 +142,8 @@ export default function PlaygroundPage() {
           position: "fixed",
           top: 0,
           left: 0,
-          width: "1200px",
-          height: "630px",
+          width: "1280px",
+          height: "720px",
           zIndex: -100,
           visibility: "visible",
           background: "white",

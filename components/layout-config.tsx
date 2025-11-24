@@ -69,39 +69,27 @@ export const LayoutConfigPanel = ({
   };
 
   return (
-    <div className="flex h-full flex-col rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-950">
-      <h3 className="mb-4 text-sm font-semibold text-slate-800 dark:text-slate-200">Layout</h3>
+    <div className="flex h-full flex-col p-4">
+      <h3 className="text-foreground mb-4 text-sm font-medium">Configuration</h3>
 
-      <div className="flex-1 space-y-6 overflow-y-auto py-2">
+      <div className="flex-1 space-y-6 overflow-y-auto py-2 pr-2">
         {/* Template Selection */}
-        <div>
-          <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Template</Label>
-          <div className="grid gap-2">
+        <div className="space-y-2">
+          <Label className="text-muted-foreground text-xs">Template</Label>
+          <div className="grid grid-cols-1 gap-2">
             {TEMPLATES.map((template) => (
               <Button
                 key={template.id}
-                variant={config.templateId === template.id ? "default" : "outline"}
-                className="h-auto flex-col items-start p-3 text-left"
+                variant={config.templateId === template.id ? "secondary" : "ghost"}
+                size="sm"
+                className={`justify-start px-3 font-normal ${
+                  config.templateId === template.id
+                    ? "bg-secondary text-secondary-foreground"
+                    : "text-muted-foreground"
+                }`}
                 onClick={() => handleTemplateSelect(template.id)}
               >
-                <span
-                  className={`font-semibold ${
-                    config.templateId === template.id
-                      ? "text-slate-50 dark:text-slate-50"
-                      : "text-slate-900 dark:text-slate-50"
-                  }`}
-                >
-                  {template.name}
-                </span>
-                <span
-                  className={`text-xs ${
-                    config.templateId === template.id
-                      ? "text-slate-200 dark:text-slate-300"
-                      : "text-slate-500 dark:text-slate-400"
-                  }`}
-                >
-                  {template.description}
-                </span>
+                {template.name}
               </Button>
             ))}
           </div>
@@ -109,8 +97,8 @@ export const LayoutConfigPanel = ({
 
         {/* Layout Variant */}
         {currentTemplate && currentTemplate.variants.length > 0 && (
-          <div>
-            <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Layout</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Layout</Label>
             <Select value={config.variant} onValueChange={handleVariantChange}>
               <SelectTrigger>
                 <SelectValue placeholder="Select layout" />
@@ -118,9 +106,9 @@ export const LayoutConfigPanel = ({
               <SelectContent>
                 {currentTemplate.variants.map((v) => {
                   const labelMap: Record<string, string> = {
-                    left: "Photo on the left",
-                    right: "Photo on the right",
-                    center: "Photo in the center",
+                    left: "Left",
+                    right: "Right",
+                    center: "Center",
                   };
                   return (
                     <SelectItem key={v} value={v}>
@@ -135,16 +123,16 @@ export const LayoutConfigPanel = ({
 
         {/* Text Inputs */}
         <div className="space-y-3">
-          <div>
-            <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Title</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Title</Label>
             <Input
               value={config.text.title}
               onChange={(e) => handleTextChange("title", e.target.value)}
               placeholder="Project Title"
             />
           </div>
-          <div>
-            <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Subtitle</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Subtitle</Label>
             <Input
               value={config.text.subtitle || ""}
               onChange={(e) => handleTextChange("subtitle", e.target.value)}
@@ -155,16 +143,16 @@ export const LayoutConfigPanel = ({
 
         {/* Assets */}
         <div className="space-y-4">
-          <div>
-            <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Screenshot</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Screenshot</Label>
             <ScreenshotDropzone
               asset={screenshotAsset}
               onUpload={onUploadAsset}
               disabled={!onUploadAsset}
             />
           </div>
-          <div>
-            <Label className="mb-2 text-xs text-slate-500 dark:text-slate-400">Logo</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Logo</Label>
             <Select
               value={config.assets.logo || "__none__"}
               onValueChange={(v: string) => handleAssetChange("logo", v)}
@@ -197,30 +185,11 @@ interface ScreenshotDropzoneProps {
 }
 
 const ScreenshotDropzone = ({ asset, onUpload, disabled }: ScreenshotDropzoneProps) => {
-  const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFile = (file?: File) => {
     if (!file || !onUpload) return;
     onUpload(file);
-  };
-
-  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    event.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    event.preventDefault();
-    setIsDragging(false);
-    const file = event.dataTransfer.files?.[0];
-    handleFile(file);
   };
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -236,28 +205,13 @@ const ScreenshotDropzone = ({ asset, onUpload, disabled }: ScreenshotDropzonePro
     inputRef.current?.click();
   };
 
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (disabled) return;
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      inputRef.current?.click();
-    }
-  };
-
   return (
     <div
       role="button"
-      tabIndex={disabled ? -1 : 0}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      className={`flex flex-col gap-3 rounded-lg border-2 border-dashed p-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 dark:focus-visible:ring-slate-600 ${
-        isDragging
-          ? "border-slate-400 bg-slate-50 dark:border-slate-600 dark:bg-slate-900"
-          : "border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950"
-      } ${disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"}`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
+      className={`group relative flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50 ${
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+      }`}
     >
       <input
         type="file"
@@ -267,31 +221,27 @@ const ScreenshotDropzone = ({ asset, onUpload, disabled }: ScreenshotDropzonePro
         onChange={handleInputChange}
         disabled={disabled}
       />
-      <div className="flex items-center gap-3">
+
+      <div className="bg-background relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border">
         {asset ? (
           <img
             src={asset.url}
             alt={asset.name}
-            className="h-16 w-20 rounded-md object-cover"
+            className="h-full w-full object-cover"
             crossOrigin="anonymous"
           />
         ) : (
-          <div className="flex h-16 w-20 items-center justify-center rounded-md bg-slate-100 dark:bg-slate-800">
-            <UploadCloud className="h-5 w-5 text-slate-400 dark:text-slate-500" />
-          </div>
+          <UploadCloud className="text-muted-foreground h-4 w-4" />
         )}
-        <div className="flex-1">
-          <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-            {asset
-              ? "Click or drop to replace the screenshot"
-              : "Click or drop to upload a screenshot"}
-          </p>
-          {asset ? (
-            <p className="text-xs text-slate-500 dark:text-slate-400">{`Current file: ${asset.name}`}</p>
-          ) : (
-            <p className="text-xs text-slate-500 dark:text-slate-400">PNG or JPG up to 10MB</p>
-          )}
-        </div>
+      </div>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <span className="text-foreground truncate text-xs font-medium">
+          {asset ? asset.name : "Upload Screenshot"}
+        </span>
+        <span className="text-muted-foreground truncate text-[10px]">
+          {asset ? "Click to replace" : "PNG, JPG"}
+        </span>
       </div>
     </div>
   );

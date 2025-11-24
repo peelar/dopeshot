@@ -70,7 +70,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{
-        aspectRatio: "1200 / 630",
+        aspectRatio: "1280 / 720",
         background: `linear-gradient(135deg, ${bgColor1}, ${bgColor2})`,
       }}
     >

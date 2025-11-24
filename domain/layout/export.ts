@@ -15,13 +15,13 @@ export async function exportLayoutAsPng(elementId: string, fileName: string): Pr
     // Wait a bit longer to ensure rendering and image decoding
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    // Templates always render on a 1200x630 surface. The visible preview is just a scaled version
+    // Templates always render on a 1280x720 surface. The visible preview is just a scaled version
     // via <PreviewViewport>, so exporting the hidden 1:1 surface preserves layout parity.
     const dataUrl = await toPng(element, {
       cacheBust: true,
       pixelRatio: 1,
-      width: 1200,
-      height: 630,
+      width: 1280,
+      height: 720,
       skipAutoScale: true,
       backgroundColor: "white",
       // Ensure we capture styles correctly

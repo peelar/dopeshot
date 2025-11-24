@@ -38,22 +38,22 @@ export const UploadDropzone = ({ onUpload }: UploadDropzoneProps) => {
 
   return (
     <div
-      className={`flex h-full w-full flex-col items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+      className={`flex h-64 w-full max-w-md flex-col items-center justify-center rounded-lg border border-dashed transition-colors ${
         isDragging
-          ? "border-slate-400 dark:border-slate-600 bg-slate-50 dark:bg-slate-900"
-          : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950"
+          ? "border-primary bg-muted/50"
+          : "border-border bg-background hover:bg-muted/25"
       }`}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <div className="flex flex-col items-center gap-4 p-8 text-center">
-        <div className="rounded-full bg-slate-100 dark:bg-slate-800 p-4">
-          <UploadCloud className="h-8 w-8 text-slate-500 dark:text-slate-400" />
+      <div className="flex flex-col items-center gap-2 text-center">
+        <div className="flex h-10 w-10 items-center justify-center rounded-md border border-border bg-muted/50 shadow-sm">
+          <UploadCloud className="h-5 w-5 text-muted-foreground" />
         </div>
-        <div className="space-y-1">
-          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Upload your screenshot</h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400">Drag and drop or click to browse</p>
+        <div className="space-y-1 px-4">
+          <h3 className="text-sm font-medium text-foreground">Upload screenshot</h3>
+          <p className="text-xs text-muted-foreground">Drag and drop or click to browse</p>
         </div>
         <input
           type="file"
@@ -62,7 +62,9 @@ export const UploadDropzone = ({ onUpload }: UploadDropzoneProps) => {
           accept="image/*"
           onChange={handleFileSelect}
         />
-        <Button onClick={() => fileInputRef.current?.click()}>Select File</Button>
+        <Button variant="secondary" size="sm" className="mt-2" onClick={() => fileInputRef.current?.click()}>
+          Select File
+        </Button>
       </div>
     </div>
   );
