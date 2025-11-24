@@ -11,6 +11,7 @@ import { Download } from "lucide-react";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TemplateSelector } from "@/components/template-selector";
 
 const DEFAULT_ASSETS: Asset[] = [];
 
@@ -104,6 +105,11 @@ export default function PlaygroundPage() {
           </Button>
         </div>
       </header>
+
+      {/* Template Selector */}
+      {hasUploaded && (
+        <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main Preview Area */}

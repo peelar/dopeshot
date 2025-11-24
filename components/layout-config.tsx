@@ -1,9 +1,8 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
-import { TEMPLATES, getTemplateById } from "@/domain/layout/templates";
-import { Button } from "@/components/ui/button";
+import { getTemplateById } from "@/domain/layout/templates";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
@@ -36,24 +35,6 @@ export const LayoutConfigPanel = ({
     ? assets.find((asset) => asset.id === config.assets.screenshot)
     : undefined;
 
-  const handleTemplateSelect = (templateId: string) => {
-    const template = getTemplateById(templateId);
-    if (template) {
-      const newConfig = template.createConfig();
-
-      // Preserve active asset if available
-      if (activeAssetId) {
-        newConfig.assets.screenshot = activeAssetId;
-      }
-
-      onConfigChangeAction(newConfig);
-    }
-  };
-
-  const handleVariantChange = (variant: string) => {
-    onConfigChangeAction({ ...config, variant });
-  };
-
   const handleTextChange = (field: "title" | "subtitle", value: string) => {
     onConfigChangeAction({
       ...config,
@@ -73,54 +54,6 @@ export const LayoutConfigPanel = ({
       <h3 className="text-foreground mb-4 text-sm font-medium">Configuration</h3>
 
       <div className="flex-1 space-y-6 overflow-y-auto py-2 pr-2">
-        {/* Template Selection */}
-        <div className="space-y-2">
-          <Label className="text-muted-foreground text-xs">Template</Label>
-          <div className="grid grid-cols-1 gap-2">
-            {TEMPLATES.map((template) => (
-              <Button
-                key={template.id}
-                variant={config.templateId === template.id ? "secondary" : "ghost"}
-                size="sm"
-                className={`justify-start px-3 font-normal ${
-                  config.templateId === template.id
-                    ? "bg-secondary text-secondary-foreground"
-                    : "text-muted-foreground"
-                }`}
-                onClick={() => handleTemplateSelect(template.id)}
-              >
-                {template.name}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        {/* Layout Variant */}
-        {currentTemplate && currentTemplate.variants.length > 0 && (
-          <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">Layout</Label>
-            <Select value={config.variant} onValueChange={handleVariantChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select layout" />
-              </SelectTrigger>
-              <SelectContent>
-                {currentTemplate.variants.map((v) => {
-                  const labelMap: Record<string, string> = {
-                    left: "Left",
-                    right: "Right",
-                    center: "Center",
-                  };
-                  return (
-                    <SelectItem key={v} value={v}>
-                      {labelMap[v] || v.charAt(0).toUpperCase() + v.slice(1)}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
         {/* Text Inputs */}
         <div className="space-y-3">
           <div className="space-y-2">

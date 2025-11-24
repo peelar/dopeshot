@@ -174,12 +174,12 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
       {imagePosition === "center" && (
         <>
           {/* Text on top */}
-          <div className="absolute left-1/2 top-[30%] z-10 -translate-x-1/2 text-center">
-            <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
+          <div className="absolute left-1/2 top-[12%] z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center">
+            <h1 className={cn("text-5xl font-bold", tokenToTextColorClass(config.colors.text))}>
               {config.text.title}
             </h1>
             {config.text.subtitle && (
-              <p className={cn("mt-4 text-lg", tokenToTextColorClass(config.colors.text))}>
+              <p className={cn("mt-4 text-xl", tokenToTextColorClass(config.colors.text))}>
                 {config.text.subtitle}
               </p>
             )}
@@ -191,7 +191,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
               className="absolute bottom-0 left-1/2 z-5 -translate-x-1/2 overflow-hidden"
               style={{
                 width: "60%",
-                height: "70%",
+                height: "60%",
                 borderTopLeftRadius: "8px",
                 borderTopRightRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
