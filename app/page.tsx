@@ -6,7 +6,6 @@ import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Asset } from "@/domain/asset/types";
 import { RefreshCw, Upload, Download } from "lucide-react";
 import { exportLayoutAsPng } from "@/domain/layout/export";
@@ -104,14 +103,14 @@ export default function PlaygroundPage() {
                 accept="image/*"
                 onChange={handleAssetUpload}
               />
-              <label htmlFor="file-upload-header">
-                <Button variant="outline" size="sm" asChild className="cursor-pointer">
-                  <span>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Replace Image
-                  </span>
-                </Button>
-              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById("file-upload-header")?.click()}
+              >
+                <Upload className="mr-2 h-4 w-4" />
+                Replace Image
+              </Button>
             </div>
           )}
           <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-500">
@@ -133,7 +132,7 @@ export default function PlaygroundPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Main Preview Area */}
         <div className="flex flex-1 items-center justify-center overflow-auto p-8">
-          <Card className="flex w-full max-w-4xl items-center justify-center overflow-hidden bg-white p-8 shadow-sm">
+          <div className="flex w-full max-w-4xl items-center justify-center bg-white p-8">
             {!hasUploaded ? (
               <div className="h-[600px] w-full">
                 <UploadDropzone onUpload={handleFileProcess} />
@@ -141,7 +140,7 @@ export default function PlaygroundPage() {
             ) : (
               <CoverPreview config={config} assets={assets} />
             )}
-          </Card>
+          </div>
         </div>
 
         {/* Right Sidebar - Controls */}

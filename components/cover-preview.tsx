@@ -16,7 +16,7 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
     return (
       <div
         className={cn(
-          "flex items-center justify-center rounded-lg border border-slate-200 bg-white",
+          "flex items-center justify-center rounded-lg bg-white",
           className,
         )}
         style={{ aspectRatio: "1200 / 630" }}
@@ -31,7 +31,7 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
   return (
     <div
       className={cn(
-        "relative w-full overflow-hidden rounded-lg border border-slate-200",
+        "relative w-full overflow-hidden rounded-lg",
         className,
       )}
       style={{

@@ -1,11 +1,17 @@
 "use client";
 
-import { useState } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
 import { TEMPLATES, getTemplateById } from "@/domain/layout/templates";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Asset } from "@/domain/asset/types";
 
 interface LayoutConfigProps {
@@ -14,28 +20,6 @@ interface LayoutConfigProps {
   assets?: Asset[];
   activeAssetId?: string;
 }
-
-const NativeSelect = ({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  options: { value: string; label: string }[];
-}) => (
-  <select
-    value={value}
-    onChange={(e) => onChange(e.target.value)}
-    className="flex h-9 w-full items-center justify-between rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm shadow-sm ring-offset-white placeholder:text-slate-500 focus:outline-none focus:ring-1 focus:ring-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
-  >
-    {options.map((opt) => (
-      <option key={opt.value} value={opt.value}>
-        {opt.label}
-      </option>
-    ))}
-  </select>
-);
 
 export const LayoutConfigPanel = ({
   config,
@@ -73,7 +57,7 @@ export const LayoutConfigPanel = ({
   const handleAssetChange = (field: "screenshot" | "logo", assetId: string) => {
     onChange({
       ...config,
-      assets: { ...config.assets, [field]: assetId || undefined },
+      assets: { ...config.assets, [field]: assetId === "__none__" ? undefined : assetId },
     });
   };
 
@@ -104,21 +88,25 @@ export const LayoutConfigPanel = ({
         {currentTemplate && currentTemplate.variants.length > 0 && (
           <div>
             <Label className="mb-2 text-xs text-slate-500">Layout</Label>
-            <NativeSelect
-              value={config.variant}
-              onChange={handleVariantChange}
-              options={currentTemplate.variants.map((v) => {
-                const labelMap: Record<string, string> = {
-                  left: "Photo on the left",
-                  right: "Photo on the right",
-                  center: "Photo in the center",
-                };
-                return {
-                  value: v,
-                  label: labelMap[v] || v.charAt(0).toUpperCase() + v.slice(1),
-                };
-              })}
-            />
+            <Select value={config.variant} onValueChange={handleVariantChange}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select layout" />
+              </SelectTrigger>
+              <SelectContent>
+                {currentTemplate.variants.map((v) => {
+                  const labelMap: Record<string, string> = {
+                    left: "Photo on the left",
+                    right: "Photo on the right",
+                    center: "Photo in the center",
+                  };
+                  return (
+                    <SelectItem key={v} value={v}>
+                      {labelMap[v] || v.charAt(0).toUpperCase() + v.slice(1)}
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
           </div>
         )}
 
@@ -146,29 +134,45 @@ export const LayoutConfigPanel = ({
         <div className="space-y-3">
           <div>
             <Label className="mb-2 text-xs text-slate-500">Screenshot</Label>
-            <NativeSelect
-              value={config.assets.screenshot || ""}
-              onChange={(v) => handleAssetChange("screenshot", v)}
-              options={[
-                { value: "", label: "None" },
-                ...assets
+            <Select
+              value={config.assets.screenshot || "__none__"}
+              onValueChange={(v: string) => handleAssetChange("screenshot", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select screenshot" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
+                {assets
                   .filter((a) => a.kind === "screenshot")
-                  .map((a) => ({ value: a.id, label: a.name })),
-              ]}
-            />
+                  .map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="mb-2 text-xs text-slate-500">Logo</Label>
-            <NativeSelect
-              value={config.assets.logo || ""}
-              onChange={(v) => handleAssetChange("logo", v)}
-              options={[
-                { value: "", label: "None" },
-                ...assets
+            <Select
+              value={config.assets.logo || "__none__"}
+              onValueChange={(v: string) => handleAssetChange("logo", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select logo" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">None</SelectItem>
+                {assets
                   .filter((a) => a.kind === "logo")
-                  .map((a) => ({ value: a.id, label: a.name })),
-              ]}
-            />
+                  .map((a) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
