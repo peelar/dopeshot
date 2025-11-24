@@ -2,6 +2,7 @@ import type React from "react";
 import { LayoutConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
+import { getGradientById } from "@/domain/layout/gradients";
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -60,18 +61,38 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
   const screenshot = config.assets.screenshot ? assetMap.get(config.assets.screenshot) : null;
   const logo = config.assets.logo ? assetMap.get(config.assets.logo) : null;
 
-  const bgColor1 = tokenToCssColor(config.colors.background);
-  const bgColor2 = tokenToCssColor(config.colors.accent);
+  let backgroundStyle: string | undefined;
+
+  if (config.background?.type === "gradient") {
+    const gradient = getGradientById(config.background.value);
+    if (gradient) {
+      backgroundStyle = gradient.value;
+    }
+  } else if (config.background?.type === "image") {
+    const bgAsset = assetMap.get(config.background.value);
+    if (bgAsset) {
+      backgroundStyle = `url(${bgAsset.url})`;
+    }
+  } else if (config.background?.type === "solid") {
+    backgroundStyle = tokenToCssColor(config.background.value);
+  }
+
+  // Fallback to old color logic if no background set (or invalid)
+  if (!backgroundStyle) {
+    const bgColor1 = tokenToCssColor(config.colors.background);
+    const bgColor2 = tokenToCssColor(config.colors.accent);
+    backgroundStyle = `linear-gradient(135deg, ${bgColor1}, ${bgColor2})`;
+  }
 
   // Variant determines image position: "left", "right", or "center"
   const imagePosition = config.variant || "right";
 
   return (
     <div
-      className={cn("relative h-full w-full overflow-hidden", className)}
+      className={cn("relative h-full w-full overflow-hidden bg-cover bg-center bg-no-repeat", className)}
       style={{
         aspectRatio: "1280 / 720",
-        background: `linear-gradient(135deg, ${bgColor1}, ${bgColor2})`,
+        background: backgroundStyle,
       }}
     >
       {/* Logo */}
@@ -215,4 +236,3 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
     </div>
   );
 }
-

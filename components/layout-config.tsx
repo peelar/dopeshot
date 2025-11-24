@@ -1,19 +1,21 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent, useEffect } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
 import { getTemplateById } from "@/domain/layout/templates";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
+import { GRADIENTS, getGradientById } from "@/domain/layout/gradients";
+import { cn } from "@/utils";
 
 interface LayoutConfigProps {
   config: LayoutConfig;
   onConfigChangeAction: (newConfig: LayoutConfig) => void;
   assets?: Asset[];
   activeAssetId?: string;
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
 export const LayoutConfigPanel = ({
@@ -30,11 +32,46 @@ export const LayoutConfigPanel = ({
   const logoAsset = config.assets.logo
     ? assets.find((asset) => asset.id === config.assets.logo)
     : undefined;
+  const backgroundAsset = config.assets.background
+    ? assets.find((asset) => asset.id === config.assets.background)
+    : undefined;
+
+  // Local state for background tab selection (default to current config type or gradient)
+  const [bgType, setBgType] = useState<"gradient" | "image">(
+    config.background?.type === "image" ? "image" : "gradient",
+  );
+
+  // Sync local state with config type when it changes externally (e.g. template switch)
+  useEffect(() => {
+    if (config.background?.type) {
+      // Only sync if the type matches one of our tabs.
+      // If solid, we might default to gradient or handle it differently,
+      // but for now we only have gradient/image UI.
+      if (config.background.type === "image") {
+        setBgType("image");
+      } else if (config.background.type === "gradient") {
+        setBgType("gradient");
+      }
+    }
+  }, [config.background?.type]);
 
   const handleTextChange = (field: "title" | "subtitle", value: string) => {
     onConfigChangeAction({
       ...config,
       text: { ...config.text, [field]: value },
+    });
+  };
+
+  const handleGradientSelect = (gradientId: string) => {
+    const gradient = getGradientById(gradientId);
+
+    onConfigChangeAction({
+      ...config,
+      colors: {
+        ...config.colors,
+        text: gradient?.textColor || "slate-900",
+      },
+      background: { type: "gradient", value: gradientId },
     });
   };
 
@@ -61,6 +98,71 @@ export const LayoutConfigPanel = ({
               placeholder="A short description"
             />
           </div>
+        </div>
+
+        {/* Background Selection */}
+        <div className="space-y-3">
+          <Label className="text-muted-foreground text-xs">Background</Label>
+
+          <div className="flex rounded-md bg-muted p-1">
+            <button
+              onClick={() => setBgType("gradient")}
+              className={cn(
+                "flex-1 rounded-sm py-1 text-xs transition-all",
+                bgType === "gradient"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Gradient
+            </button>
+            <button
+              onClick={() => setBgType("image")}
+              className={cn(
+                "flex-1 rounded-sm py-1 text-xs transition-all",
+                bgType === "image"
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Image
+            </button>
+          </div>
+
+          {bgType === "gradient" && (
+            <div className="grid grid-cols-2 gap-2">
+              {GRADIENTS.map((g) => (
+                <div
+                  key={g.id}
+                  className={cn(
+                    "h-12 cursor-pointer rounded-md border transition-all hover:opacity-90",
+                    config.background?.type === "gradient" && config.background?.value === g.id
+                      ? "border-primary ring-primary ring-1"
+                      : "border-border",
+                  )}
+                  style={{ background: g.value }}
+                  onClick={() => handleGradientSelect(g.id)}
+                  title={g.name}
+                />
+              ))}
+            </div>
+          )}
+
+          {bgType === "image" && (
+            <div className="space-y-2">
+              <AssetDropzone
+                asset={backgroundAsset}
+                onUpload={(file) => onUploadAsset?.(file, "background")}
+                disabled={!onUploadAsset}
+                label="Upload Background"
+              />
+              {config.background?.type === "image" && !backgroundAsset && (
+                <p className="text-xs text-yellow-600">
+                  Background image not found. Please upload again.
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Assets */}

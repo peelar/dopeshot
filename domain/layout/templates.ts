@@ -2,6 +2,7 @@ import { LayoutConfig } from "./types";
 import { PopupGradient } from "@/components/templates/PopupGradient";
 import type { ComponentType } from "react";
 import { Asset } from "@/domain/asset/types";
+import { DEFAULT_GRADIENT } from "@/domain/layout/gradients";
 
 export interface Template {
   id: string;
@@ -27,12 +28,17 @@ export const TEMPLATES: Template[] = [
       },
       colors: {
         background: "indigo-50",
-        text: "slate-900",
+        text: DEFAULT_GRADIENT.textColor,
         accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: DEFAULT_GRADIENT.id,
       },
       assets: {
         screenshot: undefined,
         logo: undefined,
+        background: undefined,
       },
     }),
     component: PopupGradient,
