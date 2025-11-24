@@ -15,10 +15,7 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
   if (!template) {
     return (
       <div
-        className={cn(
-          "flex items-center justify-center rounded-lg bg-white",
-          className,
-        )}
+        className={cn("flex items-center justify-center rounded-lg bg-white", className)}
         style={{ aspectRatio: "1200 / 630" }}
       >
         <span className="text-sm text-slate-500">Template not found</span>
@@ -30,10 +27,7 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
 
   return (
     <div
-      className={cn(
-        "relative w-full overflow-hidden rounded-lg",
-        className,
-      )}
+      className={cn("relative w-full overflow-hidden rounded-lg", className)}
       style={{
         aspectRatio: "1200 / 630",
       }}

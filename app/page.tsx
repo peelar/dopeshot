@@ -7,8 +7,10 @@ import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
 import { Asset } from "@/domain/asset/types";
-import { RefreshCw, Upload, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import { exportLayoutAsPng } from "@/domain/layout/export";
+import { PreviewViewport } from "@/components/preview-viewport";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const DEFAULT_ASSETS: Asset[] = [];
 
@@ -18,12 +20,6 @@ export default function PlaygroundPage() {
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-
-  const handleReset = () => {
-    setConfig(TEMPLATES[0].createConfig());
-    setAssets([]);
-    setHasUploaded(false);
-  };
 
   const handleExport = async () => {
     const hasScreenshot = !!config.assets.screenshot;
@@ -77,52 +73,19 @@ export default function PlaygroundPage() {
     reader.readAsDataURL(file);
   };
 
-  const handleAssetUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFileProcess(e.target.files[0]);
-    }
-  };
-
   return (
-    <main className="flex h-screen w-full flex-col overflow-hidden bg-slate-50">
+    <main className="flex h-screen w-full flex-col overflow-hidden bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4">
+      <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2">
-          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600">
+          <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-slate-800 dark:text-slate-400">
             Cover Forge
           </span>
-          <span className="text-sm text-slate-500">Playground</span>
+          <span className="text-sm text-slate-500 dark:text-slate-400">Playground</span>
         </div>
         <div className="flex items-center gap-2">
-          {hasUploaded && (
-            <div className="relative">
-              <input
-                type="file"
-                id="file-upload-header"
-                className="hidden"
-                accept="image/*"
-                onChange={handleAssetUpload}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => document.getElementById("file-upload-header")?.click()}
-              >
-                <Upload className="mr-2 h-4 w-4" />
-                Replace Image
-              </Button>
-            </div>
-          )}
-          <Button variant="ghost" size="sm" onClick={handleReset} className="text-slate-500">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Reset
-          </Button>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleExport}
-            disabled={!hasUploaded || isExporting}
-          >
+          <ThemeToggle />
+          <Button variant="primary" onClick={handleExport} disabled={!hasUploaded || isExporting}>
             <Download className="mr-2 h-4 w-4" />
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
@@ -132,25 +95,28 @@ export default function PlaygroundPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* Main Preview Area */}
         <div className="flex flex-1 items-center justify-center overflow-auto p-8">
-          <div className="flex w-full max-w-4xl items-center justify-center bg-white p-8">
+          <div className="flex w-full max-w-4xl items-center justify-center">
             {!hasUploaded ? (
               <div className="h-[600px] w-full">
                 <UploadDropzone onUpload={handleFileProcess} />
               </div>
             ) : (
-              <CoverPreview config={config} assets={assets} />
+              <PreviewViewport>
+                <CoverPreview config={config} assets={assets} />
+              </PreviewViewport>
             )}
           </div>
         </div>
 
         {/* Right Sidebar - Controls */}
         {hasUploaded && (
-          <div className="w-80 border-l border-slate-200 bg-white">
+          <div className="w-80 border-l border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
             <LayoutConfigPanel
               config={config}
-              onChange={setConfig}
+              onConfigChangeAction={setConfig}
               assets={assets}
               activeAssetId={assets.length > 0 ? assets[assets.length - 1].id : undefined}
+              onUploadAsset={handleFileProcess}
             />
           </div>
         )}
@@ -160,23 +126,18 @@ export default function PlaygroundPage() {
       <div
         id="export-container"
         style={{
-          position: "fixed", // Fixed position to ensure it's relative to the viewport
+          position: "fixed",
           top: 0,
-          left: 0, // In the viewport
+          left: 0,
           width: "1200px",
           height: "630px",
-          zIndex: -100, // Behind everything
-          visibility: "visible", // Explicitly visible
-          background: "white", // Ensure background is present
+          zIndex: -100,
+          visibility: "visible",
+          background: "white",
         }}
       >
-        {/* We render the preview without the border/radius for the final export if desired,
-            but CoverPreview has them hardcoded. Ideally we might want to remove them for export
-            so the user gets clean corners, but for now we'll keep consistent with preview.
-            However, CoverPreview adds a border-slate-200.
-            To make it clean, we might want to override className to remove border/radius.
-        */}
-        <CoverPreview config={config} assets={assets} className="rounded-none border-0" />
+        {/* The hidden surface mirrors the visible preview (same dimensions + markup) */}
+        <CoverPreview config={config} assets={assets} />
       </div>
     </main>
   );

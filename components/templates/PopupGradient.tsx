@@ -90,7 +90,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
       {imagePosition === "right" && (
         <>
           {/* Text on left */}
-          <div className="absolute left-8 top-32 z-10 max-w-lg">
+          <div className="absolute left-8 top-[30%] z-10 max-w-lg">
             <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
               {config.text.title}
             </h1>
@@ -109,6 +109,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
                 width: "60%",
                 height: "70%",
                 borderTopLeftRadius: "8px",
+                borderTopRightRadius: "0px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
               }}
             >
@@ -137,7 +138,8 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
               style={{
                 width: "60%",
                 height: "70%",
-                borderTopLeftRadius: "8px",
+                borderTopLeftRadius: "0px",
+                borderTopRightRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
               }}
             >
@@ -156,7 +158,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
           )}
 
           {/* Text on right */}
-          <div className="absolute right-8 top-32 z-10 max-w-lg text-right">
+          <div className="absolute right-8 top-[30%] z-10 max-w-lg text-right">
             <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
               {config.text.title}
             </h1>
@@ -172,7 +174,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
       {imagePosition === "center" && (
         <>
           {/* Text on top */}
-          <div className="absolute left-1/2 top-16 z-10 -translate-x-1/2 text-center">
+          <div className="absolute left-1/2 top-[30%] z-10 -translate-x-1/2 text-center">
             <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
               {config.text.title}
             </h1>
@@ -191,6 +193,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
                 width: "60%",
                 height: "70%",
                 borderTopLeftRadius: "8px",
+                borderTopRightRadius: "8px",
                 boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
               }}
             >
