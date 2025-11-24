@@ -16,7 +16,7 @@ const display = Space_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "Cover Forge",
+  title: "Dopeshot",
   description: "Design cover art with manual layout configuration and Supabase",
 };
 

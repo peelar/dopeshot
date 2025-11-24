@@ -79,9 +79,8 @@ export default function PlaygroundPage() {
       <header className="flex h-14 items-center justify-between border-b border-slate-200 bg-white px-4 dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2">
           <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold uppercase text-slate-600 dark:border-slate-800 dark:text-slate-400">
-            Cover Forge
+            Dopeshot
           </span>
-          <span className="text-sm text-slate-500 dark:text-slate-400">Playground</span>
         </div>
         <div className="flex items-center gap-2">
           <ThemeToggle />
