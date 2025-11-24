@@ -80,7 +80,7 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
           <img
             src={logo.url}
             alt="Logo"
-            className="h-12 w-auto object-contain"
+            className="h-8 w-auto object-contain"
             crossOrigin="anonymous"
           />
         </div>

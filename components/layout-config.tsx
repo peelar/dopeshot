@@ -5,13 +5,6 @@ import { LayoutConfig } from "@/domain/layout/types";
 import { getTemplateById } from "@/domain/layout/templates";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
 
@@ -20,7 +13,7 @@ interface LayoutConfigProps {
   onConfigChangeAction: (newConfig: LayoutConfig) => void;
   assets?: Asset[];
   activeAssetId?: string;
-  onUploadAsset?: (file: File) => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo") => void;
 }
 
 export const LayoutConfigPanel = ({
@@ -34,18 +27,14 @@ export const LayoutConfigPanel = ({
   const screenshotAsset = config.assets.screenshot
     ? assets.find((asset) => asset.id === config.assets.screenshot)
     : undefined;
+  const logoAsset = config.assets.logo
+    ? assets.find((asset) => asset.id === config.assets.logo)
+    : undefined;
 
   const handleTextChange = (field: "title" | "subtitle", value: string) => {
     onConfigChangeAction({
       ...config,
       text: { ...config.text, [field]: value },
-    });
-  };
-
-  const handleAssetChange = (field: "screenshot" | "logo", assetId: string) => {
-    onConfigChangeAction({
-      ...config,
-      assets: { ...config.assets, [field]: assetId === "__none__" ? undefined : assetId },
     });
   };
 
@@ -78,32 +67,21 @@ export const LayoutConfigPanel = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label className="text-muted-foreground text-xs">Screenshot</Label>
-            <ScreenshotDropzone
+            <AssetDropzone
               asset={screenshotAsset}
-              onUpload={onUploadAsset}
+              onUpload={(file) => onUploadAsset?.(file, "screenshot")}
               disabled={!onUploadAsset}
+              label="Upload Screenshot"
             />
           </div>
           <div className="space-y-2">
             <Label className="text-muted-foreground text-xs">Logo</Label>
-            <Select
-              value={config.assets.logo || "__none__"}
-              onValueChange={(v: string) => handleAssetChange("logo", v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select logo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="__none__">None</SelectItem>
-                {assets
-                  .filter((a) => a.kind === "logo")
-                  .map((a) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+            <AssetDropzone
+              asset={logoAsset}
+              onUpload={(file) => onUploadAsset?.(file, "logo")}
+              disabled={!onUploadAsset}
+              label="Upload Logo"
+            />
           </div>
         </div>
       </div>
@@ -111,13 +89,14 @@ export const LayoutConfigPanel = ({
   );
 };
 
-interface ScreenshotDropzoneProps {
+interface AssetDropzoneProps {
   asset?: Asset;
   onUpload?: (file: File) => void;
   disabled?: boolean;
+  label: string;
 }
 
-const ScreenshotDropzone = ({ asset, onUpload, disabled }: ScreenshotDropzoneProps) => {
+const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFile = (file?: File) => {
@@ -170,7 +149,7 @@ const ScreenshotDropzone = ({ asset, onUpload, disabled }: ScreenshotDropzonePro
 
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="text-foreground truncate text-xs font-medium">
-          {asset ? asset.name : "Upload Screenshot"}
+          {asset ? asset.name : label}
         </span>
         <span className="text-muted-foreground truncate text-[10px]">
           {asset ? "Click to replace" : "PNG, JPG"}

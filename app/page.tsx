@@ -42,7 +42,7 @@ export default function PlaygroundPage() {
     }
   };
 
-  const handleFileProcess = (file: File) => {
+  const handleFileProcess = (file: File, kind: "screenshot" | "logo" = "screenshot") => {
     // Use FileReader to create a data URL (base64) instead of blob URL
     // This avoids issues with html-to-image fetching blob resources
     const reader = new FileReader();
@@ -56,18 +56,18 @@ export default function PlaygroundPage() {
         userId: "playground-user",
         name: file.name,
         url: dataUrl,
-        kind: "screenshot",
+        kind: kind,
         createdAt: new Date().toISOString(),
       };
       setAssets((prev) => [...prev, newAsset]);
       setHasUploaded(true);
 
-      // Auto-assign to screenshot asset if available
+      // Auto-assign to correct asset field
       setConfig((currentConfig) => ({
         ...currentConfig,
         assets: {
           ...currentConfig.assets,
-          screenshot: newAsset.id,
+          [kind]: newAsset.id,
         },
       }));
     };
