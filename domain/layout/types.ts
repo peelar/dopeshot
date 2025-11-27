@@ -21,9 +21,16 @@ export type BackgroundType = "gradient" | "image" | "solid";
 
 export type ShadowIntensity = "low" | "medium" | "high";
 
+export type CustomGradient = {
+  from: string; // hex color
+  to: string; // hex color
+  direction?: string; // e.g., "to right", "to bottom right"
+};
+
 export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken
+  customGradient?: CustomGradient; // for custom/dynamic gradients
 };
 
 // Layout configuration - simple data structure

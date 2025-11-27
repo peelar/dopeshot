@@ -6,12 +6,14 @@ import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
-import { Asset } from "@/domain/asset/types";
+import { Asset, ColorPalette } from "@/domain/asset/types";
 import { Download } from "lucide-react";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
+import { getContrastTextColor } from "@/domain/layout/gradient-utils";
+import { ColorPaletteResponse } from "@/app/api/analyze-colors/route";
 
 const DEFAULT_ASSETS: Asset[] = [];
 
@@ -42,6 +44,22 @@ export default function PlaygroundPage() {
     }
   };
 
+  const analyzeColors = async (dataUrl: string): Promise<ColorPalette | undefined> => {
+    try {
+      const response = await fetch("/api/analyze-colors", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageData: dataUrl }),
+      });
+      if (!response.ok) return undefined;
+      const data: ColorPaletteResponse = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Color analysis failed:", error);
+      return undefined;
+    }
+  };
+
   const handleFileProcess = (
     file: File,
     kind: "screenshot" | "logo" | "background" = "screenshot",
@@ -49,12 +67,13 @@ export default function PlaygroundPage() {
     // Use FileReader to create a data URL (base64) instead of blob URL
     // This avoids issues with html-to-image fetching blob resources
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const dataUrl = e.target?.result as string;
       if (!dataUrl) return;
 
+      const assetId = Math.random().toString(36).substring(7);
       const newAsset: Asset = {
-        id: Math.random().toString(36).substring(7),
+        id: assetId,
         projectId: "playground",
         userId: "playground-user",
         name: file.name,
@@ -84,16 +103,44 @@ export default function PlaygroundPage() {
 
         return newConfig;
       });
+
+      // Analyze colors for screenshots and apply dynamic gradient
+      if (kind === "screenshot") {
+        const colorPalette = await analyzeColors(dataUrl);
+        if (colorPalette) {
+          // Update asset with color palette
+          setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
+
+          // Auto-apply dynamic gradient based on accent color
+          const textColor = getContrastTextColor(colorPalette.accent);
+          setConfig((currentConfig) => ({
+            ...currentConfig,
+            colors: {
+              ...currentConfig.colors,
+              text: textColor,
+            },
+            background: {
+              type: "gradient",
+              value: "custom",
+              customGradient: {
+                from: colorPalette.accent,
+                to: "#ffffff",
+                direction: "to right",
+              },
+            },
+          }));
+        }
+      }
     };
     reader.readAsDataURL(file);
   };
 
   return (
-    <main className="bg-background text-foreground flex h-screen w-full flex-col overflow-hidden">
+    <main className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
       {/* Header */}
-      <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 flex h-14 items-center justify-between border-b border-border px-4 backdrop-blur">
-        <div className="flex items-center gap-2">
-          <div className="bg-foreground text-background flex h-5 w-5 items-center justify-center rounded-sm">
+      <header className="flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <a href="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
+          <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-background">
             <svg
               width="10"
               height="10"
@@ -105,7 +152,7 @@ export default function PlaygroundPage() {
             </svg>
           </div>
           <span className="text-sm font-bold tracking-tight">dopeshot</span>
-        </div>
+        </a>
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button
@@ -127,7 +174,7 @@ export default function PlaygroundPage() {
 
       <div className="flex flex-1 overflow-hidden">
         {/* Main Preview Area */}
-        <div className="bg-background flex flex-1 items-center justify-center overflow-auto p-8">
+        <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
           <div className="flex w-full max-w-4xl items-center justify-center">
             {!hasUploaded ? (
               <div className="w-full max-w-md">
@@ -143,12 +190,11 @@ export default function PlaygroundPage() {
 
         {/* Right Sidebar - Controls */}
         {hasUploaded && (
-          <div className="bg-background w-80 border-l border-border">
+          <div className="w-80 border-l border-border bg-background">
             <LayoutConfigPanel
               config={config}
               onConfigChangeAction={setConfig}
               assets={assets}
-              activeAssetId={assets.length > 0 ? assets[assets.length - 1].id : undefined}
               onUploadAsset={handleFileProcess}
             />
           </div>

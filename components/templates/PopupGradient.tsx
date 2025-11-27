@@ -3,6 +3,7 @@ import { LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getGradientById } from "@/domain/layout/gradients";
+import { customGradientToCss } from "@/domain/layout/gradient-utils";
 
 const SHADOW_PRESETS: Record<ShadowIntensity, string> = {
   low: "0 2px 8px rgba(0, 0, 0, 0.08)",
@@ -70,9 +71,14 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
   let backgroundStyle: string | undefined;
 
   if (config.background?.type === "gradient") {
-    const gradient = getGradientById(config.background.value);
-    if (gradient) {
-      backgroundStyle = gradient.value;
+    // Check for custom gradient first
+    if (config.background.customGradient) {
+      backgroundStyle = customGradientToCss(config.background.customGradient);
+    } else {
+      const gradient = getGradientById(config.background.value);
+      if (gradient) {
+        backgroundStyle = gradient.value;
+      }
     }
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);
