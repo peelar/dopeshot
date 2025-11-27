@@ -4,6 +4,7 @@ import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getGradientById } from "@/domain/layout/gradients";
 import { customGradientToCss } from "@/domain/layout/gradient-utils";
+import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 
 const SHADOW_PRESETS: Record<ShadowIntensity, string> = {
   low: "0 2px 8px rgba(0, 0, 0, 0.08)",
@@ -100,6 +101,10 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
   // Variant determines image position: "left", "right", or "center"
   const imagePosition = config.variant || "right";
   const shadowStyle = SHADOW_PRESETS[config.screenshotShadow || "medium"];
+  const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
+  const fontSize = getFontSizeById(config.fontSize);
+  const titleStyle = { ...fontStyle, fontSize: `${fontSize.titleRem}rem` };
+  const subtitleStyle = { ...fontStyle, fontSize: `${fontSize.subtitleRem}rem` };
 
   return (
     <div
@@ -129,11 +134,25 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
         <>
           {/* Text on left */}
           <div className="absolute left-8 top-[30%] z-10 max-w-lg">
-            <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
+            <h1
+              className={cn(
+                "font-bold",
+                fontSize.titleClass,
+                tokenToTextColorClass(config.colors.text),
+              )}
+              style={titleStyle}
+            >
               {config.text.title}
             </h1>
             {config.text.subtitle && (
-              <p className={cn("mt-4 text-lg", tokenToTextColorClass(config.colors.text))}>
+              <p
+                className={cn(
+                  "mt-4",
+                  fontSize.subtitleClass,
+                  tokenToTextColorClass(config.colors.text),
+                )}
+                style={subtitleStyle}
+              >
                 {config.text.subtitle}
               </p>
             )}
@@ -197,11 +216,25 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
 
           {/* Text on right */}
           <div className="absolute right-8 top-[30%] z-10 max-w-lg text-right">
-            <h1 className={cn("text-4xl font-bold", tokenToTextColorClass(config.colors.text))}>
+            <h1
+              className={cn(
+                "font-bold",
+                fontSize.titleClass,
+                tokenToTextColorClass(config.colors.text),
+              )}
+              style={titleStyle}
+            >
               {config.text.title}
             </h1>
             {config.text.subtitle && (
-              <p className={cn("mt-4 text-lg", tokenToTextColorClass(config.colors.text))}>
+              <p
+                className={cn(
+                  "mt-4",
+                  fontSize.subtitleClass,
+                  tokenToTextColorClass(config.colors.text),
+                )}
+                style={subtitleStyle}
+              >
                 {config.text.subtitle}
               </p>
             )}
@@ -213,11 +246,25 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
         <>
           {/* Text on top */}
           <div className="absolute left-1/2 top-[12%] z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center">
-            <h1 className={cn("text-5xl font-bold", tokenToTextColorClass(config.colors.text))}>
+            <h1
+              className={cn(
+                "font-bold",
+                fontSize.titleClass,
+                tokenToTextColorClass(config.colors.text),
+              )}
+              style={titleStyle}
+            >
               {config.text.title}
             </h1>
             {config.text.subtitle && (
-              <p className={cn("mt-4 text-xl", tokenToTextColorClass(config.colors.text))}>
+              <p
+                className={cn(
+                  "mt-4",
+                  fontSize.subtitleClass,
+                  tokenToTextColorClass(config.colors.text),
+                )}
+                style={subtitleStyle}
+              >
                 {config.text.subtitle}
               </p>
             )}

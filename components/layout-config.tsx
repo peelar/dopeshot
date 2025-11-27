@@ -1,13 +1,21 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent, useEffect, useMemo, useCallback } from "react";
-import { BackgroundConfig, ColorToken, LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
+import {
+  BackgroundConfig,
+  ColorToken,
+  FontId,
+  FontSize,
+  LayoutConfig,
+  ShadowIntensity,
+} from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/utils";
 import { GradientPicker } from "@/components/gradient-picker";
+import { FontSelector } from "@/components/font-selector";
 
 type SidebarTab = "design" | "assets";
 
@@ -15,7 +23,7 @@ type SidebarTab = "design" | "assets";
 function DebouncedInput({
   value,
   onChange,
-  delay = 200,
+  delay = 100,
   ...props
 }: Omit<React.ComponentProps<"input">, "onChange"> & {
   value: string;
@@ -121,6 +129,26 @@ export const LayoutConfigPanel = ({
     [config, onConfigChangeAction],
   );
 
+  const handleFontChange = useCallback(
+    (fontId: FontId) => {
+      onConfigChangeAction({
+        ...config,
+        fontId,
+      });
+    },
+    [config, onConfigChangeAction],
+  );
+
+  const handleFontSizeChange = useCallback(
+    (fontSize: FontSize) => {
+      onConfigChangeAction({
+        ...config,
+        fontSize,
+      });
+    },
+    [config, onConfigChangeAction],
+  );
+
   return (
     <div className="flex h-full flex-col">
       {/* Tab Header */}
@@ -199,6 +227,14 @@ export const LayoutConfigPanel = ({
                 />
               </div>
             </div>
+
+            {/* Typography */}
+            <FontSelector
+              fontId={config.fontId}
+              fontSize={config.fontSize}
+              onFontChangeAction={handleFontChange}
+              onSizeChangeAction={handleFontSizeChange}
+            />
 
             {/* Screenshot Shadow */}
             <div className="space-y-2">

@@ -59,6 +59,15 @@ const config: Config = {
       fontFamily: {
         sans: ["var(--font-sans)", "Inter", "system-ui", "sans-serif"],
         mono: ["SFMono-Regular", "monospace"],
+        // Cover fonts for canvas
+        clean: ["var(--font-clean)", "system-ui", "sans-serif"],
+        professional: ["var(--font-professional)", "system-ui", "sans-serif"],
+        developer: ["var(--font-developer)", "monospace"],
+        bold: ["var(--font-bold)", "system-ui", "sans-serif"],
+        friendly: ["var(--font-friendly)", "system-ui", "sans-serif"],
+        edgy: ["var(--font-edgy)", "system-ui", "sans-serif"],
+        technical: ["var(--font-technical)", "system-ui", "sans-serif"],
+        premium: ["var(--font-premium)", "system-ui", "sans-serif"],
       },
     },
   },

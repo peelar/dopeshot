@@ -21,6 +21,18 @@ export type BackgroundType = "gradient" | "image" | "solid";
 
 export type ShadowIntensity = "low" | "medium" | "high";
 
+export type FontId =
+  | "clean"
+  | "professional"
+  | "developer"
+  | "bold"
+  | "friendly"
+  | "edgy"
+  | "technical"
+  | "premium";
+
+export type FontSize = "sm" | "md" | "lg" | "xl" | "2xl";
+
 export type CustomGradient = {
   from: string; // hex color
   to: string; // hex color
@@ -37,6 +49,8 @@ export type BackgroundConfig = {
 export type LayoutConfig = {
   templateId: string;
   variant: string; // Template-specific variant (e.g., "left", "right", "center")
+  fontId: FontId;
+  fontSize: FontSize;
   text: {
     title: string;
     subtitle?: string;

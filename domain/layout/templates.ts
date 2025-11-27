@@ -3,6 +3,7 @@ import { PopupGradient } from "@/components/templates/PopupGradient";
 import type { ComponentType } from "react";
 import { Asset } from "@/domain/asset/types";
 import { DEFAULT_GRADIENT } from "@/domain/layout/gradients";
+import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
 
 export interface Template {
   id: string;
@@ -22,6 +23,8 @@ export const TEMPLATES: Template[] = [
     createConfig: () => ({
       templateId: "popup-gradient",
       variant: "right",
+      fontId: DEFAULT_FONT_ID,
+      fontSize: DEFAULT_FONT_SIZE,
       text: {
         title: "Project Title",
         subtitle: "A short description.",
