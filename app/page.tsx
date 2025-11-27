@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useCallback, useState } from "react";
+import { Download } from "lucide-react";
 import { TEMPLATES } from "@/domain/layout/templates";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
 import { Asset, ColorPalette } from "@/domain/asset/types";
-import { Download } from "lucide-react";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -18,18 +18,16 @@ import { ColorPaletteResponse } from "@/app/api/analyze-colors/route";
 const DEFAULT_ASSETS: Asset[] = [];
 
 export default function PlaygroundPage() {
-  // Use the first available template (now "popup-gradient")
   const [config, setConfig] = useState(TEMPLATES[0].createConfig());
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isAnalyzingColors, setIsAnalyzingColors] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
+  const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
-  // Announce status to screen readers
   const announce = useCallback((message: string) => {
     setStatusMessage(message);
-    // Clear after announcement
     setTimeout(() => setStatusMessage(""), 3000);
   }, []);
 
@@ -73,12 +71,15 @@ export default function PlaygroundPage() {
 
   const handleFileProcess = useCallback(
     (file: File, kind: "screenshot" | "logo" | "background" = "screenshot") => {
-      // Use FileReader to create a data URL (base64) instead of blob URL
-      // This avoids issues with html-to-image fetching blob resources
       const reader = new FileReader();
+      setIsProcessingUpload(true);
+
       reader.onload = async (e) => {
         const dataUrl = e.target?.result as string;
-        if (!dataUrl) return;
+        if (!dataUrl) {
+          setIsProcessingUpload(false);
+          return;
+        }
 
         const assetId = Math.random().toString(36).substring(7);
         const newAsset: Asset = {
@@ -94,7 +95,6 @@ export default function PlaygroundPage() {
         setHasUploaded(true);
         announce(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
 
-        // Auto-assign to correct asset field and set neutral background during analysis
         setConfig((currentConfig) => {
           const newConfig = {
             ...currentConfig,
@@ -111,7 +111,6 @@ export default function PlaygroundPage() {
             };
           }
 
-          // Use neutral background while analyzing screenshot colors
           if (kind === "screenshot") {
             newConfig.background = {
               type: "solid",
@@ -122,52 +121,58 @@ export default function PlaygroundPage() {
           return newConfig;
         });
 
-        // Analyze colors for screenshots and apply dynamic gradient
         if (kind === "screenshot") {
           setIsAnalyzingColors(true);
           announce("Analyzing colors from screenshot...");
 
-          const colorPalette = await analyzeColors(dataUrl);
-          setIsAnalyzingColors(false);
+          try {
+            const colorPalette = await analyzeColors(dataUrl);
 
-          if (colorPalette) {
-            // Update asset with color palette
-            setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
+            if (colorPalette) {
+              setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
 
-            // Auto-apply dynamic gradient based on extracted colors
-            // Prefer vibrant (LightVibrant) as it's typically the most visually prominent
-            // background-friendly color, falling back to accent (Vibrant)
-            const gradientColor = colorPalette.vibrant ?? colorPalette.accent;
-            const textColor = getContrastTextColor(gradientColor);
-            setConfig((currentConfig) => ({
-              ...currentConfig,
-              colors: {
-                ...currentConfig.colors,
-                text: textColor,
-              },
-              background: {
-                type: "gradient",
-                value: "custom",
-                customGradient: {
-                  from: gradientColor,
-                  to: "#ffffff",
-                  direction: "to right",
+              const gradientColor = colorPalette.vibrant ?? colorPalette.accent;
+              const textColor = getContrastTextColor(gradientColor);
+              setConfig((currentConfig) => ({
+                ...currentConfig,
+                colors: {
+                  ...currentConfig.colors,
+                  text: textColor,
                 },
-              },
-            }));
-            announce("Gradient applied based on your screenshot colors.");
+                background: {
+                  type: "gradient",
+                  value: "custom",
+                  customGradient: {
+                    from: gradientColor,
+                    to: "#ffffff",
+                    direction: "to right",
+                  },
+                },
+              }));
+              announce("Gradient applied based on your screenshot colors.");
+            }
+          } finally {
+            setIsAnalyzingColors(false);
           }
         }
+
+        setIsProcessingUpload(false);
       };
+
+      reader.onerror = () => {
+        setIsProcessingUpload(false);
+        setIsAnalyzingColors(false);
+        announce("Failed to read file. Please try another image.");
+      };
+
       reader.readAsDataURL(file);
     },
     [analyzeColors, announce],
   );
 
   return (
-    <main className="flex h-screen w-full flex-col overflow-hidden bg-background text-foreground">
-      {/* Header */}
-      <header className="flex h-14 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <main className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <a
           href="/"
           aria-label="Go to homepage"
@@ -189,75 +194,89 @@ export default function PlaygroundPage() {
           </div>
           <span className="text-sm font-bold tracking-tight">dopeshot</span>
         </a>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {hasUploaded ? (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleExport}
+              disabled={isExporting}
+              aria-busy={isExporting}
+              aria-label={isExporting ? "Exporting image" : "Export as PNG"}
+            >
+              <Download className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
+              {isExporting ? "Exporting..." : "Export PNG"}
+            </Button>
+          ) : null}
           <ThemeToggle />
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleExport}
-            disabled={!hasUploaded || isExporting}
-            aria-busy={isExporting}
-            aria-label={isExporting ? "Exporting image" : "Export as PNG"}
-          >
-            <Download className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
-            {isExporting ? "Exporting..." : "Export PNG"}
-          </Button>
         </div>
       </header>
 
-      {/* Template Selector */}
-      {hasUploaded && (
-        <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
-      )}
-
-      <div className="flex flex-1 overflow-hidden">
-        {/* Main Preview Area */}
-        <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
-          <div className="flex w-full max-w-4xl items-center justify-center">
-            {!hasUploaded ? (
-              <div className="w-full max-w-md">
-                <UploadDropzone onUpload={handleFileProcess} />
-              </div>
-            ) : (
-              <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
-                <CoverPreview config={config} assets={assets} />
-              </PreviewViewport>
-            )}
-          </div>
+      {!hasUploaded ? (
+        <section className="mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-16 pt-10 sm:pt-14">
+          <div className="max-w-2xl space-y-4">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground">
+              New • Updated layouts
+            </span>
+            <h1 className="text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
+              Transform your screenshots into share-worthy images
+            </h1>
+            <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
+              Go from raw screenshot to polished social post in seconds. Drag a file, or click to
+              upload.
+            </p>
         </div>
 
-        {/* Right Sidebar - Controls */}
-        {hasUploaded && (
-          <div className="w-80 border-l border-border bg-background">
-            <LayoutConfigPanel
-              config={config}
-              onConfigChangeAction={setConfig}
-              assets={assets}
-              onUploadAsset={handleFileProcess}
+          <div className="w-full max-w-3xl">
+            <UploadDropzone
+              onUpload={(file) => handleFileProcess(file, "screenshot")}
+              isUploading={isProcessingUpload}
             />
           </div>
-        )}
-      </div>
+        </section>
+      ) : (
+        <>
+          <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
 
-      {/* Hidden Export Container */}
-      <div
-        id="export-container"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "1280px",
-          height: "720px",
-          zIndex: -100,
-          visibility: "visible",
-          background: "white",
-        }}
-      >
-        {/* The hidden surface mirrors the visible preview (same dimensions + markup) */}
-        <CoverPreview config={config} assets={assets} />
-      </div>
+          <div className="flex flex-1 overflow-hidden">
+            <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
+              <div className="flex w-full max-w-4xl items-center justify-center">
+                <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
+                  <CoverPreview config={config} assets={assets} />
+                </PreviewViewport>
+              </div>
+            </div>
 
-      {/* Live region for screen reader announcements */}
+            <div className="w-80 border-l border-border bg-background">
+              <LayoutConfigPanel
+                config={config}
+                onConfigChangeAction={setConfig}
+                assets={assets}
+                onUploadAsset={handleFileProcess}
+              />
+            </div>
+          </div>
+        </>
+      )}
+
+      {hasUploaded ? (
+        <div
+          id="export-container"
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "1280px",
+            height: "720px",
+            zIndex: -100,
+            visibility: "visible",
+            background: "white",
+          }}
+        >
+          <CoverPreview config={config} assets={assets} />
+        </div>
+      ) : null}
+
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {statusMessage}
       </div>
