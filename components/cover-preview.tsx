@@ -7,9 +7,15 @@ interface CoverPreviewProps {
   config: LayoutConfig;
   className?: string;
   assets?: Asset[];
+  onTextChange?: (field: "title" | "subtitle", value: string) => void;
 }
 
-export function CoverPreview({ config, className, assets = [] }: CoverPreviewProps) {
+export function CoverPreview({
+  config,
+  className,
+  assets = [],
+  onTextChange,
+}: CoverPreviewProps) {
   const template = getTemplateById(config.templateId);
 
   if (!template) {
@@ -32,7 +38,11 @@ export function CoverPreview({ config, className, assets = [] }: CoverPreviewPro
         aspectRatio: "1280 / 720",
       }}
     >
-      <TemplateComponent config={config} assets={assets} />
+      <TemplateComponent
+        config={config}
+        assets={assets}
+        onTextChange={onTextChange}
+      />
     </div>
   );
 }

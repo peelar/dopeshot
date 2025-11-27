@@ -10,7 +10,6 @@ import {
   ShadowIntensity,
 } from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/utils";
@@ -18,45 +17,6 @@ import { GradientPicker } from "@/components/gradient-picker";
 import { FontSelector } from "@/components/font-selector";
 
 type SidebarTab = "design" | "assets";
-
-// Debounced input component that manages local state and delays parent updates
-function DebouncedInput({
-  value,
-  onChange,
-  delay = 100,
-  ...props
-}: Omit<React.ComponentProps<"input">, "onChange"> & {
-  value: string;
-  onChange: (value: string) => void;
-  delay?: number;
-}) {
-  const [localValue, setLocalValue] = useState(value);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
-
-  // Sync local state when external value changes (e.g., template switch)
-  useEffect(() => {
-    setLocalValue(value);
-  }, [value]);
-
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setLocalValue(newValue);
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    timeoutRef.current = setTimeout(() => {
-      onChange(newValue);
-    }, delay);
-  };
-
-  return <Input {...props} value={localValue} onChange={handleChange} />;
-}
 
 interface LayoutConfigProps {
   config: LayoutConfig;
@@ -104,16 +64,6 @@ export const LayoutConfigPanel = ({
       }
     }
   }, [config.background?.type]);
-
-  const handleTextChange = useCallback(
-    (field: "title" | "subtitle", value: string) => {
-      onConfigChangeAction({
-        ...config,
-        text: { ...config.text, [field]: value },
-      });
-    },
-    [config, onConfigChangeAction],
-  );
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
@@ -202,32 +152,6 @@ export const LayoutConfigPanel = ({
             aria-labelledby="tab-design"
             className="space-y-6"
           >
-            {/* Text Inputs */}
-            <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="title-input" className="text-xs text-muted-foreground">
-                  Title
-                </Label>
-                <DebouncedInput
-                  id="title-input"
-                  value={config.text.title}
-                  onChange={(value) => handleTextChange("title", value)}
-                  placeholder="Project Title"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="subtitle-input" className="text-xs text-muted-foreground">
-                  Subtitle
-                </Label>
-                <DebouncedInput
-                  id="subtitle-input"
-                  value={config.text.subtitle || ""}
-                  onChange={(value) => handleTextChange("subtitle", value)}
-                  placeholder="A short description"
-                />
-              </div>
-            </div>
-
             {/* Typography */}
             <FontSelector
               fontId={config.fontId}

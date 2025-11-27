@@ -124,3 +124,37 @@ export function darkenColor(hex: string, percent: number): string {
   return `#${[r, g, b].map((c) => c.toString(16).padStart(2, "0")).join("")}`;
 }
 
+const DIRECTION_KEYWORD_ANGLE: Record<string, number> = {
+  "to top": 0,
+  "to top right": 45,
+  "to right": 90,
+  "to bottom right": 135,
+  "to bottom": 180,
+  "to bottom left": 225,
+  "to left": 270,
+  "to top left": 315,
+};
+
+function normalizeKeyword(direction: string): string {
+  return direction.trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+export function directionStringToDegrees(direction?: string): number {
+  if (!direction) return 90;
+
+  const normalized = normalizeKeyword(direction);
+  if (normalized.endsWith("deg")) {
+    const parsed = parseFloat(normalized.replace("deg", ""));
+    if (!Number.isNaN(parsed)) {
+      return ((parsed % 360) + 360) % 360;
+    }
+  }
+
+  return DIRECTION_KEYWORD_ANGLE[normalized] ?? 90;
+}
+
+export function degreesToDirection(angle: number): string {
+  const normalized = ((Math.round(angle) % 360) + 360) % 360;
+  return `${normalized}deg`;
+}
+

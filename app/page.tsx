@@ -14,8 +14,10 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
 import { getContrastTextColor } from "@/domain/layout/gradient-utils";
 import { ColorPaletteResponse } from "@/app/api/analyze-colors/route";
+import { Sora } from "next/font/google";
 
 const DEFAULT_ASSETS: Asset[] = [];
+const sora = Sora({ subsets: ["latin"] });
 
 export default function PlaygroundPage() {
   const [config, setConfig] = useState(TEMPLATES[0].createConfig());
@@ -29,6 +31,16 @@ export default function PlaygroundPage() {
   const announce = useCallback((message: string) => {
     setStatusMessage(message);
     setTimeout(() => setStatusMessage(""), 3000);
+  }, []);
+
+  const handleTextChange = useCallback((field: "title" | "subtitle", value: string) => {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      text: {
+        ...currentConfig.text,
+        [field]: value,
+      },
+    }));
   }, []);
 
   const handleExport = useCallback(async () => {
@@ -172,11 +184,11 @@ export default function PlaygroundPage() {
 
   return (
     <main className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-border bg-background/90 px-8 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <a
           href="/"
           aria-label="Go to homepage"
-          className="flex items-center gap-2 transition-opacity hover:opacity-80"
+          className="flex items-center gap-2 pl-4 transition-opacity hover:opacity-80"
         >
           <div
             className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-background"
@@ -213,19 +225,35 @@ export default function PlaygroundPage() {
       </header>
 
       {!hasUploaded ? (
-        <section className="mx-auto flex max-w-6xl flex-col gap-10 px-4 pb-16 pt-10 sm:pt-14">
-          <div className="max-w-2xl space-y-4">
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground">
-              New • Updated layouts
-            </span>
-            <h1 className="text-3xl font-semibold leading-tight sm:text-4xl md:text-5xl">
-              Transform your screenshots into share-worthy images
+        <section className="mx-auto flex max-w-7xl flex-col gap-10 px-8 pb-16 pt-10 sm:pt-14">
+          <div className="max-w-3xl space-y-4">
+            <h1
+              className={`${sora.className} text-[32px] font-medium leading-[1.2] tracking-[calc(-0.015em)] sm:text-[4rem] sm:leading-[1.15] lg:text-[60px] lg:leading-[1.1]`}
+            >
+              <span className="inline-block font-normal">
+                Your product is{" "}
+                <span className="bg-gradient-to-r from-[#EA580C] to-[#EC4899] bg-clip-text text-transparent">
+                  dope
+                </span>
+                <span className="bg-gradient-to-r from-[#EA580C] to-[#EC4899] bg-clip-text align-middle text-[0.95em] text-transparent">
+                  .
+                </span>
+              </span>
+              <br />
+              <span className="inline-block font-extrabold">
+                Your screenshots
+                <br />
+                should be{" "}
+                <span className="bg-gradient-to-r from-[#EA580C] to-[#EC4899] bg-clip-text text-transparent">
+                  too
+                </span>
+              </span>
             </h1>
-            <p className="max-w-xl text-base text-muted-foreground sm:text-lg">
+            <p className="max-w-2xl text-base text-muted-foreground sm:text-lg">
               Go from raw screenshot to polished social post in seconds. Drag a file, or click to
               upload.
             </p>
-        </div>
+          </div>
 
           <div className="w-full max-w-3xl">
             <UploadDropzone
@@ -235,14 +263,14 @@ export default function PlaygroundPage() {
           </div>
         </section>
       ) : (
-        <>
+        <div className="flex flex-1 flex-col gap-4 px-8">
           <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
 
           <div className="flex flex-1 overflow-hidden">
-            <div className="flex flex-1 items-center justify-center overflow-auto bg-background p-8">
-              <div className="flex w-full max-w-4xl items-center justify-center">
+            <div className="flex flex-1 items-start justify-center overflow-auto bg-background p-8">
+              <div className="flex w-full max-w-4xl items-start justify-center">
                 <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
-                  <CoverPreview config={config} assets={assets} />
+                  <CoverPreview config={config} assets={assets} onTextChange={handleTextChange} />
                 </PreviewViewport>
               </div>
             </div>
@@ -256,7 +284,7 @@ export default function PlaygroundPage() {
               />
             </div>
           </div>
-        </>
+        </div>
       )}
 
       {hasUploaded ? (

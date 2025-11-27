@@ -63,7 +63,7 @@ const fontVariables = [
 ].join(" ");
 
 export const metadata: Metadata = {
-  title: "Dopeshot",
+  title: "dopeshot",
   description: "Design cover art with manual layout configuration and Supabase",
 };
 
@@ -75,13 +75,15 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${fontVariables} min-h-screen bg-background font-sans antialiased tracking-tight`}
-        style={{
-          // Map geist variable to our naming convention
-          "--font-clean": "var(--font-geist-sans)",
-          // Use Inter as default sans-serif
-          "--font-sans": "var(--font-professional)",
-        } as React.CSSProperties}
+        className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
+        style={
+          {
+            // Map geist variable to our naming convention
+            "--font-clean": "var(--font-geist-sans)",
+            // Use Inter as default sans-serif
+            "--font-sans": "var(--font-professional)",
+          } as React.CSSProperties
+        }
         suppressHydrationWarning
       >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>

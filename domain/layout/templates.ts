@@ -11,7 +11,12 @@ export interface Template {
   description: string;
   variants: string[]; // Available layout variants for this template
   createConfig: () => LayoutConfig;
-  component: ComponentType<{ config: LayoutConfig; assets?: Asset[]; className?: string }>;
+  component: ComponentType<{
+    config: LayoutConfig;
+    assets?: Asset[];
+    className?: string;
+    onTextChange?: (field: "title" | "subtitle", value: string) => void;
+  }>;
 }
 
 export const TEMPLATES: Template[] = [
@@ -26,8 +31,8 @@ export const TEMPLATES: Template[] = [
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
       text: {
-        title: "Project Title",
-        subtitle: "A short description.",
+        title: "Change me",
+        subtitle: "Drop some vibes and tell the story.",
       },
       colors: {
         background: "indigo-50",

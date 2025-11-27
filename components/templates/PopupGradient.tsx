@@ -1,4 +1,5 @@
-import { useMemo, memo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, CSSProperties, ElementType, KeyboardEvent } from "react";
 import { LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
@@ -16,6 +17,7 @@ interface PopupGradientProps {
   config: LayoutConfig;
   assets?: Asset[];
   className?: string;
+  onTextChange?: (field: "title" | "subtitle", value: string) => void;
 }
 
 // Pre-computed color token maps (module-level to avoid recreation)
@@ -67,7 +69,12 @@ function tokenToTextColorClass(token: string): string {
   return TEXT_CLASS_MAP[token] || "text-slate-900";
 }
 
-function PopupGradientComponent({ config, assets = [], className }: PopupGradientProps) {
+function PopupGradientComponent({
+  config,
+  assets = [],
+  className,
+  onTextChange,
+}: PopupGradientProps) {
   // Memoize asset map to avoid recreation on every render
   const { screenshot, logo, assetMap } = useMemo(() => {
     const map = new Map(assets.map((a) => [a.id, a]));
@@ -105,6 +112,9 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
   const fontSize = getFontSizeById(config.fontSize);
   const titleStyle = { ...fontStyle, fontSize: `${fontSize.titleRem}rem` };
   const subtitleStyle = { ...fontStyle, fontSize: `${fontSize.subtitleRem}rem` };
+  const textColorClass = tokenToTextColorClass(config.colors.text);
+  const titleClassName = cn("font-bold", fontSize.titleClass, textColorClass);
+  const subtitleClassName = cn("mt-4 min-h-[1.2rem]", fontSize.subtitleClass, textColorClass);
 
   return (
     <div
@@ -128,33 +138,43 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
           />
         </div>
       )}
+      {!logo && (
+        <div className="absolute left-8 top-8 z-10">
+          <div
+            className="group flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 transition hover:border-white/40 hover:text-white/80"
+            aria-hidden="true"
+          >
+            Drop your logo here
+          </div>
+        </div>
+      )}
 
       {/* Content based on image position */}
       {imagePosition === "right" && (
         <>
           {/* Text on left */}
           <div className="absolute left-8 top-[30%] z-10 max-w-lg">
-            <h1
-              className={cn(
-                "font-bold",
-                fontSize.titleClass,
-                tokenToTextColorClass(config.colors.text),
-              )}
+            <InlineEditableText
+              element="h1"
+              field="title"
+              value={config.text.title}
+              placeholder="Change me"
+              className={titleClassName}
               style={titleStyle}
-            >
-              {config.text.title}
-            </h1>
-            {config.text.subtitle && (
-              <p
-                className={cn(
-                  "mt-4",
-                  fontSize.subtitleClass,
-                  tokenToTextColorClass(config.colors.text),
-                )}
+              ariaLabel="Edit title"
+              onTextChange={onTextChange}
+            />
+            {(config.text.subtitle || onTextChange) && (
+              <InlineEditableText
+                element="p"
+                field="subtitle"
+                value={config.text.subtitle}
+                placeholder="Drop some flavor"
+                className={subtitleClassName}
                 style={subtitleStyle}
-              >
-                {config.text.subtitle}
-              </p>
+                ariaLabel="Edit subtitle"
+                onTextChange={onTextChange}
+              />
             )}
           </div>
 
@@ -216,27 +236,27 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
 
           {/* Text on right */}
           <div className="absolute right-8 top-[30%] z-10 max-w-lg text-right">
-            <h1
-              className={cn(
-                "font-bold",
-                fontSize.titleClass,
-                tokenToTextColorClass(config.colors.text),
-              )}
+            <InlineEditableText
+              element="h1"
+              field="title"
+              value={config.text.title}
+              placeholder="Change me"
+              className={cn(titleClassName, "text-right")}
               style={titleStyle}
-            >
-              {config.text.title}
-            </h1>
-            {config.text.subtitle && (
-              <p
-                className={cn(
-                  "mt-4",
-                  fontSize.subtitleClass,
-                  tokenToTextColorClass(config.colors.text),
-                )}
+              ariaLabel="Edit title"
+              onTextChange={onTextChange}
+            />
+            {(config.text.subtitle || onTextChange) && (
+              <InlineEditableText
+                element="p"
+                field="subtitle"
+                value={config.text.subtitle}
+                placeholder="Drop some flavor"
+                className={cn(subtitleClassName, "text-right")}
                 style={subtitleStyle}
-              >
-                {config.text.subtitle}
-              </p>
+                ariaLabel="Edit subtitle"
+                onTextChange={onTextChange}
+              />
             )}
           </div>
         </>
@@ -246,27 +266,27 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
         <>
           {/* Text on top */}
           <div className="absolute left-1/2 top-[12%] z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center">
-            <h1
-              className={cn(
-                "font-bold",
-                fontSize.titleClass,
-                tokenToTextColorClass(config.colors.text),
-              )}
+            <InlineEditableText
+              element="h1"
+              field="title"
+              value={config.text.title}
+              placeholder="Change me"
+              className={titleClassName}
               style={titleStyle}
-            >
-              {config.text.title}
-            </h1>
-            {config.text.subtitle && (
-              <p
-                className={cn(
-                  "mt-4",
-                  fontSize.subtitleClass,
-                  tokenToTextColorClass(config.colors.text),
-                )}
+              ariaLabel="Edit title"
+              onTextChange={onTextChange}
+            />
+            {(config.text.subtitle || onTextChange) && (
+              <InlineEditableText
+                element="p"
+                field="subtitle"
+                value={config.text.subtitle}
+                placeholder="Drop some flavor"
+                className={subtitleClassName}
                 style={subtitleStyle}
-              >
-                {config.text.subtitle}
-              </p>
+                ariaLabel="Edit subtitle"
+                onTextChange={onTextChange}
+              />
             )}
           </div>
 
@@ -298,6 +318,147 @@ function PopupGradientComponent({ config, assets = [], className }: PopupGradien
         </>
       )}
     </div>
+  );
+}
+
+type TextField = "title" | "subtitle";
+
+interface InlineEditableTextProps {
+  element: ElementType;
+  field: TextField;
+  value?: string;
+  placeholder: string;
+  className?: string;
+  style?: CSSProperties;
+  ariaLabel?: string;
+  onTextChange?: (field: TextField, value: string) => void;
+}
+
+function InlineEditableText({
+  element,
+  field,
+  value,
+  placeholder,
+  className,
+  style,
+  ariaLabel,
+  onTextChange,
+}: InlineEditableTextProps) {
+  const normalizedValue = value ?? "";
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState(normalizedValue);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isEditable = Boolean(onTextChange);
+  const Tag = element;
+
+  useEffect(() => {
+    setDraft(normalizedValue);
+  }, [normalizedValue]);
+
+  useEffect(() => {
+    if (!isEditing) return;
+    inputRef.current?.focus();
+  }, [isEditing]);
+
+  const startEditing = useCallback(() => {
+    if (!isEditable) return;
+    setIsEditing(true);
+  }, [isEditable]);
+
+  const cancelEditing = useCallback(() => {
+    setIsEditing(false);
+    setDraft(normalizedValue);
+  }, [normalizedValue]);
+
+  const handleCommit = useCallback(() => {
+    setIsEditing(false);
+    if (!onTextChange) {
+      return;
+    }
+    if (draft !== normalizedValue) {
+      onTextChange(field, draft);
+    }
+  }, [draft, field, normalizedValue, onTextChange]);
+
+  const handleBlur = useCallback(() => {
+    if (!isEditing) return;
+    handleCommit();
+  }, [handleCommit, isEditing]);
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (!isEditable) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        cancelEditing();
+        return;
+      }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        handleCommit();
+      }
+    },
+    [cancelEditing, handleCommit, isEditable],
+  );
+
+  const handleDraftChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setDraft(event.target.value);
+  }, []);
+
+  const startKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLElement>) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        startEditing();
+      }
+    },
+    [startEditing],
+  );
+
+  if (!isEditable) {
+    return (
+      <Tag className={className} style={style}>
+        {normalizedValue}
+      </Tag>
+    );
+  }
+
+  const displayClassName = cn(
+    className,
+    "cursor-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+  );
+
+  if (isEditing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={handleDraftChange}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        className={cn(
+          className,
+          "border-0 bg-transparent p-0 text-inherit outline-none placeholder:text-muted-foreground focus-visible:outline-none",
+        )}
+        style={style}
+        aria-label={ariaLabel}
+      />
+    );
+  }
+
+  return (
+    <Tag
+      className={displayClassName}
+      style={style}
+      onClick={startEditing}
+      onKeyDown={startKeyDown}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel ? `${ariaLabel} (press Enter to edit)` : undefined}
+    >
+      {normalizedValue}
+    </Tag>
   );
 }
 
