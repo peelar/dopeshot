@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { TEMPLATES } from "@/domain/layout/templates";
+import { TEMPLATES, getTemplateById } from "@/domain/layout/templates";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
@@ -15,6 +15,8 @@ import { TemplateSelector } from "@/components/template-selector";
 import { getContrastTextColor } from "@/domain/layout/gradient-utils";
 import { ColorPaletteResponse } from "@/app/api/analyze-colors/route";
 import { Sora } from "next/font/google";
+import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
+import { cn } from "@/utils";
 
 const DEFAULT_ASSETS: Asset[] = [];
 const sora = Sora({ subsets: ["latin"] });
@@ -27,6 +29,7 @@ export default function PlaygroundPage() {
   const [isAnalyzingColors, setIsAnalyzingColors] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
+  const currentTemplate = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
 
   const announce = useCallback((message: string) => {
     setStatusMessage(message);
@@ -64,6 +67,22 @@ export default function PlaygroundPage() {
       setIsExporting(false);
     }
   }, [config.assets.screenshot, announce]);
+
+  const handleVariantChange = useCallback((variant: string) => {
+    setConfig((currentConfig) => {
+      const template = getTemplateById(currentConfig.templateId);
+      if (!template || !template.variants.includes(variant) || currentConfig.variant === variant) {
+        return currentConfig;
+      }
+
+      return {
+        ...currentConfig,
+        variant,
+      };
+    });
+  }, []);
+
+  const showLayoutToggle = (currentTemplate?.variants.length ?? 0) > 1;
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     try {
@@ -267,11 +286,22 @@ export default function PlaygroundPage() {
           <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
 
           <div className="flex flex-1 overflow-hidden">
-            <div className="flex flex-1 items-start justify-center overflow-auto bg-background p-8">
-              <div className="flex w-full max-w-4xl items-start justify-center">
-                <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
-                  <CoverPreview config={config} assets={assets} onTextChange={handleTextChange} />
-                </PreviewViewport>
+            <div className="flex flex-1 flex-col overflow-hidden bg-background px-4 pb-8 pt-4 sm:p-8">
+              <div
+                className={cn(
+                  "mx-auto flex w-full max-w-4xl flex-col",
+                  showLayoutToggle ? "gap-4" : "gap-2",
+                )}
+              >
+                {showLayoutToggle ? (
+                  <LayoutVariantToggle config={config} onVariantChange={handleVariantChange} />
+                ) : null}
+
+                <div className="flex w-full justify-center">
+                  <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
+                    <CoverPreview config={config} assets={assets} onTextChange={handleTextChange} />
+                  </PreviewViewport>
+                </div>
               </div>
             </div>
 

@@ -1,3 +1,7 @@
+---
+status: COMPLETED
+---
+
 # Layout Variant UI PRD
 
 ## Objective
