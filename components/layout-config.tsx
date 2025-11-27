@@ -293,7 +293,8 @@ export const LayoutConfigPanel = ({
                 asset={logoAsset}
                 onUpload={(file) => onUploadAsset?.(file, "logo")}
                 disabled={!onUploadAsset}
-                label="Upload Logo"
+                label="Drop your logo"
+                variant="logo"
               />
             </div>
           </div>
@@ -344,9 +345,16 @@ interface AssetDropzoneProps {
   onUpload?: (file: File) => void;
   disabled?: boolean;
   label: string;
+  variant?: "default" | "logo";
 }
 
-const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps) => {
+const AssetDropzone = ({
+  asset,
+  onUpload,
+  disabled,
+  label,
+  variant = "default",
+}: AssetDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const handleFile = useCallback(
@@ -396,9 +404,13 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
       aria-disabled={disabled}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className={`group relative flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-      }`}
+      className={cn(
+        "group relative w-full rounded-2xl border border-border bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted/50",
+        variant === "logo"
+          ? "flex min-h-[120px] flex-col items-center gap-4 px-4 py-4"
+          : "flex min-h-[72px] items-center gap-3 px-3 py-2",
+      )}
     >
       <input
         type="file"
@@ -411,7 +423,12 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
         tabIndex={-1}
       />
 
-      <div className="relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
+      <div
+        className={cn(
+          "relative overflow-hidden rounded border border-border bg-background",
+          variant === "logo" ? "h-16 w-16" : "h-10 w-14",
+        )}
+      >
         {asset ? (
           <img
             src={asset.url}
@@ -424,11 +441,24 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-xs font-medium text-foreground">
+      <div
+        className={cn(
+          variant === "logo"
+            ? "flex flex-col items-center gap-1 text-center"
+            : "flex min-w-0 flex-1 flex-col",
+        )}
+      >
+        <span
+          className={cn(
+            "font-semibold text-foreground",
+            variant === "logo" ? "text-sm" : "text-xs",
+          )}
+        >
           {asset ? asset.name : label}
         </span>
-        <span className="truncate text-[10px] text-muted-foreground">
+        <span
+          className={cn("text-muted-foreground", variant === "logo" ? "text-xs" : "text-[10px]")}
+        >
           {asset ? "Click to replace" : "PNG, JPG"}
         </span>
       </div>

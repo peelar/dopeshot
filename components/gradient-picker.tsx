@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  useState,
-  useMemo,
-  useCallback,
-  useRef,
-  useEffect,
-  useLayoutEffect,
-  type ChangeEvent,
-  type KeyboardEvent,
-  type PointerEvent,
-} from "react";
-import { Label } from "@/components/ui/label";
+import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradients";
 import { BackgroundConfig, ColorToken, CustomGradient } from "@/domain/layout/types";
 import { ColorPalette } from "@/domain/asset/types";
@@ -22,7 +11,6 @@ import {
   degreesToDirection,
 } from "@/domain/layout/gradient-utils";
 import { cn } from "@/utils";
-import { ChevronDown, Sparkles } from "lucide-react";
 
 // Debounced color input that delays updates while dragging
 function DebouncedColorInput({
@@ -62,7 +50,7 @@ function DebouncedColorInput({
   };
 
   return (
-    <div className="flex flex-1 items-center gap-2 rounded-md border border-border/50 bg-background px-2 py-1.5">
+    <div className="flex flex-1 items-center gap-2 rounded-lg border border-border/30 bg-background/60 px-2 py-1">
       <input
         type="color"
         id={id}
@@ -71,12 +59,17 @@ function DebouncedColorInput({
         className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent p-0"
         aria-label={`${label} color`}
       />
-      <label htmlFor={id} className="text-xs text-muted-foreground cursor-pointer">
+      <label
+        htmlFor={id}
+        className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground"
+      >
         {label}
       </label>
     </div>
   );
 }
+
+type GradientSource = "screenshot" | "custom" | "preset";
 
 interface GradientPickerProps {
   background: BackgroundConfig;
@@ -85,9 +78,20 @@ interface GradientPickerProps {
 }
 
 export function GradientPicker({ background, colorPalette, onChangeAction }: GradientPickerProps) {
-  const [expanded, setExpanded] = useState(false);
+  const dynamicGradients = useMemo((): CustomGradient[] => {
+    if (!colorPalette) return [];
+    const gradients: CustomGradient[] = [];
 
-  // Memoize current gradient CSS for display
+    if (colorPalette.vibrant) {
+      gradients.push({ from: colorPalette.vibrant, to: "#ffffff", direction: "to right" });
+    }
+    gradients.push({ from: colorPalette.accent, to: "#ffffff", direction: "to right" });
+    gradients.push({ from: colorPalette.accent, to: "#1e1e1e", direction: "to right" });
+    gradients.push({ from: colorPalette.dominant, to: colorPalette.accent, direction: "to right" });
+
+    return gradients;
+  }, [colorPalette]);
+
   const currentGradientCss = useMemo((): string => {
     if (background.customGradient) {
       return customGradientToCss(background.customGradient);
@@ -104,18 +108,87 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
     [background.customGradient?.direction],
   );
 
-  const handlePresetSelect = useCallback((gradientId: string) => {
-    const gradient = getGradientById(gradientId);
-    onChangeAction(
-      { type: "gradient", value: gradientId, customGradient: undefined },
-      gradient?.textColor ?? "slate-900",
-    );
-  }, [onChangeAction]);
+  const defaultSource = useMemo<GradientSource>(() => {
+    if (
+      background.type === "gradient" &&
+      background.value &&
+      background.value !== "custom" &&
+      !background.customGradient
+    ) {
+      return "preset";
+    }
+    if (dynamicGradients.length > 0) {
+      return "screenshot";
+    }
+    return "custom";
+  }, [
+    background.type,
+    background.value,
+    background.customGradient?.from,
+    background.customGradient?.to,
+    background.customGradient?.direction,
+    dynamicGradients.length,
+  ]);
 
-  const handleCustomGradientSelect = useCallback((gradient: CustomGradient) => {
-    const textColor = getContrastTextColor(gradient.from);
-    onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
-  }, [onChangeAction]);
+  const [activeSource, setActiveSource] = useState<GradientSource>(() => defaultSource);
+  const sourceOverrideRef = useRef(false);
+  const lockManualSource = useCallback(() => {
+    sourceOverrideRef.current = true;
+  }, []);
+  const setActiveSourceWithOverride = useCallback(
+    (source: GradientSource) => {
+      lockManualSource();
+      setActiveSource(source);
+    },
+    [lockManualSource],
+  );
+
+  useEffect(() => {
+    if (sourceOverrideRef.current) {
+      sourceOverrideRef.current = false;
+      return;
+    }
+    if (defaultSource !== activeSource) {
+      setActiveSource(defaultSource);
+    }
+  }, [defaultSource, activeSource]);
+
+  const [fineTuneOpen, setFineTuneOpen] = useState(false);
+  const currentTextColor = useMemo<ColorToken>(() => {
+    if (background.customGradient) {
+      return getContrastTextColor(background.customGradient.from);
+    }
+    if (background.type === "gradient" && background.value) {
+      return getGradientById(background.value)?.textColor ?? "slate-900";
+    }
+    return "slate-900";
+  }, [background.customGradient, background.type, background.value]);
+
+  const hasScreenshotGradients = dynamicGradients.length > 0;
+  const activePresetId =
+    background.type === "gradient" && !background.customGradient ? background.value : undefined;
+
+  const handlePresetSelect = useCallback(
+    (gradientId: string) => {
+      const gradient = getGradientById(gradientId);
+      if (!gradient) return;
+      setActiveSourceWithOverride("preset");
+      onChangeAction(
+        { type: "gradient", value: gradientId, customGradient: undefined },
+        gradient.textColor ?? "slate-900",
+      );
+    },
+    [onChangeAction, setActiveSourceWithOverride],
+  );
+
+  const handleCustomGradientSelect = useCallback(
+    (gradient: CustomGradient) => {
+      lockManualSource();
+      const textColor = getContrastTextColor(gradient.from);
+      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
+    },
+    [lockManualSource, onChangeAction],
+  );
 
   const handleColorChange = useCallback(
     (colorType: "from" | "to", value: string) => {
@@ -124,15 +197,22 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
         to: "#ffffff",
         direction: degreesToDirection(currentAngle),
       };
-      const newGradient = {
+      const newGradient: CustomGradient = {
         ...current,
         direction: current.direction ?? degreesToDirection(currentAngle),
         [colorType]: value,
       };
+      lockManualSource();
       const textColor = getContrastTextColor(newGradient.from);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [background.customGradient, colorPalette?.accent, currentAngle, onChangeAction],
+    [
+      background.customGradient,
+      colorPalette?.accent,
+      currentAngle,
+      lockManualSource,
+      onChangeAction,
+    ],
   );
 
   const handleDirectionChange = useCallback(
@@ -142,289 +222,300 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
         to: "#ffffff",
         direction: degreesToDirection(currentAngle),
       };
-      const newGradient = {
+      const newGradient: CustomGradient = {
         ...current,
         direction: degreesToDirection(angle),
       };
+      lockManualSource();
       const textColor = getContrastTextColor(newGradient.from);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [background.customGradient, colorPalette?.accent, currentAngle, onChangeAction],
+    [
+      background.customGradient,
+      colorPalette?.accent,
+      currentAngle,
+      lockManualSource,
+      onChangeAction,
+    ],
   );
 
-  // Memoize dynamic gradients from screenshot colors
-  // Order: vibrant (LightVibrant) first as it's the preferred default for backgrounds,
-  // then accent variants, then dominant-to-accent combination
-  const dynamicGradients = useMemo((): CustomGradient[] => {
-    if (!colorPalette) return [];
-    const gradients: CustomGradient[] = [];
-    
-    // Vibrant (LightVibrant) to white - preferred default, most background-friendly
-    if (colorPalette.vibrant) {
-      gradients.push({ from: colorPalette.vibrant, to: "#ffffff", direction: "to right" });
-    }
-    // Accent (Vibrant) to white
-    gradients.push({ from: colorPalette.accent, to: "#ffffff", direction: "to right" });
-    // Accent to dark
-    gradients.push({ from: colorPalette.accent, to: "#1e1e1e", direction: "to right" });
-    // Dominant to accent - color combination
-    gradients.push({ from: colorPalette.dominant, to: colorPalette.accent, direction: "to right" });
-    
-    return gradients;
-  }, [colorPalette]);
+  const handleScreenshotSelect = useCallback(
+    (gradient: CustomGradient) => {
+      setActiveSourceWithOverride("screenshot");
+      handleCustomGradientSelect(gradient);
+    },
+    [handleCustomGradientSelect, setActiveSourceWithOverride],
+  );
 
   return (
-    <div className="space-y-2">
-      {/* Trigger */}
-      <button
-        type="button"
-        onClick={() => setExpanded(!expanded)}
-        className="group flex w-full items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50"
-        aria-expanded={expanded}
-        aria-label="Select gradient"
-      >
-        <div
-          className="h-10 w-14 shrink-0 rounded border border-border"
-          style={{ background: currentGradientCss }}
-        />
-        <div className="flex min-w-0 flex-1 flex-col text-left">
-          <span className="truncate text-xs font-medium text-foreground">
-            {background.customGradient ? "Custom Gradient" : getGradientById(background.value)?.name ?? "Gradient"}
-          </span>
-          <span className="truncate text-[10px] text-muted-foreground">Click to change</span>
+    <div className="space-y-5">
+      <div className="rounded-2xl border border-border/60 bg-muted/30">
+        <div className="space-y-3 border-b border-border/40 px-4 py-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+            Gradient
+          </p>
+          <GradientSourceTabs
+            activeSource={activeSource}
+            onSelect={setActiveSourceWithOverride}
+            screenshotAvailable={hasScreenshotGradients}
+          />
         </div>
-        <ChevronDown
-          aria-hidden="true"
-          className={cn(
-            "h-4 w-4 text-muted-foreground transition-transform",
-            expanded && "rotate-180",
-          )}
-        />
-      </button>
-
-      {/* Collapsible content */}
-      {expanded && (
-        <div className="space-y-3 rounded-md bg-zinc-100 p-3 dark:bg-zinc-800">
-          {/* Dynamic gradients from screenshot */}
-          {dynamicGradients.length > 0 && (
-            <div className="space-y-2">
-              <div>
-                <div className="flex items-center gap-1.5">
-                  <Sparkles className="h-3 w-3 text-amber-500" aria-hidden="true" />
-                  <Label className="text-xs font-medium text-foreground">From Screenshot</Label>
-                </div>
-                <p className="mt-0.5 text-[10px] text-muted-foreground">
-                  Curated gradients based on your image colors
-                </p>
+        <div className="px-4 py-4">
+          <div className="rounded-2xl border border-border/20 bg-background/70 p-4">
+            {activeSource === "screenshot" && (
+              <div className="space-y-5">
+                <ScreenshotGradients
+                  gradients={dynamicGradients}
+                  activeGradient={background.customGradient}
+                  disabled={!hasScreenshotGradients}
+                  onSelect={handleScreenshotSelect}
+                />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                {dynamicGradients.map((g, i) => {
-                  const isSelected = background.customGradient &&
-                    background.customGradient.from === g.from &&
-                    background.customGradient.to === g.to;
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      aria-label={`Dynamic gradient from ${g.from} to ${g.to}`}
-                      aria-pressed={!!isSelected}
-                      className={cn(
-                        "h-10 rounded-md border transition-all hover:opacity-90",
-                        isSelected
-                          ? "border-primary ring-1 ring-primary"
-                          : "border-border/50",
-                      )}
-                      style={{ background: customGradientToCss(g) }}
-                      onClick={() => handleCustomGradientSelect(g)}
-                    />
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Custom color inputs */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-foreground">Custom Colors</Label>
-            <div className="flex gap-2">
-              <DebouncedColorInput
-                id="gradient-from-color"
-                value={background.customGradient?.from ?? colorPalette?.accent ?? "#6366f1"}
-                onChange={(value) => handleColorChange("from", value)}
-                label="From"
+            )}
+            {activeSource === "custom" && (
+              <CustomGradientControls
+                background={background}
+                colorPalette={colorPalette}
+                angle={currentAngle}
+                onColorChange={handleColorChange}
+                onAngleChange={handleDirectionChange}
               />
-              <DebouncedColorInput
-                id="gradient-to-color"
-                value={background.customGradient?.to ?? "#ffffff"}
-                onChange={(value) => handleColorChange("to", value)}
-                label="To"
+            )}
+            {activeSource === "preset" && (
+              <PresetGradients
+                gradients={GRADIENTS}
+                selectedPresetId={activePresetId}
+                onSelect={handlePresetSelect}
               />
-            </div>
-          </div>
-
-          {/* Angle dial */}
-          <div className="space-y-2">
-            <div className="flex items-end justify-between">
-              <Label className="text-xs font-medium text-foreground">Angle</Label>
-              <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">
-                Drag to rotate
-              </span>
-            </div>
-            <GradientAngleDial angle={currentAngle} onChange={handleDirectionChange} />
-          </div>
-
-          {/* Preset gradients */}
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-foreground">Presets</Label>
-            <div className="grid grid-cols-4 gap-1.5">
-              {GRADIENTS.map((g) => {
-                const isSelected = background.type === "gradient" &&
-                  background.value === g.id &&
-                  !background.customGradient;
-                return (
-                  <button
-                    key={g.id}
-                    type="button"
-                    aria-label={`${g.name} gradient preset`}
-                    aria-pressed={isSelected}
-                    className={cn(
-                      "h-8 rounded border transition-all hover:opacity-90",
-                      isSelected
-                        ? "border-primary ring-1 ring-primary"
-                        : "border-border/50",
-                    )}
-                    style={{ background: g.value }}
-                    onClick={() => handlePresetSelect(g.id)}
-                    title={g.name}
-                  />
-                );
-              })}
-            </div>
+            )}
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-interface GradientAngleDialProps {
+interface GradientSourceTabsProps {
+  activeSource: GradientSource;
+  onSelect: (source: GradientSource) => void;
+  screenshotAvailable: boolean;
+}
+
+function GradientSourceTabs({
+  activeSource,
+  onSelect,
+  screenshotAvailable,
+}: GradientSourceTabsProps) {
+  const options: { id: GradientSource; label: string; disabled?: boolean }[] = [
+    { id: "screenshot", label: "From Screenshot", disabled: !screenshotAvailable },
+    { id: "custom", label: "Custom" },
+    { id: "preset", label: "Presets" },
+  ];
+
+  return (
+    <div className="flex w-full gap-2 rounded-lg border border-border/40 bg-muted/20 p-1 text-xs font-medium">
+      {options.map((option) => (
+        <button
+          key={option.id}
+          type="button"
+          className={cn(
+            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition",
+            activeSource === option.id
+              ? "bg-foreground text-background shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+            option.disabled && "cursor-not-allowed opacity-40",
+          )}
+          onClick={() => {
+            if (option.disabled) return;
+            onSelect(option.id);
+          }}
+          aria-pressed={activeSource === option.id}
+          disabled={option.disabled}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+interface ScreenshotGradientsProps {
+  gradients: CustomGradient[];
+  activeGradient?: CustomGradient;
+  disabled: boolean;
+  onSelect: (gradient: CustomGradient) => void;
+}
+
+function ScreenshotGradients({
+  gradients,
+  activeGradient,
+  disabled,
+  onSelect,
+}: ScreenshotGradientsProps) {
+  if (!gradients.length) {
+    return (
+      <div className="rounded-2xl border border-dashed border-border/40 bg-background/50 px-3 py-6 text-center text-xs text-muted-foreground">
+        Upload a screenshot to reveal curated gradients.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-2">
+        {gradients.map((gradient, index) => {
+          const isSelected = areGradientsEqual(activeGradient, gradient);
+          return (
+            <button
+              key={`${gradient.from}-${gradient.to}-${index}`}
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={`Gradient from ${gradient.from} to ${gradient.to}`}
+              className={cn(
+                "h-12 rounded-2xl border transition focus-visible:ring-2 focus-visible:ring-offset-2",
+                isSelected
+                  ? "border-primary ring-1 ring-primary/30"
+                  : "border-border/30 hover:border-foreground",
+              )}
+              style={{ background: customGradientToCss(gradient) }}
+              onClick={() => !disabled && onSelect(gradient)}
+            />
+          );
+        })}
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Colors extracted via AI analysis of your screenshot.
+      </p>
+    </div>
+  );
+}
+
+interface CustomGradientControlsProps {
+  background: BackgroundConfig;
+  colorPalette?: ColorPalette;
+  angle: number;
+  onColorChange: (colorType: "from" | "to", value: string) => void;
+  onAngleChange: (angle: number) => void;
+}
+
+function CustomGradientControls({
+  background,
+  colorPalette,
+  angle,
+  onColorChange,
+  onAngleChange,
+}: CustomGradientControlsProps) {
+  const fromValue = background.customGradient?.from ?? colorPalette?.accent ?? "#6366f1";
+  const toValue = background.customGradient?.to ?? "#ffffff";
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-border/20 bg-background/70 p-3">
+      <div className="space-y-2">
+        <div className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
+          Colors
+        </div>
+        <div className="flex gap-2">
+          <DebouncedColorInput
+            id="gradient-from-color"
+            value={fromValue}
+            onChange={(value) => onColorChange("from", value)}
+            label="From"
+          />
+          <DebouncedColorInput
+            id="gradient-to-color"
+            value={toValue}
+            onChange={(value) => onColorChange("to", value)}
+            label="To"
+          />
+        </div>
+      </div>
+      <GradientAngleControl angle={angle} onChange={onAngleChange} />
+    </div>
+  );
+}
+
+interface PresetGradientsProps {
+  gradients: typeof GRADIENTS;
+  selectedPresetId?: string;
+  onSelect: (gradientId: string) => void;
+}
+
+function PresetGradients({ gradients, selectedPresetId, onSelect }: PresetGradientsProps) {
+  return (
+    <div className="space-y-3">
+      <div className="grid grid-cols-4 gap-2">
+        {gradients.map((gradient) => {
+          const isSelected = selectedPresetId === gradient.id;
+          return (
+            <button
+              key={gradient.id}
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={`${gradient.name} preset`}
+              className={cn(
+                "h-10 rounded-xl border transition focus-visible:ring-2 focus-visible:ring-offset-2",
+                isSelected
+                  ? "border-primary ring-1 ring-primary/40"
+                  : "border-border/30 hover:border-foreground/70",
+              )}
+              style={{ background: gradient.value }}
+              onClick={() => onSelect(gradient.id)}
+            />
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+interface GradientAngleControlProps {
   angle: number;
   onChange: (angle: number) => void;
 }
 
-function GradientAngleDial({ angle, onChange }: GradientAngleDialProps) {
-  const dialRef = useRef<HTMLDivElement>(null);
-  const pointerIdRef = useRef<number | null>(null);
-  const normalizedTarget = ((angle % 360) + 360) % 360;
-  const roundedAngle = Math.round(normalizedTarget);
-  const visualRotationRef = useRef(normalizedTarget);
-  const [visualRotation, setVisualRotation] = useState(normalizedTarget);
+function GradientAngleControl({ angle, onChange }: GradientAngleControlProps) {
+  const normalized = ((Math.round(angle) % 360) + 360) % 360;
 
-  useLayoutEffect(() => {
-    const prevNormalized = ((visualRotationRef.current % 360) + 360) % 360;
-    let delta = normalizedTarget - prevNormalized;
-    if (delta > 180) {
-      delta -= 360;
-    } else if (delta < -180) {
-      delta += 360;
-    }
-    const nextRotation = visualRotationRef.current + delta;
-    visualRotationRef.current = nextRotation;
-    setVisualRotation(nextRotation);
-  }, [normalizedTarget]);
+  const handleRangeChange = (event: ChangeEvent<HTMLInputElement>) => {
+    onChange(Number(event.target.value));
+  };
 
-  const updateFromPointer = useCallback(
-    (clientX: number, clientY: number) => {
-      const rect = dialRef.current?.getBoundingClientRect();
-      if (!rect) return;
-      const centerX = rect.left + rect.width / 2;
-      const centerY = rect.top + rect.height / 2;
-      const dx = clientX - centerX;
-      const dy = centerY - clientY;
-      const radians = Math.atan2(dx, dy);
-      const degrees = (radians * (180 / Math.PI) + 360) % 360;
-      onChange(Math.round(degrees));
-    },
-    [onChange],
-  );
-
-  const handlePointerDown = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      event.preventDefault();
-      pointerIdRef.current = event.pointerId;
-      event.currentTarget.setPointerCapture?.(event.pointerId);
-      updateFromPointer(event.clientX, event.clientY);
-    },
-    [updateFromPointer],
-  );
-
-  const handlePointerMove = useCallback(
-    (event: PointerEvent<HTMLDivElement>) => {
-      if (pointerIdRef.current !== event.pointerId) return;
-      updateFromPointer(event.clientX, event.clientY);
-    },
-    [updateFromPointer],
-  );
-
-  const handlePointerEnd = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    if (pointerIdRef.current !== event.pointerId) return;
-    pointerIdRef.current = null;
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
-  }, []);
-
-  const handleKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLDivElement>) => {
-      const step = event.shiftKey ? 15 : 5;
-      let nextAngle: number | null = null;
-      if (event.key === "ArrowRight" || event.key === "ArrowUp") {
-        nextAngle = (roundedAngle + step) % 360;
-      } else if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
-        nextAngle = (roundedAngle - step + 360) % 360;
-      } else if (event.key === "Home") {
-        nextAngle = 0;
-      } else if (event.key === "End") {
-        nextAngle = 180;
-      } else if (event.key === "PageUp") {
-        nextAngle = (roundedAngle + 45) % 360;
-      } else if (event.key === "PageDown") {
-        nextAngle = (roundedAngle - 45 + 360) % 360;
-      }
-      if (nextAngle === null) return;
-      event.preventDefault();
-      onChange(nextAngle);
-    },
-    [onChange, roundedAngle],
-  );
+  const handleNumberChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const parsed = Number(event.target.value);
+    if (Number.isNaN(parsed)) return;
+    const clamped = Math.max(0, Math.min(360, parsed));
+    onChange(clamped);
+  };
 
   return (
-    <div className="flex flex-col items-center gap-1.5">
-      <div
-        ref={dialRef}
-        role="slider"
-        tabIndex={0}
-        aria-label="Gradient angle"
-        aria-valuemin={0}
-        aria-valuemax={359}
-        aria-valuenow={roundedAngle}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerEnd}
-        onPointerCancel={handlePointerEnd}
-        onKeyDown={handleKeyDown}
-        className="group relative flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border border-border/40 bg-gradient-to-br from-muted/30 via-transparent to-muted/20 shadow-inner transition hover:border-primary focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
-      >
-        <div className="absolute inset-0 rounded-full border border-border/30" />
-        <div
-          className="absolute left-1/2 top-1/2 h-11 w-[1px] origin-bottom rounded-full bg-primary/70 shadow-[0_0_12px_rgba(59,130,246,0.45)] transition-all"
-          style={{ transform: `translate(-50%, -100%) rotate(${visualRotation}deg)` }}
-        />
-        <div className="pointer-events-none flex flex-col items-center justify-center text-[10px] font-semibold uppercase tracking-[0.4em] text-muted-foreground">
-          <span>angle</span>
-          <span className="text-xs text-foreground">{roundedAngle}°</span>
-        </div>
+    <div className="space-y-2 text-xs text-muted-foreground">
+      <div className="flex items-center justify-between uppercase tracking-[0.3em]">
+        <span>Angle</span>
+        <span className="text-[13px] font-semibold text-foreground">{normalized}°</span>
       </div>
-      <span className="text-[10px] text-muted-foreground/80">or use arrows</span>
+      <div className="flex items-center gap-3">
+        <input
+          type="range"
+          min={0}
+          max={360}
+          value={normalized}
+          onChange={handleRangeChange}
+          className="h-1 flex-1 appearance-none rounded-full bg-border/40 accent-primary"
+        />
+        <input
+          type="number"
+          min={0}
+          max={360}
+          value={normalized}
+          onChange={handleNumberChange}
+          className="w-14 rounded border border-border/30 bg-background px-2 py-0.5 text-right text-xs text-foreground"
+        />
+      </div>
     </div>
   );
 }
 
+function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
+  if (!a || !b) return false;
+  return a.from === b.from && a.to === b.to;
+}
