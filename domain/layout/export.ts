@@ -1,6 +1,24 @@
 import { toPng } from "html-to-image";
 
 /**
+ * Waits for the next frame and idle time before proceeding.
+ * More efficient than a fixed timeout.
+ */
+function waitForRender(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => {
+      // Use requestIdleCallback if available, otherwise use a short timeout
+      if ("requestIdleCallback" in window) {
+        (window as typeof window & { requestIdleCallback: (cb: () => void) => void })
+          .requestIdleCallback(() => resolve(), { timeout: 100 });
+      } else {
+        setTimeout(resolve, 50);
+      }
+    });
+  });
+}
+
+/**
  * Exports a DOM element to a PNG file.
  * @param elementId - The ID of the DOM element to export.
  * @param fileName - The name of the file to download.
@@ -12,8 +30,8 @@ export async function exportLayoutAsPng(elementId: string, fileName: string): Pr
   }
 
   try {
-    // Wait a bit longer to ensure rendering and image decoding
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    // Wait for next frame and idle time to ensure rendering is complete
+    await waitForRender();
 
     // Templates always render on a 1280x720 surface. The visible preview is just a scaled version
     // via <PreviewViewport>, so exporting the hidden 1:1 surface preserves layout parity.

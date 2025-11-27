@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, useEffect } from "react";
+import { useRef, useState, type ChangeEvent, useEffect, useMemo, useCallback } from "react";
 import { BackgroundConfig, ColorToken, LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,45 @@ import { cn } from "@/utils";
 import { GradientPicker } from "@/components/gradient-picker";
 
 type SidebarTab = "design" | "assets";
+
+// Debounced input component that manages local state and delays parent updates
+function DebouncedInput({
+  value,
+  onChange,
+  delay = 200,
+  ...props
+}: Omit<React.ComponentProps<"input">, "onChange"> & {
+  value: string;
+  onChange: (value: string) => void;
+  delay?: number;
+}) {
+  const [localValue, setLocalValue] = useState(value);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
+  // Sync local state when external value changes (e.g., template switch)
+  useEffect(() => {
+    setLocalValue(value);
+  }, [value]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
+  }, []);
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+    setLocalValue(newValue);
+
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    timeoutRef.current = setTimeout(() => {
+      onChange(newValue);
+    }, delay);
+  };
+
+  return <Input {...props} value={localValue} onChange={handleChange} />;
+}
 
 interface LayoutConfigProps {
   config: LayoutConfig;
@@ -26,15 +65,21 @@ export const LayoutConfigPanel = ({
 }: LayoutConfigProps) => {
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
 
-  const screenshotAsset = config.assets.screenshot
-    ? assets.find((asset) => asset.id === config.assets.screenshot)
-    : undefined;
-  const logoAsset = config.assets.logo
-    ? assets.find((asset) => asset.id === config.assets.logo)
-    : undefined;
-  const backgroundAsset = config.assets.background
-    ? assets.find((asset) => asset.id === config.assets.background)
-    : undefined;
+  // Memoize asset lookups to avoid recalculating on every render
+  const { screenshotAsset, logoAsset, backgroundAsset } = useMemo(
+    () => ({
+      screenshotAsset: config.assets.screenshot
+        ? assets.find((asset) => asset.id === config.assets.screenshot)
+        : undefined,
+      logoAsset: config.assets.logo
+        ? assets.find((asset) => asset.id === config.assets.logo)
+        : undefined,
+      backgroundAsset: config.assets.background
+        ? assets.find((asset) => asset.id === config.assets.background)
+        : undefined,
+    }),
+    [assets, config.assets.screenshot, config.assets.logo, config.assets.background],
+  );
 
   // Local state for background tab selection (default to current config type or gradient)
   const [bgType, setBgType] = useState<"gradient" | "image">(
@@ -52,29 +97,45 @@ export const LayoutConfigPanel = ({
     }
   }, [config.background?.type]);
 
-  const handleTextChange = (field: "title" | "subtitle", value: string) => {
-    onConfigChangeAction({
-      ...config,
-      text: { ...config.text, [field]: value },
-    });
-  };
+  const handleTextChange = useCallback(
+    (field: "title" | "subtitle", value: string) => {
+      onConfigChangeAction({
+        ...config,
+        text: { ...config.text, [field]: value },
+      });
+    },
+    [config, onConfigChangeAction],
+  );
 
-  const handleGradientChange = (background: BackgroundConfig, textColor: ColorToken) => {
-    onConfigChangeAction({
-      ...config,
-      colors: {
-        ...config.colors,
-        text: textColor,
-      },
-      background,
-    });
-  };
+  const handleGradientChange = useCallback(
+    (background: BackgroundConfig, textColor: ColorToken) => {
+      onConfigChangeAction({
+        ...config,
+        colors: {
+          ...config.colors,
+          text: textColor,
+        },
+        background,
+      });
+    },
+    [config, onConfigChangeAction],
+  );
 
   return (
     <div className="flex h-full flex-col">
       {/* Tab Header */}
-      <div className="flex border-b border-border">
+      <div
+        role="tablist"
+        aria-label="Configuration options"
+        className="flex border-b border-border"
+      >
         <button
+          type="button"
+          role="tab"
+          id="tab-design"
+          aria-selected={activeTab === "design"}
+          aria-controls="tabpanel-design"
+          tabIndex={activeTab === "design" ? 0 : -1}
           onClick={() => setActiveTab("design")}
           className={cn(
             "flex-1 px-4 py-3 text-sm font-medium transition-colors",
@@ -86,6 +147,12 @@ export const LayoutConfigPanel = ({
           Design
         </button>
         <button
+          type="button"
+          role="tab"
+          id="tab-assets"
+          aria-selected={activeTab === "assets"}
+          aria-controls="tabpanel-assets"
+          tabIndex={activeTab === "assets" ? 0 : -1}
           onClick={() => setActiveTab("assets")}
           className={cn(
             "flex-1 px-4 py-3 text-sm font-medium transition-colors",
@@ -101,22 +168,33 @@ export const LayoutConfigPanel = ({
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto p-4">
         {activeTab === "design" && (
-          <div className="space-y-6">
+          <div
+            role="tabpanel"
+            id="tabpanel-design"
+            aria-labelledby="tab-design"
+            className="space-y-6"
+          >
             {/* Text Inputs */}
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Title</Label>
-                <Input
+                <Label htmlFor="title-input" className="text-xs text-muted-foreground">
+                  Title
+                </Label>
+                <DebouncedInput
+                  id="title-input"
                   value={config.text.title}
-                  onChange={(e) => handleTextChange("title", e.target.value)}
+                  onChange={(value) => handleTextChange("title", value)}
                   placeholder="Project Title"
                 />
               </div>
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">Subtitle</Label>
-                <Input
+                <Label htmlFor="subtitle-input" className="text-xs text-muted-foreground">
+                  Subtitle
+                </Label>
+                <DebouncedInput
+                  id="subtitle-input"
                   value={config.text.subtitle || ""}
-                  onChange={(e) => handleTextChange("subtitle", e.target.value)}
+                  onChange={(value) => handleTextChange("subtitle", value)}
                   placeholder="A short description"
                 />
               </div>
@@ -124,39 +202,61 @@ export const LayoutConfigPanel = ({
 
             {/* Screenshot Shadow */}
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Shadow</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["low", "medium", "high"] as const).map((intensity) => (
-                  <button
-                    key={intensity}
-                    onClick={() =>
-                      onConfigChangeAction({
-                        ...config,
-                        screenshotShadow: intensity,
-                      })
-                    }
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-md border px-2 py-3 transition-all",
-                      (config.screenshotShadow || "medium") === intensity
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:bg-muted/50",
-                    )}
-                  >
-                    <ShadowIcon intensity={intensity} />
-                    <span className="text-[10px] capitalize text-muted-foreground">
-                      {intensity}
-                    </span>
-                  </button>
-                ))}
+              <Label id="shadow-label" className="text-xs text-muted-foreground">
+                Shadow
+              </Label>
+              <div
+                role="radiogroup"
+                aria-labelledby="shadow-label"
+                className="grid grid-cols-3 gap-2"
+              >
+                {(["low", "medium", "high"] as const).map((intensity) => {
+                  const isSelected = (config.screenshotShadow || "medium") === intensity;
+                  return (
+                    <button
+                      key={intensity}
+                      type="button"
+                      role="radio"
+                      aria-checked={isSelected}
+                      aria-label={`${intensity} shadow intensity`}
+                      onClick={() =>
+                        onConfigChangeAction({
+                          ...config,
+                          screenshotShadow: intensity,
+                        })
+                      }
+                      className={cn(
+                        "flex flex-col items-center gap-1.5 rounded-md border px-2 py-3 transition-all",
+                        isSelected
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:bg-muted/50",
+                      )}
+                    >
+                      <ShadowIcon intensity={intensity} />
+                      <span className="text-[10px] capitalize text-muted-foreground">
+                        {intensity}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
             {/* Background Selection */}
             <div className="space-y-3">
-              <Label className="text-xs text-muted-foreground">Background</Label>
+              <Label id="bg-type-label" className="text-xs text-muted-foreground">
+                Background
+              </Label>
 
-              <div className="flex rounded-md bg-muted p-1">
+              <div
+                role="radiogroup"
+                aria-labelledby="bg-type-label"
+                className="flex rounded-md bg-muted p-1"
+              >
                 <button
+                  type="button"
+                  role="radio"
+                  aria-checked={bgType === "gradient"}
                   onClick={() => setBgType("gradient")}
                   className={cn(
                     "flex-1 rounded-sm py-1 text-xs transition-all",
@@ -168,6 +268,9 @@ export const LayoutConfigPanel = ({
                   Gradient
                 </button>
                 <button
+                  type="button"
+                  role="radio"
+                  aria-checked={bgType === "image"}
                   onClick={() => setBgType("image")}
                   className={cn(
                     "flex-1 rounded-sm py-1 text-xs transition-all",
@@ -208,7 +311,12 @@ export const LayoutConfigPanel = ({
         )}
 
         {activeTab === "assets" && (
-          <div className="space-y-4">
+          <div
+            role="tabpanel"
+            id="tabpanel-assets"
+            aria-labelledby="tab-assets"
+            className="space-y-4"
+          >
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Screenshot</Label>
               <AssetDropzone
@@ -281,29 +389,54 @@ interface AssetDropzoneProps {
 const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const handleFile = (file?: File) => {
-    if (!file || !onUpload) return;
-    onUpload(file);
-  };
+  const handleFile = useCallback(
+    (file?: File) => {
+      if (!file || !onUpload) return;
+      onUpload(file);
+    },
+    [onUpload],
+  );
 
-  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    handleFile(file);
-    if (event.target) {
-      event.target.value = "";
-    }
-  };
+  const handleInputChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      handleFile(file);
+      if (event.target) {
+        event.target.value = "";
+      }
+    },
+    [handleFile],
+  );
 
-  const handleClick = () => {
+  const handleClick = useCallback(() => {
     if (disabled) return;
     inputRef.current?.click();
-  };
+  }, [disabled]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (disabled) return;
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        inputRef.current?.click();
+      }
+    },
+    [disabled],
+  );
+
+  const ariaLabel = asset
+    ? `${label}: ${asset.name}. Press Enter to replace`
+    : `${label}. Press Enter to upload`;
 
   return (
     <div
       role="button"
+      tabIndex={disabled ? -1 : 0}
+      aria-label={ariaLabel}
+      aria-disabled={disabled}
       onClick={handleClick}
-      className={`group relative flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50 ${
+      onKeyDown={handleKeyDown}
+      className={`group relative flex items-center gap-3 rounded-md border border-border bg-muted/30 px-3 py-2 transition-colors hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       }`}
     >
@@ -314,18 +447,20 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
         accept="image/*"
         onChange={handleInputChange}
         disabled={disabled}
+        aria-hidden="true"
+        tabIndex={-1}
       />
 
       <div className="relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
         {asset ? (
           <img
             src={asset.url}
-            alt={asset.name}
+            alt={`Preview of ${asset.name}`}
             className="h-full w-full object-cover"
             crossOrigin="anonymous"
           />
         ) : (
-          <UploadCloud className="h-4 w-4 text-muted-foreground" />
+          <UploadCloud className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         )}
       </div>
 
