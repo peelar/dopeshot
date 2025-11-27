@@ -101,7 +101,7 @@ function LogoDropTarget({ onUploadLogo }: { onUploadLogo?: (file: File) => void 
   );
 
   const handleDrop = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>) => {
+    (event: React.DragEvent<HTMLDivElement>) => {
       if (!onUploadLogo) return;
       event.preventDefault();
       setIsDragging(false);
@@ -112,7 +112,7 @@ function LogoDropTarget({ onUploadLogo }: { onUploadLogo?: (file: File) => void 
   );
 
   const handleDragOver = useCallback(
-    (event: React.DragEvent<HTMLButtonElement>) => {
+    (event: React.DragEvent<HTMLDivElement>) => {
       if (!onUploadLogo) return;
       event.preventDefault();
       setIsDragging(true);
@@ -125,7 +125,7 @@ function LogoDropTarget({ onUploadLogo }: { onUploadLogo?: (file: File) => void 
   }, []);
 
   const handleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+    (event: React.KeyboardEvent<HTMLDivElement>) => {
       if (!onUploadLogo) return;
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault();
