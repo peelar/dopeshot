@@ -16,6 +16,7 @@ export interface Template {
     assets?: Asset[];
     className?: string;
     onTextChange?: (field: "title" | "subtitle", value: string) => void;
+    onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   }>;
 }
 

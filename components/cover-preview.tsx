@@ -8,6 +8,7 @@ interface CoverPreviewProps {
   className?: string;
   assets?: Asset[];
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
+   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
 export function CoverPreview({
@@ -15,6 +16,7 @@ export function CoverPreview({
   className,
   assets = [],
   onTextChange,
+  onUploadAsset,
 }: CoverPreviewProps) {
   const template = getTemplateById(config.templateId);
 
@@ -42,6 +44,7 @@ export function CoverPreview({
         config={config}
         assets={assets}
         onTextChange={onTextChange}
+        onUploadAsset={onUploadAsset}
       />
     </div>
   );

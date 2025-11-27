@@ -18,6 +18,7 @@ interface PopupGradientProps {
   assets?: Asset[];
   className?: string;
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
 // Pre-computed color token maps (module-level to avoid recreation)
@@ -69,11 +70,120 @@ function tokenToTextColorClass(token: string): string {
   return TEXT_CLASS_MAP[token] || "text-slate-900";
 }
 
+const LOGO_ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const LOGO_MAX_SIZE = 10 * 1024 * 1024;
+
+function LogoDropTarget({ onUploadLogo }: { onUploadLogo?: (file: File) => void }) {
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const validateFile = useCallback((file: File) => {
+    if (!LOGO_ALLOWED_TYPES.includes(file.type)) {
+      setError("Use PNG, JPG, or WebP.");
+      return false;
+    }
+    if (file.size > LOGO_MAX_SIZE) {
+      setError("Max size is 10MB.");
+      return false;
+    }
+    setError(null);
+    return true;
+  }, []);
+
+  const handleFile = useCallback(
+    (file?: File) => {
+      if (!file || !onUploadLogo) return;
+      if (!validateFile(file)) return;
+      onUploadLogo(file);
+    },
+    [onUploadLogo, validateFile],
+  );
+
+  const handleDrop = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>) => {
+      if (!onUploadLogo) return;
+      event.preventDefault();
+      setIsDragging(false);
+      const file = event.dataTransfer.files?.[0];
+      handleFile(file);
+    },
+    [handleFile, onUploadLogo],
+  );
+
+  const handleDragOver = useCallback(
+    (event: React.DragEvent<HTMLButtonElement>) => {
+      if (!onUploadLogo) return;
+      event.preventDefault();
+      setIsDragging(true);
+    },
+    [onUploadLogo],
+  );
+
+  const handleDragLeave = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (!onUploadLogo) return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        inputRef.current?.click();
+      }
+    },
+    [onUploadLogo],
+  );
+
+  const handleClick = useCallback(() => {
+    if (!onUploadLogo) return;
+    inputRef.current?.click();
+  }, [onUploadLogo]);
+
+  return (
+    <div className="space-y-1">
+      <div
+        role="button"
+        tabIndex={onUploadLogo ? 0 : -1}
+        aria-label="Upload logo. Drag and drop or press Enter to browse files"
+        aria-disabled={!onUploadLogo}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        className={cn(
+          "flex items-center justify-center rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+          "border-white/50 bg-white/15 text-white/80 backdrop-blur-md",
+          onUploadLogo
+            ? "cursor-pointer hover:border-white/80 hover:bg-white/25 hover:text-white"
+            : "cursor-not-allowed opacity-70",
+          isDragging && onUploadLogo ? "border-white/60 bg-white/10 text-white" : "",
+        )}
+      >
+        Drop your logo here
+        <input
+          ref={inputRef}
+          type="file"
+          className="hidden"
+          accept={LOGO_ALLOWED_TYPES.join(",")}
+          onChange={(e) => handleFile(e.target.files?.[0])}
+          tabIndex={-1}
+          aria-hidden="true"
+          disabled={!onUploadLogo}
+        />
+      </div>
+      {error ? <p className="text-[10px] text-white/80">{error}</p> : null}
+    </div>
+  );
+}
+
 function PopupGradientComponent({
   config,
   assets = [],
   className,
   onTextChange,
+  onUploadAsset,
 }: PopupGradientProps) {
   // Memoize asset map to avoid recreation on every render
   const { screenshot, logo, assetMap } = useMemo(() => {
@@ -140,12 +250,7 @@ function PopupGradientComponent({
       )}
       {!logo && (
         <div className="absolute left-8 top-8 z-10">
-          <div
-            className="group flex items-center justify-center rounded-full border border-white/20 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.3em] text-white/40 transition hover:border-white/40 hover:text-white/80"
-            aria-hidden="true"
-          >
-            Drop your logo here
-          </div>
+          <LogoDropTarget onUploadLogo={onUploadAsset ? (file) => onUploadAsset(file, "logo") : undefined} />
         </div>
       )}
 

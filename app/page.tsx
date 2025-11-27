@@ -299,7 +299,12 @@ export default function PlaygroundPage() {
 
                 <div className="flex w-full justify-center">
                   <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
-                    <CoverPreview config={config} assets={assets} onTextChange={handleTextChange} />
+                    <CoverPreview
+                      config={config}
+                      assets={assets}
+                      onTextChange={handleTextChange}
+                      onUploadAsset={handleFileProcess}
+                    />
                   </PreviewViewport>
                 </div>
               </div>
