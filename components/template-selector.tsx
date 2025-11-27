@@ -33,6 +33,7 @@ export function TemplateSelector({
   className,
 }: TemplateSelectorProps) {
   // Memoize preview configs - only recalculate when user content changes
+  // Preserve user's background, colors, and shadow settings across variant switches
   const previewConfigs = useMemo(() => {
     return TEMPLATE_DEFAULTS.map(({ defaultConfig, variant, key, displayName, template }) => ({
       key,
@@ -44,9 +45,12 @@ export function TemplateSelector({
         variant,
         text: currentConfig.text,
         assets: currentConfig.assets,
+        background: currentConfig.background,
+        colors: currentConfig.colors,
+        screenshotShadow: currentConfig.screenshotShadow,
       } as LayoutConfig,
     }));
-  }, [currentConfig.text, currentConfig.assets]);
+  }, [currentConfig.text, currentConfig.assets, currentConfig.background, currentConfig.colors, currentConfig.screenshotShadow]);
 
   return (
     <div className={cn("flex w-full gap-4 overflow-x-auto p-4 bg-muted/20 border-b border-border", className)}>
