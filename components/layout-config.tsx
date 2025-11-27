@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent, useEffect } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
+import { LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
 import { getTemplateById } from "@/domain/layout/templates";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -77,13 +77,13 @@ export const LayoutConfigPanel = ({
 
   return (
     <div className="flex h-full flex-col p-4">
-      <h3 className="text-foreground mb-4 text-sm font-medium">Configuration</h3>
+      <h3 className="mb-4 text-sm font-medium text-foreground">Configuration</h3>
 
       <div className="flex-1 space-y-6 overflow-y-auto py-2 pr-2">
         {/* Text Inputs */}
         <div className="space-y-3">
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">Title</Label>
+            <Label className="text-xs text-muted-foreground">Title</Label>
             <Input
               value={config.text.title}
               onChange={(e) => handleTextChange("title", e.target.value)}
@@ -91,7 +91,7 @@ export const LayoutConfigPanel = ({
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">Subtitle</Label>
+            <Label className="text-xs text-muted-foreground">Subtitle</Label>
             <Input
               value={config.text.subtitle || ""}
               onChange={(e) => handleTextChange("subtitle", e.target.value)}
@@ -102,7 +102,7 @@ export const LayoutConfigPanel = ({
 
         {/* Background Selection */}
         <div className="space-y-3">
-          <Label className="text-muted-foreground text-xs">Background</Label>
+          <Label className="text-xs text-muted-foreground">Background</Label>
 
           <div className="flex rounded-md bg-muted p-1">
             <button
@@ -137,7 +137,7 @@ export const LayoutConfigPanel = ({
                   className={cn(
                     "h-12 cursor-pointer rounded-md border transition-all hover:opacity-90",
                     config.background?.type === "gradient" && config.background?.value === g.id
-                      ? "border-primary ring-primary ring-1"
+                      ? "border-primary ring-1 ring-primary"
                       : "border-border",
                   )}
                   style={{ background: g.value }}
@@ -168,7 +168,7 @@ export const LayoutConfigPanel = ({
         {/* Assets */}
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">Screenshot</Label>
+            <Label className="text-xs text-muted-foreground">Screenshot</Label>
             <AssetDropzone
               asset={screenshotAsset}
               onUpload={(file) => onUploadAsset?.(file, "screenshot")}
@@ -176,8 +176,36 @@ export const LayoutConfigPanel = ({
               label="Upload Screenshot"
             />
           </div>
+
+          {/* Screenshot Shadow */}
           <div className="space-y-2">
-            <Label className="text-muted-foreground text-xs">Logo</Label>
+            <Label className="text-xs text-muted-foreground">Shadow</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {(["low", "medium", "high"] as const).map((intensity) => (
+                <button
+                  key={intensity}
+                  onClick={() =>
+                    onConfigChangeAction({
+                      ...config,
+                      screenshotShadow: intensity,
+                    })
+                  }
+                  className={cn(
+                    "flex flex-col items-center gap-1.5 rounded-md border p-3 transition-all",
+                    (config.screenshotShadow || "medium") === intensity
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-muted/50",
+                  )}
+                >
+                  <ShadowIcon intensity={intensity} />
+                  <span className="text-[10px] capitalize text-muted-foreground">{intensity}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-muted-foreground">Logo</Label>
             <AssetDropzone
               asset={logoAsset}
               onUpload={(file) => onUploadAsset?.(file, "logo")}
@@ -190,6 +218,42 @@ export const LayoutConfigPanel = ({
     </div>
   );
 };
+
+function ShadowIcon({ intensity }: { intensity: ShadowIntensity }) {
+  const shadows: Record<ShadowIntensity, { blur: number; opacity: number }> = {
+    low: { blur: 1, opacity: 0.15 },
+    medium: { blur: 2, opacity: 0.25 },
+    high: { blur: 4, opacity: 0.4 },
+  };
+
+  const { blur, opacity } = shadows[intensity];
+
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+      {/* Shadow */}
+      <rect
+        x={6 + blur}
+        y={6 + blur}
+        width="16"
+        height="16"
+        rx="2"
+        fill="currentColor"
+        className="text-foreground"
+        style={{ opacity, filter: `blur(${blur}px)` }}
+      />
+      {/* Card */}
+      <rect
+        x="6"
+        y="6"
+        width="16"
+        height="16"
+        rx="2"
+        className="fill-background stroke-border"
+        strokeWidth="1.5"
+      />
+    </svg>
+  );
+}
 
 interface AssetDropzoneProps {
   asset?: Asset;
@@ -236,7 +300,7 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
         disabled={disabled}
       />
 
-      <div className="bg-background relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border">
+      <div className="relative flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded border border-border bg-background">
         {asset ? (
           <img
             src={asset.url}
@@ -245,15 +309,15 @@ const AssetDropzone = ({ asset, onUpload, disabled, label }: AssetDropzoneProps)
             crossOrigin="anonymous"
           />
         ) : (
-          <UploadCloud className="text-muted-foreground h-4 w-4" />
+          <UploadCloud className="h-4 w-4 text-muted-foreground" />
         )}
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <span className="text-foreground truncate text-xs font-medium">
+        <span className="truncate text-xs font-medium text-foreground">
           {asset ? asset.name : label}
         </span>
-        <span className="text-muted-foreground truncate text-[10px]">
+        <span className="truncate text-[10px] text-muted-foreground">
           {asset ? "Click to replace" : "PNG, JPG"}
         </span>
       </div>

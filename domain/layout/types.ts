@@ -19,6 +19,8 @@ export type ColorToken =
 
 export type BackgroundType = "gradient" | "image" | "solid";
 
+export type ShadowIntensity = "low" | "medium" | "high";
+
 export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken
@@ -43,4 +45,5 @@ export type LayoutConfig = {
     logo?: string; // Asset ID
     background?: string; // Asset ID for background image
   };
+  screenshotShadow?: ShadowIntensity;
 };

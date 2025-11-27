@@ -1,8 +1,14 @@
 import type React from "react";
-import { LayoutConfig } from "@/domain/layout/types";
+import { LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getGradientById } from "@/domain/layout/gradients";
+
+const SHADOW_PRESETS: Record<ShadowIntensity, string> = {
+  low: "0 2px 8px rgba(0, 0, 0, 0.08)",
+  medium: "0 4px 16px rgba(0, 0, 0, 0.15)",
+  high: "0 12px 40px rgba(0, 0, 0, 0.3)",
+};
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -86,10 +92,14 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
 
   // Variant determines image position: "left", "right", or "center"
   const imagePosition = config.variant || "right";
+  const shadowStyle = SHADOW_PRESETS[config.screenshotShadow || "medium"];
 
   return (
     <div
-      className={cn("relative h-full w-full overflow-hidden bg-cover bg-center bg-no-repeat", className)}
+      className={cn(
+        "relative h-full w-full overflow-hidden bg-cover bg-center bg-no-repeat",
+        className,
+      )}
       style={{
         aspectRatio: "1280 / 720",
         background: backgroundStyle,
@@ -125,13 +135,13 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
           {/* Screenshot on right, popping up from bottom */}
           {screenshot && (
             <div
-              className="absolute bottom-0 right-0 z-5 overflow-hidden"
+              className="z-5 absolute bottom-0 right-0 overflow-hidden"
               style={{
                 width: "60%",
                 height: "70%",
                 borderTopLeftRadius: "8px",
                 borderTopRightRadius: "0px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                boxShadow: shadowStyle,
               }}
             >
               <img
@@ -155,13 +165,13 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
           {/* Screenshot on left */}
           {screenshot && (
             <div
-              className="absolute bottom-0 left-0 z-5 overflow-hidden"
+              className="z-5 absolute bottom-0 left-0 overflow-hidden"
               style={{
                 width: "60%",
                 height: "70%",
                 borderTopLeftRadius: "0px",
                 borderTopRightRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                boxShadow: shadowStyle,
               }}
             >
               <img
@@ -209,13 +219,13 @@ export function PopupGradient({ config, assets = [], className }: PopupGradientP
           {/* Screenshot centered, popping up from bottom */}
           {screenshot && (
             <div
-              className="absolute bottom-0 left-1/2 z-5 -translate-x-1/2 overflow-hidden"
+              className="z-5 absolute bottom-0 left-1/2 -translate-x-1/2 overflow-hidden"
               style={{
                 width: "60%",
                 height: "60%",
                 borderTopLeftRadius: "8px",
                 borderTopRightRadius: "8px",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+                boxShadow: shadowStyle,
               }}
             >
               <img
