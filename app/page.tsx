@@ -13,7 +13,7 @@ import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
 import { getContrastTextColor } from "@/domain/layout/gradient-utils";
-import { ColorPaletteResponse } from "@/app/api/analyze-colors/route";
+import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
 import { cn } from "@/utils";
@@ -85,19 +85,7 @@ export default function PlaygroundPage() {
   const showLayoutToggle = (currentTemplate?.variants.length ?? 0) > 1;
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
-    try {
-      const response = await fetch("/api/analyze-colors", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ imageData: dataUrl }),
-      });
-      if (!response.ok) return undefined;
-      const data: ColorPaletteResponse = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Color analysis failed:", error);
-      return undefined;
-    }
+    return analyzeImageColors(dataUrl);
   }, []);
 
   const handleFileProcess = useCallback(

@@ -383,9 +383,6 @@ function ScreenshotGradients({
           );
         })}
       </div>
-      <p className="text-[11px] text-muted-foreground">
-        Colors extracted via AI analysis of your screenshot.
-      </p>
     </div>
   );
 }

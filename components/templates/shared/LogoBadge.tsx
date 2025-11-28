@@ -89,14 +89,18 @@ export function LogoBadge({
     inputRef.current?.click();
   }, [onUploadLogo]);
 
-  const bgStyle = isDragging ? "rgba(255,255,255,0.2)" : mutedBg ?? "rgba(255,255,255,0.12)";
+  const bgStyle = isDragging ? "rgba(255,255,255,0.2)" : (mutedBg ?? "rgba(255,255,255,0.12)");
 
   return (
     <div className="space-y-1 text-left">
       <div
         role={onUploadLogo ? "button" : undefined}
         tabIndex={onUploadLogo ? 0 : -1}
-        aria-label={onUploadLogo ? `${logo ? "Replace" : "Upload"} logo. Drag and drop or press Enter to browse files` : "Logo placeholder"}
+        aria-label={
+          onUploadLogo
+            ? `${logo ? "Replace" : "Upload"} logo. Drag and drop or press Enter to browse files`
+            : "Logo placeholder"
+        }
         aria-disabled={!onUploadLogo}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
@@ -104,28 +108,29 @@ export function LogoBadge({
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className={cn(
-          "flex min-w-[140px] items-center gap-3 rounded-full border px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] shadow-sm backdrop-blur transition",
-          onUploadLogo ? "cursor-pointer" : "cursor-default",
-          "border-white/40 bg-white/15 text-white/80",
-          onUploadLogo ? "hover:border-white/80 hover:bg-white/25 hover:text-white" : "",
-          isDragging && onUploadLogo ? "border-white/80 bg-white/20 text-white" : "",
+          "relative flex min-w-[140px] items-center gap-3 rounded-full border border-white/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] shadow-sm backdrop-blur transition",
+          onUploadLogo ? "cursor-pointer hover:border-white/80" : "cursor-default",
+          isDragging && onUploadLogo && "border-white/80",
           className,
         )}
-        style={{ background: bgStyle }}
       >
-        {logo ? (
-          <img
-            src={logo.url}
-            alt="Logo"
-            className="h-7 w-7 rounded-full object-contain"
-            crossOrigin="anonymous"
-          />
-        ) : (
-          <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/70 text-[10px] font-black text-slate-900">
-            +
-          </span>
-        )}
-        <span>{logo ? replaceLabel : label}</span>
+        <div
+          className="pointer-events-none absolute inset-0 rounded-full"
+          style={{ background: bgStyle, isolation: "isolate" }}
+        />
+        <div className="relative z-10 flex items-center gap-3">
+          {logo ? (
+            <img
+              src={logo.url}
+              alt="Logo"
+              className="h-7 w-7 rounded-full object-contain"
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/70" />
+          )}
+          <span className="text-white mix-blend-difference">{logo ? replaceLabel : label}</span>
+        </div>
         <input
           ref={inputRef}
           type="file"
@@ -137,7 +142,7 @@ export function LogoBadge({
           disabled={!onUploadLogo}
         />
       </div>
-      {error ? <p className="text-[11px] text-white/80">{error}</p> : null}
+      {error ? <p className="text-[11px] text-white/90 mix-blend-difference">{error}</p> : null}
     </div>
   );
 }
