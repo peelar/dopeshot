@@ -336,7 +336,7 @@ export default function PlaygroundPage() {
             background: "white",
           }}
         >
-          <CoverPreview config={config} assets={assets} />
+          <CoverPreview config={config} assets={assets} isStatic />
         </div>
       ) : null}
 

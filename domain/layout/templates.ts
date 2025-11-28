@@ -17,6 +17,7 @@ export interface Template {
     className?: string;
     onTextChange?: (field: "title" | "subtitle", value: string) => void;
     onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+    isStatic?: boolean;
   }>;
 }
 
@@ -49,6 +50,7 @@ export const TEMPLATES: Template[] = [
         logo: undefined,
         background: undefined,
       },
+      screenshotShadow: "medium",
     }),
     component: PopupGradient,
   },

@@ -8,7 +8,8 @@ interface CoverPreviewProps {
   className?: string;
   assets?: Asset[];
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
-   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  isStatic?: boolean;
 }
 
 export function CoverPreview({
@@ -17,6 +18,7 @@ export function CoverPreview({
   assets = [],
   onTextChange,
   onUploadAsset,
+  isStatic = false,
 }: CoverPreviewProps) {
   const template = getTemplateById(config.templateId);
 
@@ -45,6 +47,7 @@ export function CoverPreview({
         assets={assets}
         onTextChange={onTextChange}
         onUploadAsset={onUploadAsset}
+        isStatic={isStatic}
       />
     </div>
   );
