@@ -3,7 +3,7 @@ import type { DragEvent, KeyboardEvent } from "react";
 import { cn } from "@/utils";
 import { Asset } from "@/domain/asset/types";
 
-const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
+const ALLOWED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 
 interface LogoBadgeProps {
@@ -29,7 +29,7 @@ export function LogoBadge({
 
   const validateFile = useCallback((file: File) => {
     if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-      setError("Use PNG, JPG, or WebP.");
+      setError("Use PNG, JPG, WebP, or SVG.");
       return false;
     }
     if (file.size > MAX_IMAGE_SIZE) {

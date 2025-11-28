@@ -120,7 +120,7 @@ export function InlineEditableText({
         placeholder={placeholder}
         className={cn(
           className,
-          "border-0 bg-transparent p-0 text-inherit outline-none placeholder:text-muted-foreground focus-visible:outline-none",
+          "border-0 bg-transparent p-0 outline-none placeholder:text-muted-foreground focus-visible:outline-none",
         )}
         style={style}
         aria-label={ariaLabel}

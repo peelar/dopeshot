@@ -11,7 +11,11 @@ interface UploadDropzoneProps {
   isUploading?: boolean;
 }
 
-export const UploadDropzone = ({ onUpload, onTryExample, isUploading = false }: UploadDropzoneProps) => {
+export const UploadDropzone = ({
+  onUpload,
+  onTryExample,
+  isUploading = false,
+}: UploadDropzoneProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [internalLoading, setInternalLoading] = useState(false);
@@ -20,11 +24,11 @@ export const UploadDropzone = ({ onUpload, onTryExample, isUploading = false }: 
   const isBusy = isUploading || internalLoading;
 
   const validateFile = useCallback((file: File) => {
-    const allowedTypes = ["image/png", "image/jpeg", "image/webp"];
+    const allowedTypes = ["image/png", "image/jpeg", "image/webp", "image/svg+xml"];
     const maxSize = 10 * 1024 * 1024;
 
     if (!allowedTypes.includes(file.type)) {
-      setError("Unsupported format. Use PNG, JPG, or WebP.");
+      setError("Unsupported format. Use PNG, JPG, WebP, or SVG.");
       return false;
     }
 
@@ -161,9 +165,7 @@ export const UploadDropzone = ({ onUpload, onTryExample, isUploading = false }: 
               </Button>
             ) : null}
           </div>
-          <p className="text-xs text-muted-foreground">
-            Supports PNG, JPG, WebP • Max 10MB
-          </p>
+          <p className="text-xs text-muted-foreground">Supports PNG, JPG, WebP, SVG • Max 10MB</p>
           <input
             type="file"
             ref={fileInputRef}

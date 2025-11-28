@@ -155,7 +155,7 @@ function PopupGradientComponent({
       {imagePosition === "right" && (
         <>
           {/* Text on left */}
-          <div className="absolute left-8 top-[30%] z-10 max-w-lg">
+          <div className="absolute left-8 top-[30%] z-10" style={{ maxWidth: "calc(40% - 56px)" }}>
             <InlineEditableText
               element="h1"
               field="title"
@@ -237,7 +237,10 @@ function PopupGradientComponent({
           )}
 
           {/* Text on right */}
-          <div className="absolute right-8 top-[30%] z-10 max-w-lg text-right">
+          <div
+            className="absolute right-8 top-[30%] z-10 text-right"
+            style={{ maxWidth: "calc(40% - 56px)" }}
+          >
             <InlineEditableText
               element="h1"
               field="title"
