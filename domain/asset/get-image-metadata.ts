@@ -2,7 +2,9 @@
 
 import { ImageMetadata } from "@/domain/asset/types";
 
-export async function getImageMetadataFromDataUrl(dataUrl: string): Promise<ImageMetadata | undefined> {
+export async function getImageMetadataFromDataUrl(
+  dataUrl: string,
+): Promise<ImageMetadata | undefined> {
   if (!dataUrl) {
     return undefined;
   }

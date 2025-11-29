@@ -8,6 +8,7 @@ import {
   oklchToHex,
   enhanceColor,
 } from "./colors";
+import type { Oklch } from "culori";
 
 /**
  * Context for gradient generation
@@ -24,14 +25,29 @@ export type GradientContext = {
 export function generateGradient(
   palette: ColorPalette,
   context: GradientContext,
+  strategy: "hero-base" | "multi-color" | "complementary" | "analogous" | "triadic" = "multi-color",
 ): AdvancedGradient {
   const enhanced = enhanceColorPalette(palette);
 
   // Determine gradient type and direction based on aspect ratio
-  const { type, direction, angle } = getGradientGeometry(context);
+  let { type, direction, angle } = getGradientGeometry(context);
+
+  // Vary angle based on strategy to create visual distinction
+  if (type === "linear" && angle !== undefined) {
+    const baseAngle = angle;
+    const angleVariations: Record<string, number> = {
+      "multi-color": 0,
+      "complementary": 45,
+      "analogous": -45,
+      "triadic": 90,
+      "hero-base": 0,
+    };
+    const variation = angleVariations[strategy] ?? 0;
+    angle = (baseAngle + variation + 360) % 360;
+  }
 
   // Generate 5-12 color stops with smooth perceptual interpolation
-  const stops = generateGradientStops(enhanced, type, context);
+  const stops = generateGradientStops(enhanced, type, context, strategy);
 
   return {
     type,
@@ -93,19 +109,113 @@ function getGradientGeometry(context: GradientContext): {
 }
 
 /**
+ * Get complementary color (180° hue shift) for a given color
+ */
+function getComplementaryColor(hex: string, boostSaturation = true): string {
+  const oklchColor = hexToOklch(hex);
+  if (!oklchColor || oklchColor.h === undefined) return hex;
+
+  const complementaryH = (oklchColor.h + 180) % 360;
+  const baseC = oklchColor.c ?? 0;
+  const enhancedC = boostSaturation
+    ? Math.min(0.4, Math.max(0.15, baseC * 1.3)) // Boost saturation more for visibility
+    : baseC;
+  
+  const complementary: Parameters<typeof oklchToHex>[0] = {
+    mode: "oklch",
+    l: oklchColor.l ?? 0.5,
+    c: enhancedC,
+    h: complementaryH,
+  };
+
+  return oklchToHex(complementary);
+}
+
+/**
+ * Get analogous colors (adjacent hues, ±30-45°)
+ */
+function getAnalogousColors(hex: string, spread = 40): { left: string; right: string } {
+  const oklchColor = hexToOklch(hex);
+  if (!oklchColor || oklchColor.h === undefined) {
+    return { left: hex, right: hex };
+  }
+
+  const h = oklchColor.h;
+  const leftH = (h - spread + 360) % 360;
+  const rightH = (h + spread) % 360;
+
+  const baseL = oklchColor.l ?? 0.5;
+  const baseC = oklchColor.c ?? 0;
+  // Boost saturation for more visible variation
+  const enhancedC = Math.min(0.4, Math.max(0.12, baseC * 1.1));
+
+  return {
+    left: oklchToHex({
+      mode: "oklch",
+      l: Math.max(0.2, Math.min(0.8, baseL - 0.1)), // Slight lightness variation
+      c: enhancedC,
+      h: leftH,
+    }),
+    right: oklchToHex({
+      mode: "oklch",
+      l: Math.max(0.2, Math.min(0.8, baseL + 0.1)), // Slight lightness variation
+      c: enhancedC,
+      h: rightH,
+    }),
+  };
+}
+
+/**
+ * Get triadic colors (120° apart)
+ */
+function getTriadicColors(hex: string): { second: string; third: string } {
+  const oklchColor = hexToOklch(hex);
+  if (!oklchColor || oklchColor.h === undefined) {
+    return { second: hex, third: hex };
+  }
+
+  const h = oklchColor.h;
+  const baseL = oklchColor.l ?? 0.5;
+  const baseC = oklchColor.c ?? 0;
+  // Ensure good saturation for triadic colors
+  const enhancedC = Math.min(0.4, Math.max(0.15, baseC * 1.2));
+
+  return {
+    second: oklchToHex({
+      mode: "oklch",
+      l: Math.max(0.25, Math.min(0.75, baseL + 0.15)), // Vary lightness
+      c: enhancedC,
+      h: (h + 120) % 360,
+    }),
+    third: oklchToHex({
+      mode: "oklch",
+      l: Math.max(0.25, Math.min(0.75, baseL - 0.15)), // Vary lightness
+      c: enhancedC,
+      h: (h + 240) % 360,
+    }),
+  };
+}
+
+/**
  * Generate 5-12 color stops for a smooth, professional gradient
  * Uses OKLCH color space interpolation for perceptual uniformity
+ * Now supports multi-color gradients with complementary colors
  */
 function generateGradientStops(
   palette: EnhancedColorPalette,
   type: GradientType,
   context: GradientContext,
+  strategy: "hero-base" | "multi-color" | "complementary" | "analogous" | "triadic" = "multi-color",
 ): GradientStop[] {
-  const { hero, base, isNeutral, isDark } = palette;
+  const { hero, base, accent, vibrant, muted, dominant, isNeutral, isDark } = palette;
 
-  // Convert to OKLCH for interpolation
+  // Convert all available colors to OKLCH
   const heroOklch = hexToOklch(hero);
   const baseOklch = hexToOklch(base);
+  const accentOklch = accent ? hexToOklch(accent) : null;
+  const vibrantOklch = vibrant ? hexToOklch(vibrant) : null;
+  const mutedOklch = muted ? hexToOklch(muted) : null;
+  const dominantOklch = dominant ? hexToOklch(dominant) : null;
 
   if (!heroOklch || !baseOklch) {
     // Fallback to simple 2-color if conversion fails
@@ -118,46 +228,152 @@ function generateGradientStops(
   const stops: GradientStop[] = [];
 
   // Determine number of stops (5-12 as per PRD)
-  // More stops for complex palettes, fewer for simple ones
-  const numStops = isNeutral ? 8 : isDark ? 10 : 7;
+  const numStops = isNeutral ? 9 : isDark ? 11 : 8;
 
-  // Generate stops along perceptual path
+  // Build color sequence based on strategy
+  let colorSequence: Array<{ oklch: Oklch; weight: number }> = [];
+
+  if (strategy === "hero-base") {
+    // Simple two-color interpolation
+    colorSequence = [
+      { oklch: heroOklch, weight: 1 },
+      { oklch: baseOklch, weight: 1 },
+    ];
+  } else if (strategy === "complementary") {
+    // Hero → complementary → base
+    const complementary = getComplementaryColor(hero);
+    const compOklch = hexToOklch(complementary);
+    if (compOklch) {
+      colorSequence = [
+        { oklch: heroOklch, weight: 1 },
+        { oklch: compOklch, weight: 1.2 },
+        { oklch: baseOklch, weight: 1 },
+      ];
+    } else {
+      colorSequence = [
+        { oklch: heroOklch, weight: 1 },
+        { oklch: baseOklch, weight: 1 },
+      ];
+    }
+  } else if (strategy === "analogous") {
+    // Analogous colors from hero
+    const analogous = getAnalogousColors(hero);
+    const leftOklch = hexToOklch(analogous.left);
+    const rightOklch = hexToOklch(analogous.right);
+    colorSequence = [
+      { oklch: leftOklch || heroOklch, weight: 1 },
+      { oklch: heroOklch, weight: 1.5 },
+      { oklch: rightOklch || heroOklch, weight: 1 },
+      { oklch: baseOklch, weight: 1 },
+    ].filter((c) => c.oklch);
+  } else if (strategy === "triadic") {
+    // Triadic color scheme
+    const triadic = getTriadicColors(hero);
+    const secondOklch = hexToOklch(triadic.second);
+    const thirdOklch = hexToOklch(triadic.third);
+    colorSequence = [
+      { oklch: heroOklch, weight: 1.5 },
+      { oklch: secondOklch || heroOklch, weight: 1 },
+      { oklch: baseOklch, weight: 1 },
+      { oklch: thirdOklch || baseOklch, weight: 0.8 },
+    ].filter((c) => c.oklch);
+  } else {
+    // multi-color: Use multiple colors from palette
+    const availableColors = [
+      { oklch: heroOklch, weight: 2 },
+      { oklch: baseOklch, weight: 1.5 },
+    ];
+
+    if (vibrantOklch && vibrant !== hero) {
+      availableColors.push({ oklch: vibrantOklch, weight: 1.3 });
+    }
+    if (accentOklch && accent !== hero && accent !== vibrant) {
+      availableColors.push({ oklch: accentOklch, weight: 1.2 });
+    }
+    if (mutedOklch && muted !== base) {
+      availableColors.push({ oklch: mutedOklch, weight: 0.8 });
+    }
+    if (dominantOklch && dominant !== base && dominant !== hero) {
+      availableColors.push({ oklch: dominantOklch, weight: 1 });
+    }
+
+    // If we have enough colors, add a complementary accent
+    if (availableColors.length >= 2) {
+      const complementary = getComplementaryColor(hero);
+      const compOklch = hexToOklch(complementary);
+      if (compOklch) {
+        availableColors.splice(Math.floor(availableColors.length / 2), 0, {
+          oklch: compOklch,
+          weight: 1.1,
+        });
+      }
+    }
+
+    colorSequence = availableColors;
+  }
+
+  // Normalize weights to create position distribution
+  const totalWeight = colorSequence.reduce((sum, c) => sum + c.weight, 0);
+  let cumulativeWeight = 0;
+  const colorPositions = colorSequence.map((c) => {
+    cumulativeWeight += c.weight;
+    return cumulativeWeight / totalWeight;
+  });
+
+  // Generate stops along the color sequence path
   for (let i = 0; i <= numStops; i++) {
     const t = i / numStops; // 0 to 1
 
+    // Find which color segment we're in
+    let segmentIndex = 0;
+    for (let j = 0; j < colorPositions.length - 1; j++) {
+      if (t >= colorPositions[j] && t <= colorPositions[j + 1]) {
+        segmentIndex = j;
+        break;
+      }
+    }
+    if (t >= colorPositions[colorPositions.length - 1]) {
+      segmentIndex = colorPositions.length - 2;
+    }
+
+    const startPos = colorPositions[segmentIndex];
+    const endPos = colorPositions[segmentIndex + 1];
+    const segmentT = endPos > startPos ? (t - startPos) / (endPos - startPos) : 0;
+
+    const startColor = colorSequence[segmentIndex].oklch;
+    const endColor = colorSequence[segmentIndex + 1].oklch;
+
     // Interpolate in OKLCH space
-    const l = lerp(heroOklch.l ?? 0.5, baseOklch.l ?? 0.5, t);
-    const c = lerp(heroOklch.c ?? 0, baseOklch.c ?? 0, t);
+    const l = lerp(startColor.l ?? 0.5, endColor.l ?? 0.5, segmentT);
+    let c = lerp(startColor.c ?? 0, endColor.c ?? 0, segmentT);
 
     // For hue, handle wraparound (shorter path)
     let h: number;
-    const heroH = heroOklch.h ?? 0;
-    const baseH = baseOklch.h ?? 0;
-
-    // Find shortest hue path
-    const diff = ((baseH - heroH + 180) % 360) - 180;
-    h = (heroH + diff * t) % 360;
+    const startH = startColor.h ?? 0;
+    const endH = endColor.h ?? 0;
+    const diff = ((endH - startH + 180) % 360) - 180;
+    h = (startH + diff * segmentT) % 360;
 
     // Apply enhancement based on position
     let finalL = l;
     let finalC = c;
 
     // Enhance stops in the middle to avoid muddiness
-    if (t > 0.3 && t < 0.7) {
-      // Slightly boost saturation in middle stops to avoid dead zones
-      finalC = Math.min(0.4, c * 1.2);
+    if (t > 0.25 && t < 0.75) {
+      // Boost saturation in middle stops to avoid dead zones
+      finalC = Math.min(0.4, c * 1.3);
     }
 
     // Adjust lightness curve for better contrast
     if (isDark) {
       // Lighten the middle stops more for dark palettes
-      if (t > 0.4 && t < 0.8) {
-        finalL = Math.min(0.9, l + 0.15);
+      if (t > 0.3 && t < 0.85) {
+        finalL = Math.min(0.9, l + 0.2);
       }
     } else {
       // Create subtle S-curve for lighter palettes
       const sCurve = t < 0.5 ? t * 2 : 1 - (t - 0.5) * 2;
-      finalL = lerp(l, l + 0.1 * (sCurve - 0.5), 0.3);
+      finalL = lerp(l, l + 0.12 * (sCurve - 0.5), 0.4);
     }
 
     const interpolated: Parameters<typeof oklchToHex>[0] = {
@@ -174,9 +390,9 @@ function generateGradientStops(
   }
 
   // Special handling for neutral palettes: add accent stops
-  if (isNeutral) {
+  if (isNeutral && strategy !== "complementary") {
     // Insert an enhanced hero color stop at the beginning
-    const enhancedHero = enhanceColor(hero, { saturationBoost: 0.6 });
+    const enhancedHero = enhanceColor(hero, { saturationBoost: 0.7 });
     stops[0] = { color: enhancedHero, position: 0 };
 
     // Add a deep neutral stop in the middle
@@ -198,6 +414,7 @@ function lerp(a: number, b: number, t: number): number {
 /**
  * Generate multiple gradient options from a palette
  * Used in gradient picker to show different variations
+ * Each option uses a different color strategy for maximum visual variety
  */
 export function generateGradientOptions(
   palette: ColorPalette,
@@ -206,34 +423,27 @@ export function generateGradientOptions(
   const enhanced = enhanceColorPalette(palette);
   const options: AdvancedGradient[] = [];
 
-  // Option 1: Hero to base (primary gradient)
-  options.push(generateGradient(palette, context));
+  // Option 1: Multi-color (uses all palette colors + complementary)
+  // This is the default rich gradient
+  options.push(generateGradient(palette, context, "multi-color"));
 
-  // Option 2: Vibrant to deep (if vibrant exists)
-  if (enhanced.vibrant) {
-    const vibrantPalette: ColorPalette = {
-      ...palette,
-      accent: enhanced.vibrant,
-    };
-    options.push(generateGradient(vibrantPalette, context));
+  // Option 2: Complementary (hero → complementary → base)
+  // Creates high contrast, vibrant gradients
+  options.push(generateGradient(palette, context, "complementary"));
+
+  // Option 3: Analogous (adjacent hues from hero)
+  // Creates smooth, harmonious gradients
+  options.push(generateGradient(palette, context, "analogous"));
+
+  // Option 4: Triadic (three colors 120° apart)
+  // Creates dynamic, colorful gradients
+  options.push(generateGradient(palette, context, "triadic"));
+
+  // Option 5: Simple hero-base (if we want a 5th option)
+  // Fallback simpler gradient
+  if (options.length < 4) {
+    options.push(generateGradient(palette, context, "hero-base"));
   }
-
-  // Option 3: Light variant (boosted lightness)
-  const lightHero = enhanceColor(enhanced.hero, { lightnessShift: 0.4 });
-  const lightPalette: ColorPalette = {
-    ...palette,
-    accent: lightHero,
-  };
-  options.push(generateGradient(lightPalette, context));
-
-  // Option 4: Deep variant (reduced lightness, increased saturation)
-  const deepHero = enhanceColor(enhanced.hero, { lightnessShift: -0.2, saturationBoost: 0.3 });
-  const deepPalette: ColorPalette = {
-    ...palette,
-    accent: deepHero,
-  };
-  options.push(generateGradient(deepPalette, context));
 
   return options.slice(0, 4); // Return up to 4 options
 }
-

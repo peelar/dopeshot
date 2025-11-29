@@ -12,7 +12,7 @@ export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, A
 
     const gradient = getGradientById(config.background.value);
     if (gradient) {
-      return gradient.value;
+      return customGradientToCss(gradient.gradient);
     }
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);

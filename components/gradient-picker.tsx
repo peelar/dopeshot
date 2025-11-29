@@ -2,7 +2,13 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
-import { BackgroundConfig, ColorToken, CustomGradient, isLegacyGradient, isAdvancedGradient } from "@/domain/layout/types";
+import {
+  BackgroundConfig,
+  ColorToken,
+  CustomGradient,
+  isLegacyGradient,
+  isAdvancedGradient,
+} from "@/domain/layout/types";
 import { ColorPalette } from "@/domain/asset/types";
 import {
   customGradientToCss,
@@ -101,7 +107,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
     }
     if (background.type === "gradient" && background.value) {
       const preset = getGradientById(background.value);
-      if (preset) return preset.value;
+      if (preset) return customGradientToCss(preset.gradient);
     }
     return "linear-gradient(to right, #6366f1, #8b5cf6)";
   }, [background.customGradient, background.type, background.value]);
@@ -130,12 +136,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
       return "screenshot";
     }
     return "custom";
-  }, [
-    background.type,
-    background.value,
-    background.customGradient,
-    dynamicGradients.length,
-  ]);
+  }, [background.type, background.value, background.customGradient, dynamicGradients.length]);
 
   const [activeSource, setActiveSource] = useState<GradientSource>(() => defaultSource);
   const sourceOverrideRef = useRef(false);
@@ -204,7 +205,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
       const firstColor = isLegacyGradient(gradient)
         ? gradient.from
         : isAdvancedGradient(gradient)
-          ? gradient.stops[0]?.color ?? "#000000"
+          ? (gradient.stops[0]?.color ?? "#000000")
           : "#000000";
       const textColor = getContrastTextColor(firstColor);
       onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
@@ -436,7 +437,7 @@ function PresetGradients({ gradients, selectedPresetId, onSelect }: PresetGradie
           return (
             <GradientSwatch
               key={gradient.id}
-              gradientCss={gradient.value}
+              gradientCss={customGradientToCss(gradient.gradient)}
               selected={isSelected}
               onClick={() => onSelect(gradient.id)}
               ariaLabel={`${gradient.name} preset`}
@@ -522,12 +523,12 @@ function GradientAngleControl({ angle, onChange }: GradientAngleControlProps) {
 
 function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
   if (!a || !b) return false;
-  
+
   // Compare legacy gradients
   if (isLegacyGradient(a) && isLegacyGradient(b)) {
     return a.from === b.from && a.to === b.to && a.direction === b.direction;
   }
-  
+
   // Compare advanced gradients
   if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
     if (a.stops.length !== b.stops.length) return false;
@@ -537,7 +538,7 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
       return stop.color === otherStop?.color && stop.position === otherStop?.position;
     });
   }
-  
+
   // Different types are not equal
   return false;
 }

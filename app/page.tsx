@@ -12,13 +12,21 @@ import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
-import { getContrastTextColor, generateGradient, isAdvancedGradient } from "@/domain/layout/gradients";
+import {
+  getContrastTextColor,
+  generateGradient,
+  isAdvancedGradient,
+} from "@/domain/layout/gradients";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
 import { cn } from "@/utils";
 import { getImageMetadataFromDataUrl } from "@/domain/asset/get-image-metadata";
-import { getAspectCategory, getRecommendationForCategory, AspectCategory } from "@/domain/layout/aspect";
+import {
+  getAspectCategory,
+  getRecommendationForCategory,
+  AspectCategory,
+} from "@/domain/layout/aspect";
 import { LayoutConfig } from "@/domain/layout/types";
 
 const DEFAULT_ASSETS: Asset[] = [];
@@ -65,7 +73,8 @@ function applyTemplateRecommendation(
       config: {
         ...defaultConfig,
         templateId: template.id,
-        variant: variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
+        variant:
+          variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
         text: config.text,
         colors: config.colors,
         background: config.background,
@@ -254,7 +263,7 @@ export default function PlaygroundPage() {
 
               // Generate beautiful multi-stop gradient using new generator
               const contextAspect = aspectCategory ?? "landscape";
-              
+
               setConfig((currentConfig) => {
                 const generatedGradient = generateGradient(colorPalette, {
                   aspectCategory: contextAspect,
@@ -263,7 +272,7 @@ export default function PlaygroundPage() {
 
                 // Determine text color from first stop of gradient
                 const firstStopColor = isAdvancedGradient(generatedGradient)
-                  ? generatedGradient.stops[0]?.color ?? colorPalette.accent
+                  ? (generatedGradient.stops[0]?.color ?? colorPalette.accent)
                   : colorPalette.accent;
                 const textColor = getContrastTextColor(firstStopColor);
 
@@ -330,7 +339,7 @@ export default function PlaygroundPage() {
               <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
             </svg>
           </div>
-          <span className="text-sm font-bold tracking-tight">dopeshot</span>
+          <span className="font-bold text-sm tracking-tight">dopeshot</span>
         </a>
         <div className="flex items-center gap-3">
           {hasUploaded ? (
