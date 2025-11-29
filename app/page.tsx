@@ -15,6 +15,7 @@ import { TemplateSelector } from "@/components/template-selector";
 import {
   getContrastTextColor,
   generateGradient,
+  generateGradientOptions,
   isAdvancedGradient,
 } from "@/domain/layout/gradients";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
@@ -261,14 +262,20 @@ export default function PlaygroundPage() {
             if (colorPalette) {
               setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
 
-              // Generate beautiful multi-stop gradient using new generator
+              // Generate gradient options and use the first one (from "sampled from your screenshot")
+              // Use landscape and undefined variant to match the gradient picker context
               const contextAspect = aspectCategory ?? "landscape";
 
               setConfig((currentConfig) => {
-                const generatedGradient = generateGradient(colorPalette, {
-                  aspectCategory: contextAspect,
-                  templateVariant: currentConfig.variant,
+                // Generate with same context as gradient picker (landscape, undefined variant)
+                // This ensures the gradient matches one from the list
+                const gradientOptions = generateGradientOptions(colorPalette, {
+                  aspectCategory: "landscape",
+                  templateVariant: undefined,
                 });
+
+                // Use the first gradient from the options (multi-color strategy)
+                const generatedGradient = gradientOptions[0];
 
                 // Determine text color from first stop of gradient
                 const firstStopColor = isAdvancedGradient(generatedGradient)

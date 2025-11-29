@@ -465,7 +465,9 @@ function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientS
       onClick={onClick}
       className={cn(
         "group relative flex h-12 w-full items-center overflow-hidden rounded-xl text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
-        selected ? "ring-2 ring-white/70" : "ring-1 ring-white/15",
+        selected
+          ? "shadow-sm ring-2 ring-foreground/50 ring-offset-1 ring-offset-background"
+          : "ring-1 ring-white/15",
       )}
       style={{ background: gradientCss }}
     >
@@ -533,9 +535,19 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
   if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
     if (a.stops.length !== b.stops.length) return false;
     if (a.type !== b.type) return false;
+    // Compare angle (normalized to 0-360)
+    const angleA = a.angle !== undefined ? ((a.angle % 360) + 360) % 360 : undefined;
+    const angleB = b.angle !== undefined ? ((b.angle % 360) + 360) % 360 : undefined;
+    if (angleA !== angleB) return false;
+    // Compare stops (allow small position differences due to rounding)
     return a.stops.every((stop, i) => {
       const otherStop = b.stops[i];
-      return stop.color === otherStop?.color && stop.position === otherStop?.position;
+      if (!otherStop) return false;
+      const colorMatch = stop.color === otherStop.color;
+      const positionMatch =
+        stop.position === otherStop.position ||
+        Math.abs((stop.position ?? 0) - (otherStop.position ?? 0)) < 0.1;
+      return colorMatch && positionMatch;
     });
   }
 

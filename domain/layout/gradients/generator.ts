@@ -33,13 +33,14 @@ export function generateGradient(
   let { type, direction, angle } = getGradientGeometry(context);
 
   // Vary angle based on strategy to create visual distinction
+  // Use more dramatic angle differences to make gradients visually distinct
   if (type === "linear" && angle !== undefined) {
     const baseAngle = angle;
     const angleVariations: Record<string, number> = {
-      "multi-color": 0,
-      "complementary": 45,
-      "analogous": -45,
-      "triadic": 90,
+      "multi-color": 0, // Keep original angle
+      complementary: 135, // Diagonal opposite direction
+      analogous: -60, // Different diagonal
+      triadic: 45, // Another diagonal
       "hero-base": 0,
     };
     const variation = angleVariations[strategy] ?? 0;
@@ -120,7 +121,7 @@ function getComplementaryColor(hex: string, boostSaturation = true): string {
   const enhancedC = boostSaturation
     ? Math.min(0.4, Math.max(0.15, baseC * 1.3)) // Boost saturation more for visibility
     : baseC;
-  
+
   const complementary: Parameters<typeof oklchToHex>[0] = {
     mode: "oklch",
     l: oklchColor.l ?? 0.5,
@@ -240,15 +241,47 @@ function generateGradientStops(
       { oklch: baseOklch, weight: 1 },
     ];
   } else if (strategy === "complementary") {
-    // Hero → complementary → base
+    // Complementary strategy: Use complementary colors as the PRIMARY colors, not just accents
+    // This creates a fundamentally different gradient from the palette
     const complementary = getComplementaryColor(hero);
     const compOklch = hexToOklch(complementary);
-    if (compOklch) {
-      colorSequence = [
-        { oklch: heroOklch, weight: 1 },
-        { oklch: compOklch, weight: 1.2 },
-        { oklch: baseOklch, weight: 1 },
-      ];
+
+    // Get complementary of base too for more variety
+    const baseComplementary = getComplementaryColor(base);
+    const baseCompOklch = hexToOklch(baseComplementary);
+
+    // Get a split-complementary (one side of complementary)
+    const heroOklchForComp = hexToOklch(hero);
+    if (heroOklchForComp && heroOklchForComp.h !== undefined) {
+      const splitCompH = (heroOklchForComp.h + 150) % 360; // 30° offset from complementary
+      const splitCompOklch: Oklch = {
+        mode: "oklch",
+        l: heroOklchForComp.l ?? 0.5,
+        c: Math.min(0.4, Math.max(0.2, (heroOklchForComp.c ?? 0) * 1.4)),
+        h: splitCompH,
+      };
+
+      if (compOklch && baseCompOklch) {
+        colorSequence = [
+          { oklch: heroOklch, weight: 1 }, // Start with palette hero
+          { oklch: compOklch, weight: 1.5 }, // Primary complementary - outside palette
+          { oklch: splitCompOklch, weight: 1.2 }, // Split-complementary - outside palette
+          { oklch: baseCompOklch, weight: 1.1 }, // Base complementary - outside palette
+          { oklch: baseOklch, weight: 1 }, // End with palette base
+        ];
+      } else if (compOklch) {
+        colorSequence = [
+          { oklch: heroOklch, weight: 1 },
+          { oklch: compOklch, weight: 1.5 },
+          { oklch: splitCompOklch, weight: 1.2 },
+          { oklch: baseOklch, weight: 1 },
+        ];
+      } else {
+        colorSequence = [
+          { oklch: heroOklch, weight: 1 },
+          { oklch: baseOklch, weight: 1 },
+        ];
+      }
     } else {
       colorSequence = [
         { oklch: heroOklch, weight: 1 },
@@ -256,26 +289,45 @@ function generateGradientStops(
       ];
     }
   } else if (strategy === "analogous") {
-    // Analogous colors from hero
-    const analogous = getAnalogousColors(hero);
+    // Analogous strategy: Use ONLY analogous colors (adjacent hues), not palette colors
+    // This creates a smooth, harmonious gradient that's different from the palette
+    const analogous = getAnalogousColors(hero, 50); // Wider spread for more variation
     const leftOklch = hexToOklch(analogous.left);
     const rightOklch = hexToOklch(analogous.right);
+
+    // Get analogous colors from base too
+    const baseAnalogous = getAnalogousColors(base, 40);
+    const baseLeftOklch = hexToOklch(baseAnalogous.left);
+    const baseRightOklch = hexToOklch(baseAnalogous.right);
+
     colorSequence = [
-      { oklch: leftOklch || heroOklch, weight: 1 },
-      { oklch: heroOklch, weight: 1.5 },
-      { oklch: rightOklch || heroOklch, weight: 1 },
-      { oklch: baseOklch, weight: 1 },
+      { oklch: leftOklch || heroOklch, weight: 1.2 }, // Analogous left - outside palette
+      { oklch: heroOklch, weight: 1.5 }, // Palette hero as anchor
+      { oklch: rightOklch || heroOklch, weight: 1.2 }, // Analogous right - outside palette
+      { oklch: baseLeftOklch || baseOklch, weight: 1 }, // Base analogous left
+      { oklch: baseOklch, weight: 1.3 }, // Palette base as anchor
+      { oklch: baseRightOklch || baseOklch, weight: 1 }, // Base analogous right
     ].filter((c) => c.oklch);
   } else if (strategy === "triadic") {
-    // Triadic color scheme
+    // Triadic strategy: Use triadic colors as PRIMARY colors
+    // This creates a vibrant, dynamic gradient that's fundamentally different
     const triadic = getTriadicColors(hero);
     const secondOklch = hexToOklch(triadic.second);
     const thirdOklch = hexToOklch(triadic.third);
+
+    // Get triadic colors from base too for more variety
+    const baseTriadic = getTriadicColors(base);
+    const baseSecondOklch = hexToOklch(baseTriadic.second);
+    const baseThirdOklch = hexToOklch(baseTriadic.third);
+
+    // Build sequence using triadic colors as the main colors, with palette as anchors
     colorSequence = [
-      { oklch: heroOklch, weight: 1.5 },
-      { oklch: secondOklch || heroOklch, weight: 1 },
-      { oklch: baseOklch, weight: 1 },
-      { oklch: thirdOklch || baseOklch, weight: 0.8 },
+      { oklch: heroOklch, weight: 1.5 }, // Palette hero as start anchor
+      { oklch: secondOklch || heroOklch, weight: 1.4 }, // Primary triadic - outside palette
+      { oklch: thirdOklch || secondOklch || heroOklch, weight: 1.3 }, // Second triadic - outside palette
+      { oklch: baseSecondOklch || baseOklch, weight: 1.2 }, // Base triadic - outside palette
+      { oklch: baseOklch, weight: 1.5 }, // Palette base as end anchor
+      { oklch: baseThirdOklch || baseOklch, weight: 1.1 }, // Base triadic variant
     ].filter((c) => c.oklch);
   } else {
     // multi-color: Use multiple colors from palette
