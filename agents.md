@@ -4,16 +4,9 @@
 
 Single source of truth for agents working on cover-forge. Keep it short, actionable, and repo-specific.
 
-## Stack & Routes
+## Product Documentation
 
-- Next.js 15 App Router, TypeScript, Tailwind 3, shadcn-style local primitives.
-
-## UI
-
-- Don’t mention underlying tech in UI copy (e.g., avoid “Upload with Supabase”).
-- Favor existing shadcn-style primitives before building new components.
-- Keep the Design sidebar for styling; template/layout switching stays in the rail/toggle above the canvas.
-- Add UI comments only when clarifying non-obvious logic.
+For all product documentation, see the [Product](product/index.md) folder.
 
 ## Rules
 
@@ -24,3 +17,8 @@ Single source of truth for agents working on cover-forge. Keep it short, actiona
 - Use shadcn/ui CLI to generate components.
 - Use pnpm.
 - You will be given PRDs or similar instructions to follow. You have the authority to make decisions about the implementation.
+- Don’t mention underlying tech in UI copy (e.g., avoid “Upload with Supabase”).
+- Favor existing shadcn-style primitives before building new components.
+- Keep the Design sidebar for styling; template/layout switching stays in the rail/toggle above the canvas.
+- Be very hesitant about adding something new to the sidebar. It should be as intelligent as possible, with no extra clicks or steps.
+- Add UI comments only when clarifying non-obvious logic.
