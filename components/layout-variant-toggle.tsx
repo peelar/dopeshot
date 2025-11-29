@@ -15,6 +15,12 @@ const VARIANT_LABELS: Record<string, string> = {
   full: "Full",
 };
 
+const VARIANT_DISPLAY_PRIORITY: Record<string, number> = {
+  left: 0,
+  center: 1,
+  right: 2,
+};
+
 interface LayoutVariantToggleProps {
   config: LayoutConfig;
   onVariantChange: (variant: string) => void;
@@ -31,6 +37,20 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
 
   const variants = template.variants;
   const activeVariant = variants.includes(config.variant) ? config.variant : variants[0];
+
+  const displayVariants = useMemo(() => {
+    return variants
+      .map((variant, index) => ({ variant, index }))
+      .sort((a, b) => {
+        const priorityA = VARIANT_DISPLAY_PRIORITY[a.variant] ?? Number.MAX_SAFE_INTEGER;
+        const priorityB = VARIANT_DISPLAY_PRIORITY[b.variant] ?? Number.MAX_SAFE_INTEGER;
+        if (priorityA === priorityB) {
+          return a.index - b.index;
+        }
+        return priorityA - priorityB;
+      })
+      .map((entry) => entry.variant);
+  }, [variants]);
 
   useEffect(() => {
     if (activeVariant === "full") {
@@ -50,12 +70,12 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
       event.preventDefault();
 
       const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
-      const nextIndex = (currentIndex + direction + variants.length) % variants.length;
-      const nextVariant = variants[nextIndex];
+      const nextIndex = (currentIndex + direction + displayVariants.length) % displayVariants.length;
+      const nextVariant = displayVariants[nextIndex];
       onVariantChange(nextVariant);
       requestAnimationFrame(() => buttonRefs.current[nextIndex]?.focus());
     },
-    [onVariantChange, variants],
+    [displayVariants, onVariantChange],
   );
 
   const handleSelectChange = useCallback(
@@ -72,7 +92,7 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
       </p>
       <div className="flex flex-wrap items-center gap-2 rounded-full bg-muted/40 px-2 py-2 ring-1 ring-border/60 sm:bg-transparent sm:p-0 sm:ring-0">
         <div className="hidden flex-wrap items-center gap-2 sm:flex" role="radiogroup" aria-label="Layouts">
-          {variants.map((variant, index) => {
+          {displayVariants.map((variant, index) => {
             const isActive = activeVariant === variant;
             const showNewBadge = variant === "full" && !hasSeenFull;
 
@@ -112,7 +132,7 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
               <SelectValue placeholder="Layouts" />
             </SelectTrigger>
             <SelectContent>
-              {variants.map((variant) => (
+              {displayVariants.map((variant) => (
                 <SelectItem key={variant} value={variant} className="text-sm">
                   {getLabel(variant)}
                 </SelectItem>

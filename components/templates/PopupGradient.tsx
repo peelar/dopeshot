@@ -1,6 +1,6 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
-import { Asset, ImageMetadata } from "@/domain/asset/types";
+import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
@@ -8,15 +8,15 @@ import { LogoBadge } from "@/components/templates/shared/LogoBadge";
 import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
 
-type ScreenshotOrientation = NonNullable<ImageMetadata["orientation"]>;
-
-const FALLBACK_ORIENTATION: ScreenshotOrientation = "landscape";
-const ORIENTATION_PRESETS: Record<ScreenshotOrientation, { heightFactor: number; objectPosition: string }> = {
-  ultrawide: { heightFactor: 0.48, objectPosition: "50% 6%" },
-  landscape: { heightFactor: 0.54, objectPosition: "50% 10%" },
-  square: { heightFactor: 0.6, objectPosition: "50% 16%" },
-  portrait: { heightFactor: 0.66, objectPosition: "50% 22%" },
+const SIDE_CONTENT_TOP = "30%";
+const CENTER_CONTENT_TOP = "12%";
+const CENTER_SCREENSHOT_TOP = "40%";
+const SCREENSHOT_OBJECT_POSITIONS: Record<"left" | "right", string> = {
+  left: "0% 0%", // show top-left when text anchors left
+  right: "100% 0%", // show top-right when text anchors right
 };
+
+const CENTER_SCREENSHOT_GUTTER = 0.07; // Keep inset so rounded corners are visible
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -68,62 +68,55 @@ function PopupGradientComponent({
   const titleClassName = cn("font-bold", fontSize.titleClass, textColorClass);
   const subtitleClassName = cn("mt-4 min-h-[1.2rem]", fontSize.subtitleClass, textColorClass);
 
-  const screenshotOrientation: ScreenshotOrientation = useMemo(() => {
-    if (!screenshot) return FALLBACK_ORIENTATION;
-    if (screenshot.metadata?.orientation) {
-      return screenshot.metadata.orientation;
+  const screenshotFrameWidth = useMemo(() => {
+    if (textVariant === "center") {
+      return "100%";
     }
-
-    const ratio = screenshot.metadata?.aspectRatio;
-    if (!ratio) return FALLBACK_ORIENTATION;
-    if (ratio >= 2.1) return "ultrawide";
-    if (ratio >= 1.1) return "landscape";
-    if (ratio <= 0.85) return "portrait";
-    return "square";
-  }, [screenshot]);
-
-  const screenshotFrameDimensions = useMemo(() => {
-    const base = ORIENTATION_PRESETS[screenshotOrientation].heightFactor;
-    const variantBoost = textVariant === "center" ? 0.04 : 0;
-    const clampedHeight = Math.min(0.7, Math.max(0.48, base + variantBoost));
-
-    return {
-      width: `${(textVariant === "center" ? 0.58 : 0.62) * 100}%`,
-      height: `${clampedHeight * 100}%`,
-    };
-  }, [screenshotOrientation, textVariant]);
-
-  const screenshotImageStyle = useMemo(() => {
-    const { objectPosition } = ORIENTATION_PRESETS[screenshotOrientation];
-    return {
-      objectPosition,
-      transform: "scale(1.06)",
-      transformOrigin: "top center",
-    } as CSSProperties;
-  }, [screenshotOrientation]);
+    return "62%";
+  }, [textVariant]);
 
   const renderScreenshot = (placement: "left" | "right" | "center") => {
     if (!screenshot) return null;
 
+    if (placement === "center") {
+      const insetPercentage = `${CENTER_SCREENSHOT_GUTTER * 100}%`;
+      return (
+        <div
+          className="z-5 absolute overflow-hidden rounded-t-[20px]"
+          style={{
+            top: CENTER_SCREENSHOT_TOP,
+            bottom: 0,
+            left: insetPercentage,
+            right: insetPercentage,
+          }}
+        >
+          <div className="flex h-full w-full items-start justify-center">
+            <img
+              src={screenshot.url}
+              alt="Screenshot"
+              className="block h-auto w-full max-w-full object-contain"
+              crossOrigin="anonymous"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    const objectPosition = SCREENSHOT_OBJECT_POSITIONS[placement];
     const baseStyle: CSSProperties = {
-      width: screenshotFrameDimensions.width,
-      height: screenshotFrameDimensions.height,
+      top: placement === "center" ? CENTER_SCREENSHOT_TOP : SIDE_CONTENT_TOP,
+      bottom: 0,
+      width: screenshotFrameWidth,
       borderTopLeftRadius: placement === "right" ? "0px" : "12px",
       borderTopRightRadius: placement === "right" ? "12px" : "0px",
     };
 
-    if (placement === "center") {
-      baseStyle.borderTopLeftRadius = "12px";
-      baseStyle.borderTopRightRadius = "12px";
-    }
-
     return (
       <div
         className={cn(
-          "z-5 absolute bottom-0 overflow-hidden",
+          "z-5 absolute overflow-hidden",
           placement === "left" && "right-0",
           placement === "right" && "left-0",
-          placement === "center" && "left-1/2 -translate-x-1/2",
         )}
         style={baseStyle}
       >
@@ -131,7 +124,7 @@ function PopupGradientComponent({
           src={screenshot.url}
           alt="Screenshot"
           className="block h-full w-full object-cover"
-          style={screenshotImageStyle}
+          style={{ objectPosition }}
           crossOrigin="anonymous"
         />
       </div>
@@ -172,7 +165,10 @@ function PopupGradientComponent({
       {textVariant === "left" && (
         <>
           {/* Text on left */}
-          <div className="absolute left-14 top-[30%] z-10" style={textColumnStyle}>
+          <div
+            className="absolute left-14 z-10"
+            style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
+          >
             <InlineEditableText
               element="h1"
               field="title"
@@ -208,7 +204,10 @@ function PopupGradientComponent({
           {renderScreenshot("right")}
 
           {/* Text on right */}
-          <div className="absolute right-14 top-[30%] z-10 text-right" style={textColumnStyle}>
+          <div
+            className="absolute right-14 z-10 text-right"
+            style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
+          >
             <InlineEditableText
               element="h1"
               field="title"
@@ -238,7 +237,10 @@ function PopupGradientComponent({
       {textVariant === "center" && (
         <>
           {/* Text on top */}
-          <div className="absolute left-1/2 top-[12%] z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center">
+          <div
+            className="absolute left-1/2 z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center"
+            style={{ top: CENTER_CONTENT_TOP }}
+          >
             <InlineEditableText
               element="h1"
               field="title"

@@ -133,19 +133,24 @@ function HeroCenterComponent({
         {renderLogo()}
       </div>
 
-      <div className="flex h-full w-full items-center justify-center px-12 py-16">
-        <div className="flex w-full max-w-5xl items-center gap-12">
-          {variant === "left" ? (
-            <>
-              <div className="flex-1 max-w-md">{renderTextBlock("left")}</div>
-              {renderScreenshot()}
-            </>
-          ) : (
-            <>
-              {renderScreenshot()}
-              <div className="flex-1 max-w-md">{renderTextBlock("right")}</div>
-            </>
+      <div className="flex h-full w-full items-center px-14 py-16">
+        <div
+          className={cn(
+            "flex w-full items-center gap-12",
+            variant === "right" ? "flex-row-reverse" : "flex-row",
           )}
+        >
+          <div
+            className={cn(
+              "flex flex-1",
+              variant === "right" ? "justify-end" : "justify-start",
+            )}
+          >
+            <div className="max-w-md">
+              {variant === "right" ? renderTextBlock("right") : renderTextBlock("left")}
+            </div>
+          </div>
+          {renderScreenshot()}
         </div>
       </div>
     </div>

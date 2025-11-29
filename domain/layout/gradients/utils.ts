@@ -1,5 +1,41 @@
 import { ColorToken } from "../types";
-import { CustomGradient, isLegacyGradient, isAdvancedGradient } from "./types";
+import {
+  CustomGradient,
+  isLegacyGradient,
+  isAdvancedGradient,
+  GradientColorSpace,
+} from "./types";
+
+const COLOR_SPACE_SUPPORT_CACHE: Partial<Record<GradientColorSpace, boolean>> = {};
+
+function isColorSpaceSupported(space?: GradientColorSpace): boolean {
+  if (!space || space === "srgb") {
+    return false;
+  }
+
+  const cached = COLOR_SPACE_SUPPORT_CACHE[space];
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  if (typeof window === "undefined" || typeof CSS === "undefined" || typeof CSS.supports !== "function") {
+    COLOR_SPACE_SUPPORT_CACHE[space] = false;
+    return false;
+  }
+
+  const testDeclaration = `linear-gradient(in ${space} 90deg, #000, #fff)`;
+  const supported = CSS.supports("background-image", testDeclaration);
+  COLOR_SPACE_SUPPORT_CACHE[space] = supported;
+  return supported;
+}
+
+function buildGradientArgs(base: string, space?: GradientColorSpace): string {
+  const supportsSpace = isColorSpaceSupported(space);
+  if (supportsSpace && space) {
+    return `in ${space} ${base}`.trim();
+  }
+  return base.trim();
+}
 
 /**
  * Calculate relative luminance of a hex color
@@ -60,8 +96,8 @@ export function customGradientToCss(gradient: CustomGradient): string {
   if (isAdvancedGradient(gradient)) {
     const { type, stops, direction, colorSpace, angle } = gradient;
 
-    // Default color space to OKLCH for perceptual uniformity
-    const space = colorSpace ?? "oklch";
+    const directionOrAngle = angle !== undefined ? `${angle}deg` : direction ?? "to right";
+    const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace);
 
     // Build stops string
     const stopsString = stops
@@ -80,26 +116,13 @@ export function customGradientToCss(gradient: CustomGradient): string {
     let gradientFunction = "";
 
     if (type === "radial") {
-      const radialDirection = direction ?? "circle at center";
+      const radialDirection = buildGradientArgs(direction ?? "circle at center", colorSpace);
       gradientFunction = `radial-gradient(${radialDirection}, ${stopsString})`;
     } else if (type === "conic") {
-      const conicDirection = direction ?? "from 0deg at center";
+      const conicDirection = buildGradientArgs(direction ?? "from 0deg at center", colorSpace);
       gradientFunction = `conic-gradient(${conicDirection}, ${stopsString})`;
     } else {
-      // Linear gradient
-      let linearDirection = direction ?? "to right";
-      if (angle !== undefined) {
-        linearDirection = `${angle}deg`;
-      }
-
-      // Use OKLCH interpolation syntax if color space is oklch
-      if (space === "oklch") {
-        gradientFunction = `linear-gradient(${linearDirection} in oklch, ${stopsString})`;
-      } else if (space === "lab") {
-        gradientFunction = `linear-gradient(${linearDirection} in lab, ${stopsString})`;
-      } else {
-        gradientFunction = `linear-gradient(${linearDirection}, ${stopsString})`;
-      }
+      gradientFunction = `linear-gradient(${directionWithSpace}, ${stopsString})`;
     }
 
     return gradientFunction;
@@ -142,4 +165,3 @@ export function degreesToDirection(angle: number): string {
   const normalized = ((Math.round(angle) % 360) + 360) % 360;
   return `${normalized}deg`;
 }
-
