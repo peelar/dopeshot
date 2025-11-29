@@ -3,19 +3,19 @@
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
 import {
+  AdvancedGradient,
   BackgroundConfig,
   ColorToken,
   CustomGradient,
-  isLegacyGradient,
   isAdvancedGradient,
+  isLegacyGradient,
 } from "@/domain/layout/types";
 import { ColorPalette } from "@/domain/asset/types";
 import {
   customGradientToCss,
-  getContrastTextColor,
   directionStringToDegrees,
-  degreesToDirection,
   generateGradientOptions,
+  getContrastTextColor,
 } from "@/domain/layout/gradients";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -59,26 +59,25 @@ function DebouncedColorInput({
   };
 
   return (
-    <div className="flex flex-1 items-center gap-2 rounded-lg border border-border/30 bg-background/60 px-2 py-1">
+    <label
+      htmlFor={id}
+      className="flex flex-1 flex-col items-center gap-3 rounded-2xl bg-background/70 p-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground shadow-sm transition hover:bg-muted/20 hover:shadow focus-within:bg-muted/30"
+    >
+      {label}
       <input
         type="color"
         id={id}
         value={localValue}
         onChange={handleChange}
-        className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent p-0"
+        className="h-10 w-10 cursor-pointer appearance-none bg-transparent p-0 focus-visible:outline-none"
         aria-label={`${label} color`}
       />
-      <label
-        htmlFor={id}
-        className="cursor-pointer text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground"
-      >
-        {label}
-      </label>
-    </div>
+    </label>
   );
 }
 
 type GradientSource = "screenshot" | "custom" | "preset";
+type CustomColorStop = "start" | "mid" | "end";
 
 interface GradientPickerProps {
   background: BackgroundConfig;
@@ -214,56 +213,26 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   );
 
   const handleColorChange = useCallback(
-    (colorType: "from" | "to", value: string) => {
-      const current = background.customGradient ?? {
-        from: colorPalette?.accent ?? "#6366f1",
-        to: "#ffffff",
-        direction: degreesToDirection(currentAngle),
-      };
-      const newGradient: CustomGradient = {
-        ...current,
-        direction: current.direction ?? degreesToDirection(currentAngle),
-        [colorType]: value,
-      };
+    (colorType: CustomColorStop, value: string) => {
+      const colors = getCustomGradientColors(background.customGradient, colorPalette);
+      const nextColors = { ...colors, [colorType]: value };
+      const newGradient = buildThreeStopGradient(nextColors, currentAngle, background.customGradient);
       lockManualSource();
-      // Custom gradient controls only work with legacy gradients
-      const firstColor = isLegacyGradient(newGradient) ? newGradient.from : "#000000";
-      const textColor = getContrastTextColor(firstColor);
+      const textColor = getContrastTextColor(nextColors.start);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [
-      background.customGradient,
-      colorPalette?.accent,
-      currentAngle,
-      lockManualSource,
-      onChangeAction,
-    ],
+    [background.customGradient, colorPalette, currentAngle, lockManualSource, onChangeAction],
   );
 
   const handleDirectionChange = useCallback(
     (angle: number) => {
-      const current = background.customGradient ?? {
-        from: colorPalette?.accent ?? "#6366f1",
-        to: "#ffffff",
-        direction: degreesToDirection(currentAngle),
-      };
-      const newGradient: CustomGradient = {
-        ...current,
-        direction: degreesToDirection(angle),
-      };
+      const colors = getCustomGradientColors(background.customGradient, colorPalette);
+      const newGradient = buildThreeStopGradient(colors, angle, background.customGradient);
       lockManualSource();
-      // Custom gradient controls only work with legacy gradients
-      const firstColor = isLegacyGradient(newGradient) ? newGradient.from : "#000000";
-      const textColor = getContrastTextColor(firstColor);
+      const textColor = getContrastTextColor(colors.start);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [
-      background.customGradient,
-      colorPalette?.accent,
-      currentAngle,
-      lockManualSource,
-      onChangeAction,
-    ],
+    [background.customGradient, colorPalette, lockManualSource, onChangeAction],
   );
 
   const handleScreenshotSelect = useCallback(
@@ -382,7 +351,7 @@ interface CustomGradientControlsProps {
   background: BackgroundConfig;
   colorPalette?: ColorPalette;
   angle: number;
-  onColorChange: (colorType: "from" | "to", value: string) => void;
+  onColorChange: (colorType: CustomColorStop, value: string) => void;
   onAngleChange: (angle: number) => void;
 }
 
@@ -393,8 +362,11 @@ function CustomGradientControls({
   onColorChange,
   onAngleChange,
 }: CustomGradientControlsProps) {
-  const fromValue = background.customGradient?.from ?? colorPalette?.accent ?? "#6366f1";
-  const toValue = background.customGradient?.to ?? "#ffffff";
+  const customColors = useMemo(
+    () => getCustomGradientColors(background.customGradient, colorPalette),
+    [background.customGradient, colorPalette],
+  );
+  const { start, mid, end } = customColors;
 
   return (
     <div className="space-y-3 rounded-2xl border border-border/20 bg-background/70 p-3">
@@ -402,18 +374,24 @@ function CustomGradientControls({
         <div className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
           Colors
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-3 gap-2">
           <DebouncedColorInput
-            id="gradient-from-color"
-            value={fromValue}
-            onChange={(value) => onColorChange("from", value)}
-            label="From"
+            id="gradient-start-color"
+            value={start}
+            onChange={(value) => onColorChange("start", value)}
+            label="Start"
           />
           <DebouncedColorInput
-            id="gradient-to-color"
-            value={toValue}
-            onChange={(value) => onColorChange("to", value)}
-            label="To"
+            id="gradient-mid-color"
+            value={mid}
+            onChange={(value) => onColorChange("mid", value)}
+            label="Mid"
+          />
+          <DebouncedColorInput
+            id="gradient-end-color"
+            value={end}
+            onChange={(value) => onColorChange("end", value)}
+            label="End"
           />
         </div>
       </div>
@@ -553,4 +531,101 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
 
   // Different types are not equal
   return false;
+}
+
+type CustomGradientColors = {
+  start: string;
+  mid: string;
+  end: string;
+};
+
+function getCustomGradientColors(gradient?: CustomGradient, palette?: ColorPalette): CustomGradientColors {
+  const defaults = getDefaultCustomColors(palette);
+  if (!gradient) {
+    return defaults;
+  }
+
+  if (isAdvancedGradient(gradient)) {
+    if (gradient.stops.length >= 3) {
+      const midIndex = Math.floor(gradient.stops.length / 2);
+      return {
+        start: gradient.stops[0]?.color ?? defaults.start,
+        mid: gradient.stops[midIndex]?.color ?? defaults.mid,
+        end: gradient.stops[gradient.stops.length - 1]?.color ?? defaults.end,
+      };
+    }
+    if (gradient.stops.length === 2) {
+      return {
+        start: gradient.stops[0]?.color ?? defaults.start,
+        mid: gradient.stops[0]?.color ?? defaults.mid,
+        end: gradient.stops[1]?.color ?? defaults.end,
+      };
+    }
+    if (gradient.stops.length === 1) {
+      const singleColor = gradient.stops[0]?.color ?? defaults.start;
+      return { start: singleColor, mid: singleColor, end: singleColor };
+    }
+  }
+
+  if (isLegacyGradient(gradient)) {
+    const start = gradient.from ?? defaults.start;
+    const end = gradient.to ?? defaults.end;
+    const mid = mixHexColors(start, end) ?? defaults.mid;
+    return { start, mid, end };
+  }
+
+  return defaults;
+}
+
+function getDefaultCustomColors(palette?: ColorPalette): CustomGradientColors {
+  const start = palette?.accent ?? "#6366f1";
+  const end = palette?.muted ?? palette?.dominant ?? "#ffffff";
+  const mid = palette?.dominant ?? palette?.vibrant ?? mixHexColors(start, end) ?? start;
+  return { start, mid, end };
+}
+
+function buildThreeStopGradient(
+  colors: CustomGradientColors,
+  angle: number,
+  existing?: CustomGradient,
+): AdvancedGradient {
+  const normalizedAngle = ((Math.round(angle) % 360) + 360) % 360;
+  const base = existing && isAdvancedGradient(existing) ? existing : undefined;
+  return {
+    type: "linear",
+    angle: normalizedAngle,
+    colorSpace: base?.colorSpace ?? "oklch",
+    stops: [
+      { color: colors.start, position: 0 },
+      { color: colors.mid, position: 50 },
+      { color: colors.end, position: 100 },
+    ],
+  } satisfies AdvancedGradient;
+}
+
+function mixHexColors(a: string, b: string): string | undefined {
+  const colorA = parseHexColor(a);
+  const colorB = parseHexColor(b);
+  if (!colorA || !colorB) return undefined;
+  const mixed: [number, number, number] = [
+    Math.round((colorA[0] + colorB[0]) / 2),
+    Math.round((colorA[1] + colorB[1]) / 2),
+    Math.round((colorA[2] + colorB[2]) / 2),
+  ];
+  return rgbToHex(mixed[0], mixed[1], mixed[2]);
+}
+
+function parseHexColor(hex: string): [number, number, number] | undefined {
+  const normalized = hex.trim();
+  const match = /^#?([a-fA-F\d]{2})([a-fA-F\d]{2})([a-fA-F\d]{2})$/.exec(normalized);
+  if (!match) return undefined;
+  return [
+    parseInt(match[1], 16),
+    parseInt(match[2], 16),
+    parseInt(match[3], 16),
+  ];
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`;
 }
