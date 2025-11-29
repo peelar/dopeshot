@@ -1,17 +1,19 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
-import { GRADIENTS, getGradientById } from "@/domain/layout/gradients";
-import { BackgroundConfig, ColorToken, CustomGradient } from "@/domain/layout/types";
+import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
+import { BackgroundConfig, ColorToken, CustomGradient, isLegacyGradient, isAdvancedGradient } from "@/domain/layout/types";
 import { ColorPalette } from "@/domain/asset/types";
 import {
   customGradientToCss,
   getContrastTextColor,
   directionStringToDegrees,
   degreesToDirection,
-} from "@/domain/layout/gradient-utils";
+  generateGradientOptions,
+} from "@/domain/layout/gradients";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { AspectCategory } from "@/domain/layout/aspect";
 
 // Debounced color input that delays updates while dragging
 function DebouncedColorInput({
@@ -79,18 +81,18 @@ interface GradientPickerProps {
 }
 
 export function GradientPicker({ background, colorPalette, onChangeAction }: GradientPickerProps) {
+  // Generate beautiful multi-stop gradients from screenshot colors
   const dynamicGradients = useMemo((): CustomGradient[] => {
     if (!colorPalette) return [];
-    const gradients: CustomGradient[] = [];
 
-    if (colorPalette.vibrant) {
-      gradients.push({ from: colorPalette.vibrant, to: "#ffffff", direction: "to right" });
-    }
-    gradients.push({ from: colorPalette.accent, to: "#ffffff", direction: "to right" });
-    gradients.push({ from: colorPalette.accent, to: "#1e1e1e", direction: "to right" });
-    gradients.push({ from: colorPalette.dominant, to: colorPalette.accent, direction: "to right" });
+    // Generate gradient options using the new generator
+    // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
+    const options = generateGradientOptions(colorPalette, {
+      aspectCategory: "landscape",
+      templateVariant: undefined,
+    });
 
-    return gradients;
+    return options;
   }, [colorPalette]);
 
   const currentGradientCss = useMemo((): string => {
@@ -104,10 +106,16 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
     return "linear-gradient(to right, #6366f1, #8b5cf6)";
   }, [background.customGradient, background.type, background.value]);
 
-  const currentAngle = useMemo(
-    () => directionStringToDegrees(background.customGradient?.direction),
-    [background.customGradient?.direction],
-  );
+  const currentAngle = useMemo(() => {
+    if (!background.customGradient) return 90;
+    if (isAdvancedGradient(background.customGradient)) {
+      return background.customGradient.angle ?? 90;
+    }
+    if (isLegacyGradient(background.customGradient)) {
+      return directionStringToDegrees(background.customGradient.direction);
+    }
+    return 90;
+  }, [background.customGradient]);
 
   const defaultSource = useMemo<GradientSource>(() => {
     if (
@@ -125,9 +133,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   }, [
     background.type,
     background.value,
-    background.customGradient?.from,
-    background.customGradient?.to,
-    background.customGradient?.direction,
+    background.customGradient,
     dynamicGradients.length,
   ]);
 
@@ -157,7 +163,16 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   const currentTextColor = useMemo<ColorToken>(() => {
     if (background.customGradient) {
-      return getContrastTextColor(background.customGradient.from);
+      // Extract first color from gradient for text contrast
+      let firstColor: string;
+      if (isAdvancedGradient(background.customGradient)) {
+        firstColor = background.customGradient.stops[0]?.color ?? "#000000";
+      } else if (isLegacyGradient(background.customGradient)) {
+        firstColor = background.customGradient.from;
+      } else {
+        firstColor = "#000000";
+      }
+      return getContrastTextColor(firstColor);
     }
     if (background.type === "gradient" && background.value) {
       return getGradientById(background.value)?.textColor ?? "slate-900";
@@ -185,7 +200,13 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   const handleCustomGradientSelect = useCallback(
     (gradient: CustomGradient) => {
       lockManualSource();
-      const textColor = getContrastTextColor(gradient.from);
+      // Extract first color for text contrast
+      const firstColor = isLegacyGradient(gradient)
+        ? gradient.from
+        : isAdvancedGradient(gradient)
+          ? gradient.stops[0]?.color ?? "#000000"
+          : "#000000";
+      const textColor = getContrastTextColor(firstColor);
       onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
     },
     [lockManualSource, onChangeAction],
@@ -204,7 +225,9 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
         [colorType]: value,
       };
       lockManualSource();
-      const textColor = getContrastTextColor(newGradient.from);
+      // Custom gradient controls only work with legacy gradients
+      const firstColor = isLegacyGradient(newGradient) ? newGradient.from : "#000000";
+      const textColor = getContrastTextColor(firstColor);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
     [
@@ -228,7 +251,9 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
         direction: degreesToDirection(angle),
       };
       lockManualSource();
-      const textColor = getContrastTextColor(newGradient.from);
+      // Custom gradient controls only work with legacy gradients
+      const firstColor = isLegacyGradient(newGradient) ? newGradient.from : "#000000";
+      const textColor = getContrastTextColor(firstColor);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
     [
@@ -339,11 +364,11 @@ function ScreenshotGradients({
           const isSelected = areGradientsEqual(activeGradient, gradient);
           return (
             <GradientSwatch
-              key={`${gradient.from}-${gradient.to}-${index}`}
+              key={`gradient-${index}`}
               gradientCss={customGradientToCss(gradient)}
               selected={isSelected}
               onClick={() => !disabled && onSelect(gradient)}
-              ariaLabel={`Gradient from ${gradient.from} to ${gradient.to}`}
+              ariaLabel="Screenshot gradient"
             />
           );
         })}
@@ -497,5 +522,22 @@ function GradientAngleControl({ angle, onChange }: GradientAngleControlProps) {
 
 function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
   if (!a || !b) return false;
-  return a.from === b.from && a.to === b.to;
+  
+  // Compare legacy gradients
+  if (isLegacyGradient(a) && isLegacyGradient(b)) {
+    return a.from === b.from && a.to === b.to && a.direction === b.direction;
+  }
+  
+  // Compare advanced gradients
+  if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
+    if (a.stops.length !== b.stops.length) return false;
+    if (a.type !== b.type) return false;
+    return a.stops.every((stop, i) => {
+      const otherStop = b.stops[i];
+      return stop.color === otherStop?.color && stop.position === otherStop?.position;
+    });
+  }
+  
+  // Different types are not equal
+  return false;
 }

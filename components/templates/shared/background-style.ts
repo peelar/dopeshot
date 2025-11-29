@@ -1,7 +1,7 @@
 import { LayoutConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
-import { customGradientToCss } from "@/domain/layout/gradient-utils";
-import { getGradientById } from "@/domain/layout/gradients";
+import { customGradientToCss } from "@/domain/layout/gradients";
+import { getGradientById } from "@/domain/layout/gradient-presets";
 import { tokenToCssColor } from "@/components/templates/shared/color-utils";
 
 export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, Asset>): string {

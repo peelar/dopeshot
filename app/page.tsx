@@ -12,7 +12,7 @@ import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
-import { getContrastTextColor } from "@/domain/layout/gradient-utils";
+import { getContrastTextColor, generateGradient, isAdvancedGradient } from "@/domain/layout/gradients";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
@@ -252,24 +252,34 @@ export default function PlaygroundPage() {
             if (colorPalette) {
               setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
 
-              const gradientColor = colorPalette.vibrant ?? colorPalette.accent;
-              const textColor = getContrastTextColor(gradientColor);
-              setConfig((currentConfig) => ({
-                ...currentConfig,
-                colors: {
-                  ...currentConfig.colors,
-                  text: textColor,
-                },
-                background: {
-                  type: "gradient",
-                  value: "custom",
-                  customGradient: {
-                    from: gradientColor,
-                    to: "#ffffff",
-                    direction: "to right",
+              // Generate beautiful multi-stop gradient using new generator
+              const contextAspect = aspectCategory ?? "landscape";
+              
+              setConfig((currentConfig) => {
+                const generatedGradient = generateGradient(colorPalette, {
+                  aspectCategory: contextAspect,
+                  templateVariant: currentConfig.variant,
+                });
+
+                // Determine text color from first stop of gradient
+                const firstStopColor = isAdvancedGradient(generatedGradient)
+                  ? generatedGradient.stops[0]?.color ?? colorPalette.accent
+                  : colorPalette.accent;
+                const textColor = getContrastTextColor(firstStopColor);
+
+                return {
+                  ...currentConfig,
+                  colors: {
+                    ...currentConfig.colors,
+                    text: textColor,
                   },
-                },
-              }));
+                  background: {
+                    type: "gradient",
+                    value: "custom",
+                    customGradient: generatedGradient,
+                  },
+                };
+              });
               const gradientMessage = autoLayoutMessage
                 ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
                 : "Gradient applied based on your screenshot colors.";

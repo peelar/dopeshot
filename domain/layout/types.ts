@@ -33,11 +33,17 @@ export type FontId =
 
 export type FontSize = "sm" | "md" | "lg" | "xl" | "2xl";
 
-export type CustomGradient = {
-  from: string; // hex color
-  to: string; // hex color
-  direction?: string; // e.g., "to right", "to bottom right"
-};
+// Re-export gradient types from gradients module for backward compatibility
+export type {
+  GradientStop,
+  GradientType,
+  GradientColorSpace,
+  AdvancedGradient,
+  LegacyGradient,
+  CustomGradient,
+} from "./gradients/types";
+
+export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 export type BackgroundConfig = {
   type: BackgroundType;

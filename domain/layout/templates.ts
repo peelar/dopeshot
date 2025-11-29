@@ -3,7 +3,7 @@ import { PopupGradient } from "@/components/templates/PopupGradient";
 import { HeroCenter } from "@/components/templates/HeroCenter";
 import type { ComponentType } from "react";
 import { Asset } from "@/domain/asset/types";
-import { DEFAULT_GRADIENT } from "@/domain/layout/gradients";
+import { DEFAULT_GRADIENT } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
 
 export interface Template {

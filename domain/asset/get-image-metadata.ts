@@ -7,7 +7,7 @@ export async function getImageMetadataFromDataUrl(dataUrl: string): Promise<Imag
     return undefined;
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise<ImageMetadata | undefined>((resolve, reject) => {
     const image = new Image();
     image.onload = () => {
       const width = image.naturalWidth || image.width;
@@ -25,8 +25,8 @@ export async function getImageMetadataFromDataUrl(dataUrl: string): Promise<Imag
       });
     };
 
-    image.onerror = (error) => {
-      reject(error);
+    image.onerror = () => {
+      resolve(undefined);
     };
 
     image.src = dataUrl;
