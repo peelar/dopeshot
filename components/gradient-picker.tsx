@@ -11,6 +11,7 @@ import {
   degreesToDirection,
 } from "@/domain/layout/gradient-utils";
 import { cn } from "@/utils";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 // Debounced color input that delays updates while dragging
 function DebouncedColorInput({
@@ -247,6 +248,21 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
     [handleCustomGradientSelect, setActiveSourceWithOverride],
   );
 
+  const gradientTabs = [
+    { id: "screenshot", label: "From Screenshot", disabled: !hasScreenshotGradients },
+    { id: "custom", label: "Custom" },
+    { id: "preset", label: "Presets" },
+  ] satisfies { id: GradientSource; label: string; disabled?: boolean }[];
+
+  const handleTabChange = useCallback(
+    (next: string) => {
+      if (next === "screenshot" || next === "custom" || next === "preset") {
+        setActiveSourceWithOverride(next);
+      }
+    },
+    [setActiveSourceWithOverride],
+  );
+
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border/60 bg-muted/30">
@@ -254,87 +270,40 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
           <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
             Gradient
           </p>
-          <GradientSourceTabs
-            activeSource={activeSource}
-            onSelect={setActiveSourceWithOverride}
-            screenshotAvailable={hasScreenshotGradients}
+          <SegmentedControl
+            value={activeSource}
+            options={gradientTabs}
+            onChange={handleTabChange}
+            ariaLabel="Select gradient source"
           />
         </div>
         <div className="px-4 py-4">
-          <div className="rounded-2xl border border-border/20 bg-background/70 p-4">
-            {activeSource === "screenshot" && (
-              <div className="space-y-5">
-                <ScreenshotGradients
-                  gradients={dynamicGradients}
-                  activeGradient={background.customGradient}
-                  disabled={!hasScreenshotGradients}
-                  onSelect={handleScreenshotSelect}
-                />
-              </div>
-            )}
-            {activeSource === "custom" && (
-              <CustomGradientControls
-                background={background}
-                colorPalette={colorPalette}
-                angle={currentAngle}
-                onColorChange={handleColorChange}
-                onAngleChange={handleDirectionChange}
-              />
-            )}
-            {activeSource === "preset" && (
-              <PresetGradients
-                gradients={GRADIENTS}
-                selectedPresetId={activePresetId}
-                onSelect={handlePresetSelect}
-              />
-            )}
-          </div>
+          {activeSource === "screenshot" && (
+            <ScreenshotGradients
+              gradients={dynamicGradients}
+              activeGradient={background.customGradient}
+              disabled={!hasScreenshotGradients}
+              onSelect={handleScreenshotSelect}
+            />
+          )}
+          {activeSource === "custom" && (
+            <CustomGradientControls
+              background={background}
+              colorPalette={colorPalette}
+              angle={currentAngle}
+              onColorChange={handleColorChange}
+              onAngleChange={handleDirectionChange}
+            />
+          )}
+          {activeSource === "preset" && (
+            <PresetGradients
+              gradients={GRADIENTS}
+              selectedPresetId={activePresetId}
+              onSelect={handlePresetSelect}
+            />
+          )}
         </div>
       </div>
-    </div>
-  );
-}
-
-interface GradientSourceTabsProps {
-  activeSource: GradientSource;
-  onSelect: (source: GradientSource) => void;
-  screenshotAvailable: boolean;
-}
-
-function GradientSourceTabs({
-  activeSource,
-  onSelect,
-  screenshotAvailable,
-}: GradientSourceTabsProps) {
-  const options: { id: GradientSource; label: string; disabled?: boolean }[] = [
-    { id: "screenshot", label: "From Screenshot", disabled: !screenshotAvailable },
-    { id: "custom", label: "Custom" },
-    { id: "preset", label: "Presets" },
-  ];
-
-  return (
-    <div className="flex w-full gap-2 rounded-lg border border-border/40 bg-muted/20 p-1 text-xs font-medium">
-      {options.map((option) => (
-        <button
-          key={option.id}
-          type="button"
-          className={cn(
-            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition",
-            activeSource === option.id
-              ? "bg-foreground text-background shadow-sm"
-              : "text-muted-foreground hover:text-foreground",
-            option.disabled && "cursor-not-allowed opacity-40",
-          )}
-          onClick={() => {
-            if (option.disabled) return;
-            onSelect(option.id);
-          }}
-          aria-pressed={activeSource === option.id}
-          disabled={option.disabled}
-        >
-          {option.label}
-        </button>
-      ))}
     </div>
   );
 }
@@ -362,23 +331,19 @@ function ScreenshotGradients({
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
+        Sampled from your screenshot
+      </p>
+      <div className="grid grid-cols-4 gap-3">
         {gradients.map((gradient, index) => {
           const isSelected = areGradientsEqual(activeGradient, gradient);
           return (
-            <button
+            <GradientSwatch
               key={`${gradient.from}-${gradient.to}-${index}`}
-              type="button"
-              aria-pressed={isSelected}
-              aria-label={`Gradient from ${gradient.from} to ${gradient.to}`}
-              className={cn(
-                "h-12 rounded-2xl border transition focus-visible:ring-2 focus-visible:ring-offset-2",
-                isSelected
-                  ? "border-primary ring-1 ring-primary/30"
-                  : "border-border/30 hover:border-foreground",
-              )}
-              style={{ background: customGradientToCss(gradient) }}
+              gradientCss={customGradientToCss(gradient)}
+              selected={isSelected}
               onClick={() => !disabled && onSelect(gradient)}
+              ariaLabel={`Gradient from ${gradient.from} to ${gradient.to}`}
             />
           );
         })}
@@ -440,28 +405,46 @@ interface PresetGradientsProps {
 function PresetGradients({ gradients, selectedPresetId, onSelect }: PresetGradientsProps) {
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-4 gap-3">
         {gradients.map((gradient) => {
           const isSelected = selectedPresetId === gradient.id;
           return (
-            <button
+            <GradientSwatch
               key={gradient.id}
-              type="button"
-              aria-pressed={isSelected}
-              aria-label={`${gradient.name} preset`}
-              className={cn(
-                "h-10 rounded-xl border transition focus-visible:ring-2 focus-visible:ring-offset-2",
-                isSelected
-                  ? "border-primary ring-1 ring-primary/40"
-                  : "border-border/30 hover:border-foreground/70",
-              )}
-              style={{ background: gradient.value }}
+              gradientCss={gradient.value}
+              selected={isSelected}
               onClick={() => onSelect(gradient.id)}
+              ariaLabel={`${gradient.name} preset`}
             />
           );
         })}
       </div>
     </div>
+  );
+}
+
+interface GradientSwatchProps {
+  gradientCss: string;
+  selected?: boolean;
+  onClick?: () => void;
+  ariaLabel?: string;
+}
+
+function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientSwatchProps) {
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={ariaLabel}
+      onClick={onClick}
+      className={cn(
+        "group relative flex h-12 w-full items-center overflow-hidden rounded-xl text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
+        selected ? "ring-2 ring-white/70" : "ring-1 ring-white/15",
+      )}
+      style={{ background: gradientCss }}
+    >
+      <span className="sr-only">Gradient swatch</span>
+    </button>
   );
 }
 

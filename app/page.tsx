@@ -17,9 +17,83 @@ import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colo
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
 import { cn } from "@/utils";
+import { getImageMetadataFromDataUrl } from "@/domain/asset/get-image-metadata";
+import { getAspectCategory, getRecommendationForCategory, AspectCategory } from "@/domain/layout/aspect";
+import { LayoutConfig } from "@/domain/layout/types";
 
 const DEFAULT_ASSETS: Asset[] = [];
 const sora = Sora({ subsets: ["latin"] });
+
+type TemplateRecommendation = {
+  templateId: string;
+  variant?: string;
+};
+
+const ASPECT_COPY: Record<AspectCategory, string> = {
+  portrait: "portrait",
+  square: "square",
+  landscape: "landscape",
+  ultrawide: "ultra-wide",
+};
+
+function applyTemplateRecommendation(
+  config: LayoutConfig,
+  recommendation?: TemplateRecommendation,
+): {
+  config: LayoutConfig;
+  changedTemplate: boolean;
+  changedVariant: boolean;
+  templateName?: string;
+} {
+  if (!recommendation) {
+    return { config, changedTemplate: false, changedVariant: false };
+  }
+
+  const template = getTemplateById(recommendation.templateId);
+  if (!template) {
+    return { config, changedTemplate: false, changedVariant: false };
+  }
+
+  const defaultConfig = template.createConfig();
+  const variantCandidate =
+    recommendation.variant && template.variants.includes(recommendation.variant)
+      ? recommendation.variant
+      : undefined;
+
+  if (config.templateId !== template.id) {
+    return {
+      config: {
+        ...defaultConfig,
+        templateId: template.id,
+        variant: variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
+        text: config.text,
+        colors: config.colors,
+        background: config.background,
+        assets: config.assets,
+        screenshotShadow: config.screenshotShadow,
+        fontId: config.fontId,
+        fontSize: config.fontSize,
+      },
+      changedTemplate: true,
+      changedVariant: true,
+      templateName: template.name,
+    };
+  }
+
+  if (variantCandidate && variantCandidate !== config.variant) {
+    return {
+      config: {
+        ...config,
+        variant: variantCandidate,
+      },
+      changedTemplate: false,
+      changedVariant: true,
+      templateName: template.name,
+    };
+  }
+
+  return { config, changedTemplate: false, changedVariant: false };
+}
 
 export default function PlaygroundPage() {
   const [config, setConfig] = useState(TEMPLATES[0].createConfig());
@@ -100,6 +174,18 @@ export default function PlaygroundPage() {
           return;
         }
 
+        let assetMetadata = undefined;
+        let aspectCategory: AspectCategory | undefined;
+        let autoLayoutMessage: string | null = null;
+
+        if (kind === "screenshot") {
+          const metadata = await getImageMetadataFromDataUrl(dataUrl);
+          if (metadata) {
+            aspectCategory = getAspectCategory(metadata.aspectRatio);
+            assetMetadata = { ...metadata, orientation: aspectCategory };
+          }
+        }
+
         const assetId = Math.random().toString(36).substring(7);
         const newAsset: Asset = {
           id: assetId,
@@ -109,6 +195,7 @@ export default function PlaygroundPage() {
           url: dataUrl,
           kind: kind === "background" ? "background" : kind === "logo" ? "logo" : "screenshot",
           createdAt: new Date().toISOString(),
+          metadata: assetMetadata,
         };
         setAssets((prev) => [...prev, newAsset]);
         setHasUploaded(true);
@@ -130,14 +217,29 @@ export default function PlaygroundPage() {
             };
           }
 
+          let nextConfig = newConfig;
+
           if (kind === "screenshot") {
-            newConfig.background = {
-              type: "solid",
-              value: "slate-100",
+            nextConfig = {
+              ...nextConfig,
+              background: {
+                type: "solid",
+                value: "slate-100",
+              },
             };
           }
 
-          return newConfig;
+          if (kind === "screenshot" && aspectCategory) {
+            const recommendation = getRecommendationForCategory(aspectCategory);
+            const result = applyTemplateRecommendation(nextConfig, recommendation);
+            nextConfig = result.config;
+
+            if ((result.changedTemplate || result.changedVariant) && result.templateName) {
+              autoLayoutMessage = `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.templateName}.`;
+            }
+          }
+
+          return nextConfig;
         });
 
         if (kind === "screenshot") {
@@ -168,7 +270,11 @@ export default function PlaygroundPage() {
                   },
                 },
               }));
-              announce("Gradient applied based on your screenshot colors.");
+              const gradientMessage = autoLayoutMessage
+                ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
+                : "Gradient applied based on your screenshot colors.";
+              autoLayoutMessage = null;
+              announce(gradientMessage);
             }
           } finally {
             setIsAnalyzingColors(false);
@@ -176,6 +282,9 @@ export default function PlaygroundPage() {
         }
 
         setIsProcessingUpload(false);
+        if (autoLayoutMessage) {
+          announce(autoLayoutMessage);
+        }
       };
 
       reader.onerror = () => {
@@ -286,7 +395,12 @@ export default function PlaygroundPage() {
                 ) : null}
 
                 <div className="flex w-full justify-center">
-                  <PreviewViewport isLoading={isAnalyzingColors} loadingText="Analyzing colors...">
+                  <PreviewViewport
+                    surfaceWidth={1280}
+                    surfaceHeight={720}
+                    isLoading={isAnalyzingColors}
+                    loadingText="Analyzing colors..."
+                  >
                     <CoverPreview
                       config={config}
                       assets={assets}

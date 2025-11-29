@@ -1,5 +1,6 @@
 import { LayoutConfig } from "./types";
 import { PopupGradient } from "@/components/templates/PopupGradient";
+import { HeroCenter } from "@/components/templates/HeroCenter";
 import type { ComponentType } from "react";
 import { Asset } from "@/domain/asset/types";
 import { DEFAULT_GRADIENT } from "@/domain/layout/gradients";
@@ -24,7 +25,7 @@ export interface Template {
 export const TEMPLATES: Template[] = [
   {
     id: "popup-gradient",
-    name: "Popup & Gradient",
+    name: "Peak",
     description: "Gradient background with a logo and a pop-up screenshot.",
     variants: ["left", "right", "center"],
     createConfig: () => ({
@@ -53,6 +54,38 @@ export const TEMPLATES: Template[] = [
       screenshotShadow: "medium",
     }),
     component: PopupGradient,
+  },
+  {
+    id: "hero-center",
+    name: "Full",
+    description: "Square friendly stage with flexible left/right copy blocks.",
+    variants: ["left", "right"],
+    createConfig: () => ({
+      templateId: "hero-center",
+      variant: "left",
+      fontId: DEFAULT_FONT_ID,
+      fontSize: DEFAULT_FONT_SIZE,
+      text: {
+        title: "Square spotlight",
+        subtitle: "Perfect for store previews and app pops.",
+      },
+      colors: {
+        background: "slate-50",
+        text: "slate-900",
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: "cotton-candy",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+    }),
+    component: HeroCenter,
   },
 ];
 

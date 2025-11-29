@@ -7,6 +7,13 @@ export type ColorPalette = {
 };
 
 // Asset represents uploaded files (screenshots, logos, icons, backgrounds, etc.)
+export type ImageMetadata = {
+  width: number;
+  height: number;
+  aspectRatio: number;
+  orientation?: "portrait" | "square" | "landscape" | "ultrawide";
+};
+
 export type Asset = {
   id: string;
   projectId: string;
@@ -16,5 +23,5 @@ export type Asset = {
   kind: "screenshot" | "logo" | "icon" | "background" | "other";
   createdAt: string;
   colorPalette?: ColorPalette; // populated after color analysis
+  metadata?: ImageMetadata;
 };
-

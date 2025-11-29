@@ -15,6 +15,7 @@ import { UploadCloud } from "lucide-react";
 import { cn } from "@/utils";
 import { GradientPicker } from "@/components/gradient-picker";
 import { FontSelector } from "@/components/font-selector";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 
 type SidebarTab = "design" | "assets";
 
@@ -208,40 +209,15 @@ export const LayoutConfigPanel = ({
                 Background
               </Label>
 
-              <div
-                role="radiogroup"
-                aria-labelledby="bg-type-label"
-                className="flex rounded-md bg-muted p-1"
-              >
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={bgType === "gradient"}
-                  onClick={() => setBgType("gradient")}
-                  className={cn(
-                    "flex-1 rounded-sm py-1 text-xs transition-all",
-                    bgType === "gradient"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Gradient
-                </button>
-                <button
-                  type="button"
-                  role="radio"
-                  aria-checked={bgType === "image"}
-                  onClick={() => setBgType("image")}
-                  className={cn(
-                    "flex-1 rounded-sm py-1 text-xs transition-all",
-                    bgType === "image"
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Image
-                </button>
-              </div>
+              <SegmentedControl
+                value={bgType}
+                onChange={(value) => setBgType(value === "image" ? "image" : "gradient")}
+                options={[
+                  { id: "gradient", label: "Gradient" },
+                  { id: "image", label: "Image" },
+                ]}
+                ariaLabel="Background type"
+              />
 
               {bgType === "gradient" && (
                 <GradientPicker

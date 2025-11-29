@@ -1,18 +1,13 @@
-import { memo, useMemo } from "react";
-import { LayoutConfig, ShadowIntensity } from "@/domain/layout/types";
+import { memo, useMemo, type CSSProperties } from "react";
+import { LayoutConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
-import { getGradientById } from "@/domain/layout/gradients";
-import { customGradientToCss } from "@/domain/layout/gradient-utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
-
-const SHADOW_PRESETS: Record<ShadowIntensity, string> = {
-  low: "0 2px 8px rgba(0, 0, 0, 0.08)",
-  medium: "0 4px 16px rgba(0, 0, 0, 0.15)",
-  high: "0 12px 40px rgba(0, 0, 0, 0.3)",
-};
+import { tokenToCssColor, tokenToTextColorClass } from "@/components/templates/shared/color-utils";
+import { getBackgroundStyle } from "@/components/templates/shared/background-style";
+import { SHADOW_PRESETS } from "@/components/templates/shared/shadows";
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -21,55 +16,6 @@ interface PopupGradientProps {
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
-}
-
-// Pre-computed color token maps (module-level to avoid recreation)
-const COLOR_MAP: Record<string, string> = {
-  "slate-50": "rgb(248 250 252)",
-  "slate-100": "rgb(241 245 249)",
-  "slate-200": "rgb(226 232 240)",
-  "slate-300": "rgb(203 213 225)",
-  "slate-500": "rgb(100 116 139)",
-  "slate-600": "rgb(71 85 105)",
-  "slate-800": "rgb(30 41 59)",
-  "slate-900": "rgb(15 23 42)",
-  "zinc-50": "rgb(250 250 250)",
-  "zinc-200": "rgb(228 228 231)",
-  "zinc-900": "rgb(24 24 27)",
-  "indigo-50": "rgb(238 242 255)",
-  "indigo-400": "rgb(129 140 248)",
-  "indigo-950": "rgb(23 37 84)",
-  "violet-400": "rgb(167 139 250)",
-  "violet-500": "rgb(139 92 246)",
-};
-
-const TEXT_CLASS_MAP: Record<string, string> = {
-  "slate-50": "text-slate-50",
-  "slate-100": "text-slate-100",
-  "slate-200": "text-slate-200",
-  "slate-300": "text-slate-300",
-  "slate-500": "text-slate-500",
-  "slate-600": "text-slate-600",
-  "slate-800": "text-slate-800",
-  "slate-900": "text-slate-900",
-  "zinc-50": "text-zinc-50",
-  "zinc-200": "text-zinc-200",
-  "zinc-900": "text-zinc-900",
-  "indigo-50": "text-indigo-50",
-  "indigo-400": "text-indigo-400",
-  "indigo-950": "text-indigo-950",
-  "violet-400": "text-violet-400",
-  "violet-500": "text-violet-500",
-};
-
-// Map color tokens to CSS color values
-function tokenToCssColor(token: string): string {
-  return COLOR_MAP[token] || "rgb(248 250 252)";
-}
-
-// Map color tokens to Tailwind text color classes
-function tokenToTextColorClass(token: string): string {
-  return TEXT_CLASS_MAP[token] || "text-slate-900";
 }
 
 function PopupGradientComponent({
@@ -91,27 +37,20 @@ function PopupGradientComponent({
   }, [assets, config.assets.screenshot, config.assets.logo]);
 
   // Memoize background style computation
-  const backgroundStyle = useMemo((): string => {
-    if (config.background?.type === "gradient") {
-      if (config.background.customGradient) {
-        return customGradientToCss(config.background.customGradient);
-      }
-      const gradient = getGradientById(config.background.value);
-      if (gradient) return gradient.value;
-    } else if (config.background?.type === "image") {
-      const bgAsset = assetMap.get(config.background.value);
-      if (bgAsset) return `url(${bgAsset.url})`;
-    } else if (config.background?.type === "solid") {
-      return tokenToCssColor(config.background.value);
-    }
-    // Fallback to old color logic if no background set (or invalid)
-    const bgColor1 = tokenToCssColor(config.colors.background);
-    const bgColor2 = tokenToCssColor(config.colors.accent);
-    return `linear-gradient(135deg, ${bgColor1}, ${bgColor2})`;
-  }, [config.background, config.colors.background, config.colors.accent, assetMap]);
+  const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
 
-  // Variant determines image position: "left", "right", or "center"
-  const imagePosition = config.variant || "right";
+  const textColumnStyle: CSSProperties = useMemo(
+    () => ({ width: "min(420px, calc(45%))" }),
+    [],
+  );
+
+  const textVariant: "left" | "right" | "center" = (() => {
+    if (config.variant === "left" || config.variant === "center") return config.variant;
+    if (config.variant === "right") return "right";
+    return "right";
+  })();
+
+  // Interpret variant as text position; screenshot mirrors opposite side
   const shadowStyle = SHADOW_PRESETS[config.screenshotShadow || "medium"];
   const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
   const fontSize = getFontSizeById(config.fontSize);
@@ -152,10 +91,10 @@ function PopupGradientComponent({
       </div>
 
       {/* Content based on image position */}
-      {imagePosition === "right" && (
+      {textVariant === "left" && (
         <>
           {/* Text on left */}
-          <div className="absolute left-8 top-[30%] z-10" style={{ maxWidth: "calc(40% - 56px)" }}>
+          <div className="absolute left-14 top-[30%] z-10" style={textColumnStyle}>
             <InlineEditableText
               element="h1"
               field="title"
@@ -208,7 +147,7 @@ function PopupGradientComponent({
         </>
       )}
 
-      {imagePosition === "left" && (
+      {textVariant === "right" && (
         <>
           {/* Screenshot on left */}
           {screenshot && (
@@ -237,10 +176,7 @@ function PopupGradientComponent({
           )}
 
           {/* Text on right */}
-          <div
-            className="absolute right-8 top-[30%] z-10 text-right"
-            style={{ maxWidth: "calc(40% - 56px)" }}
-          >
+          <div className="absolute right-14 top-[30%] z-10 text-right" style={textColumnStyle}>
             <InlineEditableText
               element="h1"
               field="title"
@@ -267,7 +203,7 @@ function PopupGradientComponent({
         </>
       )}
 
-      {imagePosition === "center" && (
+      {textVariant === "center" && (
         <>
           {/* Text on top */}
           <div className="absolute left-1/2 top-[12%] z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center">

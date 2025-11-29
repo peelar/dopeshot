@@ -89,7 +89,7 @@ export function LogoBadge({
     inputRef.current?.click();
   }, [onUploadLogo]);
 
-  const bgStyle = isDragging ? "rgba(255,255,255,0.2)" : (mutedBg ?? "rgba(255,255,255,0.12)");
+  const bgStyle = isDragging ? "rgba(255,255,255,0.3)" : mutedBg ?? "rgba(255,255,255,0.2)";
 
   return (
     <div className="space-y-1 text-left">
