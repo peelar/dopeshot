@@ -1,13 +1,22 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
-import { Asset } from "@/domain/asset/types";
+import { Asset, ImageMetadata } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
-import { tokenToCssColor, tokenToTextColorClass } from "@/components/templates/shared/color-utils";
+import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
-import { SHADOW_PRESETS } from "@/components/templates/shared/shadows";
+
+type ScreenshotOrientation = NonNullable<ImageMetadata["orientation"]>;
+
+const FALLBACK_ORIENTATION: ScreenshotOrientation = "landscape";
+const ORIENTATION_PRESETS: Record<ScreenshotOrientation, { heightFactor: number; objectPosition: string }> = {
+  ultrawide: { heightFactor: 0.48, objectPosition: "50% 6%" },
+  landscape: { heightFactor: 0.54, objectPosition: "50% 10%" },
+  square: { heightFactor: 0.6, objectPosition: "50% 16%" },
+  portrait: { heightFactor: 0.66, objectPosition: "50% 22%" },
+};
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -51,7 +60,6 @@ function PopupGradientComponent({
   })();
 
   // Interpret variant as text position; screenshot mirrors opposite side
-  const shadowStyle = SHADOW_PRESETS[config.screenshotShadow || "medium"];
   const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
   const fontSize = getFontSizeById(config.fontSize);
   const titleStyle = { ...fontStyle, fontSize: `${fontSize.titleRem}rem` };
@@ -59,6 +67,76 @@ function PopupGradientComponent({
   const textColorClass = tokenToTextColorClass(config.colors.text);
   const titleClassName = cn("font-bold", fontSize.titleClass, textColorClass);
   const subtitleClassName = cn("mt-4 min-h-[1.2rem]", fontSize.subtitleClass, textColorClass);
+
+  const screenshotOrientation: ScreenshotOrientation = useMemo(() => {
+    if (!screenshot) return FALLBACK_ORIENTATION;
+    if (screenshot.metadata?.orientation) {
+      return screenshot.metadata.orientation;
+    }
+
+    const ratio = screenshot.metadata?.aspectRatio;
+    if (!ratio) return FALLBACK_ORIENTATION;
+    if (ratio >= 2.1) return "ultrawide";
+    if (ratio >= 1.1) return "landscape";
+    if (ratio <= 0.85) return "portrait";
+    return "square";
+  }, [screenshot]);
+
+  const screenshotFrameDimensions = useMemo(() => {
+    const base = ORIENTATION_PRESETS[screenshotOrientation].heightFactor;
+    const variantBoost = textVariant === "center" ? 0.04 : 0;
+    const clampedHeight = Math.min(0.7, Math.max(0.48, base + variantBoost));
+
+    return {
+      width: `${(textVariant === "center" ? 0.58 : 0.62) * 100}%`,
+      height: `${clampedHeight * 100}%`,
+    };
+  }, [screenshotOrientation, textVariant]);
+
+  const screenshotImageStyle = useMemo(() => {
+    const { objectPosition } = ORIENTATION_PRESETS[screenshotOrientation];
+    return {
+      objectPosition,
+      transform: "scale(1.06)",
+      transformOrigin: "top center",
+    } as CSSProperties;
+  }, [screenshotOrientation]);
+
+  const renderScreenshot = (placement: "left" | "right" | "center") => {
+    if (!screenshot) return null;
+
+    const baseStyle: CSSProperties = {
+      width: screenshotFrameDimensions.width,
+      height: screenshotFrameDimensions.height,
+      borderTopLeftRadius: placement === "right" ? "0px" : "12px",
+      borderTopRightRadius: placement === "right" ? "12px" : "0px",
+    };
+
+    if (placement === "center") {
+      baseStyle.borderTopLeftRadius = "12px";
+      baseStyle.borderTopRightRadius = "12px";
+    }
+
+    return (
+      <div
+        className={cn(
+          "z-5 absolute bottom-0 overflow-hidden",
+          placement === "left" && "right-0",
+          placement === "right" && "left-0",
+          placement === "center" && "left-1/2 -translate-x-1/2",
+        )}
+        style={baseStyle}
+      >
+        <img
+          src={screenshot.url}
+          alt="Screenshot"
+          className="block h-full w-full object-cover"
+          style={screenshotImageStyle}
+          crossOrigin="anonymous"
+        />
+      </div>
+    );
+  };
 
   return (
     <div
@@ -120,60 +198,14 @@ function PopupGradientComponent({
           </div>
 
           {/* Screenshot on right, popping up from bottom */}
-          {screenshot && (
-            <div
-              className="z-5 absolute bottom-0 right-0 overflow-hidden"
-              style={{
-                width: "60%",
-                height: "70%",
-                borderTopLeftRadius: "8px",
-                borderTopRightRadius: "0px",
-                boxShadow: shadowStyle,
-              }}
-            >
-              <img
-                src={screenshot.url}
-                alt="Screenshot"
-                className="object-cover"
-                style={{
-                  width: "111.11%", // 10% extends behind right border (100% / 0.9)
-                  height: "166.67%", // 40% extends below bottom border (100% / 0.6)
-                  objectPosition: "top left",
-                }}
-                crossOrigin="anonymous"
-              />
-            </div>
-          )}
+          {renderScreenshot("left")}
         </>
       )}
 
       {textVariant === "right" && (
         <>
           {/* Screenshot on left */}
-          {screenshot && (
-            <div
-              className="z-5 absolute bottom-0 left-0 overflow-hidden"
-              style={{
-                width: "60%",
-                height: "70%",
-                borderTopLeftRadius: "0px",
-                borderTopRightRadius: "8px",
-                boxShadow: shadowStyle,
-              }}
-            >
-              <img
-                src={screenshot.url}
-                alt="Screenshot"
-                className="object-cover"
-                style={{
-                  width: "111.11%", // 10% extends behind right border (100% / 0.9)
-                  height: "166.67%", // 40% extends below bottom border (100% / 0.6)
-                  objectPosition: "top left",
-                }}
-                crossOrigin="anonymous"
-              />
-            </div>
-          )}
+          {renderScreenshot("right")}
 
           {/* Text on right */}
           <div className="absolute right-14 top-[30%] z-10 text-right" style={textColumnStyle}>
@@ -232,37 +264,12 @@ function PopupGradientComponent({
           </div>
 
           {/* Screenshot centered, popping up from bottom */}
-          {screenshot && (
-            <div
-              className="z-5 absolute bottom-0 left-1/2 -translate-x-1/2 overflow-hidden"
-              style={{
-                width: "60%",
-                height: "60%",
-                borderTopLeftRadius: "8px",
-                borderTopRightRadius: "8px",
-                boxShadow: shadowStyle,
-              }}
-            >
-              <img
-                src={screenshot.url}
-                alt="Screenshot"
-                className="object-cover"
-                style={{
-                  width: "111.11%", // 10% extends behind right border (100% / 0.9)
-                  height: "166.67%", // 40% extends below bottom border (100% / 0.6)
-                  objectPosition: "top left",
-                }}
-                crossOrigin="anonymous"
-              />
-            </div>
-          )}
+          {renderScreenshot("center")}
         </>
       )}
     </div>
   );
 }
-
-type TextField = "title" | "subtitle";
 
 // Memoize the component to prevent unnecessary re-renders
 export const PopupGradient = memo(PopupGradientComponent);
