@@ -1,10 +1,5 @@
 import { ColorToken } from "../types";
-import {
-  CustomGradient,
-  isLegacyGradient,
-  isAdvancedGradient,
-  GradientColorSpace,
-} from "./types";
+import { CustomGradient, isLegacyGradient, isAdvancedGradient, GradientColorSpace } from "./types";
 
 const COLOR_SPACE_SUPPORT_CACHE: Partial<Record<GradientColorSpace, boolean>> = {};
 
@@ -18,7 +13,11 @@ function isColorSpaceSupported(space?: GradientColorSpace): boolean {
     return cached;
   }
 
-  if (typeof window === "undefined" || typeof CSS === "undefined" || typeof CSS.supports !== "function") {
+  if (
+    typeof window === "undefined" ||
+    typeof CSS === "undefined" ||
+    typeof CSS.supports !== "function"
+  ) {
     COLOR_SPACE_SUPPORT_CACHE[space] = false;
     return false;
   }
@@ -96,7 +95,10 @@ export function getContrastTextColor(backgroundColor: string | string[]): ColorT
 
   for (const color of palette) {
     const normalized = normalizeHex(color);
-    weakestLightContrast = Math.min(weakestLightContrast, contrastRatio(normalized, LIGHT_TEXT_HEX));
+    weakestLightContrast = Math.min(
+      weakestLightContrast,
+      contrastRatio(normalized, LIGHT_TEXT_HEX),
+    );
     weakestDarkContrast = Math.min(weakestDarkContrast, contrastRatio(normalized, DARK_TEXT_HEX));
   }
 
@@ -122,7 +124,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
   if (isAdvancedGradient(gradient)) {
     const { type, stops, direction, colorSpace, angle } = gradient;
 
-    const directionOrAngle = angle !== undefined ? `${angle}deg` : direction ?? "to right";
+    const directionOrAngle = angle !== undefined ? `${angle}deg` : (direction ?? "to right");
     const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace);
 
     // Build stops string
@@ -130,8 +132,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
       .map((stop) => {
         if (stop.position !== undefined) {
           // Normalize position (if 0-1, convert to percentage)
-          const position =
-            stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
+          const position = stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
           return `${stop.color} ${position}`;
         }
         return stop.color;
@@ -185,9 +186,4 @@ export function directionStringToDegrees(direction?: string): number {
   }
 
   return DIRECTION_KEYWORD_ANGLE[normalized] ?? 90;
-}
-
-export function degreesToDirection(angle: number): string {
-  const normalized = ((Math.round(angle) % 360) + 360) % 360;
-  return `${normalized}deg`;
 }

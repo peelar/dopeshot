@@ -35,11 +35,3 @@ export function getAspectCategory(aspectRatio: number): AspectCategory {
 export function getRecommendationForCategory(category: AspectCategory) {
   return DEFAULT_RECOMMENDATIONS[category];
 }
-
-export function getAspectCategoryFromDimensions(width?: number, height?: number): AspectCategory {
-  if (!width || !height) {
-    return "portrait";
-  }
-
-  return getAspectCategory(width / height);
-}

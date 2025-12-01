@@ -4,7 +4,7 @@ import { ColorPalette } from "@/domain/asset/types";
 /**
  * Convert hex color to OKLCH color space
  */
-export function hexToOklch(hex: string): Oklch | null {
+function hexToOklch(hex: string): Oklch | null {
   try {
     const convert = converter("oklch");
     const result = convert(hex);
@@ -17,7 +17,7 @@ export function hexToOklch(hex: string): Oklch | null {
 /**
  * Convert OKLCH color to hex
  */
-export function oklchToHex(color: Oklch): string {
+function oklchToHex(color: Oklch): string {
   try {
     return formatHex(color);
   } catch {

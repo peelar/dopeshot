@@ -1,6 +1,6 @@
 /**
  * Gradient module - centralized gradient logic
- * 
+ *
  * This module contains all gradient-related functionality:
  * - Types and type guards
  * - Color space conversion and palette enhancement
@@ -22,22 +22,10 @@ export { isLegacyGradient, isAdvancedGradient } from "./types";
 
 // Color space and palette enhancement
 export type { EnhancedColorPalette } from "./colors";
-export {
-  hexToOklch,
-  oklchToHex,
-  enhanceColor,
-  enhanceColorPalette,
-} from "./colors";
 
 // Gradient generation
 export type { GradientContext } from "./generator";
-export { generateGradient, generateGradientOptions } from "./generator";
+export { generateGradientOptions } from "./generator";
 
 // Utilities
-export {
-  getContrastTextColor,
-  customGradientToCss,
-  directionStringToDegrees,
-  degreesToDirection,
-} from "./utils";
-
+export { getContrastTextColor, customGradientToCss, directionStringToDegrees } from "./utils";

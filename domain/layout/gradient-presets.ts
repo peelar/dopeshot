@@ -135,12 +135,4 @@ export function getGradientById(id: string): GradientPreset | undefined {
   return GRADIENTS.find((g) => g.id === id);
 }
 
-/**
- * Get CSS string for a preset gradient (for backward compatibility)
- */
-export function getPresetGradientCss(id: string): string | undefined {
-  const preset = getGradientById(id);
-  return preset ? customGradientToCss(preset.gradient) : undefined;
-}
-
 export const DEFAULT_GRADIENT = GRADIENTS[0];

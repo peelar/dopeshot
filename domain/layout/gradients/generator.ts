@@ -21,7 +21,7 @@ export type GradientContext = {
  * Generate a beautiful multi-stop gradient from a color palette
  * Implements PRD-003 requirements for professional, designer-grade gradients
  */
-export function generateGradient(
+function generateGradient(
   palette: ColorPalette,
   context: GradientContext,
   strategy: "hero-base" | "multi-color" | "complementary" | "analogous" | "triadic" = "multi-color",
@@ -232,7 +232,10 @@ function adjustProminentColor(
   }
 
   if (strategy === "complementary") {
-    return enhanceColor(color, { saturationBoost: 0.1, lightnessShift: role === "start" ? -0.04 : 0.04 });
+    return enhanceColor(color, {
+      saturationBoost: 0.1,
+      lightnessShift: role === "start" ? -0.04 : 0.04,
+    });
   }
 
   if (strategy === "hero-base" && palette.isNeutral) {
