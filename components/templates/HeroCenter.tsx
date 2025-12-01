@@ -130,16 +130,24 @@ function HeroCenterComponent({
     if (!screenshot) return null;
 
     const screenshotAspectRatio = screenshot.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
-    const maxHeight = isAdaptiveCanvas
-      ? "min(540px, calc(100% - 120px))"
-      : "min(520px, calc(100% - 160px))";
-    const maxWidth = isAdaptiveCanvas ? "70%" : "640px";
+    const isPortraitScreenshot = screenshotAspectRatio < 0.9;
+    const verticalPadding = 64;
+    const maxHeight = isPortraitScreenshot
+      ? `calc(100% - ${verticalPadding}px)`
+      : isAdaptiveCanvas
+        ? `min(560px, calc(100% - ${verticalPadding + 32}px))`
+        : `min(520px, calc(100% - ${verticalPadding + 72}px))`;
+    const maxWidth = isPortraitScreenshot
+      ? "min(520px, 55%)"
+      : isAdaptiveCanvas
+        ? "70%"
+        : "640px";
 
     return (
       <div className="flex flex-1 items-center justify-center">
         <div
           className={cn(
-            "relative flex w-full items-center justify-center overflow-hidden",
+            "relative flex max-h-full w-full items-center justify-center overflow-hidden",
             isAdaptiveCanvas ? "rounded-[36px]" : "rounded-[32px]",
           )}
           style={{
@@ -148,7 +156,7 @@ function HeroCenterComponent({
             width: "100%",
             maxWidth,
             maxHeight,
-            aspectRatio: screenshotAspectRatio,
+            aspectRatio: `${screenshotAspectRatio}`,
           }}
         >
           <img

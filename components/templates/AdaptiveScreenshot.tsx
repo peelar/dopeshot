@@ -3,7 +3,10 @@ import { LayoutConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
-import { DEFAULT_LOCKED_ASPECT_RATIO, getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
+import {
+  DEFAULT_LOCKED_ASPECT_RATIO,
+  getScreenshotTreatment,
+} from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { getShadowValue } from "@/components/templates/shared/shadows";
 
@@ -29,7 +32,6 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
     () =>
       getScreenshotFrameAppearance({
         preset: screenshotTreatment.preset,
-        palette: screenshot?.colorPalette,
         isFocused: true,
         shadowEnabled: screenshotTreatment.shadowEnabled ?? true,
         shape: screenshotTreatment.shape,
@@ -48,15 +50,19 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
   }, [config.screenshotShadow, frameAppearance.shadow, screenshotTreatment.shadowEnabled]);
 
   const screenshotAspectRatio = screenshot?.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
-  const frameMaxWidth = "min(1100px, calc(100% - 40px))";
-  const frameMaxHeight = "calc(100% - 40px)";
+  const stagePadding = 48;
+  const frameMaxWidth = `min(1100px, calc(100% - ${stagePadding * 2}px))`;
+  const frameMaxHeight = `calc(100% - ${stagePadding * 2}px)`;
 
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle }}
     >
-      <div className="flex h-full w-full items-center justify-center px-2 py-3">
+      <div
+        className="flex h-full w-full items-center justify-center"
+        style={{ padding: `${stagePadding}px` }}
+      >
         <div
           className="relative flex w-full items-center justify-center overflow-hidden"
           style={{

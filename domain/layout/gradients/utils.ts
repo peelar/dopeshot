@@ -41,8 +41,15 @@ function buildGradientArgs(base: string, space?: GradientColorSpace): string {
  * Calculate relative luminance of a hex color
  * Used to determine if text should be light or dark
  */
+function normalizeHex(hex: string): string {
+  if (!hex) {
+    return "#000000";
+  }
+  return hex.startsWith("#") ? hex : `#${hex}`;
+}
+
 function getLuminance(hex: string): number {
-  const rgb = hexToRgb(hex);
+  const rgb = hexToRgb(normalizeHex(hex));
   if (!rgb) return 0;
 
   const [r, g, b] = [rgb.r, rgb.g, rgb.b].map((c) => {
@@ -70,15 +77,34 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 /**
  * Determine if a color is considered "dark"
  */
-function isColorDark(hex: string): boolean {
-  return getLuminance(hex) < 0.5;
+function contrastRatio(colorA: string, colorB: string): number {
+  const luminanceA = getLuminance(colorA) + 0.05;
+  const luminanceB = getLuminance(colorB) + 0.05;
+  return luminanceA > luminanceB ? luminanceA / luminanceB : luminanceB / luminanceA;
 }
 
+const LIGHT_TEXT_HEX = "#f8fafc"; // slate-50
+const DARK_TEXT_HEX = "#0f172a"; // slate-900
+
 /**
- * Get appropriate text color token based on background color
+ * Get appropriate text color token based on one or more background colors
  */
-export function getContrastTextColor(backgroundColor: string): ColorToken {
-  return isColorDark(backgroundColor) ? "slate-50" : "slate-900";
+export function getContrastTextColor(backgroundColor: string | string[]): ColorToken {
+  const palette = Array.isArray(backgroundColor) ? backgroundColor : [backgroundColor];
+  let weakestLightContrast = Infinity;
+  let weakestDarkContrast = Infinity;
+
+  for (const color of palette) {
+    const normalized = normalizeHex(color);
+    weakestLightContrast = Math.min(weakestLightContrast, contrastRatio(normalized, LIGHT_TEXT_HEX));
+    weakestDarkContrast = Math.min(weakestDarkContrast, contrastRatio(normalized, DARK_TEXT_HEX));
+  }
+
+  // Favor light text if it maintains at least slightly better contrast; default to dark otherwise
+  if (weakestLightContrast >= weakestDarkContrast) {
+    return "slate-50";
+  }
+  return "slate-900";
 }
 
 /**
@@ -165,4 +191,3 @@ export function degreesToDirection(angle: number): string {
   const normalized = ((Math.round(angle) % 360) + 360) % 360;
   return `${normalized}deg`;
 }
-

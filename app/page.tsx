@@ -12,9 +12,14 @@ import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
-import { getContrastTextColor } from "@/domain/layout/gradients";
+import {
+  getContrastTextColor,
+  generateGradientOptions,
+  isAdvancedGradient,
+  isLegacyGradient,
+} from "@/domain/layout/gradients";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import type { GradientPreferences, GradientResult } from "@/domain/gradient-generation";
+import type { GradientPreferences } from "@/domain/gradient-generation";
 import { useTheme } from "next-themes";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
@@ -128,8 +133,35 @@ function getPreferredGradientAngle(config: LayoutConfig): number | undefined {
   return undefined;
 }
 
+function applyPreferredAngle(gradient: CustomGradient, angle?: number): CustomGradient {
+  if (angle === undefined) {
+    return gradient;
+  }
+  if (isAdvancedGradient(gradient)) {
+    return { ...gradient, angle };
+  }
+  if (isLegacyGradient(gradient)) {
+    return { ...gradient, direction: `${angle}deg` };
+  }
+  return gradient;
+}
+
+function getGradientColorsForContrast(gradient: CustomGradient): string[] {
+  if (isAdvancedGradient(gradient)) {
+    return gradient.stops
+      .map((stop) => stop?.color)
+      .filter((color): color is string => Boolean(color));
+  }
+  if (isLegacyGradient(gradient)) {
+    return [gradient.from, gradient.to].filter((color): color is string => Boolean(color));
+  }
+  return [];
+}
+
 export default function PlaygroundPage() {
-  const [config, setRawConfig] = useState(() => withTemplateTextDefaults(TEMPLATES[0].createConfig()));
+  const [config, setRawConfig] = useState(() =>
+    withTemplateTextDefaults(TEMPLATES[0].createConfig()),
+  );
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -144,7 +176,10 @@ export default function PlaygroundPage() {
     () => assets.find((asset) => asset.id === config.assets.screenshot),
     [assets, config.assets.screenshot],
   );
-  const canvas = useMemo(() => getCanvasDimensions(config, screenshotAsset), [config, screenshotAsset]);
+  const canvas = useMemo(
+    () => getCanvasDimensions(config, screenshotAsset),
+    [config, screenshotAsset],
+  );
   const screenshotTreatment = useMemo(() => getScreenshotTreatment(config), [config]);
   const isScreenshotFocusedMode = useMemo(() => isScreenshotFocused(config), [config]);
   const shouldShowAspectLock =
@@ -219,7 +254,10 @@ export default function PlaygroundPage() {
   const setConfig = useCallback(
     (next: LayoutConfig | ((current: LayoutConfig) => LayoutConfig)) => {
       setRawConfig((currentConfig) => {
-        const computed = typeof next === "function" ? (next as (c: LayoutConfig) => LayoutConfig)(currentConfig) : next;
+        const computed =
+          typeof next === "function"
+            ? (next as (c: LayoutConfig) => LayoutConfig)(currentConfig)
+            : next;
         return withTemplateTextDefaults(computed);
       });
     },
@@ -361,42 +399,20 @@ export default function PlaygroundPage() {
               setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
             }
 
-            let gradientResult: GradientResult | undefined;
-            try {
-              const response = await fetch("/api/generate-gradient", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                  imageDataUrl: dataUrl,
-                  debug: process.env.NODE_ENV !== "production",
-                  preferences: gradientPreferences,
-                }),
-              });
+            const gradientOptions = colorPalette
+              ? generateGradientOptions(colorPalette, {
+                  aspectCategory: "landscape",
+                  templateVariant: undefined,
+                })
+              : [];
 
-              if (response.ok) {
-                const payload = (await response.json()) as { gradient?: GradientResult };
-                gradientResult = payload.gradient;
-              } else {
-                const errorMessage = await response.text();
-                console.error("Gradient API request failed", errorMessage);
-              }
-            } catch (gradientError) {
-              console.error("Gradient generation request failed", gradientError);
-            }
+            const preferredGradient = gradientOptions[0];
+            const fallbackGradient = preferredGradient
+              ? applyPreferredAngle(preferredGradient, gradientPreferences.angle)
+              : undefined;
 
-            if (gradientResult) {
-              const generatedGradient: CustomGradient = {
-                type: "linear",
-                angle: gradientResult.angle,
-                colorSpace: "srgb",
-                stops: [
-                  { color: gradientResult.colorStart, position: 0 },
-                  { color: gradientResult.colorEnd, position: 100 },
-                ],
-              };
-              const textColor = getContrastTextColor(gradientResult.colorStart);
+            if (fallbackGradient) {
+              const textColor = getContrastTextColor(getGradientColorsForContrast(fallbackGradient));
 
               setConfig((currentConfig) => ({
                 ...currentConfig,
@@ -407,7 +423,7 @@ export default function PlaygroundPage() {
                 background: {
                   type: "gradient",
                   value: "custom",
-                  customGradient: generatedGradient,
+                  customGradient: fallbackGradient,
                 },
               }));
 

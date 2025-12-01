@@ -133,7 +133,9 @@ function normalizeImageBuffer(imageBuffer: SupportedImageBuffer): Buffer {
     return Buffer.from(imageBuffer.buffer, imageBuffer.byteOffset, imageBuffer.byteLength);
   }
 
-  throw new Error("Unsupported image buffer type. Expected Buffer, ArrayBuffer, or ArrayBufferView.");
+  throw new Error(
+    "Unsupported image buffer type. Expected Buffer, ArrayBuffer, or ArrayBufferView.",
+  );
 }
 
 function isLikelyImageBuffer(buffer: Buffer): boolean {
@@ -152,7 +154,11 @@ function isLikelyImageBuffer(buffer: Buffer): boolean {
     buffer[6] === 0x1a &&
     buffer[7] === 0x0a;
 
-  const isJpeg = buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[buffer.byteLength - 2] === 0xff && buffer[buffer.byteLength - 1] === 0xd9;
+  const isJpeg =
+    buffer[0] === 0xff &&
+    buffer[1] === 0xd8 &&
+    buffer[buffer.byteLength - 2] === 0xff &&
+    buffer[buffer.byteLength - 1] === 0xd9;
 
   const header = buffer.subarray(0, 6).toString("ascii");
   const isGif = header === "GIF87a" || header === "GIF89a";
@@ -216,7 +222,8 @@ function buildGradientFromPalette(
   if (strategy === "single-accent") {
     const accent = strongAccents[0] ?? palette.accentColors[0] ?? palette.colors[0];
     const base = palette.baseColors[0] ?? palette.colors[0];
-    const baseBlend = base && accent ? mixColors(base.hex, accent.hex, 0.4) : accent?.hex ?? FALLBACK_START;
+    const baseBlend =
+      base && accent ? mixColors(base.hex, accent.hex, 0.4) : (accent?.hex ?? FALLBACK_START);
     const start = harmonizeColor(baseBlend, { brighten: 0.25, desaturate: 0.1 });
     const accentHex = accent?.hex ?? FALLBACK_END;
     const end = harmonizeColor(accentHex, { saturate: 0.5, darken: 0.15 });
@@ -226,7 +233,7 @@ function buildGradientFromPalette(
   if (strategy === "monochrome") {
     if (mood.isGrayscale) {
       const preset = TEMPERATURE_PRESETS[preferences?.temperature ?? "neutral"];
-      return { ...preset };
+      return { colorStart: preset.start, colorEnd: preset.end };
     }
     const base = palette.baseColors[0]?.hex ?? palette.colors[0]?.hex ?? FALLBACK_START;
     const start = harmonizeColor(base, { brighten: 0.35, desaturate: 0.2 });
@@ -265,7 +272,9 @@ function refineGradientColors(
   return ensureContrast(start, end, mood.isLowContrast ? 12 : 8);
 }
 
-function selectAccentPair(accentColors: ClassifiedColor[]): [ClassifiedColor, ClassifiedColor] | null {
+function selectAccentPair(
+  accentColors: ClassifiedColor[],
+): [ClassifiedColor, ClassifiedColor] | null {
   if (accentColors.length < 2) {
     return null;
   }
@@ -289,7 +298,10 @@ function selectAccentPair(accentColors: ClassifiedColor[]): [ClassifiedColor, Cl
   return bestPair;
 }
 
-function getStrongAccentColors(palette: ColorExtractionResult, mood: PaletteMood): ClassifiedColor[] {
+function getStrongAccentColors(
+  palette: ColorExtractionResult,
+  mood: PaletteMood,
+): ClassifiedColor[] {
   const threshold = mood.isHighlyColorful ? 0.25 : 0.35;
   return [...palette.accentColors]
     .filter((color) => color.saturation >= threshold)

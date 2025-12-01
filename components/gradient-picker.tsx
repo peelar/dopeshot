@@ -92,12 +92,10 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
 
     // Generate gradient options using the new generator
     // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
-    const options = generateGradientOptions(colorPalette, {
+    return generateGradientOptions(colorPalette, {
       aspectCategory: "landscape",
       templateVariant: undefined,
     });
-
-    return options;
   }, [colorPalette]);
 
   const currentGradientCss = useMemo((): string => {
@@ -163,16 +161,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   const currentTextColor = useMemo<ColorToken>(() => {
     if (background.customGradient) {
-      // Extract first color from gradient for text contrast
-      let firstColor: string;
-      if (isAdvancedGradient(background.customGradient)) {
-        firstColor = background.customGradient.stops[0]?.color ?? "#000000";
-      } else if (isLegacyGradient(background.customGradient)) {
-        firstColor = background.customGradient.from;
-      } else {
-        firstColor = "#000000";
-      }
-      return getContrastTextColor(firstColor);
+      return getTextColorFromGradient(background.customGradient);
     }
     if (background.type === "gradient" && background.value) {
       return getGradientById(background.value)?.textColor ?? "slate-900";
@@ -200,13 +189,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   const handleCustomGradientSelect = useCallback(
     (gradient: CustomGradient) => {
       lockManualSource();
-      // Extract first color for text contrast
-      const firstColor = isLegacyGradient(gradient)
-        ? gradient.from
-        : isAdvancedGradient(gradient)
-          ? (gradient.stops[0]?.color ?? "#000000")
-          : "#000000";
-      const textColor = getContrastTextColor(firstColor);
+      const textColor = getTextColorFromGradient(gradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
     },
     [lockManualSource, onChangeAction],
@@ -218,7 +201,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
       const nextColors = { ...colors, [colorType]: value };
       const newGradient = buildThreeStopGradient(nextColors, currentAngle, background.customGradient);
       lockManualSource();
-      const textColor = getContrastTextColor(nextColors.start);
+      const textColor = getTextColorFromGradient(newGradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
     [background.customGradient, colorPalette, currentAngle, lockManualSource, onChangeAction],
@@ -229,7 +212,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
       const colors = getCustomGradientColors(background.customGradient, colorPalette);
       const newGradient = buildThreeStopGradient(colors, angle, background.customGradient);
       lockManualSource();
-      const textColor = getContrastTextColor(colors.start);
+      const textColor = getTextColorFromGradient(newGradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
     [background.customGradient, colorPalette, lockManualSource, onChangeAction],
@@ -604,6 +587,23 @@ function mixHexColors(a: string, b: string): string | undefined {
     Math.round((colorA[2] + colorB[2]) / 2),
   ];
   return rgbToHex(mixed[0], mixed[1], mixed[2]);
+}
+
+function getTextColorFromGradient(gradient: CustomGradient): ColorToken {
+  const palette: string[] = [];
+  if (isAdvancedGradient(gradient)) {
+    gradient.stops.forEach((stop) => {
+      if (stop?.color) {
+        palette.push(stop.color);
+      }
+    });
+  } else if (isLegacyGradient(gradient)) {
+    palette.push(gradient.from, gradient.to);
+  }
+  if (palette.length === 0) {
+    palette.push("#000000");
+  }
+  return getContrastTextColor(palette);
 }
 
 function parseHexColor(hex: string): [number, number, number] | undefined {
