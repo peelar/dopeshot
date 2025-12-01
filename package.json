@@ -10,6 +10,11 @@
     "knip": "knip",
     "test:colors": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "sharp"
+    ]
+  },
   "dependencies": {
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-label": "^2.1.8",
