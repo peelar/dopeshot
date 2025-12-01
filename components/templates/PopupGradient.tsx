@@ -48,10 +48,7 @@ function PopupGradientComponent({
   // Memoize background style computation
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
 
-  const textColumnStyle: CSSProperties = useMemo(
-    () => ({ width: "min(420px, calc(45%))" }),
-    [],
-  );
+  const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
   const textVariant: "left" | "right" | "center" = (() => {
     if (config.variant === "left" || config.variant === "center") return config.variant;
@@ -104,7 +101,7 @@ function PopupGradientComponent({
 
     const objectPosition = SCREENSHOT_OBJECT_POSITIONS[placement];
     const baseStyle: CSSProperties = {
-      top: placement === "center" ? CENTER_SCREENSHOT_TOP : SIDE_CONTENT_TOP,
+      top: SIDE_CONTENT_TOP,
       bottom: 0,
       width: screenshotFrameWidth,
       borderTopLeftRadius: placement === "right" ? "0px" : "12px",

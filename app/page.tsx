@@ -412,7 +412,11 @@ export default function PlaygroundPage() {
                     isLoading={isAnalyzingColors}
                     loadingText="Analyzing colors..."
                   >
-                    <CoverPreview config={config} assets={assets} onUploadAsset={handleFileProcess} />
+                    <CoverPreview
+                      config={config}
+                      assets={assets}
+                      onUploadAsset={handleFileProcess}
+                    />
                   </PreviewViewport>
                 </div>
               </div>

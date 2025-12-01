@@ -45,6 +45,8 @@ export type {
 
 export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
+import type { CustomGradient } from "./gradients/types";
+
 export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken

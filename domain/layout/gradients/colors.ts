@@ -1,4 +1,4 @@
-import { converter, formatHex, oklch, type Oklch } from "culori";
+import { converter, formatHex, type Oklch } from "culori";
 import { ColorPalette } from "@/domain/asset/types";
 
 /**
@@ -6,7 +6,7 @@ import { ColorPalette } from "@/domain/asset/types";
  */
 export function hexToOklch(hex: string): Oklch | null {
   try {
-    const convert = converter(oklch);
+    const convert = converter("oklch");
     const result = convert(hex);
     return result && typeof result === "object" && "l" in result ? (result as Oklch) : null;
   } catch {
@@ -191,5 +191,3 @@ export function enhanceColorPalette(palette: ColorPalette): EnhancedColorPalette
     saturation,
   };
 }
-
-
