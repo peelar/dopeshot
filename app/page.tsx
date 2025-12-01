@@ -277,7 +277,8 @@ export default function PlaygroundPage() {
           <Button
             type="button"
             size="sm"
-            className="flex items-center gap-2"
+            variant="outline"
+            className="flex items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40"
             onClick={openFilePicker}
             disabled={isProcessingUpload}
             aria-label={hasCustomScreenshot ? "Change screenshot" : "Upload your screenshot"}
@@ -287,15 +288,15 @@ export default function PlaygroundPage() {
             <span className="hidden sm:inline">{uploadButtonLabel}</span>
             <span className="sm:hidden">{uploadButtonShort}</span>
           </Button>
-          {hasScreenshot ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              disabled={isExporting}
-              aria-busy={isExporting}
-              aria-label={isExporting ? "Exporting image" : "Export as PNG"}
-            >
+            {hasScreenshot ? (
+              <Button
+                size="sm"
+                className="flex cursor-pointer items-center gap-2 bg-foreground text-background shadow-none hover:bg-foreground focus-visible:ring-foreground/40 disabled:cursor-not-allowed disabled:bg-foreground/70"
+                onClick={handleExport}
+                disabled={isExporting}
+                aria-busy={isExporting}
+                aria-label={isExporting ? "Exporting image" : "Export as PNG"}
+              >
               <Download className="mr-2 h-3.5 w-3.5" aria-hidden="true" />
               {isExporting ? "Exporting..." : "Export PNG"}
             </Button>
