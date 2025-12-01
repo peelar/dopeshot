@@ -21,7 +21,7 @@ export type GradientColorSpace = "oklch" | "srgb" | "lab";
  */
 export type AdvancedGradient = {
   type: GradientType;
-  stops: GradientStop[]; // 5-12 stops as per PRD
+  stops: GradientStop[]; // Always three stops (start, background, end)
   direction?: string; // e.g., "to right", "45deg", "circle at center"
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
   angle?: number; // for linear gradients in degrees (0-360)
@@ -54,5 +54,4 @@ export function isLegacyGradient(gradient: CustomGradient): gradient is LegacyGr
 export function isAdvancedGradient(gradient: CustomGradient): gradient is AdvancedGradient {
   return "stops" in gradient && Array.isArray(gradient.stops);
 }
-
 

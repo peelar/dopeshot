@@ -3,7 +3,7 @@ import { LayoutConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
-import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
+import { DEFAULT_LOCKED_ASPECT_RATIO, getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { getShadowValue } from "@/components/templates/shared/shadows";
 
@@ -47,6 +47,10 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
     return getShadowValue(config.screenshotShadow);
   }, [config.screenshotShadow, frameAppearance.shadow, screenshotTreatment.shadowEnabled]);
 
+  const screenshotAspectRatio = screenshot?.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
+  const frameMaxWidth = "min(1100px, calc(100% - 40px))";
+  const frameMaxHeight = "calc(100% - 40px)";
+
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
@@ -58,8 +62,10 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
           style={{
             ...frameAppearance.style,
             boxShadow: appliedShadow,
-            maxWidth: "min(1100px, calc(100% - 40px))",
-            height: "calc(100% - 40px)",
+            width: "100%",
+            maxWidth: frameMaxWidth,
+            maxHeight: frameMaxHeight,
+            aspectRatio: screenshotAspectRatio,
           }}
         >
           {screenshot ? (

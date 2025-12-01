@@ -8,7 +8,11 @@ import { tokenToTextColorClass } from "@/components/templates/shared/color-utils
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
 import { getShadowValue } from "@/components/templates/shared/shadows";
-import { getEffectiveCanvasMode, getScreenshotTreatment, isScreenshotFocused } from "@/domain/layout/screenshot-mode";
+import {
+  DEFAULT_LOCKED_ASPECT_RATIO,
+  getEffectiveCanvasMode,
+  getScreenshotTreatment,
+} from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 
 interface HeroCenterProps {
@@ -44,25 +48,17 @@ function HeroCenterComponent({
   const titleStyle = { ...fontStyle, fontSize: `${fontSize.titleRem}rem`, lineHeight: 1.05 };
   const subtitleStyle = { ...fontStyle, fontSize: `${fontSize.subtitleRem}rem` };
   const shadowStyle = getShadowValue(config.screenshotShadow);
-  const isFocused = isScreenshotFocused(config);
   const isAdaptiveCanvas = getEffectiveCanvasMode(config) === "adaptive";
   const screenshotTreatment = getScreenshotTreatment(config);
   const frameAppearance = useMemo(
     () =>
       getScreenshotFrameAppearance({
         preset: screenshotTreatment.preset,
-        palette: screenshot?.colorPalette,
-        isFocused,
+        isFocused: false,
         shadowEnabled: screenshotTreatment.shadowEnabled ?? true,
         shape: screenshotTreatment.shape,
       }),
-    [
-      isFocused,
-      screenshot?.colorPalette,
-      screenshotTreatment.preset,
-      screenshotTreatment.shadowEnabled,
-      screenshotTreatment.shape,
-    ],
+    [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape],
   );
   const appliedShadow = useMemo(() => {
     if (frameAppearance.shadow) return frameAppearance.shadow;
@@ -73,12 +69,14 @@ function HeroCenterComponent({
   const variant = config.variant === "right" ? "right" : "left";
 
   const renderLogo = () => {
-    if (isFocused) {
-      return null;
-    }
     if (logo) {
       return (
-        <img src={logo.url} alt="Logo" className="h-9 w-auto object-contain" crossOrigin="anonymous" />
+        <img
+          src={logo.url}
+          alt="Logo"
+          className="h-9 w-auto object-contain"
+          crossOrigin="anonymous"
+        />
       );
     }
 
@@ -128,8 +126,16 @@ function HeroCenterComponent({
     );
   };
 
-  const renderScreenshot = () =>
-    screenshot ? (
+  const renderScreenshot = () => {
+    if (!screenshot) return null;
+
+    const screenshotAspectRatio = screenshot.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
+    const maxHeight = isAdaptiveCanvas
+      ? "min(540px, calc(100% - 120px))"
+      : "min(520px, calc(100% - 160px))";
+    const maxWidth = isAdaptiveCanvas ? "70%" : "640px";
+
+    return (
       <div className="flex flex-1 items-center justify-center">
         <div
           className={cn(
@@ -139,9 +145,10 @@ function HeroCenterComponent({
           style={{
             ...frameAppearance.style,
             boxShadow: appliedShadow,
-            height: isAdaptiveCanvas ? "min(540px, calc(100% - 120px))" : "min(520px, calc(100% - 160px))",
-            maxWidth: isAdaptiveCanvas ? "70%" : "640px",
             width: "100%",
+            maxWidth,
+            maxHeight,
+            aspectRatio: screenshotAspectRatio,
           }}
         >
           <img
@@ -151,44 +158,16 @@ function HeroCenterComponent({
             style={{ borderRadius: frameAppearance.contentRadius }}
             crossOrigin="anonymous"
           />
-        </div>
-      </div>
-    ) : null;
-
-  const renderFocusedScreenshot = () =>
-    screenshot ? (
-      <div className="flex w-full items-center justify-center">
-        <div
-          className="relative flex w-full max-w-5xl items-center justify-center overflow-hidden rounded-[48px]"
-          style={{
-            ...frameAppearance.style,
-            boxShadow: appliedShadow,
-            width: "100%",
-          }}
-        >
-          <img
-            src={screenshot.url}
-            alt="Screenshot"
-            className="h-full w-full object-contain"
-            style={{ borderRadius: frameAppearance.contentRadius }}
-            crossOrigin="anonymous"
-          />
-        </div>
-      </div>
-    ) : null;
-
-  if (isFocused) {
-    return (
-      <div className={cn("relative h-full w-full overflow-hidden", className)} style={{ background: backgroundStyle }}>
-        <div className="flex h-full w-full items-center justify-center px-8 py-10">
-          {renderFocusedScreenshot()}
         </div>
       </div>
     );
-  }
+  };
 
   return (
-    <div className={cn("relative h-full w-full overflow-hidden", className)} style={{ background: backgroundStyle }}>
+    <div
+      className={cn("relative h-full w-full overflow-hidden", className)}
+      style={{ background: backgroundStyle }}
+    >
       <div
         className={cn(
           "absolute top-8 z-10 flex items-center gap-2",
@@ -205,12 +184,7 @@ function HeroCenterComponent({
             variant === "right" ? "flex-row-reverse" : "flex-row",
           )}
         >
-          <div
-            className={cn(
-              "flex flex-1",
-              variant === "right" ? "justify-end" : "justify-start",
-            )}
-          >
+          <div className={cn("flex flex-1", variant === "right" ? "justify-end" : "justify-start")}>
             <div className="max-w-md">
               {variant === "right" ? renderTextBlock("right") : renderTextBlock("left")}
             </div>
