@@ -12,13 +12,10 @@ import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
-import {
-  getContrastTextColor,
-  generateGradient,
-  generateGradientOptions,
-  isAdvancedGradient,
-} from "@/domain/layout/gradients";
+import { getContrastTextColor } from "@/domain/layout/gradients";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
+import type { GradientPreferences, GradientResult } from "@/domain/gradient-generation";
+import { useTheme } from "next-themes";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
 import { cn } from "@/utils";
@@ -28,7 +25,7 @@ import {
   getRecommendationForCategory,
   AspectCategory,
 } from "@/domain/layout/aspect";
-import { LayoutConfig } from "@/domain/layout/types";
+import { CustomGradient, LayoutConfig } from "@/domain/layout/types";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
   getCanvasDimensions,
@@ -112,6 +109,23 @@ function applyTemplateRecommendation(
   }
 
   return { config, changedTemplate: false, changedVariant: false };
+}
+
+function getPreferredGradientAngle(config: LayoutConfig): number | undefined {
+  const variant = config.variant?.toLowerCase();
+  if (!variant) {
+    return undefined;
+  }
+  if (variant.includes("left")) {
+    return 300;
+  }
+  if (variant.includes("right")) {
+    return 120;
+  }
+  if (variant.includes("center")) {
+    return 180;
+  }
+  return undefined;
 }
 
 export default function PlaygroundPage() {
@@ -242,6 +256,15 @@ export default function PlaygroundPage() {
   }, []);
 
   const showLayoutToggle = (currentTemplate?.variants.length ?? 0) > 1;
+  const { theme } = useTheme();
+
+  const gradientPreferences = useMemo<GradientPreferences>(() => {
+    return {
+      angle: getPreferredGradientAngle(config),
+      temperature: theme === "dark" ? "cool" : "warm",
+      intensity: isScreenshotFocused(config) ? "bold" : "balanced",
+    };
+  }, [config, theme]);
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     return analyzeImageColors(dataUrl);
@@ -336,41 +359,58 @@ export default function PlaygroundPage() {
 
             if (colorPalette) {
               setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
+            }
 
-              // Generate gradient options and use the first one (from "sampled from your screenshot")
-              // Use landscape and undefined variant to match the gradient picker context
-              const contextAspect = aspectCategory ?? "landscape";
-
-              setConfig((currentConfig) => {
-                // Generate with same context as gradient picker (landscape, undefined variant)
-                // This ensures the gradient matches one from the list
-                const gradientOptions = generateGradientOptions(colorPalette, {
-                  aspectCategory: "landscape",
-                  templateVariant: undefined,
-                });
-
-                // Use the first gradient from the options (multi-color strategy)
-                const generatedGradient = gradientOptions[0];
-
-                // Determine text color from first stop of gradient
-                const firstStopColor = isAdvancedGradient(generatedGradient)
-                  ? (generatedGradient.stops[0]?.color ?? colorPalette.accent)
-                  : colorPalette.accent;
-                const textColor = getContrastTextColor(firstStopColor);
-
-                return {
-                  ...currentConfig,
-                  colors: {
-                    ...currentConfig.colors,
-                    text: textColor,
-                  },
-                  background: {
-                    type: "gradient",
-                    value: "custom",
-                    customGradient: generatedGradient,
-                  },
-                };
+            let gradientResult: GradientResult | undefined;
+            try {
+              const response = await fetch("/api/generate-gradient", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  imageDataUrl: dataUrl,
+                  debug: process.env.NODE_ENV !== "production",
+                  preferences: gradientPreferences,
+                }),
               });
+
+              if (response.ok) {
+                const payload = (await response.json()) as { gradient?: GradientResult };
+                gradientResult = payload.gradient;
+              } else {
+                const errorMessage = await response.text();
+                console.error("Gradient API request failed", errorMessage);
+              }
+            } catch (gradientError) {
+              console.error("Gradient generation request failed", gradientError);
+            }
+
+            if (gradientResult) {
+              const generatedGradient: CustomGradient = {
+                type: "linear",
+                angle: gradientResult.angle,
+                colorSpace: "srgb",
+                stops: [
+                  { color: gradientResult.colorStart, position: 0 },
+                  { color: gradientResult.colorEnd, position: 100 },
+                ],
+              };
+              const textColor = getContrastTextColor(gradientResult.colorStart);
+
+              setConfig((currentConfig) => ({
+                ...currentConfig,
+                colors: {
+                  ...currentConfig.colors,
+                  text: textColor,
+                },
+                background: {
+                  type: "gradient",
+                  value: "custom",
+                  customGradient: generatedGradient,
+                },
+              }));
+
               const gradientMessage = autoLayoutMessage
                 ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
                 : "Gradient applied based on your screenshot colors.";
@@ -396,7 +436,7 @@ export default function PlaygroundPage() {
 
       reader.readAsDataURL(file);
     },
-    [analyzeColors, announce],
+    [analyzeColors, announce, gradientPreferences],
   );
 
   return (
