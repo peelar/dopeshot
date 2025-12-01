@@ -18,12 +18,22 @@ function waitForRender(): Promise<void> {
   });
 }
 
+type ExportSizeOptions = {
+  width?: number;
+  height?: number;
+  backgroundColor?: string;
+};
+
 /**
  * Exports a DOM element to a PNG file.
  * @param elementId - The ID of the DOM element to export.
  * @param fileName - The name of the file to download.
  */
-export async function exportLayoutAsPng(elementId: string, fileName: string): Promise<void> {
+export async function exportLayoutAsPng(
+  elementId: string,
+  fileName: string,
+  { width = 1280, height = 720, backgroundColor = "white" }: ExportSizeOptions = {},
+): Promise<void> {
   const element = document.getElementById(elementId);
   if (!element) {
     throw new Error(`Export target with id "${elementId}" not found`);
@@ -33,15 +43,14 @@ export async function exportLayoutAsPng(elementId: string, fileName: string): Pr
     // Wait for next frame and idle time to ensure rendering is complete
     await waitForRender();
 
-    // Templates always render on a 1280x720 surface. The visible preview is just a scaled version
-    // via <PreviewViewport>, so exporting the hidden 1:1 surface preserves layout parity.
+    // The visible preview is a scaled version of the hidden export surface.
     const dataUrl = await toPng(element, {
       cacheBust: true,
       pixelRatio: 1,
-      width: 1280,
-      height: 720,
+      width,
+      height,
       skipAutoScale: true,
-      backgroundColor: "white",
+      backgroundColor,
       // Ensure we capture styles correctly
       style: {
         visibility: "visible",

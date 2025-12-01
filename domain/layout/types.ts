@@ -21,6 +21,20 @@ export type BackgroundType = "gradient" | "image" | "solid";
 
 export type ShadowIntensity = "low" | "medium" | "high";
 
+export type ScreenshotFramePreset = "soft-glass" | "solid";
+
+export type FrameShape = "rounded" | "rectangular";
+
+export type CanvasMode = "adaptive" | "locked";
+
+export type ScreenshotTreatment = {
+  preset: ScreenshotFramePreset;
+  canvasMode: CanvasMode;
+  lockedAspectRatio?: number; // defaults to 16:9 when locked
+  shadowEnabled?: boolean;
+  shape?: FrameShape;
+};
+
 export type FontId =
   | "clean"
   | "professional"
@@ -75,4 +89,5 @@ export type LayoutConfig = {
     background?: string; // Asset ID for background image
   };
   screenshotShadow?: ShadowIntensity;
+  screenshotFrame?: ScreenshotTreatment;
 };

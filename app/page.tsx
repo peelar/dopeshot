@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Download } from "lucide-react";
-import { TEMPLATES, getTemplateById } from "@/domain/layout/templates";
+import { TEMPLATES, getTemplateById, withTemplateTextDefaults } from "@/domain/layout/templates";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
@@ -29,6 +29,12 @@ import {
   AspectCategory,
 } from "@/domain/layout/aspect";
 import { LayoutConfig } from "@/domain/layout/types";
+import {
+  DEFAULT_LOCKED_ASPECT_RATIO,
+  getCanvasDimensions,
+  getScreenshotTreatment,
+  isScreenshotFocused,
+} from "@/domain/layout/screenshot-mode";
 
 const DEFAULT_ASSETS: Asset[] = [];
 const sora = Sora({ subsets: ["latin"] });
@@ -70,20 +76,22 @@ function applyTemplateRecommendation(
       : undefined;
 
   if (config.templateId !== template.id) {
+    const nextConfig = withTemplateTextDefaults({
+      ...defaultConfig,
+      templateId: template.id,
+      variant: variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
+      text: config.text,
+      colors: config.colors,
+      background: config.background,
+      assets: config.assets,
+      screenshotShadow: config.screenshotShadow,
+      fontId: config.fontId,
+      fontSize: config.fontSize,
+      screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
+    });
+
     return {
-      config: {
-        ...defaultConfig,
-        templateId: template.id,
-        variant:
-          variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
-        text: config.text,
-        colors: config.colors,
-        background: config.background,
-        assets: config.assets,
-        screenshotShadow: config.screenshotShadow,
-        fontId: config.fontId,
-        fontSize: config.fontSize,
-      },
+      config: nextConfig,
       changedTemplate: true,
       changedVariant: true,
       templateName: template.name,
@@ -95,6 +103,7 @@ function applyTemplateRecommendation(
       config: {
         ...config,
         variant: variantCandidate,
+        screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
       },
       changedTemplate: false,
       changedVariant: true,
@@ -106,14 +115,62 @@ function applyTemplateRecommendation(
 }
 
 export default function PlaygroundPage() {
-  const [config, setConfig] = useState(TEMPLATES[0].createConfig());
+  const [config, setRawConfig] = useState(() => withTemplateTextDefaults(TEMPLATES[0].createConfig()));
   const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
   const [hasUploaded, setHasUploaded] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isAnalyzingColors, setIsAnalyzingColors] = useState(false);
   const [statusMessage, setStatusMessage] = useState("");
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
+  const [showFocusHint, setShowFocusHint] = useState(false);
+  const focusHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const currentTemplate = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
+  const templateCapabilities = currentTemplate?.capabilities;
+  const screenshotAsset = useMemo(
+    () => assets.find((asset) => asset.id === config.assets.screenshot),
+    [assets, config.assets.screenshot],
+  );
+  const canvas = useMemo(() => getCanvasDimensions(config, screenshotAsset), [config, screenshotAsset]);
+  const screenshotTreatment = useMemo(() => getScreenshotTreatment(config), [config]);
+  const isScreenshotFocusedMode = useMemo(() => isScreenshotFocused(config), [config]);
+  const shouldShowAspectLock =
+    templateCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
+  const isAspectLocked = screenshotTreatment.canvasMode === "locked";
+
+  useEffect(() => {
+    if (templateCapabilities?.focusMode !== "auto") {
+      setShowFocusHint(false);
+      if (focusHintTimeoutRef.current) {
+        clearTimeout(focusHintTimeoutRef.current);
+        focusHintTimeoutRef.current = null;
+      }
+      return () => undefined;
+    }
+
+    if (isScreenshotFocusedMode) {
+      if (focusHintTimeoutRef.current) {
+        clearTimeout(focusHintTimeoutRef.current);
+      }
+      setShowFocusHint(true);
+      focusHintTimeoutRef.current = setTimeout(() => {
+        setShowFocusHint(false);
+        focusHintTimeoutRef.current = null;
+      }, 2000);
+    } else {
+      setShowFocusHint(false);
+      if (focusHintTimeoutRef.current) {
+        clearTimeout(focusHintTimeoutRef.current);
+        focusHintTimeoutRef.current = null;
+      }
+    }
+
+    return () => {
+      if (focusHintTimeoutRef.current) {
+        clearTimeout(focusHintTimeoutRef.current);
+        focusHintTimeoutRef.current = null;
+      }
+    };
+  }, [isScreenshotFocusedMode, templateCapabilities?.focusMode]);
 
   const announce = useCallback((message: string) => {
     setStatusMessage(message);
@@ -131,7 +188,10 @@ export default function PlaygroundPage() {
     setIsExporting(true);
     announce("Exporting image...");
     try {
-      await exportLayoutAsPng("export-container", "cover-image.png");
+      await exportLayoutAsPng("export-container", "cover-image.png", {
+        width: canvas.width,
+        height: canvas.height,
+      });
       announce("Image exported successfully.");
     } catch (error) {
       console.error("Export Error Handler:", error);
@@ -140,7 +200,17 @@ export default function PlaygroundPage() {
     } finally {
       setIsExporting(false);
     }
-  }, [config.assets.screenshot, announce]);
+  }, [canvas.height, canvas.width, config.assets.screenshot, announce]);
+
+  const setConfig = useCallback(
+    (next: LayoutConfig | ((current: LayoutConfig) => LayoutConfig)) => {
+      setRawConfig((currentConfig) => {
+        const computed = typeof next === "function" ? (next as (c: LayoutConfig) => LayoutConfig)(currentConfig) : next;
+        return withTemplateTextDefaults(computed);
+      });
+    },
+    [],
+  );
 
   const handleVariantChange = useCallback((variant: string) => {
     setConfig((currentConfig) => {
@@ -152,6 +222,21 @@ export default function PlaygroundPage() {
       return {
         ...currentConfig,
         variant,
+      };
+    });
+  }, []);
+
+  const toggleCanvasMode = useCallback(() => {
+    setConfig((currentConfig) => {
+      const treatment = getScreenshotTreatment(currentConfig);
+
+      return {
+        ...currentConfig,
+        screenshotFrame: {
+          ...treatment,
+          canvasMode: treatment.canvasMode === "locked" ? "adaptive" : "locked",
+          lockedAspectRatio: treatment.lockedAspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO,
+        },
       };
     });
   }, []);
@@ -405,10 +490,28 @@ export default function PlaygroundPage() {
                   <LayoutVariantToggle config={config} onVariantChange={handleVariantChange} />
                 ) : null}
 
-                <div className="flex w-full justify-center">
+                {shouldShowAspectLock ? (
+                  <div className="flex justify-end">
+                    <button
+                      type="button"
+                      onClick={toggleCanvasMode}
+                      aria-pressed={isAspectLocked}
+                      className={cn(
+                        "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-colors",
+                        isAspectLocked
+                          ? "border-foreground/30 bg-foreground/5 text-foreground"
+                          : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
+                      )}
+                    >
+                      {isAspectLocked ? "Locked · 16:9" : "Lock to 16:9"}
+                    </button>
+                  </div>
+                ) : null}
+
+                <div className="relative flex w-full justify-center">
                   <PreviewViewport
-                    surfaceWidth={1280}
-                    surfaceHeight={720}
+                    surfaceWidth={canvas.width}
+                    surfaceHeight={canvas.height}
                     isLoading={isAnalyzingColors}
                     loadingText="Analyzing colors..."
                   >
@@ -418,6 +521,13 @@ export default function PlaygroundPage() {
                       onUploadAsset={handleFileProcess}
                     />
                   </PreviewViewport>
+                  {showFocusHint ? (
+                    <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
+                      <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
+                        Screenshot-focused layout active
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               </div>
             </div>
@@ -441,8 +551,8 @@ export default function PlaygroundPage() {
             position: "fixed",
             top: 0,
             left: 0,
-            width: "1280px",
-            height: "720px",
+            width: `${canvas.width}px`,
+            height: `${canvas.height}px`,
             zIndex: -100,
             visibility: "visible",
             background: "white",

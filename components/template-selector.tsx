@@ -2,11 +2,12 @@
 
 import { useMemo } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
-import { TEMPLATES } from "@/domain/layout/templates";
+import { TEMPLATES, withTemplateTextDefaults } from "@/domain/layout/templates";
 import { Asset } from "@/domain/asset/types";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
+import { Type } from "lucide-react";
 
 interface TemplateSelectorProps {
   currentConfig: LayoutConfig;
@@ -38,11 +39,9 @@ export function TemplateSelector({
   // Memoize preview configs - only recalculate when user content changes
   // Preserve user's background, colors, and shadow settings across template switches
   const previewConfigs = useMemo(() => {
-    return TEMPLATE_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, template }) => ({
-      key,
-      displayName,
-      templateId: template.id,
-      previewConfig: {
+    return TEMPLATE_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, template }) => {
+      const isTextTemplate = template.capabilities.text.headline !== "hidden";
+      const previewConfig = withTemplateTextDefaults({
         ...defaultConfig,
         variant: defaultVariant,
         text: currentConfig.text,
@@ -52,11 +51,17 @@ export function TemplateSelector({
         screenshotShadow: currentConfig.screenshotShadow,
         fontId: currentConfig.fontId,
         fontSize: currentConfig.fontSize,
-      } as LayoutConfig,
-      hasMultipleVariants: template.variants.length > 1,
-      variantCount: template.variants.length,
-      defaultVariant,
-    }));
+        screenshotFrame: currentConfig.screenshotFrame,
+      } as LayoutConfig);
+
+      return {
+        key,
+        displayName,
+        templateId: template.id,
+        previewConfig,
+        showTextIcon: isTextTemplate,
+      };
+    });
   }, [
     currentConfig.assets,
     currentConfig.background,
@@ -64,6 +69,7 @@ export function TemplateSelector({
     currentConfig.fontId,
     currentConfig.fontSize,
     currentConfig.screenshotShadow,
+    currentConfig.screenshotFrame,
     currentConfig.text,
   ]);
 
@@ -74,16 +80,16 @@ export function TemplateSelector({
         className,
       )}
     >
-      {previewConfigs.map(
-        ({ key, displayName, templateId, previewConfig, hasMultipleVariants, variantCount }) => {
+      {previewConfigs.map(({ key, displayName, templateId, previewConfig, showTextIcon }) => {
           const isSelected = currentConfig.templateId === templateId;
 
           const handleSelect = () =>
-            onSelect({
-              ...previewConfig,
-              // Reset to the template's primary layout while keeping user styling/content
-              variant: previewConfig.variant,
-            });
+            onSelect(
+              withTemplateTextDefaults({
+                ...previewConfig,
+                variant: previewConfig.variant,
+              }),
+            );
 
           return (
             <button
@@ -113,9 +119,10 @@ export function TemplateSelector({
                 >
                   {displayName}
                 </span>
-                {hasMultipleVariants ? (
-                  <span className="rounded-full bg-primary/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
-                    {variantCount} layouts
+                {showTextIcon ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    <Type className="h-3 w-3" aria-hidden="true" />
+                    Text
                   </span>
                 ) : null}
               </div>

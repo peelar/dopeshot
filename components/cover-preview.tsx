@@ -1,7 +1,11 @@
+"use client";
+
+import { useMemo } from "react";
 import { LayoutConfig } from "@/domain/layout/types";
 import { getTemplateById } from "@/domain/layout/templates";
 import { Asset } from "@/domain/asset/types";
 import { cn } from "@/utils";
+import { getCanvasDimensions } from "@/domain/layout/screenshot-mode";
 
 interface CoverPreviewProps {
   config: LayoutConfig;
@@ -21,6 +25,14 @@ export function CoverPreview({
   isStatic = false,
 }: CoverPreviewProps) {
   const template = getTemplateById(config.templateId);
+  const screenshotAsset = useMemo(
+    () => assets.find((asset) => asset.id === config.assets.screenshot),
+    [assets, config.assets.screenshot],
+  );
+  const canvasDimensions = useMemo(
+    () => getCanvasDimensions(config, screenshotAsset),
+    [config, screenshotAsset],
+  );
 
   if (!template) {
     return (
@@ -43,7 +55,7 @@ export function CoverPreview({
     <div
       className={cn("relative w-full overflow-hidden", isStatic ? "" : "rounded-lg", className)}
       style={{
-        aspectRatio: "1280 / 720",
+        aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
       }}
     >
       <TemplateComponent

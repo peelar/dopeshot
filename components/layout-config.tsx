@@ -9,14 +9,7 @@ import {
   useCallback,
   type ReactNode,
 } from "react";
-import {
-  BackgroundConfig,
-  ColorToken,
-  FontId,
-  FontSize,
-  LayoutConfig,
-  ShadowIntensity,
-} from "@/domain/layout/types";
+import { BackgroundConfig, ColorToken, FontId, FontSize, LayoutConfig, ScreenshotTreatment } from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
@@ -24,6 +17,23 @@ import { cn } from "@/utils";
 import { GradientPicker } from "@/components/gradient-picker";
 import { FontSelector } from "@/components/font-selector";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
+import { Tooltip } from "@/components/ui/tooltip";
+import { getTemplateById } from "@/domain/layout/templates";
+
+const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
+  preset: "soft-glass",
+  canvasMode: "adaptive",
+  lockedAspectRatio: DEFAULT_LOCKED_ASPECT_RATIO,
+  shadowEnabled: true,
+  shape: "rounded",
+};
+
+const FULL_OUTLINE_CONTROLS = {
+  softGlass: true,
+  shape: true,
+  shadow: true,
+};
 
 type SidebarTab = "design" | "assets";
 
@@ -54,6 +64,15 @@ export const LayoutConfigPanel = ({
   onUploadAsset,
 }: LayoutConfigProps) => {
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
+  const template = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
+  const templateCapabilities = template?.capabilities;
+  const outlineControls = templateCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+  const showHeadlineInput = (templateCapabilities?.text.headline ?? "optional") !== "hidden";
+  const showSubtitleInput = (templateCapabilities?.text.subtitle ?? "optional") !== "hidden";
+  const showTypographyControls = templateCapabilities?.typography !== false;
+  const showOutlineSection =
+    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
+  const showLogoUpload = templateCapabilities?.logo !== "hidden";
 
   // Memoize asset lookups to avoid recalculating on every render
   const { screenshotAsset, logoAsset, backgroundAsset } = useMemo(
@@ -134,6 +153,43 @@ export const LayoutConfigPanel = ({
     [config, onConfigChangeAction],
   );
 
+  const toggleSoftGlass = useCallback(() => {
+    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+    const isSoftGlass = treatment.preset === "soft-glass";
+    onConfigChangeAction({
+      ...config,
+      screenshotFrame: {
+        ...treatment,
+        preset: isSoftGlass ? "solid" : "soft-glass",
+        shape: treatment.shape ?? "rounded",
+      },
+    });
+  }, [config, onConfigChangeAction]);
+
+  const handleShapeToggle = useCallback(() => {
+    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+    const currentShape = treatment.shape ?? "rounded";
+    const nextShape = currentShape === "rounded" ? "rectangular" : "rounded";
+    onConfigChangeAction({
+      ...config,
+      screenshotFrame: {
+        ...treatment,
+        shape: nextShape,
+      },
+    });
+  }, [config, onConfigChangeAction]);
+
+  const toggleFrameShadow = useCallback(() => {
+    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+    onConfigChangeAction({
+      ...config,
+      screenshotFrame: {
+        ...treatment,
+        shadowEnabled: !(treatment.shadowEnabled ?? true),
+      },
+    });
+  }, [config, onConfigChangeAction]);
+
   return (
     <div className="flex h-full flex-col">
       {/* Tab Header */}
@@ -187,80 +243,85 @@ export const LayoutConfigPanel = ({
             aria-labelledby="tab-design"
             className="space-y-6"
           >
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <SidebarFieldLabel htmlFor="sidebar-content-title">Headline</SidebarFieldLabel>
-                <input
-                  id="sidebar-content-title"
-                  value={config.text.title ?? ""}
-                  onChange={(event) => handleTextInputChange("title", event.target.value)}
-                  placeholder="Bring the heat"
-                  className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                />
+            {(showHeadlineInput || showSubtitleInput) && (
+              <div className="space-y-3">
+                {showHeadlineInput && (
+                  <div className="space-y-1.5">
+                    <SidebarFieldLabel htmlFor="sidebar-content-title">Headline</SidebarFieldLabel>
+                    <input
+                      id="sidebar-content-title"
+                      value={config.text.title ?? ""}
+                      onChange={(event) => handleTextInputChange("title", event.target.value)}
+                      placeholder="Bring the heat"
+                      className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    />
+                  </div>
+                )}
+                {showSubtitleInput && (
+                  <div className="space-y-1.5">
+                    <SidebarFieldLabel htmlFor="sidebar-content-subtitle">Subtitle</SidebarFieldLabel>
+                    <textarea
+                      id="sidebar-content-subtitle"
+                      value={config.text.subtitle ?? ""}
+                      onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
+                      placeholder="Keep the heat going"
+                      rows={2}
+                      className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                    />
+                  </div>
+                )}
               </div>
-              <div className="space-y-1.5">
-                <SidebarFieldLabel htmlFor="sidebar-content-subtitle">Subtitle</SidebarFieldLabel>
-                <textarea
-                  id="sidebar-content-subtitle"
-                  value={config.text.subtitle ?? ""}
-                  onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
-                  placeholder="Keep the heat going"
-                  rows={2}
-                  className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                />
-                <p className="text-[11px] text-foreground/70">Leave it blank if you don't want it rendered.</p>
-              </div>
-            </div>
+            )}
 
-            {/* Typography */}
-            <FontSelector
-              fontId={config.fontId}
-              fontSize={config.fontSize}
-              onFontChangeAction={handleFontChange}
-              onSizeChangeAction={handleFontSizeChange}
-            />
+            {showTypographyControls && (
+              <FontSelector
+                fontId={config.fontId}
+                fontSize={config.fontSize}
+                onFontChangeAction={handleFontChange}
+                onSizeChangeAction={handleFontSizeChange}
+              />
+            )}
 
-            {/* Screenshot Shadow */}
-            <div className="space-y-2">
-              <Label id="shadow-label" className="text-sm font-medium text-muted-foreground">
-                Shadow
-              </Label>
-              <div
-                role="radiogroup"
-                aria-labelledby="shadow-label"
-                className="grid grid-cols-3 gap-2"
-              >
-                {(["low", "medium", "high"] as const).map((intensity) => {
-                  const isSelected = (config.screenshotShadow || "medium") === intensity;
-                  return (
-                    <button
-                      key={intensity}
-                      type="button"
-                      role="radio"
-                      aria-checked={isSelected}
-                      aria-label={`${intensity} shadow intensity`}
-                      onClick={() =>
-                        onConfigChangeAction({
-                          ...config,
-                          screenshotShadow: intensity,
-                        })
-                      }
-                      className={cn(
-                        "flex flex-col items-center gap-1.5 rounded-md border px-2 py-3 transition-all",
-                        isSelected
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:bg-muted/50",
-                      )}
-                    >
-                      <ShadowIcon intensity={intensity} />
-                      <span className="text-[10px] capitalize text-muted-foreground">
-                        {intensity}
-                      </span>
-                    </button>
-                  );
-                })}
+            {showOutlineSection && (
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-muted-foreground">Outline</Label>
+                <div className="flex items-center gap-3">
+                  {outlineControls.softGlass && (
+                    <Tooltip label="Glass">
+                      <IconToggleButton
+                        active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"}
+                        onClick={toggleSoftGlass}
+                        ariaLabel="Toggle soft glass outline"
+                      >
+                        <SoftGlassGlyph active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"} />
+                      </IconToggleButton>
+                    </Tooltip>
+                  )}
+                  {outlineControls.shape && (
+                    <Tooltip label="Corners">
+                      <IconToggleButton
+                        active={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
+                        onClick={handleShapeToggle}
+                        ariaLabel="Toggle corner style"
+                      >
+                        <CornerGlyph rounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"} />
+                      </IconToggleButton>
+                    </Tooltip>
+                  )}
+                  {outlineControls.shadow && (
+                    <Tooltip label="Shadow">
+                      <IconToggleButton
+                        active={config.screenshotFrame?.shadowEnabled ?? true}
+                        onClick={toggleFrameShadow}
+                        ariaLabel="Toggle shadow"
+                      >
+                        <ShadowGlyph active={config.screenshotFrame?.shadowEnabled ?? true} />
+                      </IconToggleButton>
+                    </Tooltip>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Background Selection */}
             <div className="space-y-3">
@@ -322,58 +383,24 @@ export const LayoutConfigPanel = ({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Logo</Label>
-              <AssetDropzone
-                asset={logoAsset}
-                onUpload={(file) => onUploadAsset?.(file, "logo")}
-                disabled={!onUploadAsset}
-                label="Drop your logo"
-                variant="logo"
-              />
-            </div>
+            {showLogoUpload && (
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Logo</Label>
+                <AssetDropzone
+                  asset={logoAsset}
+                  onUpload={(file) => onUploadAsset?.(file, "logo")}
+                  disabled={!onUploadAsset}
+                  label="Drop your logo"
+                  variant="logo"
+                />
+              </div>
+            )}
           </div>
         )}
       </div>
     </div>
   );
 };
-
-function ShadowIcon({ intensity }: { intensity: ShadowIntensity }) {
-  const shadows: Record<ShadowIntensity, { offset: number; opacity: number }> = {
-    low: { offset: 1, opacity: 0.15 },
-    medium: { offset: 2, opacity: 0.25 },
-    high: { offset: 3, opacity: 0.4 },
-  };
-
-  const { offset, opacity } = shadows[intensity];
-
-  return (
-    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="overflow-visible">
-      {/* Shadow - using a solid offset instead of blur for cleaner rendering */}
-      <rect
-        x={8 + offset}
-        y={8 + offset}
-        width="16"
-        height="16"
-        rx="2"
-        fill="currentColor"
-        className="text-foreground"
-        style={{ opacity }}
-      />
-      {/* Card */}
-      <rect
-        x="8"
-        y="8"
-        width="16"
-        height="16"
-        rx="2"
-        className="fill-background stroke-border"
-        strokeWidth="1.5"
-      />
-    </svg>
-  );
-}
 
 interface AssetDropzoneProps {
   asset?: Asset;
@@ -500,3 +527,117 @@ const AssetDropzone = ({
     </div>
   );
 };
+
+interface IconToggleButtonProps {
+  active: boolean;
+  onClick: () => void;
+  ariaLabel: string;
+  children: ReactNode;
+}
+
+function IconToggleButton({ active, onClick, ariaLabel, children }: IconToggleButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
+      className={cn(
+        "inline-flex h-12 w-12 items-center justify-center rounded-xl border text-muted-foreground transition",
+        active
+          ? "border-primary/60 bg-primary/10 text-primary"
+          : "border-border bg-background hover:bg-muted/40 hover:text-foreground",
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SoftGlassGlyph({ active }: { active: boolean }) {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <defs>
+        <linearGradient id="soft-glass-gradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity={active ? 0.45 : 0.15} />
+          <stop offset="100%" stopColor="currentColor" stopOpacity={active ? 0.2 : 0.05} />
+        </linearGradient>
+      </defs>
+      <rect
+        x="5"
+        y="5"
+        width="18"
+        height="18"
+        rx="8"
+        fill="url(#soft-glass-gradient)"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        opacity={active ? 0.9 : 0.7}
+      />
+      <rect
+        x="8.5"
+        y="8"
+        width="9"
+        height="4"
+        rx="2"
+        fill="currentColor"
+        opacity={active ? 0.5 : 0.2}
+      />
+    </svg>
+  );
+}
+
+function ShadowGlyph({ active }: { active: boolean }) {
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <rect
+        x="6"
+        y="6"
+        width="16"
+        height="11"
+        rx="3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+      />
+      <ellipse
+        cx="14"
+        cy="19"
+        rx="6.5"
+        ry="2.8"
+        fill="currentColor"
+        opacity={active ? 0.35 : 0.15}
+      />
+    </svg>
+  );
+}
+
+function CornerGlyph({ rounded }: { rounded: boolean }) {
+  if (rounded) {
+    return (
+      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+        <path
+          d="M8 22V13C8 9.68629 10.6863 7 14 7H22"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
+      <path
+        d="M8 22V8H22"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.2"
+        strokeLinecap="square"
+        strokeLinejoin="miter"
+      />
+    </svg>
+  );
+}

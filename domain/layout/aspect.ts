@@ -6,8 +6,8 @@ const LANDSCAPE_MAX = 2.2;
 const PORTRAIT_MAX = 0.9;
 
 const DEFAULT_RECOMMENDATIONS: Record<AspectCategory, { templateId: string; variant?: string }> = {
-  portrait: { templateId: "popup-gradient", variant: "right" },
-  square: { templateId: "hero-center", variant: "left" },
+  portrait: { templateId: "hero-center", variant: "left" },
+  square: { templateId: "adaptive-stage" },
   landscape: { templateId: "popup-gradient", variant: "right" },
   ultrawide: { templateId: "popup-gradient", variant: "right" },
 };

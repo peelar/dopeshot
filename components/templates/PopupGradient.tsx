@@ -7,6 +7,8 @@ import { InlineEditableText } from "@/components/templates/shared/InlineEditable
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
 import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
+import { getScreenshotTreatment, isScreenshotFocused } from "@/domain/layout/screenshot-mode";
+import { getShadowValue } from "@/components/templates/shared/shadows";
 
 const SIDE_CONTENT_TOP = "30%";
 const CENTER_CONTENT_TOP = "12%";
@@ -17,6 +19,21 @@ const SCREENSHOT_OBJECT_POSITIONS: Record<"left" | "right", string> = {
 };
 
 const CENTER_SCREENSHOT_GUTTER = 0.07; // Keep inset so rounded corners are visible
+const FOCUSED_SCREENSHOT_GUTTER = 0.05;
+const FOCUSED_SCREENSHOT_VERTICAL_GUTTER = 0.05;
+const PEAK_CORNER_RADIUS = "42px";
+
+function getPeakBorderRadius(placement: "left" | "right" | "center") {
+  switch (placement) {
+    case "left":
+      return `${PEAK_CORNER_RADIUS} 0 0 0`;
+    case "right":
+      return `0 ${PEAK_CORNER_RADIUS} 0 0`;
+    case "center":
+    default:
+      return `${PEAK_CORNER_RADIUS} ${PEAK_CORNER_RADIUS} 0 0`;
+  }
+}
 
 interface PopupGradientProps {
   config: LayoutConfig;
@@ -50,11 +67,19 @@ function PopupGradientComponent({
 
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
+  const isFocused = isScreenshotFocused(config);
+  const screenshotTreatment = getScreenshotTreatment(config);
+  const appliedShadow = useMemo(() => {
+    if (screenshotTreatment.shadowEnabled === false) return undefined;
+    return getShadowValue(config.screenshotShadow);
+  }, [config.screenshotShadow, screenshotTreatment.shadowEnabled]);
+
   const textVariant: "left" | "right" | "center" = (() => {
     if (config.variant === "left" || config.variant === "center") return config.variant;
     if (config.variant === "right") return "right";
     return "right";
   })();
+  const effectiveVariant: "left" | "right" | "center" = isFocused ? "center" : textVariant;
 
   // Interpret variant as text position; screenshot mirrors opposite side
   const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
@@ -66,25 +91,31 @@ function PopupGradientComponent({
   const subtitleClassName = cn("mt-4 min-h-[1.2rem]", fontSize.subtitleClass, textColorClass);
 
   const screenshotFrameWidth = useMemo(() => {
-    if (textVariant === "center") {
+    if (effectiveVariant === "center") {
       return "100%";
     }
     return "62%";
-  }, [textVariant]);
+  }, [effectiveVariant]);
 
   const renderScreenshot = (placement: "left" | "right" | "center") => {
     if (!screenshot) return null;
 
     if (placement === "center") {
-      const insetPercentage = `${CENTER_SCREENSHOT_GUTTER * 100}%`;
+      const insetPercentage = `${
+        (isFocused ? FOCUSED_SCREENSHOT_GUTTER : CENTER_SCREENSHOT_GUTTER) * 100
+      }%`;
+      const verticalInset = isFocused ? `${FOCUSED_SCREENSHOT_VERTICAL_GUTTER * 100}%` : undefined;
       return (
         <div
-          className="z-5 absolute overflow-hidden rounded-t-[20px]"
+          className="z-5 absolute overflow-hidden"
           style={{
-            top: CENTER_SCREENSHOT_TOP,
-            bottom: 0,
+            top: isFocused ? verticalInset : CENTER_SCREENSHOT_TOP,
+            bottom: verticalInset || 0,
             left: insetPercentage,
             right: insetPercentage,
+            borderRadius: getPeakBorderRadius("center"),
+            background: "transparent",
+            boxShadow: appliedShadow,
           }}
         >
           <div className="flex h-full w-full items-start justify-center">
@@ -104,8 +135,6 @@ function PopupGradientComponent({
       top: SIDE_CONTENT_TOP,
       bottom: 0,
       width: screenshotFrameWidth,
-      borderTopLeftRadius: placement === "right" ? "0px" : "12px",
-      borderTopRightRadius: placement === "right" ? "12px" : "0px",
     };
 
     return (
@@ -115,7 +144,12 @@ function PopupGradientComponent({
           placement === "left" && "right-0",
           placement === "right" && "left-0",
         )}
-        style={baseStyle}
+        style={{
+          ...baseStyle,
+          borderRadius: getPeakBorderRadius(placement),
+          background: "transparent",
+          boxShadow: appliedShadow,
+        }}
       >
         <img
           src={screenshot.url}
@@ -135,36 +169,37 @@ function PopupGradientComponent({
         className,
       )}
       style={{
-        aspectRatio: "1280 / 720",
         background: backgroundStyle,
       }}
     >
-      <div
-        className={cn(
-          "absolute top-8 z-10 flex items-center",
-          textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
-        )}
-      >
-        {logo ? (
-          <img
-            src={logo.url}
-            alt="Logo"
-            className="h-8 w-auto object-contain"
-            crossOrigin="anonymous"
-          />
-        ) : null}
-        {!logo && onUploadAsset && !isStatic ? (
-          <LogoBadge
-            logo={logo}
-            label="Drop your logo here"
-            replaceLabel="Replace logo"
-            onUploadLogo={(file) => onUploadAsset(file, "logo")}
-          />
-        ) : null}
-      </div>
+      {!isFocused && (
+        <div
+          className={cn(
+            "absolute top-8 z-10 flex items-center",
+            textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
+          )}
+        >
+          {logo ? (
+            <img
+              src={logo.url}
+              alt="Logo"
+              className="h-8 w-auto object-contain"
+              crossOrigin="anonymous"
+            />
+          ) : null}
+          {!logo && onUploadAsset && !isStatic ? (
+            <LogoBadge
+              logo={logo}
+              label="Drop your logo here"
+              replaceLabel="Replace logo"
+              onUploadLogo={(file) => onUploadAsset(file, "logo")}
+            />
+          ) : null}
+        </div>
+      )}
 
       {/* Content based on image position */}
-      {textVariant === "left" && (
+      {!isFocused && effectiveVariant === "left" && (
         <>
           {/* Text on left */}
           <div
@@ -200,7 +235,7 @@ function PopupGradientComponent({
         </>
       )}
 
-      {textVariant === "right" && (
+      {!isFocused && effectiveVariant === "right" && (
         <>
           {/* Screenshot on left */}
           {renderScreenshot("right")}
@@ -236,36 +271,37 @@ function PopupGradientComponent({
         </>
       )}
 
-      {textVariant === "center" && (
+      {effectiveVariant === "center" && (
         <>
-          {/* Text on top */}
-          <div
-            className="absolute left-1/2 z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center"
-            style={{ top: CENTER_CONTENT_TOP }}
-          >
-            <InlineEditableText
-              element="h1"
-              field="title"
-              value={config.text.title}
-              placeholder="Bring the heat"
-              className={titleClassName}
-              style={titleStyle}
-              ariaLabel="Edit title"
-              onTextChange={onTextChange}
-            />
-            {(config.text.subtitle || onTextChange) && (
+          {!isFocused && (
+            <div
+              className="absolute left-1/2 z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center"
+              style={{ top: CENTER_CONTENT_TOP }}
+            >
               <InlineEditableText
-                element="p"
-                field="subtitle"
-                value={config.text.subtitle}
-                placeholder="Drop some flavor"
-                className={subtitleClassName}
-                style={subtitleStyle}
-                ariaLabel="Edit subtitle"
+                element="h1"
+                field="title"
+                value={config.text.title}
+                placeholder="Bring the heat"
+                className={titleClassName}
+                style={titleStyle}
+                ariaLabel="Edit title"
                 onTextChange={onTextChange}
               />
-            )}
-          </div>
+              {(config.text.subtitle || onTextChange) && (
+                <InlineEditableText
+                  element="p"
+                  field="subtitle"
+                  value={config.text.subtitle}
+                  placeholder="Drop some flavor"
+                  className={subtitleClassName}
+                  style={subtitleStyle}
+                  ariaLabel="Edit subtitle"
+                  onTextChange={onTextChange}
+                />
+              )}
+            </div>
+          )}
 
           {/* Screenshot centered, popping up from bottom */}
           {renderScreenshot("center")}
