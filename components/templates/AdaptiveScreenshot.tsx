@@ -68,7 +68,7 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
           style={{
             ...frameAppearance.style,
             boxShadow: appliedShadow,
-            width: "100%",
+            width: "max-content",
             maxWidth: frameMaxWidth,
             maxHeight: frameMaxHeight,
             aspectRatio: screenshotAspectRatio,

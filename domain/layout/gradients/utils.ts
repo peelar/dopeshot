@@ -1,31 +1,8 @@
 import { ColorToken } from "../types";
 import { CustomGradient, isLegacyGradient, isAdvancedGradient, GradientColorSpace } from "./types";
 
-const COLOR_SPACE_SUPPORT_CACHE: Partial<Record<GradientColorSpace, boolean>> = {};
-
-function isColorSpaceSupported(space?: GradientColorSpace): boolean {
-  if (!space || space === "srgb") {
-    return false;
-  }
-
-  const cached = COLOR_SPACE_SUPPORT_CACHE[space];
-  if (cached !== undefined) {
-    return cached;
-  }
-
-  if (
-    typeof window === "undefined" ||
-    typeof CSS === "undefined" ||
-    typeof CSS.supports !== "function"
-  ) {
-    COLOR_SPACE_SUPPORT_CACHE[space] = false;
-    return false;
-  }
-
-  const testDeclaration = `linear-gradient(in ${space} 90deg, #000, #fff)`;
-  const supported = CSS.supports("background-image", testDeclaration);
-  COLOR_SPACE_SUPPORT_CACHE[space] = supported;
-  return supported;
+function isColorSpaceSupported(_space?: GradientColorSpace): boolean {
+  return false;
 }
 
 function buildGradientArgs(base: string, space?: GradientColorSpace): string {

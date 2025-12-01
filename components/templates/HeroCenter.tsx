@@ -140,7 +140,7 @@ function HeroCenterComponent({
           <div
             className={cn(
               "relative flex w-full items-center justify-center overflow-hidden",
-              isAdaptiveCanvas ? "rounded-[36px]" : "rounded-[32px]",
+              "rounded-[16px]",
             )}
             style={{
               ...frameAppearance.style,
@@ -173,12 +173,12 @@ function HeroCenterComponent({
         <div
           className={cn(
             "relative flex max-h-full w-full items-center justify-center overflow-hidden",
-            isAdaptiveCanvas ? "rounded-[36px]" : "rounded-[32px]",
+            "rounded-[16px]",
           )}
           style={{
             ...frameAppearance.style,
             boxShadow: appliedShadow,
-            width: "100%",
+            width: "max-content",
             maxWidth,
             maxHeight,
             aspectRatio: `${screenshotAspectRatio}`,

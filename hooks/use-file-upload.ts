@@ -6,8 +6,17 @@ import { applyTemplateRecommendation, ASPECT_COPY } from "@/domain/layout/recomm
 import { getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
 
+const ACCEPTED_IMAGE_TYPES = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+]);
+const ACCEPTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+
 export interface UseFileUploadOptions {
-  onAssetCreated: (asset: Asset) => void;
+  onAssetCreated: (asset: Asset, kind: "screenshot" | "logo" | "background") => void;
   onConfigUpdate: (updater: (config: LayoutConfig) => LayoutConfig) => void;
   onStatusMessage: (message: string) => void;
   onScreenshotUploaded?: (asset: Asset, aspectCategory?: AspectCategory) => void;
@@ -21,15 +30,39 @@ export function useFileUpload({
 }: UseFileUploadOptions) {
   const [isProcessingUpload, setIsProcessingUpload] = useState(false);
 
+  const validateFile = useCallback(
+    (file: File) => {
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      const matchesMime = file.type ? ACCEPTED_IMAGE_TYPES.has(file.type) : false;
+      const matchesExtension = extension ? ACCEPTED_EXTENSIONS.has(extension) : false;
+
+      if (!(matchesMime || matchesExtension)) {
+        onStatusMessage("Unsupported format. Use PNG, JPG, WebP, or SVG.");
+        return false;
+      }
+
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        onStatusMessage("File is too large. Max size is 10MB.");
+        return false;
+      }
+
+      return true;
+    },
+    [onStatusMessage],
+  );
+
   const handleFileProcess = useCallback(
     async (file: File, kind: "screenshot" | "logo" | "background" = "screenshot") => {
+      if (!validateFile(file)) {
+        return;
+      }
       setIsProcessingUpload(true);
 
       try {
         const result = await processFileUpload(file, kind);
         const { asset, aspectCategory } = result;
 
-        onAssetCreated(asset);
+        onAssetCreated(asset, kind);
         onStatusMessage(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
 
         onConfigUpdate((currentConfig) => {
@@ -85,7 +118,7 @@ export function useFileUpload({
         setIsProcessingUpload(false);
       }
     },
-    [onAssetCreated, onConfigUpdate, onStatusMessage, onScreenshotUploaded],
+    [onAssetCreated, onConfigUpdate, onStatusMessage, onScreenshotUploaded, validateFile],
   );
 
   return {

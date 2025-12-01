@@ -3,16 +3,16 @@ import { FrameShape, ScreenshotFramePreset } from "@/domain/layout/types";
 
 const GLASS_BACKGROUND = "rgba(255, 255, 255, 0.14)";
 const ROUNDED_PADDING = {
-  focused: "clamp(10px, 1.8vw, 22px)",
-  default: "clamp(6px, 1vw, 12px)",
+  focused: "10px",
+  default: "8px",
 };
 const RECT_PADDING = {
-  focused: "clamp(6px, 1.4vw, 14px)",
-  default: "clamp(4px, 0.9vw, 10px)",
+  focused: "8px",
+  default: "6px",
 };
 
-function roundedRadius(isFocused: boolean) {
-  return isFocused ? "16px" : "24px";
+function roundedRadius(_isFocused: boolean) {
+  return "16px";
 }
 
 export type ScreenshotFrameAppearance = {

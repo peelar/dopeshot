@@ -28,6 +28,7 @@ export function PreviewViewport({
 }: PreviewViewportProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
+  const [hasMeasured, setHasMeasured] = useState(false);
   const rafRef = useRef<number>();
 
   // Throttled scale update using requestAnimationFrame
@@ -41,6 +42,7 @@ export function PreviewViewport({
       if (!width || !surfaceWidth) return;
       const nextScale = Math.min(width / surfaceWidth, 1);
       setScale(nextScale);
+      setHasMeasured(true);
     });
   }, [surfaceWidth]);
 
@@ -51,7 +53,9 @@ export function PreviewViewport({
     // Initial scale calculation
     const width = node.clientWidth;
     if (width && surfaceWidth) {
-      setScale(Math.min(width / surfaceWidth, 1));
+      const nextScale = Math.min(width / surfaceWidth, 1);
+      setScale(nextScale);
+      setHasMeasured(true);
     }
 
     const observer = new ResizeObserver(updateScale);
@@ -78,6 +82,8 @@ export function PreviewViewport({
             width: surfaceWidth,
             height: surfaceHeight,
             transform: `scale(${scale})`,
+            opacity: hasMeasured ? 1 : 0,
+            transition: "opacity 150ms ease",
           }}
         >
           {children}

@@ -19,7 +19,7 @@ const SCREENSHOT_OBJECT_POSITIONS: Record<"left" | "right", string> = {
 };
 
 const CENTER_SCREENSHOT_GUTTER = 0.07; // Keep inset so rounded corners are visible
-const PEAK_CORNER_RADIUS = "42px";
+const PEAK_CORNER_RADIUS = "16px";
 
 function getPeakBorderRadius(placement: "left" | "right" | "center") {
   switch (placement) {
