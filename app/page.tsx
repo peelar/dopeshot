@@ -1,230 +1,85 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { TEMPLATES, getTemplateById, withTemplateTextDefaults } from "@/domain/layout/templates";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
 import { UploadDropzone } from "@/components/upload-dropzone";
 import { Button } from "@/components/ui/button";
-import { Asset, ColorPalette } from "@/domain/asset/types";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TemplateSelector } from "@/components/template-selector";
-import {
-  getContrastTextColor,
-  generateGradientOptions,
-  isAdvancedGradient,
-  isLegacyGradient,
-} from "@/domain/layout/gradients";
-import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import type { GradientPreferences } from "@/domain/gradient-generation";
 import { useTheme } from "next-themes";
 import { Sora } from "next/font/google";
 import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
 import { cn } from "@/utils";
-import { getImageMetadataFromDataUrl } from "@/domain/asset/get-image-metadata";
-import {
-  getAspectCategory,
-  getRecommendationForCategory,
-  AspectCategory,
-} from "@/domain/layout/aspect";
-import { CustomGradient, LayoutConfig } from "@/domain/layout/types";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
-  getCanvasDimensions,
   getScreenshotTreatment,
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
+import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
+import { usePlaygroundState } from "@/hooks/use-playground-state";
+import { useFileUpload } from "@/hooks/use-file-upload";
+import { useColorAnalysis } from "@/hooks/use-color-analysis";
+import { useStatusMessage } from "@/hooks/use-status-message";
+import { useFocusHint } from "@/hooks/use-focus-hint";
+import type { GradientPreferences } from "@/domain/gradient-generation";
+import { getTemplateById } from "@/domain/layout/templates";
 
-const DEFAULT_ASSETS: Asset[] = [];
 const sora = Sora({ subsets: ["latin"] });
 
-type TemplateRecommendation = {
-  templateId: string;
-  variant?: string;
-};
-
-const ASPECT_COPY: Record<AspectCategory, string> = {
-  portrait: "portrait",
-  square: "square",
-  landscape: "landscape",
-  ultrawide: "ultra-wide",
-};
-
-function applyTemplateRecommendation(
-  config: LayoutConfig,
-  recommendation?: TemplateRecommendation,
-): {
-  config: LayoutConfig;
-  changedTemplate: boolean;
-  changedVariant: boolean;
-  templateName?: string;
-} {
-  if (!recommendation) {
-    return { config, changedTemplate: false, changedVariant: false };
-  }
-
-  const template = getTemplateById(recommendation.templateId);
-  if (!template) {
-    return { config, changedTemplate: false, changedVariant: false };
-  }
-
-  const defaultConfig = template.createConfig();
-  const variantCandidate =
-    recommendation.variant && template.variants.includes(recommendation.variant)
-      ? recommendation.variant
-      : undefined;
-
-  if (config.templateId !== template.id) {
-    const nextConfig = withTemplateTextDefaults({
-      ...defaultConfig,
-      templateId: template.id,
-      variant: variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
-      text: config.text,
-      colors: config.colors,
-      background: config.background,
-      assets: config.assets,
-      screenshotShadow: config.screenshotShadow,
-      fontId: config.fontId,
-      fontSize: config.fontSize,
-      screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
-    });
-
-    return {
-      config: nextConfig,
-      changedTemplate: true,
-      changedVariant: true,
-      templateName: template.name,
-    };
-  }
-
-  if (variantCandidate && variantCandidate !== config.variant) {
-    return {
-      config: {
-        ...config,
-        variant: variantCandidate,
-        screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
-      },
-      changedTemplate: false,
-      changedVariant: true,
-      templateName: template.name,
-    };
-  }
-
-  return { config, changedTemplate: false, changedVariant: false };
-}
-
-function getPreferredGradientAngle(config: LayoutConfig): number | undefined {
-  const variant = config.variant?.toLowerCase();
-  if (!variant) {
-    return undefined;
-  }
-  if (variant.includes("left")) {
-    return 300;
-  }
-  if (variant.includes("right")) {
-    return 120;
-  }
-  if (variant.includes("center")) {
-    return 180;
-  }
-  return undefined;
-}
-
-function applyPreferredAngle(gradient: CustomGradient, angle?: number): CustomGradient {
-  if (angle === undefined) {
-    return gradient;
-  }
-  if (isAdvancedGradient(gradient)) {
-    return { ...gradient, angle };
-  }
-  if (isLegacyGradient(gradient)) {
-    return { ...gradient, direction: `${angle}deg` };
-  }
-  return gradient;
-}
-
-function getGradientColorsForContrast(gradient: CustomGradient): string[] {
-  if (isAdvancedGradient(gradient)) {
-    return gradient.stops
-      .map((stop) => stop?.color)
-      .filter((color): color is string => Boolean(color));
-  }
-  if (isLegacyGradient(gradient)) {
-    return [gradient.from, gradient.to].filter((color): color is string => Boolean(color));
-  }
-  return [];
-}
-
 export default function PlaygroundPage() {
-  const [config, setRawConfig] = useState(() =>
-    withTemplateTextDefaults(TEMPLATES[0].createConfig()),
-  );
-  const [assets, setAssets] = useState<Asset[]>(DEFAULT_ASSETS);
-  const [hasUploaded, setHasUploaded] = useState(false);
+  const { theme } = useTheme();
+  const {
+    config,
+    setConfig,
+    assets,
+    setAssets,
+    hasUploaded,
+    setHasUploaded,
+    currentTemplate,
+    templateCapabilities,
+    screenshotAsset,
+    canvas,
+    isScreenshotFocusedMode,
+    shouldShowAspectLock,
+    isAspectLocked,
+    showLayoutToggle,
+  } = usePlaygroundState();
+
+  const { statusMessage, announce } = useStatusMessage();
   const [isExporting, setIsExporting] = useState(false);
-  const [isAnalyzingColors, setIsAnalyzingColors] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
-  const [isProcessingUpload, setIsProcessingUpload] = useState(false);
-  const [showFocusHint, setShowFocusHint] = useState(false);
-  const focusHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const currentTemplate = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
-  const templateCapabilities = currentTemplate?.capabilities;
-  const screenshotAsset = useMemo(
-    () => assets.find((asset) => asset.id === config.assets.screenshot),
-    [assets, config.assets.screenshot],
-  );
-  const canvas = useMemo(
-    () => getCanvasDimensions(config, screenshotAsset),
-    [config, screenshotAsset],
-  );
-  const screenshotTreatment = useMemo(() => getScreenshotTreatment(config), [config]);
-  const isScreenshotFocusedMode = useMemo(() => isScreenshotFocused(config), [config]);
-  const shouldShowAspectLock =
-    templateCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
-  const isAspectLocked = screenshotTreatment.canvasMode === "locked";
 
-  useEffect(() => {
-    if (templateCapabilities?.focusMode !== "auto") {
-      setShowFocusHint(false);
-      if (focusHintTimeoutRef.current) {
-        clearTimeout(focusHintTimeoutRef.current);
-        focusHintTimeoutRef.current = null;
-      }
-      return () => undefined;
-    }
-
-    if (isScreenshotFocusedMode) {
-      if (focusHintTimeoutRef.current) {
-        clearTimeout(focusHintTimeoutRef.current);
-      }
-      setShowFocusHint(true);
-      focusHintTimeoutRef.current = setTimeout(() => {
-        setShowFocusHint(false);
-        focusHintTimeoutRef.current = null;
-      }, 2000);
-    } else {
-      setShowFocusHint(false);
-      if (focusHintTimeoutRef.current) {
-        clearTimeout(focusHintTimeoutRef.current);
-        focusHintTimeoutRef.current = null;
-      }
-    }
-
-    return () => {
-      if (focusHintTimeoutRef.current) {
-        clearTimeout(focusHintTimeoutRef.current);
-        focusHintTimeoutRef.current = null;
-      }
+  const gradientPreferences = useMemo<GradientPreferences>(() => {
+    return {
+      angle: getPreferredGradientAngle(config),
+      temperature: theme === "dark" ? "cool" : "warm",
+      intensity: isScreenshotFocused(config) ? "bold" : "balanced",
     };
-  }, [isScreenshotFocusedMode, templateCapabilities?.focusMode]);
+  }, [config, theme]);
 
-  const announce = useCallback((message: string) => {
-    setStatusMessage(message);
-    setTimeout(() => setStatusMessage(""), 3000);
-  }, []);
+  const { processColorAnalysis, isAnalyzingColors } = useColorAnalysis({
+    onAssetUpdate: setAssets,
+    onConfigUpdate: setConfig,
+    onStatusMessage: announce,
+    gradientPreferences,
+  });
+
+  const { handleFileProcess, isProcessingUpload } = useFileUpload({
+    onAssetCreated: (asset) => {
+      setAssets((prev) => [...prev, asset]);
+      setHasUploaded(true);
+    },
+    onConfigUpdate: setConfig,
+    onStatusMessage: announce,
+    onScreenshotUploaded: async (asset, aspectCategory) => {
+      await processColorAnalysis(asset.url, asset.id, null);
+    },
+  });
+
+  const showFocusHint = useFocusHint(isScreenshotFocusedMode, templateCapabilities?.focusMode);
 
   const handleExport = useCallback(async () => {
     const hasScreenshot = !!config.assets.screenshot;
@@ -251,32 +106,26 @@ export default function PlaygroundPage() {
     }
   }, [canvas.height, canvas.width, config.assets.screenshot, announce]);
 
-  const setConfig = useCallback(
-    (next: LayoutConfig | ((current: LayoutConfig) => LayoutConfig)) => {
-      setRawConfig((currentConfig) => {
-        const computed =
-          typeof next === "function"
-            ? (next as (c: LayoutConfig) => LayoutConfig)(currentConfig)
-            : next;
-        return withTemplateTextDefaults(computed);
+  const handleVariantChange = useCallback(
+    (variant: string) => {
+      setConfig((currentConfig) => {
+        const template = getTemplateById(currentConfig.templateId);
+        if (
+          !template ||
+          !template.variants.includes(variant) ||
+          currentConfig.variant === variant
+        ) {
+          return currentConfig;
+        }
+
+        return {
+          ...currentConfig,
+          variant,
+        };
       });
     },
-    [],
+    [setConfig],
   );
-
-  const handleVariantChange = useCallback((variant: string) => {
-    setConfig((currentConfig) => {
-      const template = getTemplateById(currentConfig.templateId);
-      if (!template || !template.variants.includes(variant) || currentConfig.variant === variant) {
-        return currentConfig;
-      }
-
-      return {
-        ...currentConfig,
-        variant,
-      };
-    });
-  }, []);
 
   const toggleCanvasMode = useCallback(() => {
     setConfig((currentConfig) => {
@@ -291,169 +140,7 @@ export default function PlaygroundPage() {
         },
       };
     });
-  }, []);
-
-  const showLayoutToggle = (currentTemplate?.variants.length ?? 0) > 1;
-  const { theme } = useTheme();
-
-  const gradientPreferences = useMemo<GradientPreferences>(() => {
-    return {
-      angle: getPreferredGradientAngle(config),
-      temperature: theme === "dark" ? "cool" : "warm",
-      intensity: isScreenshotFocused(config) ? "bold" : "balanced",
-    };
-  }, [config, theme]);
-
-  const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
-    return analyzeImageColors(dataUrl);
-  }, []);
-
-  const handleFileProcess = useCallback(
-    (file: File, kind: "screenshot" | "logo" | "background" = "screenshot") => {
-      const reader = new FileReader();
-      setIsProcessingUpload(true);
-
-      reader.onload = async (e) => {
-        const dataUrl = e.target?.result as string;
-        if (!dataUrl) {
-          setIsProcessingUpload(false);
-          return;
-        }
-
-        let assetMetadata = undefined;
-        let aspectCategory: AspectCategory | undefined;
-        let autoLayoutMessage: string | null = null;
-
-        if (kind === "screenshot") {
-          const metadata = await getImageMetadataFromDataUrl(dataUrl);
-          if (metadata) {
-            aspectCategory = getAspectCategory(metadata.aspectRatio);
-            assetMetadata = { ...metadata, orientation: aspectCategory };
-          }
-        }
-
-        const assetId = Math.random().toString(36).substring(7);
-        const newAsset: Asset = {
-          id: assetId,
-          projectId: "playground",
-          userId: "playground-user",
-          name: file.name,
-          url: dataUrl,
-          kind: kind === "background" ? "background" : kind === "logo" ? "logo" : "screenshot",
-          createdAt: new Date().toISOString(),
-          metadata: assetMetadata,
-        };
-        setAssets((prev) => [...prev, newAsset]);
-        setHasUploaded(true);
-        announce(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
-
-        setConfig((currentConfig) => {
-          const newConfig = {
-            ...currentConfig,
-            assets: {
-              ...currentConfig.assets,
-              [kind]: newAsset.id,
-            },
-          };
-
-          if (kind === "background") {
-            newConfig.background = {
-              type: "image",
-              value: newAsset.id,
-            };
-          }
-
-          let nextConfig = newConfig;
-
-          if (kind === "screenshot") {
-            nextConfig = {
-              ...nextConfig,
-              background: {
-                type: "solid",
-                value: "slate-100",
-              },
-            };
-          }
-
-          if (kind === "screenshot" && aspectCategory) {
-            const recommendation = getRecommendationForCategory(aspectCategory);
-            const result = applyTemplateRecommendation(nextConfig, recommendation);
-            nextConfig = result.config;
-
-            if ((result.changedTemplate || result.changedVariant) && result.templateName) {
-              autoLayoutMessage = `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.templateName}.`;
-            }
-          }
-
-          return nextConfig;
-        });
-
-        if (kind === "screenshot") {
-          setIsAnalyzingColors(true);
-          announce("Analyzing colors from screenshot...");
-
-          try {
-            const colorPalette = await analyzeColors(dataUrl);
-
-            if (colorPalette) {
-              setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
-            }
-
-            const gradientOptions = colorPalette
-              ? generateGradientOptions(colorPalette, {
-                  aspectCategory: "landscape",
-                  templateVariant: undefined,
-                })
-              : [];
-
-            const preferredGradient = gradientOptions[0];
-            const fallbackGradient = preferredGradient
-              ? applyPreferredAngle(preferredGradient, gradientPreferences.angle)
-              : undefined;
-
-            if (fallbackGradient) {
-              const textColor = getContrastTextColor(getGradientColorsForContrast(fallbackGradient));
-
-              setConfig((currentConfig) => ({
-                ...currentConfig,
-                colors: {
-                  ...currentConfig.colors,
-                  text: textColor,
-                },
-                background: {
-                  type: "gradient",
-                  value: "custom",
-                  customGradient: fallbackGradient,
-                },
-              }));
-
-              const gradientMessage = autoLayoutMessage
-                ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
-                : "Gradient applied based on your screenshot colors.";
-              autoLayoutMessage = null;
-              announce(gradientMessage);
-            }
-          } finally {
-            setIsAnalyzingColors(false);
-          }
-        }
-
-        setIsProcessingUpload(false);
-        if (autoLayoutMessage) {
-          announce(autoLayoutMessage);
-        }
-      };
-
-      reader.onerror = () => {
-        setIsProcessingUpload(false);
-        setIsAnalyzingColors(false);
-        announce("Failed to read file. Please try another image.");
-      };
-
-      reader.readAsDataURL(file);
-    },
-    [analyzeColors, announce, gradientPreferences],
-  );
+  }, [setConfig]);
 
   return (
     <main className="min-h-screen bg-background text-foreground">

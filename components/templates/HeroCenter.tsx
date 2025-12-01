@@ -131,17 +131,42 @@ function HeroCenterComponent({
 
     const screenshotAspectRatio = screenshot.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
     const isPortraitScreenshot = screenshotAspectRatio < 0.9;
-    const verticalPadding = 64;
-    const maxHeight = isPortraitScreenshot
-      ? `calc(100% - ${verticalPadding}px)`
-      : isAdaptiveCanvas
-        ? `min(560px, calc(100% - ${verticalPadding + 32}px))`
-        : `min(520px, calc(100% - ${verticalPadding + 72}px))`;
-    const maxWidth = isPortraitScreenshot
-      ? "min(520px, 55%)"
-      : isAdaptiveCanvas
-        ? "70%"
-        : "640px";
+    const verticalPadding = 16;
+
+    // For tall/portrait images, use full height minus padding
+    if (isPortraitScreenshot) {
+      return (
+        <div className="flex flex-1 items-center justify-center">
+          <div
+            className={cn(
+              "relative flex w-full items-center justify-center overflow-hidden",
+              isAdaptiveCanvas ? "rounded-[36px]" : "rounded-[32px]",
+            )}
+            style={{
+              ...frameAppearance.style,
+              boxShadow: appliedShadow,
+              height: `calc(100% - ${verticalPadding}px)`,
+              width: "auto",
+              maxWidth: "480px",
+            }}
+          >
+            <img
+              src={screenshot.url}
+              alt="Screenshot"
+              className="h-full w-auto object-contain"
+              style={{ borderRadius: frameAppearance.contentRadius }}
+              crossOrigin="anonymous"
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // For landscape images, use existing logic
+    const maxHeight = isAdaptiveCanvas
+      ? `min(560px, calc(100% - ${verticalPadding + 32}px))`
+      : `min(520px, calc(100% - ${verticalPadding + 72}px))`;
+    const maxWidth = isAdaptiveCanvas ? "70%" : "640px";
 
     return (
       <div className="flex flex-1 items-center justify-center">
