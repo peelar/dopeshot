@@ -120,16 +120,6 @@ export default function PlaygroundPage() {
     setTimeout(() => setStatusMessage(""), 3000);
   }, []);
 
-  const handleTextChange = useCallback((field: "title" | "subtitle", value: string) => {
-    setConfig((currentConfig) => ({
-      ...currentConfig,
-      text: {
-        ...currentConfig.text,
-        [field]: value,
-      },
-    }));
-  }, []);
-
   const handleExport = useCallback(async () => {
     const hasScreenshot = !!config.assets.screenshot;
 
@@ -410,12 +400,7 @@ export default function PlaygroundPage() {
 
           <div className="flex flex-1 overflow-hidden">
             <div className="flex flex-1 flex-col overflow-hidden bg-background px-4 pb-8 pt-4 sm:p-8">
-              <div
-                className={cn(
-                  "mx-auto flex w-full max-w-4xl flex-col",
-                  showLayoutToggle ? "gap-4" : "gap-2",
-                )}
-              >
+              <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
                 {showLayoutToggle ? (
                   <LayoutVariantToggle config={config} onVariantChange={handleVariantChange} />
                 ) : null}
@@ -427,12 +412,7 @@ export default function PlaygroundPage() {
                     isLoading={isAnalyzingColors}
                     loadingText="Analyzing colors..."
                   >
-                    <CoverPreview
-                      config={config}
-                      assets={assets}
-                      onTextChange={handleTextChange}
-                      onUploadAsset={handleFileProcess}
-                    />
+                    <CoverPreview config={config} assets={assets} onUploadAsset={handleFileProcess} />
                   </PreviewViewport>
                 </div>
               </div>

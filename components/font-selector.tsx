@@ -43,7 +43,7 @@ export function FontSelector({
 
   return (
     <div className="space-y-2">
-      <Label className="text-xs text-muted-foreground">Typography</Label>
+      <Label className="text-sm font-medium text-muted-foreground">Typography</Label>
       <div className="flex gap-2">
         {/* Font Select - 3/4 width */}
         <div className="flex-[3]">

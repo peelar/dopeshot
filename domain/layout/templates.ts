@@ -34,7 +34,7 @@ export const TEMPLATES: Template[] = [
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
       text: {
-        title: "Change me",
+        title: "Bring the heat",
         subtitle: "Drop some vibes and tell the story.",
       },
       colors: {

@@ -1,6 +1,14 @@
 "use client";
 
-import { useRef, useState, type ChangeEvent, useEffect, useMemo, useCallback } from "react";
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  useEffect,
+  useMemo,
+  useCallback,
+  type ReactNode,
+} from "react";
 import {
   BackgroundConfig,
   ColorToken,
@@ -24,6 +32,19 @@ interface LayoutConfigProps {
   onConfigChangeAction: (newConfig: LayoutConfig) => void;
   assets?: Asset[];
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+}
+
+interface SidebarFieldLabelProps {
+  htmlFor: string;
+  children: ReactNode;
+}
+
+function SidebarFieldLabel({ htmlFor, children }: SidebarFieldLabelProps) {
+  return (
+    <Label htmlFor={htmlFor} className="text-sm font-medium text-muted-foreground">
+      {children}
+    </Label>
+  );
 }
 
 export const LayoutConfigPanel = ({
@@ -100,6 +121,19 @@ export const LayoutConfigPanel = ({
     [config, onConfigChangeAction],
   );
 
+  const handleTextInputChange = useCallback(
+    (field: "title" | "subtitle", value: string) => {
+      onConfigChangeAction({
+        ...config,
+        text: {
+          ...config.text,
+          [field]: value,
+        },
+      });
+    },
+    [config, onConfigChangeAction],
+  );
+
   return (
     <div className="flex h-full flex-col">
       {/* Tab Header */}
@@ -153,6 +187,31 @@ export const LayoutConfigPanel = ({
             aria-labelledby="tab-design"
             className="space-y-6"
           >
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <SidebarFieldLabel htmlFor="sidebar-content-title">Headline</SidebarFieldLabel>
+                <input
+                  id="sidebar-content-title"
+                  value={config.text.title ?? ""}
+                  onChange={(event) => handleTextInputChange("title", event.target.value)}
+                  placeholder="Bring the heat"
+                  className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <SidebarFieldLabel htmlFor="sidebar-content-subtitle">Subtitle</SidebarFieldLabel>
+                <textarea
+                  id="sidebar-content-subtitle"
+                  value={config.text.subtitle ?? ""}
+                  onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
+                  placeholder="Keep the heat going"
+                  rows={2}
+                  className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+                />
+                <p className="text-[11px] text-foreground/70">Leave it blank if you don't want it rendered.</p>
+              </div>
+            </div>
+
             {/* Typography */}
             <FontSelector
               fontId={config.fontId}
@@ -163,7 +222,7 @@ export const LayoutConfigPanel = ({
 
             {/* Screenshot Shadow */}
             <div className="space-y-2">
-              <Label id="shadow-label" className="text-xs text-muted-foreground">
+              <Label id="shadow-label" className="text-sm font-medium text-muted-foreground">
                 Shadow
               </Label>
               <div
@@ -205,7 +264,7 @@ export const LayoutConfigPanel = ({
 
             {/* Background Selection */}
             <div className="space-y-3">
-              <Label id="bg-type-label" className="text-xs text-muted-foreground">
+              <Label id="bg-type-label" className="text-sm font-medium text-muted-foreground">
                 Background
               </Label>
 

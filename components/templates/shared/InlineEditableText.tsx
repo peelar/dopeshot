@@ -97,9 +97,13 @@ export function InlineEditableText({
   );
 
   if (!isEditable) {
+    if (!normalizedValue.trim()) {
+      return null;
+    }
+
     return (
       <Tag className={className} style={style}>
-        {normalizedValue || placeholder}
+        {normalizedValue}
       </Tag>
     );
   }

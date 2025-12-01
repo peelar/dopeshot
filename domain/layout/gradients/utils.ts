@@ -165,3 +165,4 @@ export function degreesToDirection(angle: number): string {
   const normalized = ((Math.round(angle) % 360) + 360) % 360;
   return `${normalized}deg`;
 }
+

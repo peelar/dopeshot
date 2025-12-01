@@ -142,7 +142,12 @@ function PopupGradientComponent({
         background: backgroundStyle,
       }}
     >
-      <div className="absolute left-8 top-8 z-10">
+      <div
+        className={cn(
+          "absolute top-8 z-10 flex items-center",
+          textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
+        )}
+      >
         {logo ? (
           <img
             src={logo.url}
@@ -173,7 +178,7 @@ function PopupGradientComponent({
               element="h1"
               field="title"
               value={config.text.title}
-              placeholder="Change me"
+              placeholder="Bring the heat"
               className={titleClassName}
               style={titleStyle}
               ariaLabel="Edit title"
@@ -212,7 +217,7 @@ function PopupGradientComponent({
               element="h1"
               field="title"
               value={config.text.title}
-              placeholder="Change me"
+              placeholder="Bring the heat"
               className={cn(titleClassName, "text-right")}
               style={titleStyle}
               ariaLabel="Edit title"
@@ -245,7 +250,7 @@ function PopupGradientComponent({
               element="h1"
               field="title"
               value={config.text.title}
-              placeholder="Change me"
+              placeholder="Bring the heat"
               className={titleClassName}
               style={titleStyle}
               ariaLabel="Edit title"

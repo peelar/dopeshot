@@ -261,10 +261,8 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border/60 bg-muted/30">
-        <div className="space-y-3 border-b border-border/40 px-4 py-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-            Gradient
-          </p>
+        <div className="space-y-3 px-4 pt-4 pb-3">
+          <p className="text-sm font-medium text-muted-foreground">Gradient</p>
           <SegmentedControl
             value={activeSource}
             options={gradientTabs}
@@ -272,7 +270,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
             ariaLabel="Select gradient source"
           />
         </div>
-        <div className="px-4 py-4">
+        <div className="px-4 pb-4">
           {activeSource === "screenshot" && (
             <ScreenshotGradients
               gradients={dynamicGradients}
@@ -325,10 +323,7 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="space-y-3">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-muted-foreground">
-        Sampled from your screenshot
-      </p>
+    <div className="space-y-2">
       <div className="grid grid-cols-4 gap-3">
         {gradients.map((gradient, index) => {
           const isSelected = areGradientsEqual(activeGradient, gradient);
@@ -343,6 +338,7 @@ function ScreenshotGradients({
           );
         })}
       </div>
+      <p className="text-[11px] text-muted-foreground/80">Sampled from your screenshot</p>
     </div>
   );
 }
@@ -369,31 +365,26 @@ function CustomGradientControls({
   const { start, mid, end } = customColors;
 
   return (
-    <div className="space-y-3 rounded-2xl border border-border/20 bg-background/70 p-3">
-      <div className="space-y-2">
-        <div className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">
-          Colors
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          <DebouncedColorInput
-            id="gradient-start-color"
-            value={start}
-            onChange={(value) => onColorChange("start", value)}
-            label="Start"
-          />
-          <DebouncedColorInput
-            id="gradient-mid-color"
-            value={mid}
-            onChange={(value) => onColorChange("mid", value)}
-            label="Mid"
-          />
-          <DebouncedColorInput
-            id="gradient-end-color"
-            value={end}
-            onChange={(value) => onColorChange("end", value)}
-            label="End"
-          />
-        </div>
+    <div className="space-y-4">
+      <div className="grid grid-cols-3 gap-3">
+        <DebouncedColorInput
+          id="gradient-start-color"
+          value={start}
+          onChange={(value) => onColorChange("start", value)}
+          label="Start"
+        />
+        <DebouncedColorInput
+          id="gradient-mid-color"
+          value={mid}
+          onChange={(value) => onColorChange("mid", value)}
+          label="Mid"
+        />
+        <DebouncedColorInput
+          id="gradient-end-color"
+          value={end}
+          onChange={(value) => onColorChange("end", value)}
+          label="End"
+        />
       </div>
       <GradientAngleControl angle={angle} onChange={onAngleChange} />
     </div>

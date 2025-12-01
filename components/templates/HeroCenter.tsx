@@ -88,7 +88,7 @@ function HeroCenterComponent({
             element="p"
             field="subtitle"
             value={config.text.subtitle}
-            placeholder="Tell a short story"
+            placeholder="Keep the heat going"
             className={cn("opacity-90", fontSize.subtitleClass, textColorClass)}
             style={subtitleStyle}
             ariaLabel="Edit subtitle"
@@ -127,7 +127,7 @@ function HeroCenterComponent({
       <div
         className={cn(
           "absolute top-8 z-10 flex items-center gap-2",
-          variant === "right" ? "right-14" : "left-14",
+          variant === "right" ? "right-8" : "left-8",
         )}
       >
         {renderLogo()}
