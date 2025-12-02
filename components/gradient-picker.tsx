@@ -11,6 +11,7 @@ import {
   isAdvancedGradient,
   isLegacyGradient,
 } from "@/domain/layout/types";
+import type { ColorPalette } from "@/domain/asset/types";
 import {
   customGradientToCss,
   directionStringToDegrees,
@@ -489,18 +490,15 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
 
   // Compare legacy gradients
   if (isLegacyGradient(a) && isLegacyGradient(b)) {
-    return a.from === b.from && a.to === b.to && a.direction === b.direction;
+    // Compare colors only, ignoring direction (angle may be modified after selection)
+    return a.from === b.from && a.to === b.to;
   }
 
   // Compare advanced gradients
   if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
     if (a.stops.length !== b.stops.length) return false;
     if (a.type !== b.type) return false;
-    // Compare angle (normalized to 0-360)
-    const angleA = a.angle !== undefined ? ((a.angle % 360) + 360) % 360 : undefined;
-    const angleB = b.angle !== undefined ? ((b.angle % 360) + 360) % 360 : undefined;
-    if (angleA !== angleB) return false;
-    // Compare stops (allow small position differences due to rounding)
+    // Compare stops by colors only (ignoring angle since it may be modified after selection)
     return a.stops.every((stop, i) => {
       const otherStop = b.stops[i];
       if (!otherStop) return false;

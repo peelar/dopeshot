@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, type ChangeEvent, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
@@ -17,6 +17,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { PLACEHOLDER_ASSET_ID } from "@/hooks/atoms";
+import { getRandomDemoPreset } from "@/domain/demo/presets";
 import {
   configAtom,
   assetsAtom,
@@ -45,7 +46,7 @@ import { AppHeader } from "@/components/app-header";
 export default function PlaygroundPage() {
   const { theme } = useTheme();
   const [config, setConfig] = useAtom(configAtom);
-  const assets = useAtomValue(assetsAtom);
+  const [assets, setAssets] = useAtom(assetsAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
@@ -62,6 +63,16 @@ export default function PlaygroundPage() {
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const dragCounterRef = useRef(0);
+  const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
+
+  // Apply random demo preset on client mount (after hydration)
+  useEffect(() => {
+    if (hasAppliedRandomPreset || hasCustomScreenshot) return;
+    
+    const randomPreset = getRandomDemoPreset();
+    setConfig(randomPreset.config);
+    setHasAppliedRandomPreset(true);
+  }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig]);
 
   const gradientPreferences = useMemo<GradientPreferences>(() => {
     return {
@@ -77,14 +88,18 @@ export default function PlaygroundPage() {
     processColorAnalysis,
   });
 
+  // Run color analysis when demo asset doesn't have a gradient set yet
   useEffect(() => {
     const placeholderAsset = assets.find((asset) => asset.id === PLACEHOLDER_ASSET_ID);
-    if (!placeholderAsset || placeholderAsset.colorPalette) {
+    const hasGradientSet = config.background?.customGradient !== undefined;
+    
+    // Skip if no placeholder or if gradient is already set
+    if (!placeholderAsset || hasGradientSet) {
       return;
     }
 
     void processColorAnalysis(placeholderAsset.url, placeholderAsset.id, null);
-  }, [assets, processColorAnalysis]);
+  }, [assets, config.background?.customGradient, processColorAnalysis]);
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, templateCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);

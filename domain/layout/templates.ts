@@ -41,8 +41,6 @@ export interface Template {
   variants: string[]; // Available layout variants for this template
   createConfig: () => LayoutConfig;
   component: ComponentType<{
-    config: LayoutConfig;
-    assets?: Asset[];
     className?: string;
     onTextChange?: (field: "title" | "subtitle", value: string) => void;
     onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;

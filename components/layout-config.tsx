@@ -10,6 +10,7 @@ import {
   type CSSProperties,
 } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { useTheme } from "next-themes";
 import {
   BackgroundConfig,
   ColorToken,
@@ -483,7 +484,9 @@ const EffectsSection = ({
   );
 };
 
-interface EffectToggleVisuals {
+type ThemeMode = "light" | "dark";
+
+interface EffectToggleVisualState {
   trackClass?: string;
   trackStyle?: CSSProperties;
   knobClass?: string;
@@ -491,6 +494,21 @@ interface EffectToggleVisuals {
   trackOverlay?: ReactNode;
   knobOverlay?: ReactNode;
 }
+
+type EffectToggleVisuals = Record<ThemeMode, EffectToggleVisualState>;
+
+const createSharedVisuals = (visual: EffectToggleVisualState = {}): EffectToggleVisuals => ({
+  light: visual,
+  dark: visual,
+});
+
+const createThemedVisuals = (
+  light: EffectToggleVisualState,
+  dark: EffectToggleVisualState,
+): EffectToggleVisuals => ({
+  light,
+  dark,
+});
 
 const EffectToggleRow = ({ label, checked, onToggle, variant }: EffectToggleRowProps) => (
   <EffectToggleControl
@@ -508,24 +526,34 @@ interface EffectToggleControlProps extends EffectToggleRowProps {
 
 const EffectToggleControl = ({ label, checked, onToggle, variant, visuals }: EffectToggleControlProps) => {
   const isCorners = variant === "corners";
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use light theme during SSR to avoid hydration mismatch
+  const themeMode: ThemeMode = mounted && resolvedTheme === "dark" ? "dark" : "light";
+  const themeVisuals = visuals[themeMode] ?? {};
 
   const trackClasses = cn(
     "relative flex h-7 w-12 items-center overflow-hidden px-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] border border-black/10 dark:border-white/20",
     isCorners && !checked ? "rounded-[8px]" : "rounded-full",
     checked
-      ? "bg-[#fcfcfc] dark:bg-white/12"
-      : "bg-[#f6f6f6] text-gray-600 dark:bg-white/5",
-    visuals.trackClass,
+      ? "bg-[#fcfcfc] dark:bg-[#1f1f1f]"
+      : "bg-[#f6f6f6] text-gray-600 dark:bg-[#131313]",
+    themeVisuals.trackClass,
   );
 
   const knobStyle = {
-    ...visuals.knobStyle,
+    ...themeVisuals.knobStyle,
   } satisfies CSSProperties;
 
   const knobClasses = cn(
     "relative z-[1] h-[18px] w-[18px] transform rounded-full border border-white/70 bg-[#dcdcdc] text-[#111] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/30 dark:bg-white/90",
     checked ? "translate-x-5" : "translate-x-0",
-    visuals.knobClass,
+    themeVisuals.knobClass,
   );
 
   return (
@@ -534,13 +562,13 @@ const EffectToggleControl = ({ label, checked, onToggle, variant, visuals }: Eff
       role="switch"
       aria-checked={checked}
       onClick={onToggle}
-      className="group flex h-12 w-full items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
+      className="group flex h-12 w-full cursor-pointer items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
     >
       <span>{label}</span>
-      <span aria-hidden="true" className={trackClasses} style={visuals.trackStyle}>
-        {visuals.trackOverlay}
+      <span aria-hidden="true" className={trackClasses} style={themeVisuals.trackStyle}>
+        {themeVisuals.trackOverlay}
         <span className={knobClasses} style={knobStyle}>
-          {visuals.knobOverlay}
+          {themeVisuals.knobOverlay}
         </span>
       </span>
     </button>
@@ -552,29 +580,78 @@ function getEffectToggleVisuals(
   isOn: boolean,
 ): EffectToggleVisuals {
   switch (variant) {
-    case "glass":
-      return {
-        trackOverlay: isOn ? (
+    case "glass": {
+      const offVisual = createSharedVisuals({
+        knobStyle: {
+          border: "1px solid rgba(255,255,255,0.65)",
+        },
+      });
+
+      if (!isOn) {
+        return offVisual;
+      }
+
+      const knobEnhancement: EffectToggleVisualState = {
+        knobStyle: {
+          border: "1px solid rgba(255,255,255,0.65)",
+          backdropFilter: "blur(2px)",
+          background: "linear-gradient(145deg, rgba(255,255,255,0.9), rgba(30,30,30,0.12))",
+        },
+      };
+
+      const lightOverlay = (
+        <>
           <span
             aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute inset-[2px] rounded-full bg-gradient-to-b from-transparent via-black/35 to-black/70 transition-opacity duration-300",
-              isOn ? "opacity-60" : "opacity-0",
-            )}
+            className="pointer-events-none absolute inset-[2px] rounded-full bg-gradient-to-b from-transparent via-white/50 to-white/30 opacity-80"
           />
-        ) : undefined,
-        knobStyle: isOn
-          ? {
-              border: "1px solid rgba(255,255,255,0.65)",
-              backdropFilter: "blur(2px)",
-              background: "linear-gradient(145deg, rgba(255,255,255,0.9), rgba(30,30,30,0.12))",
-            }
-          : {
-              border: "1px solid rgba(255,255,255,0.65)",
-            },
-      };
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-1 rounded-full bg-white/40 blur-md mix-blend-screen opacity-70"
+          />
+        </>
+      );
+
+      const darkOverlay = (
+        <>
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-[2px] rounded-full bg-gradient-to-b from-transparent via-white/20 to-white/10 opacity-70"
+          />
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-1 rounded-full bg-white/20 blur-md mix-blend-screen opacity-60"
+          />
+        </>
+      );
+
+      return createThemedVisuals(
+        {
+          trackClass: "bg-gradient-to-br from-white/85 via-white/60 to-white/25 backdrop-blur",
+          trackStyle: {
+            backgroundColor: "rgba(255,255,255,0.35)",
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.35)",
+            WebkitBackdropFilter: "blur(8px)",
+            backdropFilter: "blur(8px)",
+          },
+          trackOverlay: lightOverlay,
+          ...knobEnhancement,
+        },
+        {
+          trackClass: "bg-gradient-to-br from-white/25 via-white/15 to-white/5 backdrop-blur",
+          trackStyle: {
+            backgroundColor: "rgba(255,255,255,0.15)",
+            boxShadow: "inset 0 0 0 1px rgba(255,255,255,0.2)",
+            WebkitBackdropFilter: "blur(10px)",
+            backdropFilter: "blur(10px)",
+          },
+          trackOverlay: darkOverlay,
+          ...knobEnhancement,
+        },
+      );
+    }
     case "corners":
-      return {
+      return createSharedVisuals({
         trackStyle: {
           transitionProperty: "background-color, transform",
         },
@@ -582,33 +659,59 @@ function getEffectToggleVisuals(
         knobStyle: {
           transitionProperty: "transform, background-color, box-shadow",
         },
-      };
+      });
     case "shadow":
-      return {
-        trackClass: isOn
-          ? "shadow-[0_0_18px_rgba(0,0,0,0.35)] dark:shadow-[0_0_18px_rgba(255,255,255,0.35)]"
-          : undefined,
-      };
-    case "grain":
-      return {
-        trackStyle: isOn
-          ? {
-              backgroundImage:
-                "radial-gradient(rgba(255,255,255,0.5) 0.25px, transparent 0.25px), radial-gradient(rgba(45,45,45,0.4) 0.35px, transparent 0.35px)",
-              backgroundSize: "1.6px 1.6px, 2.4px 2.4px",
-              backgroundBlendMode: "screen, multiply",
-              opacity: 0.9,
-            }
-          : undefined,
-        knobOverlay: isOn ? (
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(rgba(0,0,0,0.35)_0.25px,transparent_0.25px)] opacity-25"
-          />
-        ) : undefined,
-      };
+      if (!isOn) {
+        return createSharedVisuals();
+      }
+      return createThemedVisuals(
+        {
+          trackClass: "shadow-[0_0_18px_rgba(0,0,0,0.35)]",
+        },
+        {
+          trackClass: "ring-1 ring-white/15 shadow-[0_0_18px_rgba(255,255,255,0.35)]",
+        },
+      );
+    case "grain": {
+      if (!isOn) {
+        return createSharedVisuals();
+      }
+
+      const knobOverlay = (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(rgba(0,0,0,0.35)_0.25px,transparent_0.25px)] opacity-25"
+        />
+      );
+
+      return createThemedVisuals(
+        {
+          trackStyle: {
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.6) 0.25px, transparent 0.25px), radial-gradient(rgba(0,0,0,0.3) 0.35px, transparent 0.35px)",
+            backgroundSize: "1.5px 1.5px, 2.2px 2.2px",
+            backgroundBlendMode: "screen, multiply",
+            opacity: 0.95,
+            backgroundColor: "rgba(255,255,255,0.08)",
+          },
+          knobOverlay,
+        },
+        {
+          trackClass: "brightness-125 contrast-125",
+          trackStyle: {
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.75) 0.25px, transparent 0.25px), radial-gradient(rgba(0,0,0,0.55) 0.35px, transparent 0.35px)",
+            backgroundSize: "1.4px 1.4px, 2px 2px",
+            backgroundBlendMode: "screen, multiply",
+            opacity: 1,
+            backgroundColor: "rgba(255,255,255,0.05)",
+          },
+          knobOverlay,
+        },
+      );
+    }
     default:
-      return {};
+      return createSharedVisuals();
   }
 }
 

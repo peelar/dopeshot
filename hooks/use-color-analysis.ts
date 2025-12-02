@@ -43,7 +43,9 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
             })
           : [];
 
-        const preferredGradient = gradientOptions[0];
+        // Randomly select a gradient from the available options
+        const randomIndex = Math.floor(Math.random() * gradientOptions.length);
+        const preferredGradient = gradientOptions[randomIndex];
         const fallbackGradient = preferredGradient
           ? applyPreferredAngle(preferredGradient, gradientPreferences.angle)
           : undefined;

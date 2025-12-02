@@ -63,7 +63,7 @@ const fontVariables = [
   manrope.variable,
 ].join(" ");
 
-const siteUrl = "https://dope-shot.vercel.app";
+const siteUrl = "https://dopeshot.vercel.app";
 const previewImage = "/og-preview.png";
 
 export const metadata: Metadata = {

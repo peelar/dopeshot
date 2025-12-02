@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue, useSetAtom, Provider, createStore } from "jotai";
 import { TEMPLATES, withTemplateTextDefaults } from "@/domain/layout/templates";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
 import { Type } from "lucide-react";
 import { configAtom, assetsAtom } from "@/hooks/atoms";
+import type { LayoutConfig } from "@/domain/layout/types";
+import type { Asset } from "@/domain/asset/types";
 
 // Memoize template default configs at module level to avoid recreation
 const TEMPLATE_DEFAULTS = TEMPLATES.map((template) => {
@@ -91,6 +93,14 @@ export function TemplateSelector({ className }: { className?: string }) {
             ),
           );
 
+        // Create isolated store for each preview
+        const previewStore = useMemo(() => {
+          const store = createStore();
+          store.set(configAtom, previewConfig);
+          store.set(assetsAtom, assets);
+          return store;
+        }, [previewConfig]);
+
         return (
           <button
             key={key}
@@ -105,7 +115,9 @@ export function TemplateSelector({ className }: { className?: string }) {
           >
             <div className="relative h-[90px] w-[160px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10">
               <PreviewViewport surfaceWidth={1280} surfaceHeight={720}>
-                <CoverPreview />
+                <Provider store={previewStore}>
+                  <CoverPreview />
+                </Provider>
               </PreviewViewport>
               {/* Overlay to prevent interactions within the preview */}
               <div className="absolute inset-0 z-10 bg-transparent" />
