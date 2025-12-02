@@ -16,6 +16,7 @@ For all product documentation, see the [Product](product/index.md) folder.
 - Maintain ASCII unless the file already uses other characters.
 - Use shadcn/ui CLI to generate components.
 - Use pnpm.
+- Use Jotai for state management, especially for global state. Prefer atoms over prop drilling and callback chains.
 - You will be given PRDs or similar instructions to follow. You have the authority to make decisions about the implementation.
 - Don’t mention underlying tech in UI copy (e.g., avoid “Upload with Supabase”).
 - Favor existing shadcn-style primitives before building new components.

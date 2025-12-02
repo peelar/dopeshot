@@ -234,7 +234,26 @@ export function getTemplateById(id: string): Template | undefined {
   return TEMPLATES.find((t) => t.id === id);
 }
 
-export function withTemplateTextDefaults(config: LayoutConfig): LayoutConfig {
+type TemplateTextDefaultOptions = {
+  preserveEmptyText?: boolean;
+};
+
+function hasUserProvidedText(value: string | undefined, preserveEmptyText: boolean): boolean {
+  if (value === undefined) {
+    return false;
+  }
+
+  if (value.trim().length > 0) {
+    return true;
+  }
+
+  return preserveEmptyText;
+}
+
+export function withTemplateTextDefaults(
+  config: LayoutConfig,
+  options?: TemplateTextDefaultOptions,
+): LayoutConfig {
   const normalizedTemplateId = config.templateId === "full-visual" ? "adaptive-stage" : config.templateId;
   const template = getTemplateById(normalizedTemplateId);
   const defaults = template?.capabilities.copyDefaults;
@@ -245,15 +264,15 @@ export function withTemplateTextDefaults(config: LayoutConfig): LayoutConfig {
   const requirements = template.capabilities.text;
   const nextText = { ...config.text };
   let shouldUpdate = false;
+  const preserveEmptyText = options?.preserveEmptyText ?? false;
 
-  const hasTitle = nextText.title && nextText.title.trim().length > 0;
+  const hasTitle = hasUserProvidedText(nextText.title, preserveEmptyText);
   if (requirements.headline !== "hidden" && !hasTitle && defaults.title) {
     nextText.title = defaults.title;
     shouldUpdate = true;
   }
 
-  const subtitleValue = nextText.subtitle ?? "";
-  const hasSubtitle = subtitleValue.trim().length > 0;
+  const hasSubtitle = hasUserProvidedText(nextText.subtitle, preserveEmptyText);
   if (requirements.subtitle !== "hidden" && !hasSubtitle && defaults.subtitle) {
     nextText.subtitle = defaults.subtitle;
     shouldUpdate = true;

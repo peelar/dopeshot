@@ -39,19 +39,23 @@ export function applyTemplateRecommendation(
       : undefined;
 
   if (config.templateId !== template.id) {
-    const nextConfig = withTemplateTextDefaults({
-      ...defaultConfig,
-      templateId: template.id,
-      variant: variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
-      text: config.text,
-      colors: config.colors,
-      background: config.background,
-      assets: config.assets,
-      screenshotShadow: config.screenshotShadow,
-      fontId: config.fontId,
-      fontSize: config.fontSize,
-      screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
-    });
+    const nextConfig = withTemplateTextDefaults(
+      {
+        ...defaultConfig,
+        templateId: template.id,
+        variant:
+          variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
+        text: config.text,
+        colors: config.colors,
+        background: config.background,
+        assets: config.assets,
+        screenshotShadow: config.screenshotShadow,
+        fontId: config.fontId,
+        fontSize: config.fontSize,
+        screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
+      },
+      { preserveEmptyText: true },
+    );
 
     return {
       config: nextConfig,
@@ -82,4 +86,3 @@ export function getRecommendationForAspectCategory(
 ): TemplateRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }
-

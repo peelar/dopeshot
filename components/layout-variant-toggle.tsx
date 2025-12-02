@@ -2,11 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
-import { getTemplateById } from "@/domain/layout/templates";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/utils";
+import { configAtom } from "@/hooks/atoms";
+import { currentTemplateAtom } from "@/hooks/atoms/derived";
 
 const VARIANT_LABELS: Record<string, string> = {
   left: "Left",
@@ -22,12 +29,12 @@ const VARIANT_DISPLAY_PRIORITY: Record<string, number> = {
 };
 
 interface LayoutVariantToggleProps {
-  config: LayoutConfig;
   onVariantChange: (variant: string) => void;
 }
 
-export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantToggleProps) {
-  const template = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
+export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProps) {
+  const config = useAtomValue(configAtom);
+  const template = useAtomValue(currentTemplateAtom);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [hasSeenFull, setHasSeenFull] = useState(false);
 
@@ -70,7 +77,8 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
       event.preventDefault();
 
       const direction = event.key === "ArrowRight" || event.key === "ArrowDown" ? 1 : -1;
-      const nextIndex = (currentIndex + direction + displayVariants.length) % displayVariants.length;
+      const nextIndex =
+        (currentIndex + direction + displayVariants.length) % displayVariants.length;
       const nextVariant = displayVariants[nextIndex];
       onVariantChange(nextVariant);
       requestAnimationFrame(() => buttonRefs.current[nextIndex]?.focus());
@@ -91,7 +99,11 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
         Layouts
       </p>
       <div className="flex flex-wrap items-center gap-2 rounded-full bg-muted/40 px-2 py-2 ring-1 ring-border/60 sm:bg-transparent sm:p-0 sm:ring-0">
-        <div className="hidden flex-wrap items-center gap-2 sm:flex" role="radiogroup" aria-label="Layouts">
+        <div
+          className="hidden flex-wrap items-center gap-2 sm:flex"
+          role="radiogroup"
+          aria-label="Layouts"
+        >
           {displayVariants.map((variant, index) => {
             const isActive = activeVariant === variant;
             const showNewBadge = variant === "full" && !hasSeenFull;
@@ -117,7 +129,7 @@ export function LayoutVariantToggle({ config, onVariantChange }: LayoutVariantTo
               >
                 <span>{getLabel(variant)}</span>
                 {showNewBadge ? (
-                  <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-primary-foreground">
+                  <span className="rounded-full bg-primary px-1.5 py-0.5 font-bold text-[10px] text-primary-foreground">
                     New
                   </span>
                 ) : null}

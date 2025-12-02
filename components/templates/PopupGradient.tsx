@@ -1,6 +1,5 @@
 import { memo, useMemo, type CSSProperties } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
-import { Asset } from "@/domain/asset/types";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
@@ -10,6 +9,8 @@ import { getBackgroundStyle } from "@/components/templates/shared/background-sty
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getShadowValue } from "@/components/templates/shared/shadows";
 import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { configAtom, assetsAtom } from "@/hooks/atoms";
+import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 
 const SIDE_CONTENT_TOP = "30%";
 const CENTER_CONTENT_TOP = "12%";
@@ -35,8 +36,6 @@ function getPeakBorderRadius(placement: "left" | "right" | "center") {
 }
 
 interface PopupGradientProps {
-  config: LayoutConfig;
-  assets?: Asset[];
   className?: string;
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
@@ -44,22 +43,20 @@ interface PopupGradientProps {
 }
 
 function PopupGradientComponent({
-  config,
-  assets = [],
   className,
   onTextChange,
   onUploadAsset,
   isStatic = false,
 }: PopupGradientProps) {
+  const config = useAtomValue(configAtom);
+  const assets = useAtomValue(assetsAtom);
+  const screenshot = useAtomValue(screenshotAssetAtom);
+  const logo = useAtomValue(logoAssetAtom);
+
   // Memoize asset map to avoid recreation on every render
-  const { screenshot, logo, assetMap } = useMemo(() => {
-    const map = new Map(assets.map((a) => [a.id, a]));
-    return {
-      assetMap: map,
-      screenshot: config.assets.screenshot ? map.get(config.assets.screenshot) : null,
-      logo: config.assets.logo ? map.get(config.assets.logo) : null,
-    };
-  }, [assets, config.assets.screenshot, config.assets.logo]);
+  const assetMap = useMemo(() => {
+    return new Map(assets.map((a) => [a.id, a]));
+  }, [assets]);
 
   // Memoize background style computation
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
@@ -171,137 +168,137 @@ function PopupGradientComponent({
     >
       <GrainOverlay enabled={showGrainOverlay} />
       <div className="relative z-10 h-full w-full">
-      <div
-        className={cn(
-          "absolute top-8 z-10 flex items-center",
-          textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
+        <div
+          className={cn(
+            "absolute top-8 z-10 flex items-center",
+            textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
+          )}
+        >
+          {logo ? (
+            <img
+              src={logo.url}
+              alt="Logo"
+              className="h-8 w-auto object-contain"
+              crossOrigin="anonymous"
+            />
+          ) : null}
+          {!logo && onUploadAsset && !isStatic ? (
+            <LogoBadge
+              logo={logo}
+              label="Drop your logo here"
+              replaceLabel="Replace logo"
+              onUploadLogo={(file) => onUploadAsset(file, "logo")}
+            />
+          ) : null}
+        </div>
+
+        {/* Content based on image position */}
+        {textVariant === "left" && (
+          <>
+            {/* Text on left */}
+            <div
+              className="absolute left-14 z-10"
+              style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
+            >
+              <InlineEditableText
+                element="h1"
+                field="title"
+                value={config.text.title}
+                placeholder="Bring the heat"
+                className={titleClassName}
+                style={titleStyle}
+                ariaLabel="Edit title"
+                onTextChange={onTextChange}
+              />
+              {(config.text.subtitle || onTextChange) && (
+                <InlineEditableText
+                  element="p"
+                  field="subtitle"
+                  value={config.text.subtitle}
+                  placeholder="Drop some flavor"
+                  className={subtitleClassName}
+                  style={subtitleStyle}
+                  ariaLabel="Edit subtitle"
+                  onTextChange={onTextChange}
+                />
+              )}
+            </div>
+
+            {/* Screenshot on right, popping up from bottom */}
+            {renderScreenshot("left")}
+          </>
         )}
-      >
-        {logo ? (
-          <img
-            src={logo.url}
-            alt="Logo"
-            className="h-8 w-auto object-contain"
-            crossOrigin="anonymous"
-          />
-        ) : null}
-        {!logo && onUploadAsset && !isStatic ? (
-          <LogoBadge
-            logo={logo}
-            label="Drop your logo here"
-            replaceLabel="Replace logo"
-            onUploadLogo={(file) => onUploadAsset(file, "logo")}
-          />
-        ) : null}
-      </div>
 
-      {/* Content based on image position */}
-      {textVariant === "left" && (
-        <>
-          {/* Text on left */}
-          <div
-            className="absolute left-14 z-10"
-            style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
-          >
-            <InlineEditableText
-              element="h1"
-              field="title"
-              value={config.text.title}
-              placeholder="Bring the heat"
-              className={titleClassName}
-              style={titleStyle}
-              ariaLabel="Edit title"
-              onTextChange={onTextChange}
-            />
-            {(config.text.subtitle || onTextChange) && (
+        {textVariant === "right" && (
+          <>
+            {/* Screenshot on left */}
+            {renderScreenshot("right")}
+
+            {/* Text on right */}
+            <div
+              className="absolute right-14 z-10 text-right"
+              style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
+            >
               <InlineEditableText
-                element="p"
-                field="subtitle"
-                value={config.text.subtitle}
-                placeholder="Drop some flavor"
-                className={subtitleClassName}
-                style={subtitleStyle}
-                ariaLabel="Edit subtitle"
+                element="h1"
+                field="title"
+                value={config.text.title}
+                placeholder="Bring the heat"
+                className={cn(titleClassName, "text-right")}
+                style={titleStyle}
+                ariaLabel="Edit title"
                 onTextChange={onTextChange}
               />
-            )}
-          </div>
+              {(config.text.subtitle || onTextChange) && (
+                <InlineEditableText
+                  element="p"
+                  field="subtitle"
+                  value={config.text.subtitle}
+                  placeholder="Drop some flavor"
+                  className={cn(subtitleClassName, "text-right")}
+                  style={subtitleStyle}
+                  ariaLabel="Edit subtitle"
+                  onTextChange={onTextChange}
+                />
+              )}
+            </div>
+          </>
+        )}
 
-          {/* Screenshot on right, popping up from bottom */}
-          {renderScreenshot("left")}
-        </>
-      )}
-
-      {textVariant === "right" && (
-        <>
-          {/* Screenshot on left */}
-          {renderScreenshot("right")}
-
-          {/* Text on right */}
-          <div
-            className="absolute right-14 z-10 text-right"
-            style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP }}
-          >
-            <InlineEditableText
-              element="h1"
-              field="title"
-              value={config.text.title}
-              placeholder="Bring the heat"
-              className={cn(titleClassName, "text-right")}
-              style={titleStyle}
-              ariaLabel="Edit title"
-              onTextChange={onTextChange}
-            />
-            {(config.text.subtitle || onTextChange) && (
+        {textVariant === "center" && (
+          <>
+            <div
+              className="absolute left-1/2 z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center"
+              style={{ top: CENTER_CONTENT_TOP }}
+            >
               <InlineEditableText
-                element="p"
-                field="subtitle"
-                value={config.text.subtitle}
-                placeholder="Drop some flavor"
-                className={cn(subtitleClassName, "text-right")}
-                style={subtitleStyle}
-                ariaLabel="Edit subtitle"
+                element="h1"
+                field="title"
+                value={config.text.title}
+                placeholder="Bring the heat"
+                className={titleClassName}
+                style={titleStyle}
+                ariaLabel="Edit title"
                 onTextChange={onTextChange}
               />
-            )}
-          </div>
-        </>
-      )}
+              {(config.text.subtitle || onTextChange) && (
+                <InlineEditableText
+                  element="p"
+                  field="subtitle"
+                  value={config.text.subtitle}
+                  placeholder="Drop some flavor"
+                  className={subtitleClassName}
+                  style={subtitleStyle}
+                  ariaLabel="Edit subtitle"
+                  onTextChange={onTextChange}
+                />
+              )}
+            </div>
 
-      {textVariant === "center" && (
-        <>
-          <div
-            className="absolute left-1/2 z-10 w-full max-w-2xl -translate-x-1/2 px-8 text-center"
-            style={{ top: CENTER_CONTENT_TOP }}
-          >
-            <InlineEditableText
-              element="h1"
-              field="title"
-              value={config.text.title}
-              placeholder="Bring the heat"
-              className={titleClassName}
-              style={titleStyle}
-              ariaLabel="Edit title"
-              onTextChange={onTextChange}
-            />
-            {(config.text.subtitle || onTextChange) && (
-              <InlineEditableText
-                element="p"
-                field="subtitle"
-                value={config.text.subtitle}
-                placeholder="Drop some flavor"
-                className={subtitleClassName}
-                style={subtitleStyle}
-                ariaLabel="Edit subtitle"
-                onTextChange={onTextChange}
-              />
-            )}
-          </div>
-
-          {/* Screenshot centered, popping up from bottom */}
-          {renderScreenshot("center")}
-        </>
-      )}
+            {/* Screenshot centered, popping up from bottom */}
+            {renderScreenshot("center")}
+          </>
+        )}
       </div>
     </div>
   );

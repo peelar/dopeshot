@@ -1,34 +1,39 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useSetAtom, useAtom } from "jotai";
 import { Asset } from "@/domain/asset/types";
-import { LayoutConfig } from "@/domain/layout/types";
-import { processFileUpload, UploadResult } from "@/domain/asset/upload-orchestrator";
+import { processFileUpload } from "@/domain/asset/upload-orchestrator";
 import { applyTemplateRecommendation, ASPECT_COPY } from "@/domain/layout/recommendations";
 import { getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
-
-const ACCEPTED_IMAGE_TYPES = new Set([
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-  "image/svg+xml",
-]);
+import {
+  configAtom,
+  assetsAtom,
+  statusMessageAtom,
+  isProcessingUploadAtom,
+  hasCustomScreenshotAtom,
+} from "./atoms";
+const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
 const ACCEPTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export interface UseFileUploadOptions {
-  onAssetCreated: (asset: Asset, kind: "screenshot" | "logo" | "background") => void;
-  onConfigUpdate: (updater: (config: LayoutConfig) => LayoutConfig) => void;
-  onStatusMessage: (message: string) => void;
-  onScreenshotUploaded?: (asset: Asset, aspectCategory?: AspectCategory) => void;
+  onScreenshotUploaded?: (asset: Asset, aspectCategory?: AspectCategory) => Promise<void>;
+  processColorAnalysis?: (
+    dataUrl: string,
+    assetId: string,
+    autoLayoutMessage: string | null,
+  ) => Promise<void>;
 }
 
 export function useFileUpload({
-  onAssetCreated,
-  onConfigUpdate,
-  onStatusMessage,
   onScreenshotUploaded,
+  processColorAnalysis,
 }: UseFileUploadOptions) {
-  const [isProcessingUpload, setIsProcessingUpload] = useState(false);
+  const [isProcessingUpload, setIsProcessingUpload] = useAtom(isProcessingUploadAtom);
+  const setAssets = useSetAtom(assetsAtom);
+  const setConfig = useSetAtom(configAtom);
+  const setStatusMessage = useSetAtom(statusMessageAtom);
+  const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
 
   const validateFile = useCallback(
     (file: File) => {
@@ -37,18 +42,18 @@ export function useFileUpload({
       const matchesExtension = extension ? ACCEPTED_EXTENSIONS.has(extension) : false;
 
       if (!(matchesMime || matchesExtension)) {
-        onStatusMessage("Unsupported format. Use PNG, JPG, WebP, or SVG.");
+        setStatusMessage("Unsupported format. Use PNG, JPG, WebP, or SVG.");
         return false;
       }
 
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        onStatusMessage("File is too large. Max size is 10MB.");
+        setStatusMessage("File is too large. Max size is 10MB.");
         return false;
       }
 
       return true;
     },
-    [onStatusMessage],
+    [setStatusMessage],
   );
 
   const handleFileProcess = useCallback(
@@ -62,10 +67,14 @@ export function useFileUpload({
         const result = await processFileUpload(file, kind);
         const { asset, aspectCategory } = result;
 
-        onAssetCreated(asset, kind);
-        onStatusMessage(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
+        setAssets((prev) => [...prev, asset]);
+        setStatusMessage(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
 
-        onConfigUpdate((currentConfig) => {
+        if (kind === "screenshot") {
+          setHasCustomScreenshot(true);
+        }
+
+        setConfig((currentConfig) => {
           const grainEnabled = currentConfig.background?.grainEnabled ?? true;
           const newConfig = {
             ...currentConfig,
@@ -102,7 +111,7 @@ export function useFileUpload({
             nextConfig = result.config;
 
             if ((result.changedTemplate || result.changedVariant) && result.templateName) {
-              onStatusMessage(
+              setStatusMessage(
                 `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.templateName}.`,
               );
             }
@@ -112,16 +121,29 @@ export function useFileUpload({
         });
 
         if (kind === "screenshot" && onScreenshotUploaded && aspectCategory) {
-          onScreenshotUploaded(asset, aspectCategory);
+          await onScreenshotUploaded(asset, aspectCategory);
+        }
+
+        if (kind === "screenshot" && processColorAnalysis) {
+          await processColorAnalysis(asset.url, asset.id, null);
         }
       } catch (error) {
-        onStatusMessage("Failed to read file. Please try another image.");
+        setStatusMessage("Failed to read file. Please try another image.");
         console.error("File upload error:", error);
       } finally {
         setIsProcessingUpload(false);
       }
     },
-    [onAssetCreated, onConfigUpdate, onStatusMessage, onScreenshotUploaded, validateFile],
+    [
+      validateFile,
+      setIsProcessingUpload,
+      setAssets,
+      setConfig,
+      setStatusMessage,
+      setHasCustomScreenshot,
+      onScreenshotUploaded,
+      processColorAnalysis,
+    ],
   );
 
   return {
@@ -129,4 +151,3 @@ export function useFileUpload({
     isProcessingUpload,
   };
 }
-

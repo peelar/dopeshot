@@ -1,7 +1,6 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
+import { useAtom, useSetAtom } from "jotai";
 import { ColorPalette } from "@/domain/asset/types";
-import { Asset } from "@/domain/asset/types";
-import { LayoutConfig } from "@/domain/layout/types";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
 import { generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
 import {
@@ -9,21 +8,17 @@ import {
   getGradientColorsForContrast,
 } from "@/domain/layout/gradient-application";
 import type { GradientPreferences } from "@/domain/gradient-generation";
+import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
 
 export interface UseColorAnalysisOptions {
-  onAssetUpdate: (updater: (assets: Asset[]) => Asset[]) => void;
-  onConfigUpdate: (updater: (config: LayoutConfig) => LayoutConfig) => void;
-  onStatusMessage: (message: string) => void;
   gradientPreferences: GradientPreferences;
 }
 
-export function useColorAnalysis({
-  onAssetUpdate,
-  onConfigUpdate,
-  onStatusMessage,
-  gradientPreferences,
-}: UseColorAnalysisOptions) {
-  const [isAnalyzingColors, setIsAnalyzingColors] = useState(false);
+export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOptions) {
+  const [isAnalyzingColors, setIsAnalyzingColors] = useAtom(isAnalyzingColorsAtom);
+  const setAssets = useSetAtom(assetsAtom);
+  const setConfig = useSetAtom(configAtom);
+  const setStatusMessage = useSetAtom(statusMessageAtom);
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     return analyzeImageColors(dataUrl);
@@ -32,13 +27,13 @@ export function useColorAnalysis({
   const processColorAnalysis = useCallback(
     async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
       setIsAnalyzingColors(true);
-      onStatusMessage("Analyzing colors from screenshot...");
+      setStatusMessage("Analyzing colors from screenshot...");
 
       try {
         const colorPalette = await analyzeColors(dataUrl);
 
         if (colorPalette) {
-          onAssetUpdate((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
+          setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
         }
 
         const gradientOptions = colorPalette
@@ -56,7 +51,7 @@ export function useColorAnalysis({
         if (fallbackGradient) {
           const textColor = getContrastTextColor(getGradientColorsForContrast(fallbackGradient));
 
-          onConfigUpdate((currentConfig) => ({
+          setConfig((currentConfig) => ({
             ...currentConfig,
             colors: {
               ...currentConfig.colors,
@@ -73,13 +68,20 @@ export function useColorAnalysis({
           const gradientMessage = autoLayoutMessage
             ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
             : "Gradient applied based on your screenshot colors.";
-          onStatusMessage(gradientMessage);
+          setStatusMessage(gradientMessage);
         }
       } finally {
         setIsAnalyzingColors(false);
       }
     },
-    [analyzeColors, onAssetUpdate, onConfigUpdate, onStatusMessage, gradientPreferences],
+    [
+      analyzeColors,
+      setAssets,
+      setConfig,
+      setStatusMessage,
+      setIsAnalyzingColors,
+      gradientPreferences,
+    ],
   );
 
   return {
@@ -87,4 +89,3 @@ export function useColorAnalysis({
     isAnalyzingColors,
   };
 }
-

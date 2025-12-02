@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
+import { useAtomValue } from "jotai";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
 import {
   AdvancedGradient,
@@ -10,7 +11,6 @@ import {
   isAdvancedGradient,
   isLegacyGradient,
 } from "@/domain/layout/types";
-import { ColorPalette } from "@/domain/asset/types";
 import {
   customGradientToCss,
   directionStringToDegrees,
@@ -19,7 +19,8 @@ import {
 } from "@/domain/layout/gradients";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { AspectCategory } from "@/domain/layout/aspect";
+import { configAtom } from "@/hooks/atoms";
+import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
 // Debounced color input that delays updates while dragging
 function DebouncedColorInput({
@@ -61,7 +62,7 @@ function DebouncedColorInput({
   return (
     <label
       htmlFor={id}
-      className="flex flex-1 flex-col items-center gap-3 rounded-2xl bg-background/70 p-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground shadow-sm transition hover:bg-muted/20 hover:shadow focus-within:bg-muted/30"
+      className="flex flex-1 flex-col items-center gap-3 rounded-2xl bg-background/70 p-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground shadow-sm transition focus-within:bg-muted/30 hover:bg-muted/20 hover:shadow"
     >
       {label}
       <input
@@ -80,12 +81,16 @@ type GradientSource = "screenshot" | "custom" | "preset";
 type CustomColorStop = "start" | "mid" | "end";
 
 interface GradientPickerProps {
-  background: BackgroundConfig;
-  colorPalette?: ColorPalette;
   onChangeAction: (background: BackgroundConfig, textColor: ColorToken) => void;
 }
 
-export function GradientPicker({ background, colorPalette, onChangeAction }: GradientPickerProps) {
+export function GradientPicker({ onChangeAction }: GradientPickerProps) {
+  const config = useAtomValue(configAtom);
+  const screenshotAsset = useAtomValue(screenshotAssetAtom);
+  const background =
+    config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
+  const colorPalette = screenshotAsset?.colorPalette;
+
   // Generate beautiful multi-stop gradients from screenshot colors
   const dynamicGradients = useMemo((): CustomGradient[] => {
     if (!colorPalette) return [];
@@ -199,7 +204,11 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
     (colorType: CustomColorStop, value: string) => {
       const colors = getCustomGradientColors(background.customGradient, colorPalette);
       const nextColors = { ...colors, [colorType]: value };
-      const newGradient = buildThreeStopGradient(nextColors, currentAngle, background.customGradient);
+      const newGradient = buildThreeStopGradient(
+        nextColors,
+        currentAngle,
+        background.customGradient,
+      );
       lockManualSource();
       const textColor = getTextColorFromGradient(newGradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
@@ -244,7 +253,7 @@ export function GradientPicker({ background, colorPalette, onChangeAction }: Gra
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border/60 bg-muted/30">
-        <div className="space-y-3 px-4 pt-4 pb-3">
+        <div className="space-y-3 px-4 pb-3 pt-4">
           <p className="text-sm font-medium text-muted-foreground">Gradient</p>
           <SegmentedControl
             value={activeSource}
@@ -513,7 +522,10 @@ type CustomGradientColors = {
   end: string;
 };
 
-function getCustomGradientColors(gradient?: CustomGradient, palette?: ColorPalette): CustomGradientColors {
+function getCustomGradientColors(
+  gradient?: CustomGradient,
+  palette?: ColorPalette,
+): CustomGradientColors {
   const defaults = getDefaultCustomColors(palette);
   if (!gradient) {
     return defaults;
@@ -610,11 +622,7 @@ function parseHexColor(hex: string): [number, number, number] | undefined {
   const normalized = hex.trim();
   const match = /^#?([a-fA-F\d]{2})([a-fA-F\d]{2})([a-fA-F\d]{2})$/.exec(normalized);
   if (!match) return undefined;
-  return [
-    parseInt(match[1], 16),
-    parseInt(match[2], 16),
-    parseInt(match[3], 16),
-  ];
+  return [parseInt(match[1], 16), parseInt(match[2], 16), parseInt(match[3], 16)];
 }
 
 function rgbToHex(r: number, g: number, b: number): string {

@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, type ChangeEvent, type DragEvent } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
-import { Button } from "@/components/ui/button";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { TemplateSelector } from "@/components/template-selector";
@@ -16,10 +16,27 @@ import {
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
-import { PLACEHOLDER_ASSET_ID, usePlaygroundState } from "@/hooks/use-playground-state";
+import { PLACEHOLDER_ASSET_ID } from "@/hooks/atoms";
+import {
+  configAtom,
+  assetsAtom,
+  statusMessageAtom,
+  isExportingAtom,
+  hasCustomScreenshotAtom,
+  isDraggingAtom,
+  isAnalyzingColorsAtom,
+} from "@/hooks/atoms";
+import {
+  currentTemplateAtom,
+  templateCapabilitiesAtom,
+  canvasAtom,
+  isScreenshotFocusedModeAtom,
+  shouldShowAspectLockAtom,
+  isAspectLockedAtom,
+  showLayoutToggleAtom,
+} from "@/hooks/atoms/derived";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
-import { useStatusMessage } from "@/hooks/use-status-message";
 import { useFocusHint } from "@/hooks/use-focus-hint";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { getTemplateById } from "@/domain/layout/templates";
@@ -27,24 +44,22 @@ import { AppHeader } from "@/components/app-header";
 
 export default function PlaygroundPage() {
   const { theme } = useTheme();
-  const {
-    config,
-    setConfig,
-    assets,
-    setAssets,
-    currentTemplate,
-    templateCapabilities,
-    canvas,
-    isScreenshotFocusedMode,
-    shouldShowAspectLock,
-    isAspectLocked,
-    showLayoutToggle,
-  } = usePlaygroundState();
-
-  const { statusMessage, announce } = useStatusMessage();
-  const [isExporting, setIsExporting] = useState(false);
-  const [hasCustomScreenshot, setHasCustomScreenshot] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [config, setConfig] = useAtom(configAtom);
+  const assets = useAtomValue(assetsAtom);
+  const statusMessage = useAtomValue(statusMessageAtom);
+  const [isExporting, setIsExporting] = useAtom(isExportingAtom);
+  const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
+  const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
+  const currentTemplate = useAtomValue(currentTemplateAtom);
+  const templateCapabilities = useAtomValue(templateCapabilitiesAtom);
+  const canvas = useAtomValue(canvasAtom);
+  const isScreenshotFocusedMode = useAtomValue(isScreenshotFocusedModeAtom);
+  const shouldShowAspectLock = useAtomValue(shouldShowAspectLockAtom);
+  const isAspectLocked = useAtomValue(isAspectLockedAtom);
+  const showLayoutToggle = useAtomValue(showLayoutToggleAtom);
+  const setStatusMessage = useSetAtom(statusMessageAtom);
+  const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const dragCounterRef = useRef(0);
 
@@ -56,25 +71,10 @@ export default function PlaygroundPage() {
     };
   }, [config, theme]);
 
-  const { processColorAnalysis, isAnalyzingColors } = useColorAnalysis({
-    onAssetUpdate: setAssets,
-    onConfigUpdate: setConfig,
-    onStatusMessage: announce,
-    gradientPreferences,
-  });
+  const { processColorAnalysis } = useColorAnalysis({ gradientPreferences });
 
   const { handleFileProcess, isProcessingUpload } = useFileUpload({
-    onAssetCreated: (asset, kind) => {
-      setAssets((prev) => [...prev, asset]);
-      if (kind === "screenshot") {
-        setHasCustomScreenshot(true);
-      }
-    },
-    onConfigUpdate: setConfig,
-    onStatusMessage: announce,
-    onScreenshotUploaded: async (asset, aspectCategory) => {
-      await processColorAnalysis(asset.url, asset.id, null);
-    },
+    processColorAnalysis,
   });
 
   useEffect(() => {
@@ -91,26 +91,26 @@ export default function PlaygroundPage() {
 
   const handleExport = useCallback(async () => {
     if (!hasScreenshot) {
-      announce("Please upload a screenshot before exporting.");
+      setStatusMessage("Please upload a screenshot before exporting.");
       return;
     }
 
     setIsExporting(true);
-    announce("Exporting image...");
+    setStatusMessage("Exporting image...");
     try {
       await exportLayoutAsPng("export-container", "cover-image.png", {
         width: canvas.width,
         height: canvas.height,
       });
-      announce("Image exported successfully.");
+      setStatusMessage("Image exported successfully.");
     } catch (error) {
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
-      announce(`Export failed: ${msg}`);
+      setStatusMessage(`Export failed: ${msg}`);
     } finally {
       setIsExporting(false);
     }
-  }, [announce, canvas.height, canvas.width, hasScreenshot]);
+  }, [setStatusMessage, canvas.height, canvas.width, hasScreenshot, setIsExporting]);
 
   const handleVariantChange = useCallback(
     (variant: string) => {
@@ -183,7 +183,7 @@ export default function PlaygroundPage() {
       dragCounterRef.current += 1;
       setIsDragging(true);
     },
-    [isFileDrag],
+    [isFileDrag, setIsDragging],
   );
 
   const handleDragOver = useCallback(
@@ -204,7 +204,7 @@ export default function PlaygroundPage() {
         setIsDragging(false);
       }
     },
-    [isFileDrag],
+    [isFileDrag, setIsDragging],
   );
 
   const handleDrop = useCallback(
@@ -218,7 +218,7 @@ export default function PlaygroundPage() {
         await handleScreenshotUpload(file);
       }
     },
-    [handleScreenshotUpload, isFileDrag],
+    [handleScreenshotUpload, isFileDrag, setIsDragging],
   );
 
   return (
@@ -248,13 +248,13 @@ export default function PlaygroundPage() {
       />
 
       <div className="flex flex-1 flex-col gap-4 px-4 pb-10 pt-4 sm:px-8">
-        <TemplateSelector currentConfig={config} onSelect={setConfig} assets={assets} />
+        <TemplateSelector />
 
         <div className="flex flex-1 overflow-hidden">
           <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
               {showLayoutToggle ? (
-                <LayoutVariantToggle config={config} onVariantChange={handleVariantChange} />
+                <LayoutVariantToggle onVariantChange={handleVariantChange} />
               ) : null}
 
               {shouldShowAspectLock ? (
@@ -282,7 +282,7 @@ export default function PlaygroundPage() {
                   isLoading={isAnalyzingColors}
                   loadingText="Analyzing colors..."
                 >
-                  <CoverPreview config={config} assets={assets} onUploadAsset={handleFileProcess} />
+                  <CoverPreview onUploadAsset={handleFileProcess} />
                 </PreviewViewport>
                 {showFocusHint ? (
                   <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
@@ -296,12 +296,7 @@ export default function PlaygroundPage() {
           </div>
 
           <div className="w-80 border-l border-border bg-background">
-            <LayoutConfigPanel
-              config={config}
-              onConfigChangeAction={setConfig}
-              assets={assets}
-              onUploadAsset={handleFileProcess}
-            />
+            <LayoutConfigPanel onUploadAsset={handleFileProcess} />
           </div>
         </div>
       </div>
@@ -320,7 +315,7 @@ export default function PlaygroundPage() {
             background: "white",
           }}
         >
-          <CoverPreview config={config} assets={assets} isStatic />
+          <CoverPreview isStatic />
         </div>
       ) : null}
 

@@ -1,38 +1,24 @@
 "use client";
 
-import { useMemo } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
-import { getTemplateById } from "@/domain/layout/templates";
-import { Asset } from "@/domain/asset/types";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
-import { getCanvasDimensions } from "@/domain/layout/screenshot-mode";
+import { canvasAtom, currentTemplateAtom } from "@/hooks/atoms/derived";
 
 interface CoverPreviewProps {
-  config: LayoutConfig;
   className?: string;
-  assets?: Asset[];
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
 }
 
 export function CoverPreview({
-  config,
   className,
-  assets = [],
   onTextChange,
   onUploadAsset,
   isStatic = false,
 }: CoverPreviewProps) {
-  const template = getTemplateById(config.templateId);
-  const screenshotAsset = useMemo(
-    () => assets.find((asset) => asset.id === config.assets.screenshot),
-    [assets, config.assets.screenshot],
-  );
-  const canvasDimensions = useMemo(
-    () => getCanvasDimensions(config, screenshotAsset),
-    [config, screenshotAsset],
-  );
+  const template = useAtomValue(currentTemplateAtom);
+  const canvasDimensions = useAtomValue(canvasAtom);
 
   if (!template) {
     return (
@@ -59,8 +45,6 @@ export function CoverPreview({
       }}
     >
       <TemplateComponent
-        config={config}
-        assets={assets}
         onTextChange={onTextChange}
         onUploadAsset={onUploadAsset}
         isStatic={isStatic}

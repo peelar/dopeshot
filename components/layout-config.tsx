@@ -5,12 +5,18 @@ import {
   useState,
   type ChangeEvent,
   useEffect,
-  useMemo,
   useCallback,
   type ReactNode,
   type ButtonHTMLAttributes,
 } from "react";
-import { BackgroundConfig, ColorToken, FontId, FontSize, LayoutConfig, ScreenshotTreatment } from "@/domain/layout/types";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  BackgroundConfig,
+  ColorToken,
+  FontId,
+  FontSize,
+  ScreenshotTreatment,
+} from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud } from "lucide-react";
@@ -20,7 +26,14 @@ import { FontSelector } from "@/components/font-selector";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
 import { Tooltip } from "@/components/ui/tooltip";
-import { getTemplateById } from "@/domain/layout/templates";
+import { configAtom } from "@/hooks/atoms";
+import {
+  currentTemplateAtom,
+  templateCapabilitiesAtom,
+  screenshotAssetAtom,
+  logoAssetAtom,
+  backgroundAssetAtom,
+} from "@/hooks/atoms/derived";
 
 const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
   preset: "soft-glass",
@@ -39,9 +52,6 @@ const FULL_OUTLINE_CONTROLS = {
 type SidebarTab = "design" | "assets";
 
 interface LayoutConfigProps {
-  config: LayoutConfig;
-  onConfigChangeAction: (newConfig: LayoutConfig) => void;
-  assets?: Asset[];
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
@@ -58,15 +68,15 @@ function SidebarFieldLabel({ htmlFor, children }: SidebarFieldLabelProps) {
   );
 }
 
-export const LayoutConfigPanel = ({
-  config,
-  onConfigChangeAction,
-  assets = [],
-  onUploadAsset,
-}: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
+  const config = useAtomValue(configAtom);
+  const setConfig = useSetAtom(configAtom);
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
-  const template = useMemo(() => getTemplateById(config.templateId), [config.templateId]);
-  const templateCapabilities = template?.capabilities;
+  const template = useAtomValue(currentTemplateAtom);
+  const templateCapabilities = useAtomValue(templateCapabilitiesAtom);
+  const screenshotAsset = useAtomValue(screenshotAssetAtom);
+  const logoAsset = useAtomValue(logoAssetAtom);
+  const backgroundAsset = useAtomValue(backgroundAssetAtom);
   const outlineControls = templateCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
   const showHeadlineInput = (templateCapabilities?.text.headline ?? "optional") !== "hidden";
   const showSubtitleInput = (templateCapabilities?.text.subtitle ?? "optional") !== "hidden";
@@ -75,22 +85,6 @@ export const LayoutConfigPanel = ({
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
   const showLogoUpload = templateCapabilities?.logo !== "hidden";
   const grainEnabled = config.background?.grainEnabled ?? true;
-
-  // Memoize asset lookups to avoid recalculating on every render
-  const { screenshotAsset, logoAsset, backgroundAsset } = useMemo(
-    () => ({
-      screenshotAsset: config.assets.screenshot
-        ? assets.find((asset) => asset.id === config.assets.screenshot)
-        : undefined,
-      logoAsset: config.assets.logo
-        ? assets.find((asset) => asset.id === config.assets.logo)
-        : undefined,
-      backgroundAsset: config.assets.background
-        ? assets.find((asset) => asset.id === config.assets.background)
-        : undefined,
-    }),
-    [assets, config.assets.screenshot, config.assets.logo, config.assets.background],
-  );
 
   // Local state for background tab selection (default to current config type or gradient)
   const [bgType, setBgType] = useState<"gradient" | "image">(
@@ -110,106 +104,117 @@ export const LayoutConfigPanel = ({
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
-      const grainEnabled = background.grainEnabled ?? config.background?.grainEnabled ?? true;
-      onConfigChangeAction({
-        ...config,
-        colors: {
-          ...config.colors,
-          text: textColor,
-        },
-        background: {
-          ...background,
-          grainEnabled,
-        },
+      setConfig((currentConfig) => {
+        const grainEnabled =
+          background.grainEnabled ?? currentConfig.background?.grainEnabled ?? true;
+        return {
+          ...currentConfig,
+          colors: {
+            ...currentConfig.colors,
+            text: textColor,
+          },
+          background: {
+            ...background,
+            grainEnabled,
+          },
+        };
       });
     },
-    [config, onConfigChangeAction],
+    [setConfig],
   );
 
   const handleGrainToggle = useCallback(
     (enabled: boolean) => {
-      const fallbackBackground =
-        config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
-      onConfigChangeAction({
-        ...config,
-        background: {
-          ...fallbackBackground,
-          grainEnabled: enabled,
-        },
+      setConfig((currentConfig) => {
+        const fallbackBackground =
+          currentConfig.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
+        return {
+          ...currentConfig,
+          background: {
+            ...fallbackBackground,
+            grainEnabled: enabled,
+          },
+        };
       });
     },
-    [config, onConfigChangeAction],
+    [setConfig],
   );
 
   const handleFontChange = useCallback(
     (fontId: FontId) => {
-      onConfigChangeAction({
-        ...config,
+      setConfig((currentConfig) => ({
+        ...currentConfig,
         fontId,
-      });
+      }));
     },
-    [config, onConfigChangeAction],
+    [setConfig],
   );
 
   const handleFontSizeChange = useCallback(
     (fontSize: FontSize) => {
-      onConfigChangeAction({
-        ...config,
+      setConfig((currentConfig) => ({
+        ...currentConfig,
         fontSize,
-      });
+      }));
     },
-    [config, onConfigChangeAction],
+    [setConfig],
   );
 
   const handleTextInputChange = useCallback(
     (field: "title" | "subtitle", value: string) => {
-      onConfigChangeAction({
-        ...config,
+      setConfig((currentConfig) => ({
+        ...currentConfig,
         text: {
-          ...config.text,
+          ...currentConfig.text,
           [field]: value,
         },
-      });
+      }));
     },
-    [config, onConfigChangeAction],
+    [setConfig],
   );
 
   const toggleSoftGlass = useCallback(() => {
-    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
-    const isSoftGlass = treatment.preset === "soft-glass";
-    onConfigChangeAction({
-      ...config,
-      screenshotFrame: {
-        ...treatment,
-        preset: isSoftGlass ? "solid" : "soft-glass",
-        shape: treatment.shape ?? "rounded",
-      },
+    setConfig((currentConfig) => {
+      const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      const isSoftGlass = treatment.preset === "soft-glass";
+      return {
+        ...currentConfig,
+        screenshotFrame: {
+          ...treatment,
+          preset: isSoftGlass ? "solid" : "soft-glass",
+          shape: treatment.shape ?? "rounded",
+        },
+      };
     });
-  }, [config, onConfigChangeAction]);
+  }, [setConfig]);
 
   const handleShapeToggle = useCallback(() => {
-    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
-    const currentShape = treatment.shape ?? "rounded";
-    const nextShape = currentShape === "rounded" ? "rectangular" : "rounded";
-    onConfigChangeAction({
-      ...config,
-      screenshotFrame: {
-        ...treatment,
-        shape: nextShape,
-      },
+    setConfig((currentConfig) => {
+      const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      const currentShape = treatment.shape ?? "rounded";
+      const nextShape = currentShape === "rounded" ? "rectangular" : "rounded";
+      return {
+        ...currentConfig,
+        screenshotFrame: {
+          ...treatment,
+          shape: nextShape,
+        },
+      };
     });
-  }, [config, onConfigChangeAction]);
+  }, [setConfig]);
 
   const toggleFrameShadow = useCallback(() => {
-    const treatment = config.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
-    onConfigChangeAction({
-      ...config,
-      screenshotFrame: {
-        ...treatment,
-        shadowEnabled: !(treatment.shadowEnabled ?? true),
-      },
+    setConfig((currentConfig) => {
+      const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      return {
+        ...currentConfig,
+        screenshotFrame: {
+          ...treatment,
+          shadowEnabled: !(treatment.shadowEnabled ?? true),
+        },
+      };
     });
-  }, [config, onConfigChangeAction]);
+  }, [setConfig]);
 
   return (
     <div className="flex h-full flex-col">
@@ -280,7 +285,9 @@ export const LayoutConfigPanel = ({
                 )}
                 {showSubtitleInput && (
                   <div className="space-y-1.5">
-                    <SidebarFieldLabel htmlFor="sidebar-content-subtitle">Subtitle</SidebarFieldLabel>
+                    <SidebarFieldLabel htmlFor="sidebar-content-subtitle">
+                      Subtitle
+                    </SidebarFieldLabel>
                     <textarea
                       id="sidebar-content-subtitle"
                       value={config.text.subtitle ?? ""}
@@ -310,13 +317,24 @@ export const LayoutConfigPanel = ({
                   {outlineControls.softGlass && (
                     <Tooltip label="Glass">
                       <ToggleCardButton
-                        active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"}
+                        active={
+                          (config.screenshotFrame?.preset ||
+                            DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
+                        }
                         onClick={toggleSoftGlass}
                         aria-label="Toggle soft glass outline"
-                        aria-pressed={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"}
+                        aria-pressed={
+                          (config.screenshotFrame?.preset ||
+                            DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
+                        }
                         className="h-12 w-12"
                       >
-                        <SoftGlassGlyph active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"} />
+                        <SoftGlassGlyph
+                          active={
+                            (config.screenshotFrame?.preset ||
+                              DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
+                          }
+                        />
                       </ToggleCardButton>
                     </Tooltip>
                   )}
@@ -329,7 +347,9 @@ export const LayoutConfigPanel = ({
                         aria-pressed={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
                         className="h-12 w-12"
                       >
-                        <CornerGlyph rounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"} />
+                        <CornerGlyph
+                          rounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
+                        />
                       </ToggleCardButton>
                     </Tooltip>
                   )}
@@ -368,13 +388,7 @@ export const LayoutConfigPanel = ({
                 ariaLabel="Background type"
               />
 
-              {bgType === "gradient" && (
-                <GradientPicker
-                  background={config.background}
-                  colorPalette={screenshotAsset?.colorPalette}
-                  onChangeAction={handleGradientChange}
-                />
-              )}
+              {bgType === "gradient" && <GradientPicker onChangeAction={handleGradientChange} />}
 
               {bgType === "image" && (
                 <div className="space-y-2">

@@ -1,6 +1,5 @@
 import { memo, useMemo } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
-import { Asset } from "@/domain/asset/types";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
@@ -15,10 +14,10 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { configAtom, assetsAtom } from "@/hooks/atoms";
+import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 
 interface HeroCenterProps {
-  config: LayoutConfig;
-  assets?: Asset[];
   className?: string;
   onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
@@ -26,21 +25,19 @@ interface HeroCenterProps {
 }
 
 function HeroCenterComponent({
-  config,
-  assets = [],
   className,
   onTextChange,
   onUploadAsset,
   isStatic = false,
 }: HeroCenterProps) {
-  const { screenshot, logo, assetMap } = useMemo(() => {
-    const map = new Map(assets.map((asset) => [asset.id, asset]));
-    return {
-      assetMap: map,
-      screenshot: config.assets.screenshot ? map.get(config.assets.screenshot) : null,
-      logo: config.assets.logo ? map.get(config.assets.logo) : null,
-    };
-  }, [assets, config.assets.logo, config.assets.screenshot]);
+  const config = useAtomValue(configAtom);
+  const assets = useAtomValue(assetsAtom);
+  const screenshot = useAtomValue(screenshotAssetAtom);
+  const logo = useAtomValue(logoAssetAtom);
+
+  const assetMap = useMemo(() => {
+    return new Map(assets.map((asset) => [asset.id, asset]));
+  }, [assets]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
   const showGrainOverlay = config.background?.grainEnabled ?? true;

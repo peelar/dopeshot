@@ -1,6 +1,5 @@
 import { memo, useMemo } from "react";
-import { LayoutConfig } from "@/domain/layout/types";
-import { Asset } from "@/domain/asset/types";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
 import {
@@ -10,22 +9,22 @@ import {
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { getShadowValue } from "@/components/templates/shared/shadows";
 import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { configAtom, assetsAtom } from "@/hooks/atoms";
+import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
 interface AdaptiveScreenshotProps {
-  config: LayoutConfig;
-  assets?: Asset[];
   className?: string;
   isStatic?: boolean;
 }
 
-function AdaptiveScreenshotComponent({ config, assets = [], className }: AdaptiveScreenshotProps) {
-  const { screenshot, assetMap } = useMemo(() => {
-    const map = new Map(assets.map((asset) => [asset.id, asset]));
-    return {
-      assetMap: map,
-      screenshot: config.assets.screenshot ? map.get(config.assets.screenshot) : null,
-    };
-  }, [assets, config.assets.screenshot]);
+function AdaptiveScreenshotComponent({ className }: AdaptiveScreenshotProps) {
+  const config = useAtomValue(configAtom);
+  const assets = useAtomValue(assetsAtom);
+  const screenshot = useAtomValue(screenshotAssetAtom);
+
+  const assetMap = useMemo(() => {
+    return new Map(assets.map((asset) => [asset.id, asset]));
+  }, [assets]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
   const showGrainOverlay = config.background?.grainEnabled ?? true;
