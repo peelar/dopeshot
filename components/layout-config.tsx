@@ -7,7 +7,7 @@ import {
   useEffect,
   useCallback,
   type ReactNode,
-  type ButtonHTMLAttributes,
+  type CSSProperties,
 } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
@@ -25,7 +25,6 @@ import { GradientPicker } from "@/components/gradient-picker";
 import { FontSelector } from "@/components/font-selector";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
-import { Tooltip } from "@/components/ui/tooltip";
 import { configAtom } from "@/hooks/atoms";
 import {
   currentTemplateAtom,
@@ -310,73 +309,28 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               />
             )}
 
-            {showOutlineSection && (
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-muted-foreground">Outline</Label>
-                <div className="flex items-center gap-3">
-                  {outlineControls.softGlass && (
-                    <Tooltip label="Glass">
-                      <ToggleCardButton
-                        active={
-                          (config.screenshotFrame?.preset ||
-                            DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
-                        }
-                        onClick={toggleSoftGlass}
-                        aria-label="Toggle soft glass outline"
-                        aria-pressed={
-                          (config.screenshotFrame?.preset ||
-                            DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
-                        }
-                        className="h-12 w-12"
-                      >
-                        <SoftGlassGlyph
-                          active={
-                            (config.screenshotFrame?.preset ||
-                              DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"
-                          }
-                        />
-                      </ToggleCardButton>
-                    </Tooltip>
-                  )}
-                  {outlineControls.shape && (
-                    <Tooltip label="Corners">
-                      <ToggleCardButton
-                        active={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
-                        onClick={handleShapeToggle}
-                        aria-label="Toggle corner style"
-                        aria-pressed={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
-                        className="h-12 w-12"
-                      >
-                        <CornerGlyph
-                          rounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
-                        />
-                      </ToggleCardButton>
-                    </Tooltip>
-                  )}
-                  {outlineControls.shadow && (
-                    <Tooltip label="Shadow">
-                      <ToggleCardButton
-                        active={config.screenshotFrame?.shadowEnabled ?? true}
-                        onClick={toggleFrameShadow}
-                        aria-label="Toggle shadow"
-                        aria-pressed={config.screenshotFrame?.shadowEnabled ?? true}
-                        className="h-12 w-12"
-                      >
-                        <ShadowGlyph active={config.screenshotFrame?.shadowEnabled ?? true} />
-                      </ToggleCardButton>
-                    </Tooltip>
-                  )}
-                </div>
-              </div>
-            )}
+            <EffectsSection
+              showGlass={outlineControls.softGlass}
+              showCorners={outlineControls.shape}
+              showShadow={outlineControls.shadow}
+              glassEnabled={
+                (config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) ===
+                "soft-glass"
+              }
+              cornersRounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
+              shadowEnabled={config.screenshotFrame?.shadowEnabled ?? true}
+              grainEnabled={grainEnabled}
+              onToggleGlass={toggleSoftGlass}
+              onToggleCorners={handleShapeToggle}
+              onToggleShadow={toggleFrameShadow}
+              onToggleGrain={handleGrainToggle}
+            />
 
             {/* Background Selection */}
             <div className="space-y-3">
               <Label id="bg-type-label" className="text-sm font-medium text-muted-foreground">
                 Background
               </Label>
-
-              <GrainToggleControl enabled={grainEnabled} onToggle={handleGrainToggle} />
 
               <SegmentedControl
                 value={bgType}
@@ -445,6 +399,29 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   );
 };
 
+interface EffectsSectionProps {
+  showGlass: boolean;
+  showCorners: boolean;
+  showShadow: boolean;
+  glassEnabled: boolean;
+  cornersRounded: boolean;
+  shadowEnabled: boolean;
+  grainEnabled: boolean;
+  onToggleGlass: () => void;
+  onToggleCorners: () => void;
+  onToggleShadow: () => void;
+  onToggleGrain: (enabled: boolean) => void;
+}
+
+type EffectToggleVariant = "glass" | "corners" | "shadow" | "grain";
+
+interface EffectToggleRowProps {
+  label: string;
+  checked: boolean;
+  onToggle: () => void;
+  variant: EffectToggleVariant;
+}
+
 interface AssetDropzoneProps {
   asset?: Asset;
   onUpload?: (file: File) => void;
@@ -453,51 +430,187 @@ interface AssetDropzoneProps {
   variant?: "default" | "logo";
 }
 
-interface GrainToggleProps {
-  enabled: boolean;
-  onToggle: (enabled: boolean) => void;
-}
-
-const GrainToggleControl = ({ enabled, onToggle }: GrainToggleProps) => {
+const EffectsSection = ({
+  showGlass,
+  showCorners,
+  showShadow,
+  glassEnabled,
+  cornersRounded,
+  shadowEnabled,
+  grainEnabled,
+  onToggleGlass,
+  onToggleCorners,
+  onToggleShadow,
+  onToggleGrain,
+}: EffectsSectionProps) => {
   return (
-    <ToggleCardButton
-      active={enabled}
-      onClick={() => onToggle(!enabled)}
-      role="switch"
-      aria-checked={enabled}
-      aria-label="Toggle background grain"
-      emphasis="glow"
-      showActiveTexture
-      className="w-full items-center justify-between gap-3 px-4 py-3 text-left"
-    >
-      <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-muted-foreground/70">
-        Grain
-      </span>
+    <section aria-label="Effects" className="space-y-2">
+      <Label className="text-sm font-medium text-muted-foreground">Effects</Label>
 
-      <span
-        className={cn(
-          "relative rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.2em]",
-          enabled ? "bg-foreground/90 text-background" : "bg-border/80 text-muted-foreground",
+      <div className="space-y-2">
+        {showGlass && (
+          <EffectToggleRow
+            label="Glass"
+            variant="glass"
+            checked={glassEnabled}
+            onToggle={onToggleGlass}
+          />
         )}
-      >
-        <span
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute inset-[-2px] rounded-full opacity-0 transition",
-            enabled && "opacity-60",
-          )}
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.2) 0.6px, transparent 0.6px), radial-gradient(rgba(15,23,42,0.4) 0.8px, transparent 0.8px)",
-            backgroundSize: "3px 3px, 6px 6px",
-            mixBlendMode: "soft-light",
-          }}
+        {showCorners && (
+          <EffectToggleRow
+            label="Corners"
+            variant="corners"
+            checked={cornersRounded}
+            onToggle={onToggleCorners}
+          />
+        )}
+        {showShadow && (
+          <EffectToggleRow
+            label="Shadow"
+            variant="shadow"
+            checked={shadowEnabled}
+            onToggle={onToggleShadow}
+          />
+        )}
+        <EffectToggleRow
+          label="Grain"
+          variant="grain"
+          checked={grainEnabled}
+          onToggle={() => onToggleGrain(!grainEnabled)}
         />
-        {enabled ? "ON" : "OFF"}
-      </span>
-    </ToggleCardButton>
+      </div>
+    </section>
   );
 };
+
+interface EffectToggleVisuals {
+  trackClass?: string;
+  trackStyle?: CSSProperties;
+  knobClass?: string;
+  knobStyle?: CSSProperties;
+  trackOverlay?: ReactNode;
+  knobOverlay?: ReactNode;
+}
+
+const EffectToggleRow = ({ label, checked, onToggle, variant }: EffectToggleRowProps) => (
+  <EffectToggleControl
+    label={label}
+    checked={checked}
+    onToggle={onToggle}
+    variant={variant}
+    visuals={getEffectToggleVisuals(variant, checked)}
+  />
+);
+
+interface EffectToggleControlProps extends EffectToggleRowProps {
+  visuals: EffectToggleVisuals;
+}
+
+const EffectToggleControl = ({ label, checked, onToggle, variant, visuals }: EffectToggleControlProps) => {
+  const isCorners = variant === "corners";
+
+  const trackClasses = cn(
+    "relative flex h-7 w-12 items-center overflow-hidden px-1 transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] border border-black/10 dark:border-white/20",
+    isCorners && !checked ? "rounded-[8px]" : "rounded-full",
+    checked
+      ? "bg-[#fcfcfc] dark:bg-white/12"
+      : "bg-[#f6f6f6] text-gray-600 dark:bg-white/5",
+    visuals.trackClass,
+  );
+
+  const knobStyle = {
+    ...visuals.knobStyle,
+  } satisfies CSSProperties;
+
+  const knobClasses = cn(
+    "relative z-[1] h-[18px] w-[18px] transform rounded-full border border-white/70 bg-[#dcdcdc] text-[#111] transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] dark:border-white/30 dark:bg-white/90",
+    checked ? "translate-x-5" : "translate-x-0",
+    visuals.knobClass,
+  );
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={onToggle}
+      className="group flex h-12 w-full items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
+    >
+      <span>{label}</span>
+      <span aria-hidden="true" className={trackClasses} style={visuals.trackStyle}>
+        {visuals.trackOverlay}
+        <span className={knobClasses} style={knobStyle}>
+          {visuals.knobOverlay}
+        </span>
+      </span>
+    </button>
+  );
+};
+
+function getEffectToggleVisuals(
+  variant: EffectToggleVariant,
+  isOn: boolean,
+): EffectToggleVisuals {
+  switch (variant) {
+    case "glass":
+      return {
+        trackOverlay: isOn ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute inset-[2px] rounded-full bg-gradient-to-b from-transparent via-black/35 to-black/70 transition-opacity duration-300",
+              isOn ? "opacity-60" : "opacity-0",
+            )}
+          />
+        ) : undefined,
+        knobStyle: isOn
+          ? {
+              border: "1px solid rgba(255,255,255,0.65)",
+              backdropFilter: "blur(2px)",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.9), rgba(30,30,30,0.12))",
+            }
+          : {
+              border: "1px solid rgba(255,255,255,0.65)",
+            },
+      };
+    case "corners":
+      return {
+        trackStyle: {
+          transitionProperty: "background-color, transform",
+        },
+        knobClass: isOn ? undefined : "rounded-[5px]",
+        knobStyle: {
+          transitionProperty: "transform, background-color, box-shadow",
+        },
+      };
+    case "shadow":
+      return {
+        trackClass: isOn
+          ? "shadow-[0_0_18px_rgba(0,0,0,0.35)] dark:shadow-[0_0_18px_rgba(255,255,255,0.35)]"
+          : undefined,
+      };
+    case "grain":
+      return {
+        trackStyle: isOn
+          ? {
+              backgroundImage:
+                "radial-gradient(rgba(255,255,255,0.5) 0.25px, transparent 0.25px), radial-gradient(rgba(45,45,45,0.4) 0.35px, transparent 0.35px)",
+              backgroundSize: "1.6px 1.6px, 2.4px 2.4px",
+              backgroundBlendMode: "screen, multiply",
+              opacity: 0.9,
+            }
+          : undefined,
+        knobOverlay: isOn ? (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(rgba(0,0,0,0.35)_0.25px,transparent_0.25px)] opacity-25"
+          />
+        ) : undefined,
+      };
+    default:
+      return {};
+  }
+}
 
 const AssetDropzone = ({
   asset,
@@ -616,142 +729,3 @@ const AssetDropzone = ({
     </div>
   );
 };
-
-interface ToggleCardButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  active: boolean;
-  emphasis?: "subtle" | "glow";
-  showActiveTexture?: boolean;
-}
-
-function ToggleCardButton({
-  active,
-  emphasis = "subtle",
-  showActiveTexture = false,
-  className,
-  children,
-  type = "button",
-  ...props
-}: ToggleCardButtonProps) {
-  return (
-    <button
-      type={type}
-      {...props}
-      className={cn(
-        "relative inline-flex items-center justify-center rounded-2xl border text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 active:translate-y-[0.5px]",
-        emphasis === "glow"
-          ? active
-            ? "border-primary/60 bg-gradient-to-b from-background via-primary/5 to-primary/15 text-foreground shadow-[0_12px_32px_rgba(15,23,42,0.25)]"
-            : "border-border/70 bg-gradient-to-b from-background via-muted/10 to-muted/30 text-muted-foreground/90 hover:text-foreground"
-          : active
-            ? "border-primary/60 bg-primary/10 text-primary"
-            : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
-        className,
-      )}
-    >
-      {showActiveTexture && (
-        <span
-          aria-hidden="true"
-          className={cn(
-            "pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition",
-            active && "opacity-60",
-          )}
-          style={{
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.25) 0.6px, transparent 0.6px), radial-gradient(rgba(15,23,42,0.35) 0.9px, transparent 0.9px), linear-gradient(120deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 35%, rgba(0,0,0,0.15) 100%)",
-            backgroundSize: "4px 4px, 8px 8px, 100% 100%",
-            backgroundBlendMode: "screen, overlay, normal",
-          }}
-        />
-      )}
-      {children}
-    </button>
-  );
-}
-
-function SoftGlassGlyph({ active }: { active: boolean }) {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-      <defs>
-        <linearGradient id="soft-glass-gradient" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="currentColor" stopOpacity={active ? 0.45 : 0.15} />
-          <stop offset="100%" stopColor="currentColor" stopOpacity={active ? 0.2 : 0.05} />
-        </linearGradient>
-      </defs>
-      <rect
-        x="5"
-        y="5"
-        width="18"
-        height="18"
-        rx="8"
-        fill="url(#soft-glass-gradient)"
-        stroke="currentColor"
-        strokeWidth="1.8"
-        opacity={active ? 0.9 : 0.7}
-      />
-      <rect
-        x="8.5"
-        y="8"
-        width="9"
-        height="4"
-        rx="2"
-        fill="currentColor"
-        opacity={active ? 0.5 : 0.2}
-      />
-    </svg>
-  );
-}
-
-function ShadowGlyph({ active }: { active: boolean }) {
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-      <rect
-        x="6"
-        y="6"
-        width="16"
-        height="11"
-        rx="3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.8"
-      />
-      <ellipse
-        cx="14"
-        cy="19"
-        rx="6.5"
-        ry="2.8"
-        fill="currentColor"
-        opacity={active ? 0.35 : 0.15}
-      />
-    </svg>
-  );
-}
-
-function CornerGlyph({ rounded }: { rounded: boolean }) {
-  if (rounded) {
-    return (
-      <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-        <path
-          d="M8 22V13C8 9.68629 10.6863 7 14 7H22"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2.2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
-
-  return (
-    <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden="true">
-      <path
-        d="M8 22V8H22"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.2"
-        strokeLinecap="square"
-        strokeLinejoin="miter"
-      />
-    </svg>
-  );
-}

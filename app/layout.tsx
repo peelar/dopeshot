@@ -68,12 +68,12 @@ const previewImage = "/og-preview.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "Dope Shot - Your product is dope. Your screenshots should be too.",
+  title: "dopeshot - your product is dope. your screenshots should be too.",
   description:
-    "Transform product screenshots into Twitter-ready graphics in 10 seconds. Free, no login required. Built for indie hackers and developers.",
+    "transform product screenshots into twitter-ready graphics in 10 seconds. free, no login required. built for indie hackers and developers.",
   openGraph: {
-    title: "Dope Shot - Make Your Screenshots Look Dope",
-    description: "Drop a screenshot, get a Twitter-ready graphic in 10 seconds. Free, no login.",
+    title: "dopeshot - make your screenshots look dope",
+    description: "drop a screenshot, get a twitter-ready graphic in 10 seconds. free, no login.",
     url: siteUrl,
     type: "website",
     images: [
@@ -81,21 +81,18 @@ export const metadata: Metadata = {
         url: previewImage,
         width: 1200,
         height: 630,
-        alt: "Dope Shot editor preview",
+        alt: "dopeshot editor preview",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dope Shot - Make Your Screenshots Look Dope",
-    description: "Drop a screenshot, get a Twitter-ready graphic in 10 seconds",
+    title: "dopeshot - make your screenshots look dope",
+    description: "drop a screenshot, get a twitter-ready graphic in 10 seconds",
     images: [previewImage],
   },
   icons: {
-    icon: [
-      { url: "/dopeshot-icon.svg" },
-      { url: "/favicon.ico" },
-    ],
+    icon: [{ url: "/dopeshot-icon.svg" }, { url: "/favicon.ico" }],
   },
 };
 
