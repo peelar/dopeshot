@@ -20,21 +20,21 @@ function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `url(${COARSE_GRAIN_TEXTURE})`,
+          backgroundImage: `url("${COARSE_GRAIN_TEXTURE}")`,
           backgroundSize: "120px 120px",
           mixBlendMode: "multiply",
-          opacity: 0.65,
-          filter: "contrast(240%) brightness(0.85)",
+          opacity: 0.35,
+          filter: "contrast(220%) brightness(0.9)",
         }}
       />
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `url(${FINE_GRAIN_TEXTURE})`,
+          backgroundImage: `url("${FINE_GRAIN_TEXTURE}")`,
           backgroundSize: "50px 50px",
           mixBlendMode: "screen",
-          opacity: 0.45,
-          filter: "contrast(260%) brightness(1.25)",
+          opacity: 0.2,
+          filter: "contrast(240%) brightness(1.15)",
         }}
       />
     </div>
