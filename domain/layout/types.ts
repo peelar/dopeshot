@@ -65,6 +65,7 @@ export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken
   customGradient?: CustomGradient; // for custom/dynamic gradients
+  grainEnabled?: boolean; // enables grain overlay on gradient backgrounds
 };
 
 // Layout configuration - simple data structure

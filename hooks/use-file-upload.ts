@@ -66,6 +66,7 @@ export function useFileUpload({
         onStatusMessage(`${kind.charAt(0).toUpperCase() + kind.slice(1)} uploaded: ${file.name}`);
 
         onConfigUpdate((currentConfig) => {
+          const grainEnabled = currentConfig.background?.grainEnabled ?? true;
           const newConfig = {
             ...currentConfig,
             assets: {
@@ -78,6 +79,7 @@ export function useFileUpload({
             newConfig.background = {
               type: "image",
               value: asset.id,
+              grainEnabled,
             };
           }
 
@@ -89,6 +91,7 @@ export function useFileUpload({
               background: {
                 type: "solid",
                 value: "slate-100",
+                grainEnabled,
               },
             };
           }

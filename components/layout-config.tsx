@@ -73,6 +73,7 @@ export const LayoutConfigPanel = ({
   const showOutlineSection =
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
   const showLogoUpload = templateCapabilities?.logo !== "hidden";
+  const grainEnabled = config.background?.grainEnabled ?? true;
 
   // Memoize asset lookups to avoid recalculating on every render
   const { screenshotAsset, logoAsset, backgroundAsset } = useMemo(
@@ -108,13 +109,32 @@ export const LayoutConfigPanel = ({
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
+      const grainEnabled = background.grainEnabled ?? config.background?.grainEnabled ?? true;
       onConfigChangeAction({
         ...config,
         colors: {
           ...config.colors,
           text: textColor,
         },
-        background,
+        background: {
+          ...background,
+          grainEnabled,
+        },
+      });
+    },
+    [config, onConfigChangeAction],
+  );
+
+  const handleGrainToggle = useCallback(
+    (enabled: boolean) => {
+      const fallbackBackground =
+        config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
+      onConfigChangeAction({
+        ...config,
+        background: {
+          ...fallbackBackground,
+          grainEnabled: enabled,
+        },
       });
     },
     [config, onConfigChangeAction],
@@ -329,6 +349,8 @@ export const LayoutConfigPanel = ({
                 Background
               </Label>
 
+              <GrainToggleControl enabled={grainEnabled} onToggle={handleGrainToggle} />
+
               <SegmentedControl
                 value={bgType}
                 onChange={(value) => setBgType(value === "image" ? "image" : "gradient")}
@@ -409,6 +431,38 @@ interface AssetDropzoneProps {
   label: string;
   variant?: "default" | "logo";
 }
+
+interface GrainToggleProps {
+  enabled: boolean;
+  onToggle: (enabled: boolean) => void;
+}
+
+const GrainToggleControl = ({ enabled, onToggle }: GrainToggleProps) => {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      aria-label="Toggle background grain"
+      onClick={() => onToggle(!enabled)}
+      className={cn(
+        "flex w-full items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm font-medium text-muted-foreground/90 transition",
+        enabled && "text-foreground shadow-sm",
+        !enabled && "hover:text-foreground",
+      )}
+    >
+      <span className="text-xs uppercase tracking-[0.25em]">Grain</span>
+      <span
+        className={cn(
+          "rounded-full px-3 py-0.5 text-[11px] font-semibold",
+          enabled ? "bg-foreground text-background" : "bg-border/70 text-muted-foreground",
+        )}
+      >
+        {enabled ? "On" : "Off"}
+      </span>
+    </button>
+  );
+};
 
 const AssetDropzone = ({
   asset,

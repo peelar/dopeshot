@@ -14,6 +14,7 @@ import {
   getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
+import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
 
 interface HeroCenterProps {
   config: LayoutConfig;
@@ -42,6 +43,7 @@ function HeroCenterComponent({
   }, [assets, config.assets.logo, config.assets.screenshot]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
+  const showGrainOverlay = config.background?.grainEnabled ?? true;
   const fontSize = getFontSizeById(config.fontSize);
   const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
   const textColorClass = tokenToTextColorClass(config.colors.text);
@@ -199,30 +201,35 @@ function HeroCenterComponent({
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle }}
+      style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <div
-        className={cn(
-          "absolute top-8 z-10 flex items-center gap-2",
-          variant === "right" ? "right-8" : "left-8",
-        )}
-      >
-        {renderLogo()}
-      </div>
-
-      <div className="flex h-full w-full items-center px-14 py-16">
+      <GrainOverlay enabled={showGrainOverlay} />
+      <div className="relative z-10 h-full w-full">
         <div
           className={cn(
-            "flex w-full items-center gap-12",
-            variant === "right" ? "flex-row-reverse" : "flex-row",
+            "absolute top-8 z-10 flex items-center gap-2",
+            variant === "right" ? "right-8" : "left-8",
           )}
         >
-          <div className={cn("flex flex-1", variant === "right" ? "justify-end" : "justify-start")}>
-            <div className="max-w-md">
-              {variant === "right" ? renderTextBlock("right") : renderTextBlock("left")}
+          {renderLogo()}
+        </div>
+
+        <div className="flex h-full w-full items-center px-14 py-16">
+          <div
+            className={cn(
+              "flex w-full items-center gap-12",
+              variant === "right" ? "flex-row-reverse" : "flex-row",
+            )}
+          >
+            <div
+              className={cn("flex flex-1", variant === "right" ? "justify-end" : "justify-start")}
+            >
+              <div className="max-w-md">
+                {variant === "right" ? renderTextBlock("right") : renderTextBlock("left")}
+              </div>
             </div>
+            {renderScreenshot()}
           </div>
-          {renderScreenshot()}
         </div>
       </div>
     </div>

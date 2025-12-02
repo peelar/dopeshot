@@ -66,6 +66,7 @@ export function useColorAnalysis({
               type: "gradient",
               value: "custom",
               customGradient: fallbackGradient,
+              grainEnabled: currentConfig.background?.grainEnabled ?? true,
             },
           }));
 

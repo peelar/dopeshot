@@ -47,6 +47,7 @@ function createInitialConfig() {
     background: {
       type: "gradient",
       value: "custom",
+      grainEnabled: true,
       customGradient: {
         type: "linear",
         angle: 130,

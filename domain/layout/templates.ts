@@ -74,6 +74,7 @@ export const TEMPLATES: Template[] = [
       background: {
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
+        grainEnabled: true,
       },
       assets: {
         screenshot: undefined,
@@ -132,6 +133,7 @@ export const TEMPLATES: Template[] = [
       background: {
         type: "gradient",
         value: "cotton-candy",
+        grainEnabled: true,
       },
       assets: {
         screenshot: undefined,
@@ -190,6 +192,7 @@ export const TEMPLATES: Template[] = [
       background: {
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
+        grainEnabled: true,
       },
       assets: {
         screenshot: undefined,

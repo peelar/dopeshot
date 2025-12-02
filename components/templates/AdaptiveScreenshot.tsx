@@ -9,6 +9,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { getShadowValue } from "@/components/templates/shared/shadows";
+import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
 
 interface AdaptiveScreenshotProps {
   config: LayoutConfig;
@@ -27,6 +28,7 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
   }, [assets, config.assets.screenshot]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
+  const showGrainOverlay = config.background?.grainEnabled ?? true;
   const screenshotTreatment = getScreenshotTreatment(config);
   const frameAppearance = useMemo(
     () =>
@@ -57,36 +59,39 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle }}
+      style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <div
-        className="flex h-full w-full items-center justify-center"
-        style={{ padding: `${stagePadding}px` }}
-      >
+      <GrainOverlay enabled={showGrainOverlay} />
+      <div className="relative z-10 h-full w-full">
         <div
-          className="relative flex w-full items-center justify-center overflow-hidden"
-          style={{
-            ...frameAppearance.style,
-            boxShadow: appliedShadow,
-            width: "max-content",
-            maxWidth: frameMaxWidth,
-            maxHeight: frameMaxHeight,
-            aspectRatio: screenshotAspectRatio,
-          }}
+          className="flex h-full w-full items-center justify-center"
+          style={{ padding: `${stagePadding}px` }}
         >
-          {screenshot ? (
-            <img
-              src={screenshot.url}
-              alt="Screenshot"
-              className="h-full w-full object-contain"
-              style={{ borderRadius: frameAppearance.contentRadius }}
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-base font-semibold text-white/70">
-              Drop a screenshot to get started
-            </div>
-          )}
+          <div
+            className="relative flex w-full items-center justify-center overflow-hidden"
+            style={{
+              ...frameAppearance.style,
+              boxShadow: appliedShadow,
+              width: "max-content",
+              maxWidth: frameMaxWidth,
+              maxHeight: frameMaxHeight,
+              aspectRatio: screenshotAspectRatio,
+            }}
+          >
+            {screenshot ? (
+              <img
+                src={screenshot.url}
+                alt="Screenshot"
+                className="h-full w-full object-contain"
+                style={{ borderRadius: frameAppearance.contentRadius }}
+                crossOrigin="anonymous"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-base font-semibold text-white/70">
+                Drop a screenshot to get started
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
