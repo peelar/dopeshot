@@ -87,3 +87,4 @@ export function useColorAnalysis({
     isAnalyzingColors,
   };
 }
+

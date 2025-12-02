@@ -82,8 +82,11 @@ function AdaptiveScreenshotComponent({ config, assets = [], className }: Adaptiv
               <img
                 src={screenshot.url}
                 alt="Screenshot"
-                className="h-full w-full object-contain"
-                style={{ borderRadius: frameAppearance.contentRadius }}
+                className="h-full w-full object-cover"
+                style={{
+                  borderRadius: frameAppearance.contentRadius,
+                  objectPosition: "top",
+                }}
                 crossOrigin="anonymous"
               />
             ) : (

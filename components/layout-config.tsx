@@ -8,6 +8,7 @@ import {
   useMemo,
   useCallback,
   type ReactNode,
+  type ButtonHTMLAttributes,
 } from "react";
 import { BackgroundConfig, ColorToken, FontId, FontSize, LayoutConfig, ScreenshotTreatment } from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
@@ -308,35 +309,41 @@ export const LayoutConfigPanel = ({
                 <div className="flex items-center gap-3">
                   {outlineControls.softGlass && (
                     <Tooltip label="Glass">
-                      <IconToggleButton
+                      <ToggleCardButton
                         active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"}
                         onClick={toggleSoftGlass}
-                        ariaLabel="Toggle soft glass outline"
+                        aria-label="Toggle soft glass outline"
+                        aria-pressed={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"}
+                        className="h-12 w-12"
                       >
                         <SoftGlassGlyph active={(config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) === "soft-glass"} />
-                      </IconToggleButton>
+                      </ToggleCardButton>
                     </Tooltip>
                   )}
                   {outlineControls.shape && (
                     <Tooltip label="Corners">
-                      <IconToggleButton
+                      <ToggleCardButton
                         active={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
                         onClick={handleShapeToggle}
-                        ariaLabel="Toggle corner style"
+                        aria-label="Toggle corner style"
+                        aria-pressed={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
+                        className="h-12 w-12"
                       >
                         <CornerGlyph rounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"} />
-                      </IconToggleButton>
+                      </ToggleCardButton>
                     </Tooltip>
                   )}
                   {outlineControls.shadow && (
                     <Tooltip label="Shadow">
-                      <IconToggleButton
+                      <ToggleCardButton
                         active={config.screenshotFrame?.shadowEnabled ?? true}
                         onClick={toggleFrameShadow}
-                        ariaLabel="Toggle shadow"
+                        aria-label="Toggle shadow"
+                        aria-pressed={config.screenshotFrame?.shadowEnabled ?? true}
+                        className="h-12 w-12"
                       >
                         <ShadowGlyph active={config.screenshotFrame?.shadowEnabled ?? true} />
-                      </IconToggleButton>
+                      </ToggleCardButton>
                     </Tooltip>
                   )}
                 </div>
@@ -439,28 +446,42 @@ interface GrainToggleProps {
 
 const GrainToggleControl = ({ enabled, onToggle }: GrainToggleProps) => {
   return (
-    <button
-      type="button"
+    <ToggleCardButton
+      active={enabled}
+      onClick={() => onToggle(!enabled)}
       role="switch"
       aria-checked={enabled}
       aria-label="Toggle background grain"
-      onClick={() => onToggle(!enabled)}
-      className={cn(
-        "flex w-full items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-3 py-2 text-sm font-medium text-muted-foreground/90 transition",
-        enabled && "text-foreground shadow-sm",
-        !enabled && "hover:text-foreground",
-      )}
+      emphasis="glow"
+      showActiveTexture
+      className="w-full items-center justify-between gap-3 px-4 py-3 text-left"
     >
-      <span className="text-xs uppercase tracking-[0.25em]">Grain</span>
+      <span className="text-[10px] font-semibold uppercase tracking-[0.35em] text-muted-foreground/70">
+        Grain
+      </span>
+
       <span
         className={cn(
-          "rounded-full px-3 py-0.5 text-[11px] font-semibold",
-          enabled ? "bg-foreground text-background" : "bg-border/70 text-muted-foreground",
+          "relative rounded-full px-3 py-1 text-[11px] font-semibold tracking-[0.2em]",
+          enabled ? "bg-foreground/90 text-background" : "bg-border/80 text-muted-foreground",
         )}
       >
-        {enabled ? "On" : "Off"}
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-[-2px] rounded-full opacity-0 transition",
+            enabled && "opacity-60",
+          )}
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.2) 0.6px, transparent 0.6px), radial-gradient(rgba(15,23,42,0.4) 0.8px, transparent 0.8px)",
+            backgroundSize: "3px 3px, 6px 6px",
+            mixBlendMode: "soft-light",
+          }}
+        />
+        {enabled ? "ON" : "OFF"}
       </span>
-    </button>
+    </ToggleCardButton>
   );
 };
 
@@ -541,7 +562,7 @@ const AssetDropzone = ({
 
       <div
         className={cn(
-          "relative overflow-hidden rounded border border-border bg-background",
+          "relative flex items-center justify-center overflow-hidden rounded border border-border bg-background",
           variant === "logo" ? "h-16 w-16" : "h-10 w-14",
         )}
       >
@@ -582,27 +603,52 @@ const AssetDropzone = ({
   );
 };
 
-interface IconToggleButtonProps {
+interface ToggleCardButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active: boolean;
-  onClick: () => void;
-  ariaLabel: string;
-  children: ReactNode;
+  emphasis?: "subtle" | "glow";
+  showActiveTexture?: boolean;
 }
 
-function IconToggleButton({ active, onClick, ariaLabel, children }: IconToggleButtonProps) {
+function ToggleCardButton({
+  active,
+  emphasis = "subtle",
+  showActiveTexture = false,
+  className,
+  children,
+  type = "button",
+  ...props
+}: ToggleCardButtonProps) {
   return (
     <button
-      type="button"
-      onClick={onClick}
-      aria-label={ariaLabel}
-      aria-pressed={active}
+      type={type}
+      {...props}
       className={cn(
-        "inline-flex h-12 w-12 items-center justify-center rounded-xl border text-muted-foreground transition",
-        active
-          ? "border-primary/60 bg-primary/10 text-primary"
-          : "border-border bg-background hover:bg-muted/40 hover:text-foreground",
+        "relative inline-flex items-center justify-center rounded-2xl border text-sm font-medium transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2 active:translate-y-[0.5px]",
+        emphasis === "glow"
+          ? active
+            ? "border-primary/60 bg-gradient-to-b from-background via-primary/5 to-primary/15 text-foreground shadow-[0_12px_32px_rgba(15,23,42,0.25)]"
+            : "border-border/70 bg-gradient-to-b from-background via-muted/10 to-muted/30 text-muted-foreground/90 hover:text-foreground"
+          : active
+            ? "border-primary/60 bg-primary/10 text-primary"
+            : "border-border bg-background text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+        className,
       )}
     >
+      {showActiveTexture && (
+        <span
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-0 rounded-2xl opacity-0 transition",
+            active && "opacity-60",
+          )}
+          style={{
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.25) 0.6px, transparent 0.6px), radial-gradient(rgba(15,23,42,0.35) 0.9px, transparent 0.9px), linear-gradient(120deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 35%, rgba(0,0,0,0.15) 100%)",
+            backgroundSize: "4px 4px, 8px 8px, 100% 100%",
+            backgroundBlendMode: "screen, overlay, normal",
+          }}
+        />
+      )}
       {children}
     </button>
   );

@@ -82,3 +82,4 @@ export function getRecommendationForAspectCategory(
 ): TemplateRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }
+

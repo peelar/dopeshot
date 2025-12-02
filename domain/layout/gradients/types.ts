@@ -55,3 +55,4 @@ export function isAdvancedGradient(gradient: CustomGradient): gradient is Advanc
   return "stops" in gradient && Array.isArray(gradient.stops);
 }
 
+

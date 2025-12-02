@@ -117,7 +117,8 @@ function PopupGradientComponent({
             <img
               src={screenshot.url}
               alt="Screenshot"
-              className="block h-auto w-full max-w-full object-contain"
+              className="block h-full w-full object-cover"
+              style={{ objectPosition: "top" }}
               crossOrigin="anonymous"
             />
           </div>

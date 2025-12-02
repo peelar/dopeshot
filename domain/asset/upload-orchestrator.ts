@@ -64,3 +64,4 @@ export async function processFileUpload(
     reader.readAsDataURL(file);
   });
 }
+
