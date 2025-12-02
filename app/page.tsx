@@ -1,6 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+} from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
@@ -46,7 +54,7 @@ import { AppHeader } from "@/components/app-header";
 export default function PlaygroundPage() {
   const { theme } = useTheme();
   const [config, setConfig] = useAtom(configAtom);
-  const [assets, setAssets] = useAtom(assetsAtom);
+  const assets = useAtomValue(assetsAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
@@ -66,9 +74,10 @@ export default function PlaygroundPage() {
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
   // Apply random demo preset on client mount (after hydration)
+  // This sets text content and template - gradient comes from color analysis below
   useEffect(() => {
     if (hasAppliedRandomPreset || hasCustomScreenshot) return;
-    
+
     const randomPreset = getRandomDemoPreset();
     setConfig(randomPreset.config);
     setHasAppliedRandomPreset(true);
@@ -92,7 +101,7 @@ export default function PlaygroundPage() {
   useEffect(() => {
     const placeholderAsset = assets.find((asset) => asset.id === PLACEHOLDER_ASSET_ID);
     const hasGradientSet = config.background?.customGradient !== undefined;
-    
+
     // Skip if no placeholder or if gradient is already set
     if (!placeholderAsset || hasGradientSet) {
       return;

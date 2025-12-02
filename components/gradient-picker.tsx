@@ -490,7 +490,7 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
 
   // Compare legacy gradients
   if (isLegacyGradient(a) && isLegacyGradient(b)) {
-    // Compare colors only, ignoring direction (angle may be modified after selection)
+    // Compare colors only - ignore direction since users can adjust angle after selection
     return a.from === b.from && a.to === b.to;
   }
 
@@ -498,7 +498,7 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
   if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
     if (a.stops.length !== b.stops.length) return false;
     if (a.type !== b.type) return false;
-    // Compare stops by colors only (ignoring angle since it may be modified after selection)
+    // Compare stops by colors and positions - ignore angle since it's user-adjustable
     return a.stops.every((stop, i) => {
       const otherStop = b.stops[i];
       if (!otherStop) return false;

@@ -8,8 +8,6 @@ import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
 import { Type } from "lucide-react";
 import { configAtom, assetsAtom } from "@/hooks/atoms";
-import type { LayoutConfig } from "@/domain/layout/types";
-import type { Asset } from "@/domain/asset/types";
 
 // Memoize template default configs at module level to avoid recreation
 const TEMPLATE_DEFAULTS = TEMPLATES.map((template) => {
@@ -93,13 +91,13 @@ export function TemplateSelector({ className }: { className?: string }) {
             ),
           );
 
-        // Create isolated store for each preview
+        // Create isolated store for each preview to prevent preview interactions from affecting main state
         const previewStore = useMemo(() => {
           const store = createStore();
           store.set(configAtom, previewConfig);
           store.set(assetsAtom, assets);
           return store;
-        }, [previewConfig]);
+        }, [previewConfig, assets]);
 
         return (
           <button
