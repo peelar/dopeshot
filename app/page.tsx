@@ -52,6 +52,7 @@ import { useFocusHint } from "@/hooks/use-focus-hint";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { getTemplateById } from "@/domain/layout/templates";
 import { AppHeader } from "@/components/app-header";
+import { MobileOverlay } from "@/components/mobile-overlay";
 
 export default function PlaygroundPage() {
   const { theme } = useTheme();
@@ -295,6 +296,7 @@ export default function PlaygroundPage() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
+      <MobileOverlay />
       {isDragging ? (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/15">
           <div className="rounded-2xl border-4 border-dashed border-blue-400 bg-white/80 px-10 py-8 text-center shadow-2xl">
