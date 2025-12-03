@@ -119,31 +119,33 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
 
     const screenshotAspectRatio = screenshot.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
     const isPortraitScreenshot = screenshotAspectRatio < 0.9;
+    const screenshotObjectFit = isPortraitScreenshot ? "contain" : "cover";
     const verticalPadding = 16;
 
     // For tall/portrait images, use full height minus padding
     if (isPortraitScreenshot) {
       return (
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex h-full flex-1 items-center justify-center">
           <div
             className={cn(
-              "relative flex w-full items-center justify-center overflow-hidden",
+              "relative flex h-full max-h-full w-full items-center justify-center overflow-hidden",
               "rounded-[16px]",
             )}
             style={{
               ...frameAppearance.style,
               boxShadow: appliedShadow,
-              height: `calc(100% - ${verticalPadding}px)`,
-              width: "auto",
+              aspectRatio: `${screenshotAspectRatio}`,
+              maxHeight: `calc(100% - ${verticalPadding * 2}px)`,
               maxWidth: "480px",
             }}
           >
             <img
               src={screenshot.url}
               alt="Screenshot"
-              className="h-full w-full object-cover"
+              className="h-full w-full"
               style={{
                 borderRadius: frameAppearance.contentRadius,
+                objectFit: screenshotObjectFit,
                 objectPosition: "top",
               }}
               crossOrigin="anonymous"
@@ -160,7 +162,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     const maxWidth = isAdaptiveCanvas ? "70%" : "640px";
 
     return (
-      <div className="flex flex-1 items-center justify-center">
+      <div className="flex h-full flex-1 items-center justify-center">
         <div
           className={cn(
             "relative flex max-h-full w-full items-center justify-center overflow-hidden",
@@ -181,6 +183,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
             className="h-full w-full object-cover"
             style={{
               borderRadius: frameAppearance.contentRadius,
+              objectFit: screenshotObjectFit,
               objectPosition: "top",
             }}
             crossOrigin="anonymous"
@@ -209,7 +212,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
         <div className="flex h-full w-full items-center px-14 py-16">
           <div
             className={cn(
-              "flex w-full items-center gap-12",
+              "flex h-full w-full items-center gap-12",
               variant === "right" ? "flex-row-reverse" : "flex-row",
             )}
           >
