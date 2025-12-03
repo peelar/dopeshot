@@ -77,13 +77,16 @@ export async function exportLayoutAsPng(
       height,
       skipAutoScale: true,
       backgroundColor,
-      // Ensure we capture styles correctly
+      // Ensure we capture styles correctly (typed to allow vendor props)
       style: {
         visibility: "visible",
         zIndex: "auto",
+        textRendering: "optimizeLegibility",
         WebkitFontSmoothing: "antialiased",
         MozOsxFontSmoothing: "grayscale",
-        textRendering: "optimizeLegibility",
+      } as Partial<CSSStyleDeclaration> & {
+        WebkitFontSmoothing?: string;
+        MozOsxFontSmoothing?: string;
       },
     });
 
