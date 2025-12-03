@@ -29,7 +29,7 @@ export function PreviewViewport({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
   const [hasMeasured, setHasMeasured] = useState(false);
-  const rafRef = useRef<number>();
+  const rafRef = useRef<number | undefined>(undefined);
 
   // Throttled scale update using requestAnimationFrame
   const updateScale = useCallback(() => {
