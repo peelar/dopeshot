@@ -2,7 +2,6 @@ import { memo, useMemo, type CSSProperties } from "react";
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
-import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
 import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
@@ -38,17 +37,11 @@ function getPeakBorderRadius(placement: "left" | "right" | "center") {
 
 interface PopupGradientProps {
   className?: string;
-  onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
 }
 
-function PopupGradientComponent({
-  className,
-  onTextChange,
-  onUploadAsset,
-  isStatic = false,
-}: PopupGradientProps) {
+function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: PopupGradientProps) {
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
@@ -85,6 +78,8 @@ function PopupGradientComponent({
   const textColorClass = tokenToTextColorClass(config.colors.text);
   const titleClassName = cn("font-bold", fontSize.titleClass, textColorClass);
   const subtitleClassName = cn("mt-4 min-h-[1.2rem]", fontSize.subtitleClass, textColorClass);
+  const title = config.text.title?.trim();
+  const subtitle = config.text.subtitle?.trim();
 
   const screenshotFrameWidth = useMemo(() => {
     if (textVariant === "center") {
@@ -209,28 +204,19 @@ function PopupGradientComponent({
               className="absolute left-14 z-10 space-y-4"
               style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP, bottom: "18%" }}
             >
-              <InlineEditableText
-                element="h1"
-                field="title"
-                value={config.text.title}
-                placeholder="Bring the heat"
-                className={cn(titleClassName, "text-balance leading-tight")}
-                style={{ ...titleStyle, lineHeight: 1.05 }}
-                ariaLabel="Edit title"
-                onTextChange={onTextChange}
-              />
-              {(config.text.subtitle || onTextChange) && (
-                <InlineEditableText
-                  element="p"
-                  field="subtitle"
-                  value={config.text.subtitle}
-                  placeholder="Drop some flavor"
-                  className={cn(subtitleClassName, "text-balance")}
-                  style={subtitleStyle}
-                  ariaLabel="Edit subtitle"
-                  onTextChange={onTextChange}
-                />
-              )}
+              {title ? (
+                <h1
+                  className={cn(titleClassName, "text-balance leading-tight")}
+                  style={{ ...titleStyle, lineHeight: 1.05 }}
+                >
+                  {title}
+                </h1>
+              ) : null}
+              {subtitle ? (
+                <p className={cn(subtitleClassName, "text-balance")} style={subtitleStyle}>
+                  {subtitle}
+                </p>
+              ) : null}
             </div>
 
             {/* Screenshot on right, popping up from bottom */}
@@ -248,28 +234,22 @@ function PopupGradientComponent({
               className="absolute right-14 z-10 text-right"
               style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP, bottom: "18%" }}
             >
-              <InlineEditableText
-                element="h1"
-                field="title"
-                value={config.text.title}
-                placeholder="Bring the heat"
-                className={cn(titleClassName, "text-right text-balance leading-tight")}
-                style={{ ...titleStyle, lineHeight: 1.05 }}
-                ariaLabel="Edit title"
-                onTextChange={onTextChange}
-              />
-              {(config.text.subtitle || onTextChange) && (
-                <InlineEditableText
-                  element="p"
-                  field="subtitle"
-                  value={config.text.subtitle}
-                  placeholder="Drop some flavor"
+              {title ? (
+                <h1
+                  className={cn(titleClassName, "text-right text-balance leading-tight")}
+                  style={{ ...titleStyle, lineHeight: 1.05 }}
+                >
+                  {title}
+                </h1>
+              ) : null}
+              {subtitle ? (
+                <p
                   className={cn(subtitleClassName, "text-right text-balance")}
                   style={subtitleStyle}
-                  ariaLabel="Edit subtitle"
-                  onTextChange={onTextChange}
-                />
-              )}
+                >
+                  {subtitle}
+                </p>
+              ) : null}
             </div>
           </>
         )}
@@ -280,28 +260,19 @@ function PopupGradientComponent({
               className="absolute left-1/2 z-10 w-[calc(100%-96px)] max-w-6xl -translate-x-1/2 px-8 text-center space-y-4"
               style={centerTextRegionStyle}
             >
-              <InlineEditableText
-                element="h1"
-                field="title"
-                value={config.text.title}
-                placeholder="Bring the heat"
-                className={cn(titleClassName, "whitespace-nowrap leading-tight")}
-                style={{ ...titleStyle, lineHeight: 1.05 }}
-                ariaLabel="Edit title"
-                onTextChange={onTextChange}
-              />
-              {(config.text.subtitle || onTextChange) && (
-                <InlineEditableText
-                  element="p"
-                  field="subtitle"
-                  value={config.text.subtitle}
-                  placeholder="Drop some flavor"
-                  className={cn(subtitleClassName, "text-balance")}
-                  style={subtitleStyle}
-                  ariaLabel="Edit subtitle"
-                  onTextChange={onTextChange}
-                />
-              )}
+              {title ? (
+                <h1
+                  className={cn(titleClassName, "whitespace-nowrap leading-tight")}
+                  style={{ ...titleStyle, lineHeight: 1.05 }}
+                >
+                  {title}
+                </h1>
+              ) : null}
+              {subtitle ? (
+                <p className={cn(subtitleClassName, "text-balance")} style={subtitleStyle}>
+                  {subtitle}
+                </p>
+              ) : null}
             </div>
 
             {/* Screenshot centered, popping up from bottom */}

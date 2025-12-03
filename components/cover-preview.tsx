@@ -6,17 +6,11 @@ import { canvasAtom, currentTemplateAtom } from "@/hooks/atoms/derived";
 
 interface CoverPreviewProps {
   className?: string;
-  onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
 }
 
-export function CoverPreview({
-  className,
-  onTextChange,
-  onUploadAsset,
-  isStatic = false,
-}: CoverPreviewProps) {
+export function CoverPreview({ className, onUploadAsset, isStatic = false }: CoverPreviewProps) {
   const template = useAtomValue(currentTemplateAtom);
   const canvasDimensions = useAtomValue(canvasAtom);
 
@@ -44,11 +38,7 @@ export function CoverPreview({
         aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
       }}
     >
-      <TemplateComponent
-        onTextChange={onTextChange}
-        onUploadAsset={onUploadAsset}
-        isStatic={isStatic}
-      />
+      <TemplateComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
     </div>
   );
 }

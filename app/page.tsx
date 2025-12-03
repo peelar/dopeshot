@@ -101,14 +101,22 @@ export default function PlaygroundPage() {
   useEffect(() => {
     const placeholderAsset = assets.find((asset) => asset.id === PLACEHOLDER_ASSET_ID);
     const hasGradientSet = config.background?.customGradient !== undefined;
+    const usingCustomGradientSlot =
+      config.background?.type === "gradient" && config.background?.value === "custom";
 
-    // Skip if no placeholder or if gradient is already set
-    if (!placeholderAsset || hasGradientSet) {
+    // Skip if no placeholder, gradient already exists, or user switched away from custom gradients
+    if (!placeholderAsset || hasGradientSet || !usingCustomGradientSlot) {
       return;
     }
 
     void processColorAnalysis(placeholderAsset.url, placeholderAsset.id, null);
-  }, [assets, config.background?.customGradient, processColorAnalysis]);
+  }, [
+    assets,
+    config.background?.customGradient,
+    config.background?.type,
+    config.background?.value,
+    processColorAnalysis,
+  ]);
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, templateCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);

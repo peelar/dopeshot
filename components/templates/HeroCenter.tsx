@@ -1,7 +1,6 @@
 import { memo, useMemo } from "react";
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
-import { InlineEditableText } from "@/components/templates/shared/InlineEditableText";
 import { LogoBadge } from "@/components/templates/shared/LogoBadge";
 import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
@@ -19,17 +18,11 @@ import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 
 interface HeroCenterProps {
   className?: string;
-  onTextChange?: (field: "title" | "subtitle", value: string) => void;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
 }
 
-function HeroCenterComponent({
-  className,
-  onTextChange,
-  onUploadAsset,
-  isStatic = false,
-}: HeroCenterProps) {
+function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: HeroCenterProps) {
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
@@ -96,31 +89,27 @@ function HeroCenterComponent({
   const renderTextBlock = (align: "left" | "center" | "right") => {
     const alignmentClass =
       align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
+    const title = config.text.title?.trim();
+    const subtitle = config.text.subtitle?.trim();
 
     return (
       <div className={cn("space-y-4", alignmentClass)}>
-        <InlineEditableText
-          element="h1"
-          field="title"
-          value={config.text.title}
-          placeholder="Bring the heat"
-          className={cn("font-semibold", fontSize.titleClass, textColorClass)}
-          style={titleStyle}
-          ariaLabel="Edit title"
-          onTextChange={onTextChange}
-        />
-        {(config.text.subtitle || onTextChange) && (
-          <InlineEditableText
-            element="p"
-            field="subtitle"
-            value={config.text.subtitle}
-            placeholder="Keep the heat going"
+        {title ? (
+          <h1
+            className={cn("font-semibold", fontSize.titleClass, textColorClass)}
+            style={titleStyle}
+          >
+            {title}
+          </h1>
+        ) : null}
+        {subtitle ? (
+          <p
             className={cn("opacity-90", fontSize.subtitleClass, textColorClass)}
             style={subtitleStyle}
-            ariaLabel="Edit subtitle"
-            onTextChange={onTextChange}
-          />
-        )}
+          >
+            {subtitle}
+          </p>
+        ) : null}
       </div>
     );
   };

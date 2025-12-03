@@ -52,25 +52,43 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
 
         if (fallbackGradient) {
           const textColor = getContrastTextColor(getGradientColorsForContrast(fallbackGradient));
+          let appliedGradient = false;
 
-          setConfig((currentConfig) => ({
-            ...currentConfig,
-            colors: {
-              ...currentConfig.colors,
-              text: textColor,
-            },
-            background: {
-              type: "gradient",
-              value: "custom",
-              customGradient: fallbackGradient,
-              grainEnabled: currentConfig.background?.grainEnabled ?? true,
-            },
-          }));
+          setConfig((currentConfig) => {
+            // Respect any manual background choice while analysis was running
+            const userSelectedPreset =
+              currentConfig.background?.type === "gradient" &&
+              currentConfig.background.customGradient === undefined &&
+              currentConfig.background.value !== "custom";
+            const userHasCustomGradient = currentConfig.background?.customGradient !== undefined;
+            const hasImageBackground = currentConfig.background?.type === "image";
 
-          const gradientMessage = autoLayoutMessage
-            ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
-            : "Gradient applied based on your screenshot colors.";
-          setStatusMessage(gradientMessage);
+            if (userSelectedPreset || userHasCustomGradient || hasImageBackground) {
+              return currentConfig;
+            }
+
+            appliedGradient = true;
+            return {
+              ...currentConfig,
+              colors: {
+                ...currentConfig.colors,
+                text: textColor,
+              },
+              background: {
+                type: "gradient",
+                value: "custom",
+                customGradient: fallbackGradient,
+                grainEnabled: currentConfig.background?.grainEnabled ?? true,
+              },
+            };
+          });
+
+          if (appliedGradient) {
+            const gradientMessage = autoLayoutMessage
+              ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
+              : "Gradient applied based on your screenshot colors.";
+            setStatusMessage(gradientMessage);
+          }
         }
       } finally {
         setIsAnalyzingColors(false);

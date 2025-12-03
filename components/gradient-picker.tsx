@@ -92,11 +92,10 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
 
-  // Generate beautiful multi-stop gradients from screenshot colors
+  // Generate multi-stop gradients from screenshot colors
   const dynamicGradients = useMemo((): CustomGradient[] => {
     if (!colorPalette) return [];
 
-    // Generate gradient options using the new generator
     // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
     return generateGradientOptions(colorPalette, {
       aspectCategory: "landscape",
@@ -104,27 +103,32 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     });
   }, [colorPalette]);
 
-  const currentGradientCss = useMemo((): string => {
-    if (background.customGradient) {
-      return customGradientToCss(background.customGradient);
-    }
+  const resolvedGradient = useMemo<CustomGradient | undefined>(() => {
+    if (background.customGradient) return background.customGradient;
     if (background.type === "gradient" && background.value) {
       const preset = getGradientById(background.value);
-      if (preset) return customGradientToCss(preset.gradient);
+      if (preset) return preset.gradient;
     }
-    return "linear-gradient(to right, #6366f1, #8b5cf6)";
+    return undefined;
   }, [background.customGradient, background.type, background.value]);
 
-  const currentAngle = useMemo(() => {
-    if (!background.customGradient) return 90;
-    if (isAdvancedGradient(background.customGradient)) {
-      return background.customGradient.angle ?? 90;
+  const currentGradientCss = useMemo((): string => {
+    if (resolvedGradient) {
+      return customGradientToCss(resolvedGradient);
     }
-    if (isLegacyGradient(background.customGradient)) {
-      return directionStringToDegrees(background.customGradient.direction);
+    return "linear-gradient(to right, #6366f1, #8b5cf6)";
+  }, [resolvedGradient]);
+
+  const currentAngle = useMemo(() => {
+    if (!resolvedGradient) return 90;
+    if (isAdvancedGradient(resolvedGradient)) {
+      return resolvedGradient.angle ?? 90;
+    }
+    if (isLegacyGradient(resolvedGradient)) {
+      return directionStringToDegrees(resolvedGradient.direction);
     }
     return 90;
-  }, [background.customGradient]);
+  }, [resolvedGradient]);
 
   const defaultSource = useMemo<GradientSource>(() => {
     if (
@@ -166,14 +170,14 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   const currentTextColor = useMemo<ColorToken>(() => {
-    if (background.customGradient) {
-      return getTextColorFromGradient(background.customGradient);
+    if (resolvedGradient) {
+      return getTextColorFromGradient(resolvedGradient);
     }
     if (background.type === "gradient" && background.value) {
       return getGradientById(background.value)?.textColor ?? "slate-900";
     }
     return "slate-900";
-  }, [background.customGradient, background.type, background.value]);
+  }, [background.type, background.value, resolvedGradient]);
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const activePresetId =
@@ -203,29 +207,25 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const handleColorChange = useCallback(
     (colorType: CustomColorStop, value: string) => {
-      const colors = getCustomGradientColors(background.customGradient, colorPalette);
+      const colors = getCustomGradientColors(resolvedGradient, colorPalette);
       const nextColors = { ...colors, [colorType]: value };
-      const newGradient = buildThreeStopGradient(
-        nextColors,
-        currentAngle,
-        background.customGradient,
-      );
+      const newGradient = buildThreeStopGradient(nextColors, currentAngle, resolvedGradient);
       lockManualSource();
       const textColor = getTextColorFromGradient(newGradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [background.customGradient, colorPalette, currentAngle, lockManualSource, onChangeAction],
+    [colorPalette, currentAngle, lockManualSource, onChangeAction, resolvedGradient],
   );
 
   const handleDirectionChange = useCallback(
     (angle: number) => {
-      const colors = getCustomGradientColors(background.customGradient, colorPalette);
-      const newGradient = buildThreeStopGradient(colors, angle, background.customGradient);
+      const colors = getCustomGradientColors(resolvedGradient, colorPalette);
+      const newGradient = buildThreeStopGradient(colors, angle, resolvedGradient);
       lockManualSource();
       const textColor = getTextColorFromGradient(newGradient);
       onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
     },
-    [background.customGradient, colorPalette, lockManualSource, onChangeAction],
+    [colorPalette, lockManualSource, onChangeAction, resolvedGradient],
   );
 
   const handleScreenshotSelect = useCallback(
@@ -274,7 +274,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
           )}
           {activeSource === "custom" && (
             <CustomGradientControls
-              background={background}
+              activeGradient={resolvedGradient}
               colorPalette={colorPalette}
               angle={currentAngle}
               onColorChange={handleColorChange}
@@ -337,7 +337,7 @@ function ScreenshotGradients({
 }
 
 interface CustomGradientControlsProps {
-  background: BackgroundConfig;
+  activeGradient?: CustomGradient;
   colorPalette?: ColorPalette;
   angle: number;
   onColorChange: (colorType: CustomColorStop, value: string) => void;
@@ -345,15 +345,15 @@ interface CustomGradientControlsProps {
 }
 
 function CustomGradientControls({
-  background,
+  activeGradient,
   colorPalette,
   angle,
   onColorChange,
   onAngleChange,
 }: CustomGradientControlsProps) {
   const customColors = useMemo(
-    () => getCustomGradientColors(background.customGradient, colorPalette),
-    [background.customGradient, colorPalette],
+    () => getCustomGradientColors(activeGradient, colorPalette),
+    [activeGradient, colorPalette],
   );
   const { start, mid, end } = customColors;
 
@@ -576,8 +576,9 @@ function buildThreeStopGradient(
   const normalizedAngle = ((Math.round(angle) % 360) + 360) % 360;
   const base = existing && isAdvancedGradient(existing) ? existing : undefined;
   return {
-    type: "linear",
-    angle: normalizedAngle,
+    type: base?.type ?? "linear",
+    angle: base?.type === "linear" ? normalizedAngle : base?.angle ?? normalizedAngle,
+    direction: base?.type !== "linear" ? base?.direction : undefined,
     colorSpace: base?.colorSpace ?? "oklch",
     stops: [
       { color: colors.start, position: 0 },

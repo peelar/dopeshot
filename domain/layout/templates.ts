@@ -42,7 +42,6 @@ export interface Template {
   createConfig: () => LayoutConfig;
   component: ComponentType<{
     className?: string;
-    onTextChange?: (field: "title" | "subtitle", value: string) => void;
     onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
     isStatic?: boolean;
   }>;
