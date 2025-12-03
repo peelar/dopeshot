@@ -1,17 +1,70 @@
-import { memo } from "react";
-
-const COARSE_GRAIN_TEXTURE =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cfilter id='coarse' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='4' seed='9' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 2.8 -1.1'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23coarse)' fill='%23000'/%3E%3C/svg%3E";
-
-const FINE_GRAIN_TEXTURE =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cfilter id='fine' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='5' seed='21' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='1 0 0 0 0 0 1 0 0 0 0 0 1 0 0 0 0 0 2.4 -0.7'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23fine)' fill='%23000'/%3E%3C/svg%3E";
+import { memo, useEffect, useState } from "react";
 
 interface GrainOverlayProps {
   enabled?: boolean;
+  isStatic?: boolean; // kept for API compatibility
+}
+
+function generateNoiseDataUrl(
+  size: number,
+  alpha: number,
+  seed = 1,
+  mean = 120,
+  spread = 180,
+) {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    return null;
+  }
+
+  // Deterministic RNG so re-hydration is stable
+  const mulberry32 = (seedValue: number) => {
+    return () => {
+      let t = (seedValue += 0x6d2b79f5);
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  const rand = mulberry32(123456789 + size + Math.round(alpha * 1000) + seed * 31);
+
+  const imageData = ctx.createImageData(size, size);
+  const data = imageData.data;
+  const clampedAlpha = Math.max(0, Math.min(255, Math.round(255 * alpha)));
+
+  for (let i = 0; i < data.length; i += 4) {
+    const value = Math.max(0, Math.min(255, mean + (rand() - 0.5) * spread));
+    data[i] = value;
+    data[i + 1] = value;
+    data[i + 2] = value;
+    data[i + 3] = clampedAlpha;
+  }
+
+  ctx.putImageData(imageData, 0, 0);
+  return canvas.toDataURL("image/png");
 }
 
 function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
-  if (!enabled) {
+  const [noise, setNoise] = useState<{ coarseUrl: string; fineUrl: string } | null>(null);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const coarse = generateNoiseDataUrl(48, 0.38, 1, 118, 150);
+    const fine = generateNoiseDataUrl(24, 0.24, 2, 126, 130);
+    setNoise({
+      coarseUrl: coarse || "",
+      fineUrl: fine || "",
+    });
+  }, [enabled]);
+
+  if (!enabled || !noise) {
     return null;
   }
 
@@ -20,21 +73,19 @@ function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `url("${COARSE_GRAIN_TEXTURE}")`,
-          backgroundSize: "120px 120px",
-          mixBlendMode: "multiply",
-          opacity: 0.35,
-          filter: "contrast(220%) brightness(0.9)",
+          backgroundImage: `url("${noise.coarseUrl}"), url("${noise.fineUrl}")`,
+          backgroundSize: "48px 48px, 24px 24px",
+          opacity: 0.18,
+          filter: "contrast(190%) brightness(1.06)",
+          mixBlendMode: "normal",
+          imageRendering: "pixelated",
         }}
       />
       <div
         className="absolute inset-0"
         style={{
-          backgroundImage: `url("${FINE_GRAIN_TEXTURE}")`,
-          backgroundSize: "50px 50px",
-          mixBlendMode: "screen",
-          opacity: 0.2,
-          filter: "contrast(240%) brightness(1.15)",
+          backgroundColor: "rgba(255, 255, 255, 0.06)",
+          mixBlendMode: "normal",
         }}
       />
     </div>

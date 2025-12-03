@@ -43,6 +43,7 @@ import {
   shouldShowAspectLockAtom,
   isAspectLockedAtom,
   showLayoutToggleAtom,
+  screenshotAssetAtom,
 } from "@/hooks/atoms/derived";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
@@ -54,7 +55,7 @@ import { AppHeader } from "@/components/app-header";
 export default function PlaygroundPage() {
   const { theme } = useTheme();
   const [config, setConfig] = useAtom(configAtom);
-  const assets = useAtomValue(assetsAtom);
+  const [assets, setAssets] = useAtom(assetsAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
@@ -63,6 +64,7 @@ export default function PlaygroundPage() {
   const currentTemplate = useAtomValue(currentTemplateAtom);
   const templateCapabilities = useAtomValue(templateCapabilitiesAtom);
   const canvas = useAtomValue(canvasAtom);
+  const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isScreenshotFocusedMode = useAtomValue(isScreenshotFocusedModeAtom);
   const shouldShowAspectLock = useAtomValue(shouldShowAspectLockAtom);
   const isAspectLocked = useAtomValue(isAspectLockedAtom);
@@ -80,8 +82,9 @@ export default function PlaygroundPage() {
 
     const randomPreset = getRandomDemoPreset();
     setConfig(randomPreset.config);
+    setAssets([randomPreset.asset]);
     setHasAppliedRandomPreset(true);
-  }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig]);
+  }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig, setAssets]);
 
   const gradientPreferences = useMemo<GradientPreferences>(() => {
     return {
@@ -130,9 +133,18 @@ export default function PlaygroundPage() {
     setIsExporting(true);
     setStatusMessage("Exporting image...");
     try {
+      const maxImageScale =
+        screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
+          ? Math.min(
+              screenshotAsset.metadata.width / canvas.width,
+              screenshotAsset.metadata.height / canvas.height,
+            )
+          : undefined;
+
       await exportLayoutAsPng("export-container", "cover-image.png", {
         width: canvas.width,
         height: canvas.height,
+        maxImageScale,
       });
       setStatusMessage("Image exported successfully.");
     } catch (error) {
@@ -142,7 +154,16 @@ export default function PlaygroundPage() {
     } finally {
       setIsExporting(false);
     }
-  }, [setStatusMessage, canvas.height, canvas.width, hasScreenshot, setIsExporting]);
+  }, [
+    setStatusMessage,
+    canvas.height,
+    canvas.width,
+    hasScreenshot,
+    setIsExporting,
+    config.background?.grainEnabled,
+    screenshotAsset?.metadata?.height,
+    screenshotAsset?.metadata?.width,
+  ]);
 
   const handleVariantChange = useCallback(
     (variant: string) => {
@@ -345,6 +366,9 @@ export default function PlaygroundPage() {
             zIndex: -100,
             visibility: "visible",
             background: "white",
+            WebkitFontSmoothing: "antialiased",
+            MozOsxFontSmoothing: "grayscale",
+            textRendering: "optimizeLegibility",
           }}
         >
           <CoverPreview isStatic />

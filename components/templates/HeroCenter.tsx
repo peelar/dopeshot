@@ -195,7 +195,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <GrainOverlay enabled={showGrainOverlay} />
+      <GrainOverlay enabled={showGrainOverlay} isStatic={isStatic} />
       <div className="relative z-10 h-full w-full">
         <div
           className={cn(
