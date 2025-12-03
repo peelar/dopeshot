@@ -131,7 +131,13 @@ export default function PlaygroundPage() {
       return;
     }
 
-    track("export_button_clicked");
+    track("export_button_clicked", {
+      template_id: config.templateId,
+      template_name: currentTemplate?.name ?? "unknown",
+      variant: config.variant,
+      background_type: config.background?.type ?? "unknown",
+      font_id: config.fontId,
+    });
     setIsExporting(true);
     setStatusMessage("Exporting image...");
     try {
@@ -165,6 +171,11 @@ export default function PlaygroundPage() {
     config.background?.grainEnabled,
     screenshotAsset?.metadata?.height,
     screenshotAsset?.metadata?.width,
+    config.templateId,
+    config.variant,
+    config.background?.type,
+    config.fontId,
+    currentTemplate?.name,
   ]);
 
   const handleVariantChange = useCallback(
