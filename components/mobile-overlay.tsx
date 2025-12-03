@@ -1,10 +1,23 @@
 "use client";
 
+import { useEffect } from "react";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { cn } from "@/utils";
 
 export function MobileOverlay() {
   const isMobile = useMobileDetection();
+
+  useEffect(() => {
+    if (isMobile) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobile]);
 
   if (!isMobile) {
     return null;
