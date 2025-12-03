@@ -78,19 +78,19 @@ function getGradientGeometry(context: GradientContext): {
     };
   }
 
-  // Landscape: side-anchored or horizontal
+  // Landscape: diagonal gradient for fluid color transitions
   if (aspectCategory === "landscape") {
     return {
       type: "linear",
-      angle: templateVariant === "left" ? 90 : 270, // Horizontal, adapt to text side
+      angle: 135, // Diagonal from top-left to bottom-right
     };
   }
 
-  // Ultrawide: long-axis linear gradient
+  // Ultrawide: diagonal gradient for fluid color transitions
   if (aspectCategory === "ultrawide") {
     return {
       type: "linear",
-      angle: 0, // Horizontal along long axis
+      angle: 45, // Diagonal from bottom-left to top-right
     };
   }
 
