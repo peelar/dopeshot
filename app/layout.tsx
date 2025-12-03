@@ -69,8 +69,7 @@ const previewImage = "/cover.png";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: "dopeshot",
-  description:
-    "Your product is dope, your screenshots should be too. Transform product screenshots into Twitter-ready graphics in 10 seconds. Free, no login required. Built for indie hackers and developers.",
+  description: "Your product is dope, your screenshots should be too",
   keywords: [
     "dopeshot",
     "social media screenshots",
