@@ -17,7 +17,7 @@ interface AdaptiveScreenshotProps {
   isStatic?: boolean;
 }
 
-function AdaptiveScreenshotComponent({ className }: AdaptiveScreenshotProps) {
+function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveScreenshotProps) {
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
@@ -60,7 +60,7 @@ function AdaptiveScreenshotComponent({ className }: AdaptiveScreenshotProps) {
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <GrainOverlay enabled={showGrainOverlay} />
+      <GrainOverlay enabled={showGrainOverlay} isStatic={isStatic} />
       <div className="relative z-10 h-full w-full">
         <div
           className="flex h-full w-full items-center justify-center"
