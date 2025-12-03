@@ -64,7 +64,7 @@ const fontVariables = [
 ].join(" ");
 
 const siteUrl = "https://dopeshot.vercel.app";
-const previewImage = "/og-preview.png";
+const previewImage = "/cover.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -90,9 +90,9 @@ export const metadata: Metadata = {
     images: [
       {
         url: previewImage,
-        width: 1200,
-        height: 630,
-        alt: "dopeshot editor preview",
+        width: 2816,
+        height: 1584,
+        alt: "dopeshot cover graphic",
       },
     ],
   },
