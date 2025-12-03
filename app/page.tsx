@@ -55,7 +55,7 @@ import { AppHeader } from "@/components/app-header";
 export default function PlaygroundPage() {
   const { theme } = useTheme();
   const [config, setConfig] = useAtom(configAtom);
-  const assets = useAtomValue(assetsAtom);
+  const [assets, setAssets] = useAtom(assetsAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
@@ -82,8 +82,9 @@ export default function PlaygroundPage() {
 
     const randomPreset = getRandomDemoPreset();
     setConfig(randomPreset.config);
+    setAssets([randomPreset.asset]);
     setHasAppliedRandomPreset(true);
-  }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig]);
+  }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig, setAssets]);
 
   const gradientPreferences = useMemo<GradientPreferences>(() => {
     return {
