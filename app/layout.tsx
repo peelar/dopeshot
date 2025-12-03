@@ -68,14 +68,25 @@ const previewImage = "/og-preview.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
-  title: "dopeshot - your product is dope. your screenshots should be too.",
+  title: "dopeshot",
   description:
-    "transform product screenshots into twitter-ready graphics in 10 seconds. free, no login required. built for indie hackers and developers.",
+    "Your product is dope, your screenshots should be too. Transform product screenshots into Twitter-ready graphics in 10 seconds. Free, no login required. Built for indie hackers and developers.",
+  keywords: [
+    "dopeshot",
+    "social media screenshots",
+    "marketing visuals",
+    "twitter card generator",
+    "product launch assets",
+    "indie hacker tools",
+  ],
+  alternates: { canonical: siteUrl },
   openGraph: {
-    title: "dopeshot - make your screenshots look dope",
-    description: "drop a screenshot, get a twitter-ready graphic in 10 seconds. free, no login.",
+    title: "dopeshot",
+    description:
+      "Your product is dope, your screenshots should be too. Transform product screenshots into Twitter-ready graphics in 10 seconds. Free, no login required.",
     url: siteUrl,
     type: "website",
+    siteName: "dopeshot",
     images: [
       {
         url: previewImage,
@@ -87,8 +98,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "dopeshot - make your screenshots look dope",
-    description: "drop a screenshot, get a twitter-ready graphic in 10 seconds",
+    title: "dopeshot",
+    description:
+      "Your product is dope, your screenshots should be too. Drop a screenshot, get a Twitter-ready graphic in 10 seconds.",
     images: [previewImage],
   },
   icons: {
