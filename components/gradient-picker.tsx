@@ -205,6 +205,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   }, [defaultSource, activeSource]);
 
   useEffect(() => {
+    if (activeSource !== "screenshot") return;
     if (!hasScreenshot) return;
     if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
     if (matchesScreenshotGradient) return;
@@ -221,6 +222,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       textColor,
     );
   }, [
+    activeSource,
     background.grainEnabled,
     dynamicGradients,
     hasScreenshot,
