@@ -20,7 +20,7 @@ import {
 } from "@/domain/layout/gradients";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
 // Debounced color input that delays updates while dragging
@@ -88,9 +88,11 @@ interface GradientPickerProps {
 export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const background =
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
+  const hasScreenshot = Boolean(config.assets?.screenshot);
 
   // Generate multi-stop gradients from screenshot colors
   const dynamicGradients = useMemo((): CustomGradient[] => {
@@ -119,6 +121,20 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     return "linear-gradient(to right, #6366f1, #8b5cf6)";
   }, [resolvedGradient]);
 
+  const hasScreenshotGradients = dynamicGradients.length > 0;
+
+  const matchesScreenshotGradient = useMemo(() => {
+    if (!background.customGradient || !hasScreenshotGradients) return false;
+    return dynamicGradients.some((gradient) =>
+      areGradientsEqual(gradient, background.customGradient),
+    );
+  }, [background.customGradient, dynamicGradients, hasScreenshotGradients]);
+
+  const shouldPreferScreenshot = useMemo(
+    () => isAnalyzingColors || matchesScreenshotGradient,
+    [isAnalyzingColors, matchesScreenshotGradient],
+  );
+
   const currentAngle = useMemo(() => {
     if (!resolvedGradient) return 90;
     if (isAdvancedGradient(resolvedGradient)) {
@@ -131,21 +147,41 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   }, [resolvedGradient]);
 
   const defaultSource = useMemo<GradientSource>(() => {
-    if (
+    const isPresetSelection =
       background.type === "gradient" &&
       background.value &&
       background.value !== "custom" &&
-      !background.customGradient
-    ) {
+      !background.customGradient;
+
+    if (isPresetSelection) {
       return "preset";
     }
-    if (dynamicGradients.length > 0) {
+
+    if (shouldPreferScreenshot) {
       return "screenshot";
     }
-    return "custom";
-  }, [background.type, background.value, background.customGradient, dynamicGradients.length]);
 
-  const [activeSource, setActiveSource] = useState<GradientSource>(() => defaultSource);
+    if (background.customGradient) {
+      return "custom";
+    }
+
+    if (hasScreenshotGradients || hasScreenshot) {
+      return "screenshot";
+    }
+
+    return "custom";
+  }, [
+    background.customGradient,
+    background.type,
+    background.value,
+    hasScreenshot,
+    hasScreenshotGradients,
+    shouldPreferScreenshot,
+  ]);
+
+  const [activeSource, setActiveSource] = useState<GradientSource>(() =>
+    hasScreenshot ? "screenshot" : defaultSource,
+  );
   const sourceOverrideRef = useRef(false);
   const lockManualSource = useCallback(() => {
     sourceOverrideRef.current = true;
@@ -168,6 +204,31 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     }
   }, [defaultSource, activeSource]);
 
+  useEffect(() => {
+    if (!hasScreenshot) return;
+    if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
+    if (matchesScreenshotGradient) return;
+    if (sourceOverrideRef.current) return;
+
+    const firstGradient = dynamicGradients[0];
+    if (!firstGradient) return;
+
+    setActiveSource("screenshot");
+    const textColor = getTextColorFromGradient(firstGradient);
+    const grainEnabled = background.grainEnabled ?? true;
+    onChangeAction(
+      { type: "gradient", value: "custom", customGradient: firstGradient, grainEnabled },
+      textColor,
+    );
+  }, [
+    background.grainEnabled,
+    dynamicGradients,
+    hasScreenshot,
+    hasScreenshotGradients,
+    matchesScreenshotGradient,
+    onChangeAction,
+  ]);
+
   const [fineTuneOpen, setFineTuneOpen] = useState(false);
   const currentTextColor = useMemo<ColorToken>(() => {
     if (resolvedGradient) {
@@ -179,7 +240,6 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     return "slate-900";
   }, [background.type, background.value, resolvedGradient]);
 
-  const hasScreenshotGradients = dynamicGradients.length > 0;
   const activePresetId =
     background.type === "gradient" && !background.customGradient ? background.value : undefined;
 
@@ -236,8 +296,14 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     [handleCustomGradientSelect, setActiveSourceWithOverride],
   );
 
+  const screenshotTabDisabled = !hasScreenshotGradients && !isAnalyzingColors && !hasScreenshot;
+
   const gradientTabs = [
-    { id: "screenshot", label: "From Screenshot", disabled: !hasScreenshotGradients },
+    {
+      id: "screenshot",
+      label: "From Screenshot",
+      disabled: screenshotTabDisabled,
+    },
     { id: "custom", label: "Custom" },
     { id: "preset", label: "Presets" },
   ] satisfies { id: GradientSource; label: string; disabled?: boolean }[];
@@ -270,6 +336,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
               activeGradient={background.customGradient}
               disabled={!hasScreenshotGradients}
               onSelect={handleScreenshotSelect}
+              isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
             />
           )}
           {activeSource === "custom" && (
@@ -299,6 +366,7 @@ interface ScreenshotGradientsProps {
   activeGradient?: CustomGradient;
   disabled: boolean;
   onSelect: (gradient: CustomGradient) => void;
+  isLoading?: boolean;
 }
 
 function ScreenshotGradients({
@@ -306,7 +374,19 @@ function ScreenshotGradients({
   activeGradient,
   disabled,
   onSelect,
+  isLoading,
 }: ScreenshotGradientsProps) {
+  if (isLoading) {
+    return (
+      <div
+        className="rounded-2xl border border-dashed border-border/40 bg-background/50 px-3 text-left text-xs text-muted-foreground"
+        aria-busy="true"
+      >
+        <p className="text-left text-[11px] text-muted-foreground/80">Sampling colors…</p>
+      </div>
+    );
+  }
+
   if (!gradients.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border/40 bg-background/50 px-3 py-6 text-center text-xs text-muted-foreground">
