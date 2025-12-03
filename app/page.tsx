@@ -9,6 +9,7 @@ import {
   type ChangeEvent,
   type DragEvent,
 } from "react";
+import { track } from "@vercel/analytics";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { CoverPreview } from "@/components/cover-preview";
@@ -130,6 +131,7 @@ export default function PlaygroundPage() {
       return;
     }
 
+    track("export_button_clicked");
     setIsExporting(true);
     setStatusMessage("Exporting image...");
     try {
