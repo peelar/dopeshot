@@ -19,6 +19,11 @@ const SCREENSHOT_OBJECT_POSITIONS: Record<"left" | "right", string> = {
   left: "0% 0%", // show top-left when text anchors left
   right: "100% 0%", // show top-right when text anchors right
 };
+const SIDE_SCREENSHOT_ZOOM = 1.35;
+const SIDE_SCREENSHOT_TRANSFORM_ORIGINS: Record<"left" | "right", string> = {
+  left: "left top",
+  right: "right top",
+};
 
 const CENTER_SCREENSHOT_GUTTER = 0.07; // Keep inset so rounded corners are visible
 const PEAK_CORNER_RADIUS = "16px";
@@ -152,7 +157,11 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           src={screenshot.url}
           alt="Screenshot"
           className="block h-full w-full object-cover"
-          style={{ objectPosition }}
+          style={{
+            objectPosition,
+            transform: `scale(${SIDE_SCREENSHOT_ZOOM})`,
+            transformOrigin: SIDE_SCREENSHOT_TRANSFORM_ORIGINS[placement],
+          }}
           crossOrigin="anonymous"
         />
       </div>
