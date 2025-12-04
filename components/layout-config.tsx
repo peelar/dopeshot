@@ -254,12 +254,12 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             role="tabpanel"
             id="tabpanel-design"
             aria-labelledby="tab-design"
-            className="space-y-5"
+            className="flex flex-col gap-3"
           >
             {(showHeadlineInput || showSubtitleInput) && (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {showHeadlineInput && (
-                  <div className="space-y-1.5">
+                  <div className="flex flex-col gap-3">
                     <SidebarFieldLabel htmlFor="sidebar-content-title">Headline</SidebarFieldLabel>
                     <input
                       id="sidebar-content-title"
@@ -271,7 +271,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                   </div>
                 )}
                 {showSubtitleInput && (
-                  <div className="space-y-1.5">
+                  <div className="flex flex-col gap-3">
                     <SidebarFieldLabel htmlFor="sidebar-content-subtitle">
                       Subtitle
                     </SidebarFieldLabel>
@@ -289,7 +289,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             )}
 
             {showTypographyControls && (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 <SidebarFieldLabel htmlFor="sidebar-typography">Typography</SidebarFieldLabel>
                 <FontSelector
                   fontId={config.fontId}
@@ -300,7 +300,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               </div>
             )}
 
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <SidebarFieldLabel htmlFor="effects-section">Effects</SidebarFieldLabel>
               <EffectsSection
                 showGlass={outlineControls.softGlass}
@@ -318,7 +318,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               />
             </div>
 
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <Label id="bg-type-label" className="text-sm font-medium text-muted-foreground">
                 Background
               </Label>
@@ -336,7 +336,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               {bgType === "gradient" && <GradientPicker onChangeAction={handleGradientChange} />}
 
               {bgType === "image" && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-3">
                   <AssetDropzone
                     asset={backgroundAsset}
                     onUpload={(file) => onUploadAsset?.(file, "background")}
@@ -356,9 +356,9 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             role="tabpanel"
             id="tabpanel-assets"
             aria-labelledby="tab-assets"
-            className="space-y-4"
+            className="flex flex-col gap-3"
           >
-            <div className="space-y-2">
+            <div className="flex flex-col gap-3">
               <Label className="text-xs text-muted-foreground">Screenshot</Label>
               <AssetDropzone
                 asset={screenshotAsset}
@@ -369,7 +369,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             </div>
 
             {showLogoUpload && (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 <Label className="text-xs text-muted-foreground">Logo</Label>
                 <AssetDropzone
                   asset={logoAsset}
@@ -428,8 +428,8 @@ const EffectsSection = ({
   onToggleShadow,
 }: EffectsSectionProps) => {
   return (
-    <section aria-label="Effects" className="space-y-2">
-      <div className="space-y-2">
+    <section aria-label="Effects" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {showGlass && (
           <EffectToggleRow
             label="Glass"
