@@ -44,15 +44,21 @@ export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProp
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [hasSeenFull, setHasSeenFull] = useState(false);
 
-  if (!template || template.variants.length <= 1) {
+  if (!template) {
     return null;
   }
 
   const variants = template.variants;
+  const hasMultipleVariants = variants.length > 1;
   const activeVariant = variants.includes(config.variant) ? config.variant : variants[0];
   const backgroundType = config.background?.type;
   const isImageBackground = backgroundType === "image";
   const resolvedPattern = resolvePatternChoice(config, screenshotAsset?.colorPalette);
+  const shouldShowPatterns = !isImageBackground;
+
+  if (!hasMultipleVariants && !shouldShowPatterns) {
+    return null;
+  }
 
   const displayVariants = useMemo(() => {
     return variants
@@ -131,11 +137,12 @@ export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProp
   return (
     <div className="w-full space-y-1.5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="space-y-1.5 sm:w-auto sm:min-w-0 sm:space-y-1">
-          <p className="ml-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Layouts
-          </p>
-          <div className="flex flex-wrap items-center gap-2 sm:inline-flex sm:w-auto sm:rounded-full sm:bg-muted/20 sm:px-2 sm:py-2 sm:ring-1 sm:ring-border/30">
+        {hasMultipleVariants && (
+          <div className="space-y-1.5 sm:w-auto sm:min-w-0 sm:space-y-1">
+            <p className="ml-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Layouts
+            </p>
+            <div className="flex flex-wrap items-center gap-2 sm:inline-flex sm:w-auto sm:rounded-full sm:bg-muted/20 sm:px-2 sm:py-2 sm:ring-1 sm:ring-border/30">
             <div
               className="hidden flex-wrap items-center gap-2 sm:flex"
               role="radiogroup"
@@ -191,65 +198,64 @@ export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProp
             </div>
           </div>
         </div>
+        )}
 
-        <div className="space-y-1.5 text-right sm:w-auto sm:min-w-0 sm:space-y-1">
-          <p className="mr-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-            Style
-          </p>
-          <div className="flex flex-wrap items-center justify-start gap-2 sm:inline-flex sm:w-auto sm:justify-end sm:rounded-full sm:bg-muted/20 sm:px-2 sm:py-2 sm:ring-1 sm:ring-border/30">
-            {!isImageBackground && (
-              <>
-                <div
-                  className="hidden flex-wrap items-center gap-2 sm:flex"
-                  role="radiogroup"
-                  aria-label="Pattern"
+        {shouldShowPatterns && (
+          <div className="space-y-1.5 text-right sm:w-auto sm:min-w-0 sm:space-y-1">
+            <p className="mr-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
+              Style
+            </p>
+            <div className="flex flex-wrap items-center justify-start gap-2 sm:inline-flex sm:w-auto sm:justify-end sm:rounded-full sm:bg-muted/20 sm:px-2 sm:py-2 sm:ring-1 sm:ring-border/30">
+              <div
+                className="hidden flex-wrap items-center gap-2 sm:flex"
+                role="radiogroup"
+                aria-label="Pattern"
+              >
+                {PATTERN_OPTIONS.map((id) => {
+                  const isActive = resolvedPattern === id;
+                  return (
+                    <Button
+                      key={id}
+                      variant="ghost"
+                      size="sm"
+                      role="radio"
+                      aria-checked={isActive}
+                      aria-label={`Pattern ${id}`}
+                      className={cn(
+                        "rounded-full border border-transparent px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors",
+                        "hover:border-border hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
+                        isActive && "border-primary/40 bg-primary/10 text-primary shadow-sm",
+                      )}
+                      onClick={() => handlePatternSelect(id)}
+                    >
+                      {getPatternLabel(id)}
+                    </Button>
+                  );
+                })}
+              </div>
+
+              <div className="w-full sm:hidden">
+                <Select
+                  value={resolvedPattern}
+                  onValueChange={(value) =>
+                    handlePatternSelect(value as PatternOption)
+                  }
                 >
-                  {PATTERN_OPTIONS.map((id) => {
-                    const isActive = resolvedPattern === id;
-                    return (
-                      <Button
-                        key={id}
-                        variant="ghost"
-                        size="sm"
-                        role="radio"
-                        aria-checked={isActive}
-                        aria-label={`Pattern ${id}`}
-                        className={cn(
-                          "rounded-full border border-transparent px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors",
-                          "hover:border-border hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
-                          isActive && "border-primary/40 bg-primary/10 text-primary shadow-sm",
-                        )}
-                        onClick={() => handlePatternSelect(id)}
-                      >
+                  <SelectTrigger className="h-9 w-fit min-w-[112px] flex-row-reverse justify-between rounded-full border border-border bg-background/70 px-3 text-right text-xs font-semibold">
+                    <SelectValue placeholder="Pattern" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PATTERN_OPTIONS.map((id) => (
+                      <SelectItem key={id} value={id} className="text-sm capitalize">
                         {getPatternLabel(id)}
-                      </Button>
-                    );
-                  })}
-                </div>
-
-                <div className="w-full sm:hidden">
-                  <Select
-                    value={resolvedPattern}
-                    onValueChange={(value) =>
-                      handlePatternSelect(value as PatternOption)
-                    }
-                  >
-                    <SelectTrigger className="h-9 w-fit min-w-[112px] flex-row-reverse justify-between rounded-full border border-border bg-background/70 px-3 text-right text-xs font-semibold">
-                      <SelectValue placeholder="Pattern" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {PATTERN_OPTIONS.map((id) => (
-                        <SelectItem key={id} value={id} className="text-sm capitalize">
-                          {getPatternLabel(id)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </>
-            )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
