@@ -34,7 +34,7 @@ export function PlaygroundWorkspace({
   showFocusHint,
 }: PlaygroundWorkspaceProps) {
   return (
-    <div className={cn("flex flex-1", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
+    <div className={cn("flex flex-1 min-h-0", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
       <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
           {showLayoutToggle ? <LayoutVariantToggle onVariantChange={onVariantChange} /> : null}
@@ -77,7 +77,7 @@ export function PlaygroundWorkspace({
         </div>
       </div>
 
-      <div className="hidden w-80 border-l border-border bg-background sm:block">
+      <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
         <LayoutConfigPanel onUploadAsset={onUploadAsset} />
       </div>
     </div>

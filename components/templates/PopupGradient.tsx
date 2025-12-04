@@ -7,7 +7,7 @@ import { tokenToTextColorClass } from "@/components/templates/shared/color-utils
 import { getBackgroundStyle } from "@/components/templates/shared/background-style";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getShadowValue } from "@/components/templates/shared/shadows";
-import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { PatternOverlay } from "@/components/templates/shared/PatternOverlay";
 import { configAtom, assetsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 
@@ -59,7 +59,6 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
 
   // Memoize background style computation
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
-  const showGrainOverlay = config.background?.grainEnabled ?? true;
 
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
@@ -179,7 +178,12 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         isolation: "isolate",
       }}
     >
-      <GrainOverlay enabled={showGrainOverlay} isStatic={isStatic} />
+      <PatternOverlay
+        config={config}
+        assets={assets}
+        assetMap={assetMap}
+        screenshotAsset={screenshot}
+      />
       <div className="relative z-10 h-full w-full">
         <div
           className={cn(

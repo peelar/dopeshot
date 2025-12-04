@@ -322,16 +322,16 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border/60 bg-muted/30">
-        <div className="space-y-3 px-4 pb-3 pt-4">
-          <p className="text-sm font-medium text-muted-foreground">Gradient</p>
+        <div className="space-y-3 px-3 pb-3 pt-3">
           <SegmentedControl
             value={activeSource}
             options={gradientTabs}
             onChange={handleTabChange}
             ariaLabel="Select gradient source"
+            className="text-[11px]"
+            buttonClassName="px-2 py-1 text-[11px]"
           />
-        </div>
-        <div className="px-4 pb-4">
+
           {activeSource === "screenshot" && (
             <ScreenshotGradients
               gradients={dynamicGradients}

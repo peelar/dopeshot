@@ -75,10 +75,13 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
                 text: textColor,
               },
               background: {
+                ...(currentConfig.background ?? { type: "gradient", value: "custom" }),
                 type: "gradient",
                 value: "custom",
                 customGradient: fallbackGradient,
                 grainEnabled: currentConfig.background?.grainEnabled ?? true,
+                patternId: currentConfig.background?.patternId,
+                patternMode: currentConfig.background?.patternMode,
               },
             };
           });

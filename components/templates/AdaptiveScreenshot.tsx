@@ -8,7 +8,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
 import { getShadowValue } from "@/components/templates/shared/shadows";
-import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { PatternOverlay } from "@/components/templates/shared/PatternOverlay";
 import { configAtom, assetsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
@@ -27,7 +27,6 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
   }, [assets]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
-  const showGrainOverlay = config.background?.grainEnabled ?? true;
   const screenshotTreatment = getScreenshotTreatment(config);
   const frameAppearance = useMemo(
     () =>
@@ -60,7 +59,12 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <GrainOverlay enabled={showGrainOverlay} isStatic={isStatic} />
+      <PatternOverlay
+        config={config}
+        assets={assets}
+        assetMap={assetMap}
+        screenshotAsset={screenshot}
+      />
       <div className="relative z-10 h-full w-full">
         <div
           className="flex h-full w-full items-center justify-center"
@@ -81,13 +85,13 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
               <img
                 src={screenshot.url}
                 alt="Screenshot"
-                className="h-full w-full object-cover"
-                style={{
-                  borderRadius: frameAppearance.contentRadius,
-                  objectPosition: "top",
-                }}
-                crossOrigin="anonymous"
-              />
+              className="h-full w-full object-cover"
+              style={{
+                borderRadius: frameAppearance.contentRadius,
+                objectPosition: "top",
+              }}
+              crossOrigin="anonymous"
+            />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-base font-semibold text-white/70">
                 Drop a screenshot to get started
