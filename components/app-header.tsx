@@ -49,15 +49,14 @@ export function AppHeader({
           type="button"
           size="sm"
           variant="outline"
-          className="flex items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40"
+          className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
           onClick={onUploadClick}
           disabled={isProcessingUpload}
           aria-label={hasCustomScreenshot ? "Change screenshot" : "Upload your screenshot"}
           aria-busy={isProcessingUpload}
         >
           <UploadIcon className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
-          <span className="hidden sm:inline">{uploadButtonLabel}</span>
-          <span className="sm:hidden">{uploadButtonShort}</span>
+          <span>{uploadButtonLabel}</span>
         </Button>
         {hasScreenshot ? (
           <Button

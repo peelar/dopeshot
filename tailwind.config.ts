@@ -69,6 +69,30 @@ const config: Config = {
         technical: ["var(--font-technical)", "system-ui", "sans-serif"],
         premium: ["var(--font-premium)", "system-ui", "sans-serif"],
       },
+      keyframes: {
+        "sheet-overlay-show": {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        "sheet-overlay-hide": {
+          from: { opacity: "1" },
+          to: { opacity: "0" },
+        },
+        "sheet-slide-up": {
+          from: { transform: "translateY(12%)", opacity: "0" },
+          to: { transform: "translateY(0)", opacity: "1" },
+        },
+        "sheet-slide-down": {
+          from: { transform: "translateY(0)", opacity: "1" },
+          to: { transform: "translateY(12%)", opacity: "0" },
+        },
+      },
+      animation: {
+        "sheet-overlay-show": "sheet-overlay-show 180ms ease",
+        "sheet-overlay-hide": "sheet-overlay-hide 220ms ease",
+        "sheet-slide-up": "sheet-slide-up 260ms cubic-bezier(0.33, 1, 0.68, 1)",
+        "sheet-slide-down": "sheet-slide-down 220ms cubic-bezier(0.33, 1, 0.68, 1)",
+      },
     },
   },
   plugins: [],
