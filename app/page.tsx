@@ -52,7 +52,16 @@ import { useFocusHint } from "@/hooks/use-focus-hint";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { getTemplateById } from "@/domain/layout/templates";
 import { AppHeader } from "@/components/app-header";
-import { MobileOverlay } from "@/components/mobile-overlay";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ImageUp, SlidersHorizontal } from "lucide-react";
 
 export default function PlaygroundPage() {
   const { theme } = useTheme();
@@ -75,7 +84,9 @@ export default function PlaygroundPage() {
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const dragCounterRef = useRef(0);
+  const isMobile = useMobileDetection();
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
+  const [isConfigDrawerOpen, setIsConfigDrawerOpen] = useState(false);
 
   // Apply random demo preset on client mount (after hydration)
   // This sets text content and template - gradient comes from color analysis below
@@ -87,6 +98,25 @@ export default function PlaygroundPage() {
     setAssets([randomPreset.asset]);
     setHasAppliedRandomPreset(true);
   }, [hasAppliedRandomPreset, hasCustomScreenshot, setConfig, setAssets]);
+
+  useEffect(() => {
+    if (!isMobile && isConfigDrawerOpen) {
+      setIsConfigDrawerOpen(false);
+    }
+  }, [isConfigDrawerOpen, isMobile]);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const previousOverflow = document.body.style.overflow;
+    if (isConfigDrawerOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = previousOverflow;
+    }
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [isConfigDrawerOpen, isMobile]);
 
   const gradientPreferences = useMemo<GradientPreferences>(() => {
     return {
@@ -296,7 +326,6 @@ export default function PlaygroundPage() {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      <MobileOverlay />
       {isDragging ? (
         <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/15">
           <div className="rounded-2xl border-4 border-dashed border-blue-400 bg-white/80 px-10 py-8 text-center shadow-2xl">
@@ -315,10 +344,10 @@ export default function PlaygroundPage() {
         isExporting={isExporting}
       />
 
-      <div className="flex flex-1 flex-col gap-4 px-4 pb-10 pt-4 sm:px-8">
+      <div className="flex flex-1 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10">
         <TemplateSelector />
 
-        <div className="flex flex-1 overflow-hidden">
+        <div className={cn("flex flex-1", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
           <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
             <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
               {showLayoutToggle ? (
@@ -363,11 +392,54 @@ export default function PlaygroundPage() {
             </div>
           </div>
 
-          <div className="w-80 border-l border-border bg-background">
+          <div className="hidden w-80 border-l border-border bg-background sm:block">
             <LayoutConfigPanel onUploadAsset={handleFileProcess} />
           </div>
         </div>
       </div>
+
+      {isMobile ? (
+        <div className="fixed bottom-0 left-0 z-40 flex w-full items-stretch divide-x divide-border/70 rounded-none border-t border-border/70 bg-muted/80 px-2 py-2 shadow-[0_-6px_28px_-14px_rgb(0,0,0,0.35)] backdrop-blur sm:hidden">
+          <Sheet open={isConfigDrawerOpen} onOpenChange={setIsConfigDrawerOpen}>
+            <SheetTrigger asChild>
+              <button
+                type="button"
+                className="flex basis-2/3 items-center gap-3 rounded-none bg-foreground px-4 py-3 text-left text-sm font-semibold text-background transition hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background first:rounded-l-md last:rounded-none"
+              >
+                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-background/15 text-background shadow-inner shadow-black/20">
+                  <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <span className="text-base font-semibold">Design</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent
+              side="bottom"
+              className="h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden"
+            >
+              <div className="mx-auto h-1.5 w-14 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+              <SheetHeader className="mt-4 text-left">
+                <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
+                <SheetDescription className="text-xs text-muted-foreground">
+                  Tune colors, text, and framing.
+                </SheetDescription>
+              </SheetHeader>
+              <div className="mt-4 h-[calc(100%-100px)] overflow-y-auto">
+                <LayoutConfigPanel onUploadAsset={handleFileProcess} />
+              </div>
+            </SheetContent>
+          </Sheet>
+
+          <button
+            type="button"
+            onClick={openFilePicker}
+            disabled={isProcessingUpload}
+            className="flex basis-1/3 items-center justify-center gap-2 rounded-none bg-background/95 px-3.5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-60 last:rounded-r-md"
+          >
+            <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
+            <span className="text-base font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
+          </button>
+        </div>
+      ) : null}
 
       {hasScreenshot ? (
         <div
