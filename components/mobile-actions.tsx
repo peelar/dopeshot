@@ -34,7 +34,7 @@ export function MobileActions({
           <SheetTrigger asChild>
             <button
               type="button"
-              className="flex basis-2/3 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 py-2.5 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
+              className="flex h-12 basis-2/3 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
             >
               <span className="flex h-8 w-8 items-center justify-center rounded-md bg-background/15 text-background">
                 <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -63,7 +63,7 @@ export function MobileActions({
           type="button"
           onClick={onUploadClick}
           disabled={isProcessingUpload}
-          className="flex basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 py-2.5 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
+          className="flex h-12 basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
         >
           <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
           <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
