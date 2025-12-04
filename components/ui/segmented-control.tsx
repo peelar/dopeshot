@@ -12,9 +12,17 @@ interface SegmentedControlProps {
   onChange: (value: string) => void;
   className?: string;
   ariaLabel?: string;
+  buttonClassName?: string;
 }
 
-export function SegmentedControl({ value, options, onChange, className, ariaLabel }: SegmentedControlProps) {
+export function SegmentedControl({
+  value,
+  options,
+  onChange,
+  className,
+  ariaLabel,
+  buttonClassName,
+}: SegmentedControlProps) {
   return (
     <div
       role="tablist"
@@ -39,11 +47,12 @@ export function SegmentedControl({ value, options, onChange, className, ariaLabe
               onChange(option.id);
             }}
             className={cn(
-              "flex-1 rounded-md px-3 py-1.5 text-xs font-semibold transition",
+              "flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition",
               isActive
                 ? "bg-foreground text-background shadow-sm"
                 : "text-muted-foreground hover:text-foreground",
               option.disabled && "cursor-not-allowed opacity-40",
+              buttonClassName,
             )}
             disabled={option.disabled}
           >

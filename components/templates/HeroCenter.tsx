@@ -12,7 +12,7 @@ import {
   getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
-import { GrainOverlay } from "@/components/templates/shared/GrainOverlay";
+import { PatternOverlay } from "@/components/templates/shared/PatternOverlay";
 import { configAtom, assetsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 
@@ -33,7 +33,6 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
   }, [assets]);
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
-  const showGrainOverlay = config.background?.grainEnabled ?? true;
   const fontSize = getFontSizeById(config.fontSize);
   const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
   const textColorClass = tokenToTextColorClass(config.colors.text);
@@ -198,7 +197,12 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <GrainOverlay enabled={showGrainOverlay} isStatic={isStatic} />
+      <PatternOverlay
+        config={config}
+        assets={assets}
+        assetMap={assetMap}
+        screenshotAsset={screenshot}
+      />
       <div className="relative z-10 h-full w-full">
         <div
           className={cn(

@@ -36,8 +36,9 @@ status: TODO
 
 ## Proposed Solution
 - **Control placement:** Add a `Pattern` row inside the Background section of the Design sidebar.
-- **Options (radio chips with thumbnails):** `Auto` (default), `None`, `Grain`, `Fade` (diagonal), `Geo` (dots/triangles), `Rain` (digital rain vibe).
-- **Auto behavior:** Chooses a pattern based on gradient contrast, colorfulness, and layout (e.g., grain for flat gradients, fade for wide layouts, geo when high chroma, rain when dark/high-contrast). Auto re-evaluates on upload/palette change unless the user picks a specific pattern.
+- **MVP options (radio chips with thumbnails):** `Auto` (default), `None`, `Grain`, `Glow` (radial light bloom), `Grid` (diagonal cross grid).
+- **Auto behavior:** Chooses a pattern based on gradient contrast, colorfulness, and layout (e.g., grain for flat/neutral gradients, glow when gradients are calm or need depth, grid when layouts are graphic/minimal or need structure). Auto re-evaluates on upload/palette change unless the user picks a specific pattern.
+- **Dynamic Glow:** Glow uses palette-derived colors (accent + secondary + a softened hue) to render stacked radial gradients anchored behind the screenshot (bottom-center bias). See example below. Lightness/chroma are adjusted to stay readable and avoid washing out text.
 - **Interaction with Looks:** Looks can set a pattern; if so, show a subtle banner “Applied via Look: Beach Pop · Reset” near Background. User overrides switch the state to `Custom`.
 - **Persistence:** Pattern choice stored in layout/config state; survives template/layout switches and refresh.
 
@@ -52,10 +53,50 @@ status: TODO
 
 ## UX Notes & Copy
 - Label: `Pattern`.
-- Chips text: `Auto`, `None`, `Grain`, `Fade`, `Geo`, `Rain`.
+- Chips text: `Auto`, `None`, `Grain`, `Glow`, `Grid`.
 - Helper text (muted, 12px): “Patterns sit on top of the gradient.”
 - Tooltip for Auto: “Picks the best texture for your gradient.”
 - Reset link when a Look applied: “Applied via Look · Reset”.
+
+### Glow example (palette-driven)
+Use palette-derived accent/secondary values in place of the hardcoded RGBA below. Anchor the glow low on the canvas so it sits behind the screenshot.
+
+```tsx
+<div className="min-h-screen w-full bg-white relative">
+  {/* Glow / Morning Haze */}
+  <div
+    className="absolute inset-0 z-0"
+    style={{
+      backgroundImage: `
+        radial-gradient(circle at 50% 100%, rgba(253, 224, 71, 0.4) 0%, transparent 60%),
+        radial-gradient(circle at 50% 100%, rgba(251, 191, 36, 0.4) 0%, transparent 70%),
+        radial-gradient(circle at 50% 100%, rgba(244, 114, 182, 0.5) 0%, transparent 80%)
+      `,
+    }}
+  />
+  {/* Your Content/Components */}
+</div>
+```
+
+### Grid example (diagonal cross)
+Use palette-neutral strokes (or a muted palette tone) for the grid lines; keep line opacity low to avoid overpowering text.
+
+```tsx
+<div className="min-h-screen w-full bg-white relative">
+  {/* Diagonal Cross Grid Background */}
+  <div
+    className="absolute inset-0"
+    style={{
+      backgroundImage: `
+        linear-gradient(45deg, transparent 49%, #e5e7eb 49%, #e5e7eb 51%, transparent 51%),
+        linear-gradient(-45deg, transparent 49%, #e5e7eb 49%, #e5e7eb 51%, transparent 51%)
+      `,
+      backgroundSize: "40px 40px",
+    }}
+  />
+  {/* Your Content/Components */}
+</div>
+```
 
 ## Success Metrics
 - ≥50% of sessions leave pattern on `Auto`.

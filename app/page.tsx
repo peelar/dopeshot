@@ -67,7 +67,7 @@ export default function PlaygroundPage() {
 
   return (
     <main
-      className="relative flex min-h-screen flex-col bg-background text-foreground"
+      className="relative flex h-screen flex-col overflow-hidden bg-background text-foreground"
       onDragEnter={handleDragEnter}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
@@ -84,7 +84,7 @@ export default function PlaygroundPage() {
         isExporting={isExporting}
       />
 
-      <div className="flex flex-1 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10">
+      <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10 overflow-hidden">
         <TemplateSelector />
 
         <PlaygroundWorkspace

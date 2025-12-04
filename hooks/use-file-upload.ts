@@ -88,7 +88,9 @@ export function useFileUpload({
             newConfig.background = {
               type: "image",
               value: asset.id,
-              grainEnabled,
+              grainEnabled: false,
+              patternMode: "manual",
+              patternId: "none",
             };
           }
 
@@ -101,6 +103,7 @@ export function useFileUpload({
                 type: "solid",
                 value: "slate-100",
                 grainEnabled,
+                patternMode: "auto",
               },
             };
           }
