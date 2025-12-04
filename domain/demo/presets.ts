@@ -38,6 +38,7 @@ const DEMO_PRESETS: DemoPreset[] = DEMO_TEXTS.map((text, index) => ({
       type: "gradient",
       value: "custom",
       grainEnabled: true,
+      patternMode: "auto",
     },
     assets: {
       screenshot: "placeholder-screenshot",

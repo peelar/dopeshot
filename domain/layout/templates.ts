@@ -72,6 +72,7 @@ export const TEMPLATES: Template[] = [
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
         grainEnabled: true,
+        patternMode: "auto",
       },
       assets: {
         screenshot: undefined,
@@ -131,6 +132,7 @@ export const TEMPLATES: Template[] = [
         type: "gradient",
         value: "cotton-candy",
         grainEnabled: true,
+        patternMode: "auto",
       },
       assets: {
         screenshot: undefined,
@@ -190,6 +192,7 @@ export const TEMPLATES: Template[] = [
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
         grainEnabled: true,
+        patternMode: "auto",
       },
       assets: {
         screenshot: undefined,

@@ -43,7 +43,6 @@ export function FontSelector({
 
   return (
     <div className="space-y-2">
-      <Label className="text-sm font-medium text-muted-foreground">Typography</Label>
       <div className="flex gap-2">
         {/* Font Select - 3/4 width */}
         <div className="flex-[3]">
@@ -67,9 +66,7 @@ export function FontSelector({
                     >
                       {font.alias}
                     </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {font.fontName}
-                    </span>
+                    <span className="text-[10px] text-muted-foreground">{font.fontName}</span>
                   </div>
                 </SelectItem>
               ))}
@@ -85,19 +82,17 @@ export function FontSelector({
               onClick={handleSizeDecrease}
               disabled={currentSizeIndex === 0}
               aria-label="Decrease font size"
-            className="flex h-full w-7 items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
+              className="flex h-full w-7 items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
             >
               <Minus className="h-3 w-3" />
             </button>
-            <span className="flex-1 text-center text-xs font-medium">
-              {currentSize.label}
-            </span>
+            <span className="flex-1 text-center text-xs font-medium">{currentSize.label}</span>
             <button
               type="button"
               onClick={handleSizeIncrease}
               disabled={currentSizeIndex === FONT_SIZES.length - 1}
               aria-label="Increase font size"
-            className="flex h-full w-7 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
+              className="flex h-full w-7 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
             >
               <Plus className="h-3 w-3" />
             </button>
