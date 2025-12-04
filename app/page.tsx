@@ -399,45 +399,47 @@ export default function PlaygroundPage() {
       </div>
 
       {isMobile ? (
-        <div className="fixed bottom-0 left-0 z-40 flex w-full items-stretch divide-x divide-border/70 rounded-none border-t border-border/70 bg-muted/80 px-2 py-2 shadow-[0_-6px_28px_-14px_rgb(0,0,0,0.35)] backdrop-blur sm:hidden">
-          <Sheet open={isConfigDrawerOpen} onOpenChange={setIsConfigDrawerOpen}>
-            <SheetTrigger asChild>
-              <button
-                type="button"
-                className="flex basis-2/3 items-center gap-3 rounded-none bg-foreground px-4 py-3 text-left text-sm font-semibold text-background transition hover:bg-foreground/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background first:rounded-l-md last:rounded-none"
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
+          <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
+            <Sheet open={isConfigDrawerOpen} onOpenChange={setIsConfigDrawerOpen}>
+              <SheetTrigger asChild>
+                <button
+                  type="button"
+                className="flex basis-2/3 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 py-2.5 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
               >
-                <span className="flex h-9 w-9 items-center justify-center rounded-md bg-background/15 text-background shadow-inner shadow-black/20">
-                  <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-                </span>
-                <span className="text-base font-semibold">Design</span>
-              </button>
-            </SheetTrigger>
-            <SheetContent
-              side="bottom"
-              className="h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden"
-            >
-              <div className="mx-auto h-1.5 w-14 rounded-full bg-muted-foreground/30" aria-hidden="true" />
-              <SheetHeader className="mt-4 text-left">
-                <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
-                <SheetDescription className="text-xs text-muted-foreground">
-                  Tune colors, text, and framing.
-                </SheetDescription>
-              </SheetHeader>
-              <div className="mt-4 h-[calc(100%-100px)] overflow-y-auto">
-                <LayoutConfigPanel onUploadAsset={handleFileProcess} />
-              </div>
-            </SheetContent>
-          </Sheet>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-md bg-background/15 text-background">
+                    <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="text-sm font-semibold">Design</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden"
+              >
+                <div className="mx-auto h-1.5 w-14 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+                <SheetHeader className="mt-4 text-left">
+                  <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
+                  <SheetDescription className="text-xs text-muted-foreground">
+                    Tune colors, text, and framing.
+                  </SheetDescription>
+                </SheetHeader>
+                <div className="mt-4 h-[calc(100%-100px)] overflow-y-auto">
+                  <LayoutConfigPanel onUploadAsset={handleFileProcess} />
+                </div>
+              </SheetContent>
+            </Sheet>
 
-          <button
+            <button
             type="button"
             onClick={openFilePicker}
             disabled={isProcessingUpload}
-            className="flex basis-1/3 items-center justify-center gap-2 rounded-none bg-background/95 px-3.5 py-3 text-sm font-semibold text-foreground transition hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-60 last:rounded-r-md"
-          >
-            <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
-            <span className="text-base font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
-          </button>
+              className="flex basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 py-2.5 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
+            >
+              <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
+              <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
+            </button>
+          </div>
         </div>
       ) : null}
 
