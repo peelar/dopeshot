@@ -18,6 +18,9 @@ export type ColorToken =
   | "violet-500";
 
 export type BackgroundType = "gradient" | "image" | "solid";
+export type PatternId = "grain" | "glow" | "grid";
+export type PatternChoice = PatternId | "none";
+export type PatternMode = "auto" | "manual";
 
 export type ShadowIntensity = "low" | "medium" | "high";
 
@@ -65,7 +68,9 @@ export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken
   customGradient?: CustomGradient; // for custom/dynamic gradients
-  grainEnabled?: boolean; // enables grain overlay on gradient backgrounds
+  grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
+  patternId?: PatternChoice; // explicit pattern selection
+  patternMode?: PatternMode; // auto or manual selection
 };
 
 // Layout configuration - simple data structure

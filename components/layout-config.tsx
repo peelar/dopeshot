@@ -5,6 +5,7 @@ import {
   useState,
   type ChangeEvent,
   useEffect,
+  useMemo,
   useCallback,
   type ReactNode,
   type CSSProperties,
@@ -84,7 +85,6 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const showOutlineSection =
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
   const showLogoUpload = templateCapabilities?.logo !== "hidden";
-  const grainEnabled = config.background?.grainEnabled ?? true;
 
   // Local state for background tab selection (default to current config type or gradient)
   const [bgType, setBgType] = useState<"gradient" | "image">(
@@ -105,8 +105,9 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
       setConfig((currentConfig) => {
-        const grainEnabled =
-          background.grainEnabled ?? currentConfig.background?.grainEnabled ?? true;
+        const currentBackground =
+          currentConfig.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
+        const grainEnabled = background.grainEnabled ?? currentBackground.grainEnabled ?? true;
         return {
           ...currentConfig,
           colors: {
@@ -114,25 +115,11 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             text: textColor,
           },
           background: {
+            ...currentBackground,
             ...background,
             grainEnabled,
-          },
-        };
-      });
-    },
-    [setConfig],
-  );
-
-  const handleGrainToggle = useCallback(
-    (enabled: boolean) => {
-      setConfig((currentConfig) => {
-        const fallbackBackground =
-          currentConfig.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
-        return {
-          ...currentConfig,
-          background: {
-            ...fallbackBackground,
-            grainEnabled: enabled,
+            patternId: background.patternId ?? currentBackground.patternId,
+            patternMode: background.patternMode ?? currentBackground.patternMode,
           },
         };
       });
@@ -217,7 +204,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   }, [setConfig]);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col overflow-y-auto px-4 py-4">
       {/* Tab Header */}
       <div
         role="tablist"
@@ -267,12 +254,12 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             role="tabpanel"
             id="tabpanel-design"
             aria-labelledby="tab-design"
-            className="space-y-6"
+            className="flex flex-col gap-3"
           >
             {(showHeadlineInput || showSubtitleInput) && (
-              <div className="space-y-3">
+              <div className="flex flex-col gap-3">
                 {showHeadlineInput && (
-                  <div className="space-y-1.5">
+                  <div className="flex flex-col gap-3">
                     <SidebarFieldLabel htmlFor="sidebar-content-title">Headline</SidebarFieldLabel>
                     <input
                       id="sidebar-content-title"
@@ -284,7 +271,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                   </div>
                 )}
                 {showSubtitleInput && (
-                  <div className="space-y-1.5">
+                  <div className="flex flex-col gap-3">
                     <SidebarFieldLabel htmlFor="sidebar-content-subtitle">
                       Subtitle
                     </SidebarFieldLabel>
@@ -302,33 +289,36 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             )}
 
             {showTypographyControls && (
-              <FontSelector
-                fontId={config.fontId}
-                fontSize={config.fontSize}
-                onFontChangeAction={handleFontChange}
-                onSizeChangeAction={handleFontSizeChange}
-              />
+              <div className="flex flex-col gap-3">
+                <SidebarFieldLabel htmlFor="sidebar-typography">Typography</SidebarFieldLabel>
+                <FontSelector
+                  fontId={config.fontId}
+                  fontSize={config.fontSize}
+                  onFontChangeAction={handleFontChange}
+                  onSizeChangeAction={handleFontSizeChange}
+                />
+              </div>
             )}
 
-            <EffectsSection
-              showGlass={outlineControls.softGlass}
-              showCorners={outlineControls.shape}
-              showShadow={outlineControls.shadow}
-              glassEnabled={
-                (config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) ===
-                "soft-glass"
-              }
-              cornersRounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
-              shadowEnabled={config.screenshotFrame?.shadowEnabled ?? true}
-              grainEnabled={grainEnabled}
-              onToggleGlass={toggleSoftGlass}
-              onToggleCorners={handleShapeToggle}
-              onToggleShadow={toggleFrameShadow}
-              onToggleGrain={handleGrainToggle}
-            />
+            <div className="flex flex-col gap-3">
+              <SidebarFieldLabel htmlFor="effects-section">Effects</SidebarFieldLabel>
+              <EffectsSection
+                showGlass={outlineControls.softGlass}
+                showCorners={outlineControls.shape}
+                showShadow={outlineControls.shadow}
+                glassEnabled={
+                  (config.screenshotFrame?.preset || DEFAULT_SCREENSHOT_TREATMENT.preset) ===
+                  "soft-glass"
+                }
+                cornersRounded={(config.screenshotFrame?.shape ?? "rounded") === "rounded"}
+                shadowEnabled={config.screenshotFrame?.shadowEnabled ?? true}
+                onToggleGlass={toggleSoftGlass}
+                onToggleCorners={handleShapeToggle}
+                onToggleShadow={toggleFrameShadow}
+              />
+            </div>
 
-            {/* Background Selection */}
-            <div className="space-y-3">
+            <div className="flex flex-col gap-3">
               <Label id="bg-type-label" className="text-sm font-medium text-muted-foreground">
                 Background
               </Label>
@@ -346,20 +336,17 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               {bgType === "gradient" && <GradientPicker onChangeAction={handleGradientChange} />}
 
               {bgType === "image" && (
-                <div className="space-y-2">
+                <div className="flex flex-col gap-3">
                   <AssetDropzone
                     asset={backgroundAsset}
                     onUpload={(file) => onUploadAsset?.(file, "background")}
                     disabled={!onUploadAsset}
                     label="Upload Background"
                   />
-                  {config.background?.type === "image" && !backgroundAsset && (
-                    <p className="text-xs text-yellow-600">
-                      Background image not found. Please upload again.
-                    </p>
-                  )}
                 </div>
               )}
+
+              {/* Pattern selection lives in the top Style row now */}
             </div>
           </div>
         )}
@@ -369,9 +356,9 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             role="tabpanel"
             id="tabpanel-assets"
             aria-labelledby="tab-assets"
-            className="space-y-4"
+            className="flex flex-col gap-3"
           >
-            <div className="space-y-2">
+            <div className="flex flex-col gap-3">
               <Label className="text-xs text-muted-foreground">Screenshot</Label>
               <AssetDropzone
                 asset={screenshotAsset}
@@ -382,7 +369,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             </div>
 
             {showLogoUpload && (
-              <div className="space-y-2">
+              <div className="flex flex-col gap-3">
                 <Label className="text-xs text-muted-foreground">Logo</Label>
                 <AssetDropzone
                   asset={logoAsset}
@@ -407,14 +394,12 @@ interface EffectsSectionProps {
   glassEnabled: boolean;
   cornersRounded: boolean;
   shadowEnabled: boolean;
-  grainEnabled: boolean;
   onToggleGlass: () => void;
   onToggleCorners: () => void;
   onToggleShadow: () => void;
-  onToggleGrain: (enabled: boolean) => void;
 }
 
-type EffectToggleVariant = "glass" | "corners" | "shadow" | "grain";
+type EffectToggleVariant = "glass" | "corners" | "shadow";
 
 interface EffectToggleRowProps {
   label: string;
@@ -438,17 +423,13 @@ const EffectsSection = ({
   glassEnabled,
   cornersRounded,
   shadowEnabled,
-  grainEnabled,
   onToggleGlass,
   onToggleCorners,
   onToggleShadow,
-  onToggleGrain,
 }: EffectsSectionProps) => {
   return (
-    <section aria-label="Effects" className="space-y-2">
-      <Label className="text-sm font-medium text-muted-foreground">Effects</Label>
-
-      <div className="space-y-2">
+    <section aria-label="Effects" className="flex flex-col gap-3">
+      <div className="flex flex-col gap-3">
         {showGlass && (
           <EffectToggleRow
             label="Glass"
@@ -473,12 +454,6 @@ const EffectsSection = ({
             onToggle={onToggleShadow}
           />
         )}
-        <EffectToggleRow
-          label="Grain"
-          variant="grain"
-          checked={grainEnabled}
-          onToggle={() => onToggleGrain(!grainEnabled)}
-        />
       </div>
     </section>
   );
@@ -672,44 +647,6 @@ function getEffectToggleVisuals(
           trackClass: "ring-1 ring-white/15 shadow-[0_0_18px_rgba(255,255,255,0.35)]",
         },
       );
-    case "grain": {
-      if (!isOn) {
-        return createSharedVisuals();
-      }
-
-      const knobOverlay = (
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-full bg-[radial-gradient(rgba(0,0,0,0.35)_0.25px,transparent_0.25px)] opacity-25"
-        />
-      );
-
-      return createThemedVisuals(
-        {
-          trackStyle: {
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.6) 0.25px, transparent 0.25px), radial-gradient(rgba(0,0,0,0.3) 0.35px, transparent 0.35px)",
-            backgroundSize: "1.5px 1.5px, 2.2px 2.2px",
-            backgroundBlendMode: "screen, multiply",
-            opacity: 0.95,
-            backgroundColor: "rgba(255,255,255,0.08)",
-          },
-          knobOverlay,
-        },
-        {
-          trackClass: "brightness-125 contrast-125",
-          trackStyle: {
-            backgroundImage:
-              "radial-gradient(rgba(255,255,255,0.75) 0.25px, transparent 0.25px), radial-gradient(rgba(0,0,0,0.55) 0.35px, transparent 0.35px)",
-            backgroundSize: "1.4px 1.4px, 2px 2px",
-            backgroundBlendMode: "screen, multiply",
-            opacity: 1,
-            backgroundColor: "rgba(255,255,255,0.05)",
-          },
-          knobOverlay,
-        },
-      );
-    }
     default:
       return createSharedVisuals();
   }
