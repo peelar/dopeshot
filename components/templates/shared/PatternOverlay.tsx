@@ -42,10 +42,10 @@ function parseColorToRgb(color: string): RGB | null {
     }
   }
 
-  const rgbMatch = color.match(/rgb[a]?\\s*\\(([^)]+)\\)/i);
+  const rgbMatch = color.match(/rgb[a]?\s*\(([^)]+)\)/i);
   if (rgbMatch?.[1]) {
     const parts = rgbMatch[1]
-      .split(/[,\\s]+/)
+      .split(/[,\s]+/)
       .filter(Boolean)
       .slice(0, 3)
       .map((v) => Number(v));
