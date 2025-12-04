@@ -17,7 +17,8 @@ export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, A
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);
     if (bgAsset) {
-      return `url(${bgAsset.url})`;
+      // Use full shorthand so image covers the canvas without repeating or auto sizing
+      return `url(${bgAsset.url}) center center / cover no-repeat`;
     }
   } else if (config.background?.type === "solid") {
     return tokenToCssColor(config.background.value);
