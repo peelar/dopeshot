@@ -35,8 +35,12 @@ const sheetVariants = cva(
     variants: {
       side: {
         top: "inset-x-0 top-0 border-b data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down",
-        bottom:
-          "inset-x-0 bottom-0 border-t data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down data-[state=open]:translate-y-0 data-[state=closed]:translate-y-full",
+        bottom: [
+          "inset-x-0 bottom-0 border-t data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down",
+          "data-[state=open]:[--sheet-translate:0%] data-[state=closed]:[--sheet-translate:100%]",
+          "[--sheet-translate:100%] [--drag-offset:0px]",
+          "[transform:translateY(calc(var(--sheet-translate,0%)+var(--drag-offset,0px)))]",
+        ].join(" "),
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down sm:max-w-sm",
         right:
           "inset-y-0 right-0 h-full w-3/4 border-l data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down sm:max-w-sm",
