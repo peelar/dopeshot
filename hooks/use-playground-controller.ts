@@ -11,7 +11,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import { getTemplateById, type Template } from "@/domain/layout/templates";
+import { getLookById, type Look } from "@/domain/look/looks";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -27,13 +27,13 @@ import {
 } from "@/hooks/atoms";
 import {
   canvasAtom,
-  currentTemplateAtom,
+  currentLookAtom,
   isAspectLockedAtom,
   isScreenshotFocusedModeAtom,
   screenshotAssetAtom,
   shouldShowAspectLockAtom,
-  showLayoutToggleAtom,
-  templateCapabilitiesAtom,
+  showVariantToggleAtom,
+  lookCapabilitiesAtom,
 } from "@/hooks/atoms/derived";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { useDragAndUpload } from "@/hooks/use-drag-and-upload";
@@ -46,7 +46,7 @@ interface ExportContext {
   setStatusMessage: Setter<string>;
   setIsExporting: Setter<boolean>;
   config: LayoutConfig;
-  currentTemplate: Template | undefined;
+  currentLook: Look | undefined;
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
 }
@@ -63,14 +63,14 @@ export function usePlaygroundController() {
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
-  const currentTemplate = useAtomValue(currentTemplateAtom);
-  const templateCapabilities = useAtomValue(templateCapabilitiesAtom);
+  const currentLook = useAtomValue(currentLookAtom);
+  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
   const canvas = useAtomValue(canvasAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isScreenshotFocusedMode = useAtomValue(isScreenshotFocusedModeAtom);
   const shouldShowAspectLock = useAtomValue(shouldShowAspectLockAtom);
   const isAspectLocked = useAtomValue(isAspectLockedAtom);
-  const showLayoutToggle = useAtomValue(showLayoutToggleAtom);
+  const showVariantToggle = useAtomValue(showVariantToggleAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
@@ -91,7 +91,7 @@ export function usePlaygroundController() {
 
   usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
-  const showFocusHint = useFocusHint(isScreenshotFocusedMode, templateCapabilities?.focusMode);
+  const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);
 
   const handleExport = useExportHandler({
@@ -99,7 +99,7 @@ export function usePlaygroundController() {
     setStatusMessage,
     setIsExporting,
     config,
-    currentTemplate,
+    currentLook,
     canvas,
     screenshotAsset,
   });
@@ -129,7 +129,7 @@ export function usePlaygroundController() {
     showFocusHint,
     hasScreenshot,
     isExporting,
-    showLayoutToggle,
+    showVariantToggle,
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
@@ -235,7 +235,7 @@ function useExportHandler({
   setStatusMessage,
   setIsExporting,
   config,
-  currentTemplate,
+  currentLook,
   canvas,
   screenshotAsset,
 }: ExportContext) {
@@ -246,8 +246,8 @@ function useExportHandler({
     }
 
     track("export_button_clicked", {
-      template_id: config.templateId,
-      template_name: currentTemplate?.name ?? "unknown",
+      look_id: config.lookId,
+      look_name: currentLook?.name ?? "unknown",
       variant: config.variant,
       background_type: config.background?.type ?? "unknown",
       font_id: config.fontId,
@@ -281,9 +281,9 @@ function useExportHandler({
     canvas.width,
     config.background?.type,
     config.fontId,
-    config.templateId,
+    config.lookId,
     config.variant,
-    currentTemplate?.name,
+    currentLook?.name,
     hasScreenshot,
     screenshotAsset?.metadata?.height,
     screenshotAsset?.metadata?.width,
@@ -296,12 +296,8 @@ function useVariantChangeHandler(setConfig: Setter<LayoutConfig>) {
   return useCallback(
     (variant: string) => {
       setConfig((currentConfig) => {
-        const template = getTemplateById(currentConfig.templateId);
-        if (
-          !template ||
-          !template.variants.includes(variant) ||
-          currentConfig.variant === variant
-        ) {
+        const look = getLookById(currentConfig.lookId);
+        if (!look || !look.variants.includes(variant) || currentConfig.variant === variant) {
           return currentConfig;
         }
 

@@ -11,6 +11,7 @@ status: TODO
 - Templates (composition) were exposed but feel abstract; users mainly want “make this look good fast.”
 - Styling controls are scattered (background, grain, outline), making it hard to know what’s active.
 - We want an effortless default (auto-pick) and clear, minimal ways to swap vibes without exposing template complexity. Implementation should be primitive-first (gradient, frame, flex/grid), so new Looks/Variants compose easily.
+- Templates are gone; Looks are primitive bundles (gradient, flex composition, frame, typography tokens) so we can reuse and remix without bespoke template code.
 
 ## Problem Statement
 - Current experience requires touching multiple controls to change the vibe; template vs layout vs styling is unclear.
@@ -35,7 +36,7 @@ status: TODO
 - Brand matchers: pick one Look repeatedly for consistency.
 
 ## Proposed Solution
-- **Looks rail (replaces template rail):** Top of Design sidebar, compact chip rail. Start with 5 curated options: `Auto` (default), `Base`, `Terminal`, `Glass Clean`, `Vivid Duo`. Future Looks append after this core set. Under the hood, Looks are bundles of primitives (gradient, pattern, frame, text tokens), not template swaps.
+- **Looks rail (replaces template rail):** Top of Design sidebar, compact chip rail. Start with 5 curated options: `Auto` (default), `Base`, `Terminal`, `Glass Clean`, `Vivid Duo`. Future Looks append after this core set. Under the hood, Looks are bundles of primitives (gradient, pattern, frame, text tokens), not template swaps; shared primitive utilities keep Looks code-light.
 - **Behavior:** Selecting a Look applies its bundle. It never moves content. The only structural control is `Variants`, a small segmented control shown when options exist (today these map one-to-one to current layout variants; later they’re primitive-driven).
 - **Auto behavior:** On upload, auto-select a Look using palette/brightness/contrast/aspect. Auto can update on new uploads but never overwrites a user-chosen Look (manual).
 - **State clarity:** Above Background, show “Applied Look: Base (Auto)” or “Custom” if user edits Background/Pattern after choosing a Look. Provide “Reset to Base” to reapply the bundle.
@@ -53,6 +54,7 @@ status: TODO
 - Changing Look must not alter Variants; changing Variant must not overwrite Look styling.
 - Auto Look selection runs on upload/palette ready; if manual Look is set, do not auto-switch.
 - UI: chip radiogroup (Looks rail) replacing template rail, keyboard-accessible, wraps/collapses on narrow widths.
+- Add a visible Look label with sprinkles icon to the rail header so it matches the Variant/Style micro-titles.
 - Variants segmented control replaces “Layouts” and pulls from current layout variants (one-to-one) until primitive variants land.
 - Visible state in Background area: applied Look name + reset affordance.
 - Export must match on-canvas styling; no perf regressions.

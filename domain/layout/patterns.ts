@@ -1,21 +1,6 @@
 import type { ColorPalette } from "@/domain/asset/types";
 import type { LayoutConfig, PatternChoice, PatternId, PatternMode } from "./types";
 
-export type PatternOptionId = PatternChoice;
-
-export type PatternOption = {
-  id: PatternOptionId;
-  label: string;
-  description?: string;
-};
-
-export const PATTERN_OPTIONS: PatternOption[] = [
-  { id: "none", label: "None", description: "No overlay" },
-  { id: "grain", label: "Grain", description: "Fine noise texture" },
-  { id: "glow", label: "Glow", description: "Radial light bloom" },
-  { id: "grid", label: "Grid", description: "Diagonal cross grid" },
-];
-
 /**
  * Resolve the pattern to render given config and optional palette context.
  * - Manual mode: honor patternId (default to grain unless explicitly none or grain disabled).

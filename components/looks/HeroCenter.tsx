@@ -1,20 +1,12 @@
 import { memo, useMemo } from "react";
-import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
-import { LogoBadge } from "@/components/templates/shared/LogoBadge";
-import { tokenToTextColorClass } from "@/components/templates/shared/color-utils";
-import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
-import { getBackgroundStyle } from "@/components/templates/shared/background-style";
-import { getShadowValue } from "@/components/templates/shared/shadows";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
   getEffectiveCanvasMode,
-  getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
-import { getScreenshotFrameAppearance } from "@/components/templates/shared/screenshot-frame";
-import { PatternOverlay } from "@/components/templates/shared/PatternOverlay";
-import { configAtom, assetsAtom } from "@/hooks/atoms";
-import { screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
+import { LogoBadge } from "@/components/looks/shared/LogoBadge";
+import { getScreenshotFrameAppearance } from "@/components/looks/shared/screenshot-frame";
+import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
 
 interface HeroCenterProps {
   className?: string;
@@ -23,24 +15,18 @@ interface HeroCenterProps {
 }
 
 function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: HeroCenterProps) {
-  const config = useAtomValue(configAtom);
-  const assets = useAtomValue(assetsAtom);
-  const screenshot = useAtomValue(screenshotAssetAtom);
-  const logo = useAtomValue(logoAssetAtom);
+  const {
+    assets,
+    assetMap,
+    backgroundStyle,
+    config,
+    logo,
+    screenshot,
+    screenshotShadow,
+    screenshotTreatment,
+    text,
+  } = useLookPrimitives();
 
-  const assetMap = useMemo(() => {
-    return new Map(assets.map((asset) => [asset.id, asset]));
-  }, [assets]);
-
-  const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
-  const fontSize = getFontSizeById(config.fontSize);
-  const fontStyle = { fontFamily: getFontCssValue(config.fontId) };
-  const textColorClass = tokenToTextColorClass(config.colors.text);
-  const titleStyle = { ...fontStyle, fontSize: `${fontSize.titleRem}rem`, lineHeight: 1.05 };
-  const subtitleStyle = { ...fontStyle, fontSize: `${fontSize.subtitleRem}rem` };
-  const shadowStyle = getShadowValue(config.screenshotShadow);
-  const isAdaptiveCanvas = getEffectiveCanvasMode(config) === "adaptive";
-  const screenshotTreatment = getScreenshotTreatment(config);
   const frameAppearance = useMemo(
     () =>
       getScreenshotFrameAppearance({
@@ -51,11 +37,11 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       }),
     [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape],
   );
+
   const appliedShadow = useMemo(() => {
     if (frameAppearance.shadow) return frameAppearance.shadow;
-    if (screenshotTreatment.shadowEnabled === false) return undefined;
-    return shadowStyle;
-  }, [frameAppearance.shadow, screenshotTreatment.shadowEnabled, shadowStyle]);
+    return screenshotShadow;
+  }, [frameAppearance.shadow, screenshotShadow]);
 
   const variant = config.variant === "right" ? "right" : "left";
 
@@ -88,23 +74,23 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
   const renderTextBlock = (align: "left" | "center" | "right") => {
     const alignmentClass =
       align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
-    const title = config.text.title?.trim();
-    const subtitle = config.text.subtitle?.trim();
+    const title = text.title;
+    const subtitle = text.subtitle;
 
     return (
       <div className={cn("space-y-4", alignmentClass)}>
         {title ? (
           <h1
-            className={cn("font-semibold", fontSize.titleClass, textColorClass)}
-            style={titleStyle}
+            className={cn("font-semibold", text.fontSize.titleClass, text.textColorClass)}
+            style={{ ...text.titleStyle, lineHeight: 1.05 }}
           >
             {title}
           </h1>
         ) : null}
         {subtitle ? (
           <p
-            className={cn("opacity-90", fontSize.subtitleClass, textColorClass)}
-            style={subtitleStyle}
+            className={cn("opacity-90", text.fontSize.subtitleClass, text.textColorClass)}
+            style={text.subtitleStyle}
           >
             {subtitle}
           </p>
@@ -121,7 +107,6 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     const screenshotObjectFit = isPortraitScreenshot ? "contain" : "cover";
     const verticalPadding = 16;
 
-    // For tall/portrait images, use full height minus padding
     if (isPortraitScreenshot) {
       return (
         <div className="flex h-full flex-1 items-center justify-center">
@@ -154,7 +139,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       );
     }
 
-    // For landscape images, use existing logic
+    const isAdaptiveCanvas = getEffectiveCanvasMode(config) === "adaptive";
     const maxHeight = isAdaptiveCanvas
       ? `min(560px, calc(100% - ${verticalPadding + 32}px))`
       : `min(520px, calc(100% - ${verticalPadding + 72}px))`;
@@ -193,16 +178,14 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
   };
 
   return (
-    <div
-      className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle, isolation: "isolate" }}
+    <LookSurface
+      className={className}
+      backgroundStyle={backgroundStyle}
+      assets={assets}
+      config={config}
+      assetMap={assetMap}
+      screenshot={screenshot}
     >
-      <PatternOverlay
-        config={config}
-        assets={assets}
-        assetMap={assetMap}
-        screenshotAsset={screenshot}
-      />
       <div className="relative z-10 h-full w-full">
         <div
           className={cn(
@@ -231,7 +214,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
           </div>
         </div>
       </div>
-    </div>
+    </LookSurface>
   );
 }
 
