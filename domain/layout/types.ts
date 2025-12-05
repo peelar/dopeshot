@@ -75,8 +75,8 @@ export type BackgroundConfig = {
 
 // Layout configuration - simple data structure
 export type LayoutConfig = {
-  templateId: string;
-  variant: string; // Template-specific variant (e.g., "left", "right", "center")
+  lookId: string;
+  variant: string; // Look-specific variant (e.g., "left", "right", "center")
   fontId: FontId;
   fontSize: FontSize;
   text: {

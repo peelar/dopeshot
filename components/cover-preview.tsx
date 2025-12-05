@@ -2,7 +2,7 @@
 
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
-import { canvasAtom, currentTemplateAtom } from "@/hooks/atoms/derived";
+import { canvasAtom, currentLookAtom } from "@/hooks/atoms/derived";
 
 interface CoverPreviewProps {
   className?: string;
@@ -11,10 +11,10 @@ interface CoverPreviewProps {
 }
 
 export function CoverPreview({ className, onUploadAsset, isStatic = false }: CoverPreviewProps) {
-  const template = useAtomValue(currentTemplateAtom);
+  const look = useAtomValue(currentLookAtom);
   const canvasDimensions = useAtomValue(canvasAtom);
 
-  if (!template) {
+  if (!look) {
     return (
       <div
         className={cn(
@@ -24,12 +24,12 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
         )}
         style={{ aspectRatio: "1280 / 720" }}
       >
-        <span className="text-sm text-slate-500">Template not found</span>
+        <span className="text-sm text-slate-500">Look not found</span>
       </div>
     );
   }
 
-  const TemplateComponent = template.component;
+  const LookComponent = look.component;
 
   return (
     <div
@@ -38,7 +38,7 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
         aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
       }}
     >
-      <TemplateComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
+      <LookComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
     </div>
   );
 }

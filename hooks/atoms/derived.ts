@@ -1,23 +1,21 @@
 import { atom } from "jotai";
-import { getTemplateById } from "@/domain/layout/templates";
+import { getLookById } from "@/domain/look/looks";
 import {
   getCanvasDimensions,
   getScreenshotTreatment,
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
 import { configAtom, assetsAtom } from "../atoms";
-import type { LayoutConfig } from "@/domain/layout/types";
-import type { Asset } from "@/domain/asset/types";
 
 // Derived atoms
-export const currentTemplateAtom = atom((get) => {
+export const currentLookAtom = atom((get) => {
   const config = get(configAtom);
-  return getTemplateById(config.templateId);
+  return getLookById(config.lookId);
 });
 
-export const templateCapabilitiesAtom = atom((get) => {
-  const template = get(currentTemplateAtom);
-  return template?.capabilities;
+export const lookCapabilitiesAtom = atom((get) => {
+  const look = get(currentLookAtom);
+  return look?.capabilities;
 });
 
 export const screenshotAssetAtom = atom((get) => {
@@ -32,7 +30,7 @@ export const canvasAtom = atom((get) => {
   return getCanvasDimensions(config, screenshotAsset);
 });
 
-export const screenshotTreatmentAtom = atom((get) => {
+const screenshotTreatmentAtom = atom((get) => {
   const config = get(configAtom);
   return getScreenshotTreatment(config);
 });
@@ -43,9 +41,9 @@ export const isScreenshotFocusedModeAtom = atom((get) => {
 });
 
 export const shouldShowAspectLockAtom = atom((get) => {
-  const templateCapabilities = get(templateCapabilitiesAtom);
+  const lookCapabilities = get(lookCapabilitiesAtom);
   const isScreenshotFocusedMode = get(isScreenshotFocusedModeAtom);
-  return templateCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
+  return lookCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
 });
 
 export const isAspectLockedAtom = atom((get) => {
@@ -53,9 +51,9 @@ export const isAspectLockedAtom = atom((get) => {
   return treatment.canvasMode === "locked";
 });
 
-export const showLayoutToggleAtom = atom((get) => {
-  const template = get(currentTemplateAtom);
-  return (template?.variants.length ?? 0) > 1;
+export const showVariantToggleAtom = atom((get) => {
+  const look = get(currentLookAtom);
+  return (look?.variants.length ?? 0) > 1;
 });
 
 // Asset lookup atoms

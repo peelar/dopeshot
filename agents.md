@@ -20,6 +20,7 @@ For all product documentation, see the [Product](product/index.md) folder.
 - You will be given PRDs or similar instructions to follow. You have the authority to make decisions about the implementation.
 - Don’t mention underlying tech in UI copy (e.g., avoid “Upload with Supabase”).
 - Favor existing shadcn-style primitives before building new components.
-- Keep the Design sidebar for styling; template/layout switching stays in the rail/toggle above the canvas.
+- Keep the Design sidebar for styling; look/variant switching stays in the rail/toggle above the canvas.
 - Be very hesitant about adding something new to the sidebar. It should be as intelligent as possible, with no extra clicks or steps.
 - Add UI comments only when clarifying non-obvious logic.
+- When building a more complex feature, ask yourself: what took the longest to build? What is the most complex part? And proactively propose ways to refactor it.

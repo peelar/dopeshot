@@ -1,32 +1,31 @@
-import { LayoutConfig } from "./types";
-import { PopupGradient } from "@/components/templates/PopupGradient";
-import { HeroCenter } from "@/components/templates/HeroCenter";
+import { LayoutConfig } from "@/domain/layout/types";
+import { PopupGradient } from "@/components/looks/PopupGradient";
+import { HeroCenter } from "@/components/looks/HeroCenter";
 import type { ComponentType } from "react";
-import { Asset } from "@/domain/asset/types";
 import { DEFAULT_GRADIENT } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
-import { AdaptiveScreenshot } from "@/components/templates/AdaptiveScreenshot";
+import { AdaptiveScreenshot } from "@/components/looks/AdaptiveScreenshot";
 
-export type TemplateTextRequirement = "required" | "optional" | "hidden";
+export type LookTextRequirement = "required" | "optional" | "hidden";
 
-export type TemplateOutlineControls = {
+export type LookOutlineControls = {
   softGlass: boolean;
   shape: boolean;
   shadow: boolean;
 };
 
-export type TemplateFocusMode = "auto" | "always" | "never";
-export type TemplateCanvasBehavior = "locked" | "adaptive" | "text-dependent";
+export type LookFocusMode = "auto" | "always" | "never";
+export type LookCanvasBehavior = "locked" | "adaptive" | "text-dependent";
 
-export interface TemplateCapabilities {
-  focusMode: TemplateFocusMode;
-  canvasBehavior: TemplateCanvasBehavior;
+export interface LookCapabilities {
+  focusMode: LookFocusMode;
+  canvasBehavior: LookCanvasBehavior;
   text: {
-    headline: TemplateTextRequirement;
-    subtitle: TemplateTextRequirement;
+    headline: LookTextRequirement;
+    subtitle: LookTextRequirement;
   };
   typography: boolean;
-  outline: TemplateOutlineControls;
+  outline: LookOutlineControls;
   logo: "supported" | "hidden";
   copyDefaults?: {
     title?: string;
@@ -34,28 +33,28 @@ export interface TemplateCapabilities {
   };
 }
 
-export interface Template {
+export interface Look {
   id: string;
   name: string;
   description: string;
-  variants: string[]; // Available layout variants for this template
+  variants: string[]; // Available structural variants for this look
   createConfig: () => LayoutConfig;
   component: ComponentType<{
     className?: string;
     onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
     isStatic?: boolean;
   }>;
-  capabilities: TemplateCapabilities;
+  capabilities: LookCapabilities;
 }
 
-export const TEMPLATES: Template[] = [
+export const LOOKS: Look[] = [
   {
     id: "popup-gradient",
     name: "Peak",
     description: "Gradient hero with headline, subtitle, and an elevated screenshot frame.",
     variants: ["left", "right", "center"],
     createConfig: () => ({
-      templateId: "popup-gradient",
+      lookId: "popup-gradient",
       variant: "right",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -115,7 +114,7 @@ export const TEMPLATES: Template[] = [
     description: "Split layout with copy on one side and a tall screenshot on the other.",
     variants: ["left", "right"],
     createConfig: () => ({
-      templateId: "hero-center",
+      lookId: "hero-center",
       variant: "left",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -175,7 +174,7 @@ export const TEMPLATES: Template[] = [
     description: "Let a single screenshot shine with adaptive sizing and a curated background.",
     variants: [],
     createConfig: () => ({
-      templateId: "adaptive-stage",
+      lookId: "adaptive-stage",
       variant: "default",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -227,14 +226,14 @@ export const TEMPLATES: Template[] = [
   },
 ];
 
-export function getTemplateById(id: string): Template | undefined {
+export function getLookById(id: string): Look | undefined {
   if (id === "full-visual") {
-    return TEMPLATES.find((t) => t.id === "adaptive-stage");
+    return LOOKS.find((look) => look.id === "adaptive-stage");
   }
-  return TEMPLATES.find((t) => t.id === id);
+  return LOOKS.find((look) => look.id === id);
 }
 
-type TemplateTextDefaultOptions = {
+type LookTextDefaultOptions = {
   preserveEmptyText?: boolean;
 };
 
@@ -250,18 +249,18 @@ function hasUserProvidedText(value: string | undefined, preserveEmptyText: boole
   return preserveEmptyText;
 }
 
-export function withTemplateTextDefaults(
+export function withLookTextDefaults(
   config: LayoutConfig,
-  options?: TemplateTextDefaultOptions,
+  options?: LookTextDefaultOptions,
 ): LayoutConfig {
-  const normalizedTemplateId = config.templateId === "full-visual" ? "adaptive-stage" : config.templateId;
-  const template = getTemplateById(normalizedTemplateId);
-  const defaults = template?.capabilities.copyDefaults;
-  if (!template || !defaults) {
+  const normalizedLookId = config.lookId === "full-visual" ? "adaptive-stage" : config.lookId;
+  const look = getLookById(normalizedLookId);
+  const defaults = look?.capabilities.copyDefaults;
+  if (!look || !defaults) {
     return config;
   }
 
-  const requirements = template.capabilities.text;
+  const requirements = look.capabilities.text;
   const nextText = { ...config.text };
   let shouldUpdate = false;
   const preserveEmptyText = options?.preserveEmptyText ?? false;
@@ -278,10 +277,10 @@ export function withTemplateTextDefaults(
     shouldUpdate = true;
   }
 
-  if (shouldUpdate || normalizedTemplateId !== config.templateId) {
+  if (shouldUpdate || normalizedLookId !== config.lookId) {
     return {
       ...config,
-      templateId: normalizedTemplateId,
+      lookId: normalizedLookId,
       text: shouldUpdate ? nextText : config.text,
     };
   }

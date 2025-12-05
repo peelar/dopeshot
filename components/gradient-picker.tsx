@@ -101,7 +101,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
     return generateGradientOptions(colorPalette, {
       aspectCategory: "landscape",
-      templateVariant: undefined,
+      variant: undefined,
     });
   }, [colorPalette]);
 

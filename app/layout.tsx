@@ -2,12 +2,13 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import {
   Inter,
-  JetBrains_Mono,
-  Space_Grotesk,
-  DM_Sans,
-  Syne,
-  Archivo,
-  Manrope,
+  Commissioner,
+  IBM_Plex_Mono,
+  Bricolage_Grotesque,
+  Rubik,
+  Chivo,
+  Chakra_Petch,
+  Playfair_Display,
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -16,37 +17,48 @@ import { Analytics } from "@vercel/analytics/next";
 // Font definitions with CSS variables
 const geistSans = GeistSans;
 
-const inter = Inter({
+const interUi = Inter({
   subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-ui",
+});
+
+const commissioner = Commissioner({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
   variable: "--font-professional",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
+  weight: ["400", "600"],
   variable: "--font-developer",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const bricolageGrotesque = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-bold",
 });
 
-const dmSans = DM_Sans({
+const rubik = Rubik({
   subsets: ["latin"],
+  weight: ["400", "600"],
   variable: "--font-friendly",
 });
 
-const syne = Syne({
+const chivo = Chivo({
   subsets: ["latin"],
+  weight: ["400", "700"],
   variable: "--font-edgy",
 });
 
-const archivo = Archivo({
+const chakraPetch = Chakra_Petch({
   subsets: ["latin"],
+  weight: ["400", "600"],
   variable: "--font-technical",
 });
 
-const manrope = Manrope({
+const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-premium",
 });
@@ -54,13 +66,14 @@ const manrope = Manrope({
 // Combine all font variables
 const fontVariables = [
   geistSans.variable, // --font-geist-sans (from package)
-  inter.variable,
-  jetbrainsMono.variable,
-  spaceGrotesk.variable,
-  dmSans.variable,
-  syne.variable,
-  archivo.variable,
-  manrope.variable,
+  interUi.variable,
+  commissioner.variable,
+  ibmPlexMono.variable,
+  bricolageGrotesque.variable,
+  rubik.variable,
+  chivo.variable,
+  chakraPetch.variable,
+  playfairDisplay.variable,
 ].join(" ");
 
 const siteUrl = "https://dopeshot.vercel.app";
@@ -118,10 +131,8 @@ export default function RootLayout({
         className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
         style={
           {
-            // Map geist variable to our naming convention
             "--font-clean": "var(--font-geist-sans)",
-            // Use Inter as default sans-serif
-            "--font-sans": "var(--font-professional)",
+            "--font-sans": "var(--font-ui)",
           } as React.CSSProperties
         }
         suppressHydrationWarning
