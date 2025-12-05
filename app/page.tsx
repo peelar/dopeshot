@@ -5,7 +5,7 @@ import { CoverPreview } from "@/components/cover-preview";
 import { DragOverlay } from "@/components/drag-overlay";
 import { MobileActions } from "@/components/mobile-actions";
 import { PlaygroundWorkspace } from "@/components/playground-workspace";
-import { TemplateSelector } from "@/components/template-selector";
+import { LookSelector } from "@/components/look-selector";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 
 function ExportContainer({ width, height }: { width: number; height: number }) {
@@ -42,7 +42,7 @@ export default function PlaygroundPage() {
     showFocusHint,
     hasScreenshot,
     isExporting,
-    showLayoutToggle,
+    showVariantToggle,
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
@@ -85,11 +85,11 @@ export default function PlaygroundPage() {
       />
 
       <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10 overflow-hidden">
-        <TemplateSelector />
+        <LookSelector />
 
         <PlaygroundWorkspace
           isMobile={isMobile}
-          showLayoutToggle={showLayoutToggle}
+          showVariantToggle={showVariantToggle}
           onVariantChange={handleVariantChange}
           shouldShowAspectLock={shouldShowAspectLock}
           isAspectLocked={isAspectLocked}

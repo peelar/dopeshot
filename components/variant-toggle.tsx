@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils";
 import { configAtom } from "@/hooks/atoms";
-import { currentTemplateAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { currentLookAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 
 const VARIANT_LABELS: Record<string, string> = {
@@ -32,23 +32,23 @@ const VARIANT_DISPLAY_PRIORITY: Record<string, number> = {
 const PATTERN_OPTIONS = ["none", "grain", "glow", "grid"] as const;
 type PatternOption = (typeof PATTERN_OPTIONS)[number];
 
-interface LayoutVariantToggleProps {
+interface VariantToggleProps {
   onVariantChange: (variant: string) => void;
 }
 
-export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProps) {
+export function VariantToggle({ onVariantChange }: VariantToggleProps) {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
-  const template = useAtomValue(currentTemplateAtom);
+  const look = useAtomValue(currentLookAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [hasSeenFull, setHasSeenFull] = useState(false);
 
-  if (!template) {
+  if (!look) {
     return null;
   }
 
-  const variants = template.variants;
+  const variants = look.variants;
   const hasMultipleVariants = variants.length > 1;
   const activeVariant = variants.includes(config.variant) ? config.variant : variants[0];
   const backgroundType = config.background?.type;
@@ -140,64 +140,64 @@ export function LayoutVariantToggle({ onVariantChange }: LayoutVariantToggleProp
         {hasMultipleVariants && (
           <div className="space-y-1.5 sm:w-auto sm:min-w-0 sm:space-y-1">
             <p className="ml-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-              Layouts
+              Variants
             </p>
             <div className="flex flex-wrap items-center gap-2 sm:inline-flex sm:w-auto sm:rounded-full sm:bg-muted/20 sm:px-2 sm:py-2 sm:ring-1 sm:ring-border/30">
-            <div
-              className="hidden flex-wrap items-center gap-2 sm:flex"
-              role="radiogroup"
-              aria-label="Layouts"
-            >
-              {displayVariants.map((variant, index) => {
-                const isActive = activeVariant === variant;
-                const showNewBadge = variant === "full" && !hasSeenFull;
+              <div
+                className="hidden flex-wrap items-center gap-2 sm:flex"
+                role="radiogroup"
+                aria-label="Variants"
+              >
+                {displayVariants.map((variant, index) => {
+                  const isActive = activeVariant === variant;
+                  const showNewBadge = variant === "full" && !hasSeenFull;
 
-                return (
-                  <Button
-                    key={variant}
-                    variant="ghost"
-                    size="sm"
-                    role="radio"
-                    aria-checked={isActive}
-                    aria-label={`Switch to ${getLabel(variant)} layout`}
-                    className={cn(
-                      "rounded-full border border-transparent px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors",
-                      "hover:border-border hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
-                      isActive && "border-primary/40 bg-primary/10 text-primary shadow-sm",
-                    )}
-                    onClick={() => onVariantChange(variant)}
-                    onKeyDown={(event) => handleArrowNavigation(event, index)}
-                    ref={(el) => {
-                      buttonRefs.current[index] = el;
-                    }}
-                  >
-                    <span>{getLabel(variant)}</span>
-                    {showNewBadge ? (
-                      <span className="rounded-full bg-primary px-1.5 py-0.5 font-bold text-[10px] text-primary-foreground">
-                        New
-                      </span>
-                    ) : null}
-                  </Button>
-                );
-              })}
-            </div>
+                  return (
+                    <Button
+                      key={variant}
+                      variant="ghost"
+                      size="sm"
+                      role="radio"
+                      aria-checked={isActive}
+                      aria-label={`Switch to ${getLabel(variant)} variant`}
+                      className={cn(
+                        "rounded-full border border-transparent px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors",
+                        "hover:border-border hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
+                        isActive && "border-primary/40 bg-primary/10 text-primary shadow-sm",
+                      )}
+                      onClick={() => onVariantChange(variant)}
+                      onKeyDown={(event) => handleArrowNavigation(event, index)}
+                      ref={(el) => {
+                        buttonRefs.current[index] = el;
+                      }}
+                    >
+                      <span>{getLabel(variant)}</span>
+                      {showNewBadge ? (
+                        <span className="rounded-full bg-primary px-1.5 py-0.5 font-bold text-[10px] text-primary-foreground">
+                          New
+                        </span>
+                      ) : null}
+                    </Button>
+                  );
+                })}
+              </div>
 
-            <div className="w-full sm:hidden">
-              <Select value={activeVariant} onValueChange={handleSelectChange}>
-                <SelectTrigger className="h-9 w-fit min-w-[112px] rounded-full border border-border bg-background/70 px-3 text-xs font-semibold">
-                  <SelectValue placeholder="Layouts" />
-                </SelectTrigger>
-                <SelectContent>
-                  {displayVariants.map((variant) => (
-                    <SelectItem key={variant} value={variant} className="text-sm">
-                      {getLabel(variant)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="w-full sm:hidden">
+                <Select value={activeVariant} onValueChange={handleSelectChange}>
+                  <SelectTrigger className="h-9 w-fit min-w-[112px] rounded-full border border-border bg-background/70 px-3 text-xs font-semibold">
+                    <SelectValue placeholder="Variants" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displayVariants.map((variant) => (
+                      <SelectItem key={variant} value={variant} className="text-sm">
+                        {getLabel(variant)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
-        </div>
         )}
 
         {shouldShowPatterns && (

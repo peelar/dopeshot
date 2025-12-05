@@ -1,81 +1,66 @@
-# Template Authoring Guide
+# Look Authoring Guide
 
-This guide explains how to create a new template for the layout system.
+This guide explains how to create a new Look for the layout system.
 
 ## Overview
 
-A template consists of two main parts:
+A Look is built from shared primitives (gradient, frame, typography tokens, flex layout) and registered so it shows up in the Look rail.
 
-1. **Template Component**: A React component that renders the layout.
-2. **Template Registration**: An entry in the `TEMPLATES` array in `domain/layout/templates.ts`.
+1. **Look Component**: A React component that renders the look using shared primitives.
+2. **Look Registration**: An entry in the `LOOKS` array in `domain/look/looks.ts`.
 
-## 1. Create the Template Component
+## 1. Create the Look Component
 
-Create a new file in `components/templates/` (e.g., `components/templates/MyNewTemplate.tsx`).
+Create a new file in `components/looks/` (e.g., `components/looks/MyNewLook.tsx`). Prefer the shared helpers to avoid bespoke logic:
 
-The component should accept the following props:
-
-```typescript
-interface MyNewTemplateProps {
-  config: LayoutConfig;
-  assets?: Asset[];
-  className?: string;
-}
-```
-
-### Key Requirements
-
-- **Dimensions**: The component must handle being rendered in a container with a `16:9` aspect ratio (specifically `1280x720` pixels base).
-- **Styling**: Use Tailwind CSS for styling.
-- **Assets**: Resolve assets (screenshot, logo) using the `assets` array and `config.assets` IDs.
-- **Text**: Render `config.text.title` and `config.text.subtitle`.
-- **Colors**: Use `config.colors` to style background and text. You may need helper functions like `tokenToCssColor` or `tokenToTextColorClass` to map `ColorToken` values to CSS values or Tailwind classes.
-- **Variants**: Implement logic to handle different `config.variant` values (e.g., "left", "right", "center") if your template supports multiple layouts.
-
-### Example Structure
+- `useLookPrimitives` for config, assets, background styles, text tokens, and screenshot treatment.
+- `LookSurface` to render the background + pattern overlay wrapper.
 
 ```tsx
-import { LayoutConfig } from "@/domain/layout/types";
-import { Asset } from "@/domain/asset/types";
-import { cn } from "@/utils";
+import { memo } from "react";
+import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
 
-// ... helper functions for colors ...
-
-export function MyNewTemplate({ config, assets = [], className }: MyNewTemplateProps) {
-  // 1. Resolve assets
-  const assetMap = new Map(assets.map((a) => [a.id, a]));
-  const screenshot = config.assets.screenshot ? assetMap.get(config.assets.screenshot) : null;
-
-  // 2. Determine layout/variant
-  const variant = config.variant || "default";
+function MyNewLookComponent() {
+  const { assets, assetMap, backgroundStyle, config, screenshot, text } = useLookPrimitives();
 
   return (
-    <div className={cn("relative h-full w-full overflow-hidden", className)}>
-      {/* Render content based on config */}
-      <h1>{config.text.title}</h1>
-      {/* ... */}
-    </div>
+    <LookSurface
+      backgroundStyle={backgroundStyle}
+      assets={assets}
+      config={config}
+      assetMap={assetMap}
+      screenshot={screenshot}
+    >
+      <div className="relative z-10 h-full w-full">
+        <h1 className={text.fontSize.titleClass} style={text.titleStyle}>
+          {text.title}
+        </h1>
+        {/* ... */}
+      </div>
+    </LookSurface>
   );
 }
+
+export const MyNewLook = memo(MyNewLookComponent);
 ```
 
-## 2. Register the Template
+## 2. Register the Look
 
-Open `domain/layout/templates.ts` and add a new entry to the `TEMPLATES` array.
+Open `domain/look/looks.ts` and add a new entry to the `LOOKS` array.
 
 ```typescript
-import { MyNewTemplate } from "@/components/templates/MyNewTemplate";
+import { MyNewLook } from "@/components/looks/MyNewLook";
 
-export const TEMPLATES: Template[] = [
-  // ... existing templates
+export const LOOKS: Look[] = [
+  // ... existing looks
   {
-    id: "my-new-template",
-    name: "My New Template",
-    description: "A brief description of what this template looks like.",
-    variants: ["left", "right"], // Define supported variants. All variants will appear as distinct options in the UI.
+    id: "my-new-look",
+    name: "My New Look",
+    description: "A brief description of what this look delivers.",
+    variants: ["left", "right"], // Variants stay structural.
     createConfig: () => ({
-      templateId: "my-new-template",
-      variant: "left", // Default variant
+      lookId: "my-new-look",
+      variant: "left",
       text: {
         title: "Default Title",
         subtitle: "Default Subtitle",
@@ -89,12 +74,26 @@ export const TEMPLATES: Template[] = [
         screenshot: undefined,
         logo: undefined,
       },
+      background: {
+        type: "gradient",
+        value: "custom",
+        grainEnabled: true,
+        patternMode: "auto",
+      },
     }),
-    component: MyNewTemplate,
+    component: MyNewLook,
+    capabilities: {
+      focusMode: "auto",
+      canvasBehavior: "adaptive",
+      text: { headline: "optional", subtitle: "optional" },
+      typography: true,
+      outline: { softGlass: true, shape: true, shadow: true },
+      logo: "supported",
+    },
   },
 ];
 ```
 
 ## 3. Verification
 
-Once registered, **every variant** you defined (e.g., "left", "right") will automatically appear as a separate, selectable option in the top `TemplateSelector` bar.
+Once registered, each Look and its variants appear in the Look rail and Variant toggle automatically.

@@ -1,9 +1,9 @@
 import { LayoutConfig } from "./types";
-import { getTemplateById, withTemplateTextDefaults } from "./templates";
+import { getLookById, withLookTextDefaults } from "@/domain/look/looks";
 import { AspectCategory, getRecommendationForCategory } from "./aspect";
 
-export type TemplateRecommendation = {
-  templateId: string;
+export type LookRecommendation = {
+  lookId: string;
   variant?: string;
 };
 
@@ -14,37 +14,37 @@ export const ASPECT_COPY: Record<AspectCategory, string> = {
   ultrawide: "ultra-wide",
 };
 
-export function applyTemplateRecommendation(
+export function applyLookRecommendation(
   config: LayoutConfig,
-  recommendation?: TemplateRecommendation,
+  recommendation?: LookRecommendation,
 ): {
   config: LayoutConfig;
-  changedTemplate: boolean;
+  changedLook: boolean;
   changedVariant: boolean;
-  templateName?: string;
+  lookName?: string;
 } {
   if (!recommendation) {
-    return { config, changedTemplate: false, changedVariant: false };
+    return { config, changedLook: false, changedVariant: false };
   }
 
-  const template = getTemplateById(recommendation.templateId);
-  if (!template) {
-    return { config, changedTemplate: false, changedVariant: false };
+  const look = getLookById(recommendation.lookId);
+  if (!look) {
+    return { config, changedLook: false, changedVariant: false };
   }
 
-  const defaultConfig = template.createConfig();
+  const defaultConfig = look.createConfig();
   const variantCandidate =
-    recommendation.variant && template.variants.includes(recommendation.variant)
+    recommendation.variant && look.variants.includes(recommendation.variant)
       ? recommendation.variant
       : undefined;
 
-  if (config.templateId !== template.id) {
-    const nextConfig = withTemplateTextDefaults(
+  if (config.lookId !== look.id) {
+    const nextConfig = withLookTextDefaults(
       {
         ...defaultConfig,
-        templateId: template.id,
+        lookId: look.id,
         variant:
-          variantCandidate || defaultConfig.variant || template.variants[0] || config.variant,
+          variantCandidate || defaultConfig.variant || look.variants[0] || config.variant,
         text: config.text,
         colors: config.colors,
         background: config.background,
@@ -59,9 +59,9 @@ export function applyTemplateRecommendation(
 
     return {
       config: nextConfig,
-      changedTemplate: true,
+      changedLook: true,
       changedVariant: true,
-      templateName: template.name,
+      lookName: look.name,
     };
   }
 
@@ -72,17 +72,17 @@ export function applyTemplateRecommendation(
         variant: variantCandidate,
         screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
       },
-      changedTemplate: false,
+      changedLook: false,
       changedVariant: true,
-      templateName: template.name,
+      lookName: look.name,
     };
   }
 
-  return { config, changedTemplate: false, changedVariant: false };
+  return { config, changedLook: false, changedVariant: false };
 }
 
 export function getRecommendationForAspectCategory(
   aspectCategory: AspectCategory,
-): TemplateRecommendation | undefined {
+): LookRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }

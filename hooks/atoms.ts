@@ -18,3 +18,4 @@ export const hasCustomScreenshotAtom = atom<boolean>(false);
 export const isDraggingAtom = atom<boolean>(false);
 export const isAnalyzingColorsAtom = atom<boolean>(false);
 export const isProcessingUploadAtom = atom<boolean>(false);
+

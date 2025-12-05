@@ -1,14 +1,14 @@
 "use client";
 
 import { LayoutConfigPanel } from "@/components/layout-config";
-import { LayoutVariantToggle } from "@/components/layout-variant-toggle";
+import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
 
 interface PlaygroundWorkspaceProps {
   isMobile: boolean;
-  showLayoutToggle: boolean;
+  showVariantToggle: boolean;
   onVariantChange: (variant: string) => void;
   shouldShowAspectLock: boolean;
   isAspectLocked: boolean;
@@ -22,7 +22,7 @@ interface PlaygroundWorkspaceProps {
 
 export function PlaygroundWorkspace({
   isMobile,
-  showLayoutToggle,
+  showVariantToggle,
   onVariantChange,
   shouldShowAspectLock,
   isAspectLocked,
@@ -37,7 +37,7 @@ export function PlaygroundWorkspace({
     <div className={cn("flex flex-1 min-h-0", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
       <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-          {showLayoutToggle ? <LayoutVariantToggle onVariantChange={onVariantChange} /> : null}
+          {showVariantToggle ? <VariantToggle onVariantChange={onVariantChange} /> : null}
 
           {shouldShowAspectLock ? (
             <div className="flex justify-end">
@@ -69,7 +69,7 @@ export function PlaygroundWorkspace({
             {showFocusHint ? (
               <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
                 <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
-                  Screenshot-focused layout active
+                  Screenshot-focused variant active
                 </span>
               </div>
             ) : null}

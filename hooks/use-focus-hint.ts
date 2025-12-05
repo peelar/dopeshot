@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { TemplateFocusMode } from "@/domain/layout/templates";
+import { LookFocusMode } from "@/domain/look/looks";
 
 export function useFocusHint(
   isScreenshotFocusedMode: boolean,
-  focusMode: TemplateFocusMode | undefined,
+  focusMode: LookFocusMode | undefined,
 ) {
   const [showFocusHint, setShowFocusHint] = useState(false);
   const focusHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

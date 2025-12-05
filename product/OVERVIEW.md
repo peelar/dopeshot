@@ -52,7 +52,7 @@
   - Top/Bottom (stacked)
 - **Auto-selected:** When screenshot is horizontal or square
 
-**Switching:** One-click between templates and variants
+**Switching:** One-click between looks and variants
 
 ### 3. Font System
 
@@ -156,8 +156,8 @@ _(But in vision document)_
 - Text-only content covers (podcast, newsletter)
 - Brand consistency system (saved palettes)
 - Multi-platform export
-- Series templates
-- Additional templates (e.g., "Overlay")
+- Series looks
+- Additional looks (e.g., "Overlay")
 
 ---
 

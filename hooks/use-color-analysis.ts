@@ -39,7 +39,7 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
         const gradientOptions = colorPalette
           ? generateGradientOptions(colorPalette, {
               aspectCategory: "landscape",
-              templateVariant: undefined,
+              variant: undefined,
             })
           : [];
 

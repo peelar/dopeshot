@@ -11,7 +11,7 @@ status: COMPLETED
 
 ## Background
 - Current template rail shows every variant as its own card (e.g., Popup & Gradient Left/Right/Center), which will not scale once full-bleed or additional placements are added.
-- Layout state is already modeled as `LayoutConfig` with `templateId` (template) and `variant` (layout). Variants should be selectable without replacing the whole template or resetting user content.
+- Layout state is already modeled as `LayoutConfig` with `lookId` (styling bundle) and `variant` (layout). Variants should be selectable without replacing the whole look or resetting user content.
 
 ## Problem Statement
 - More variants (full-size image, alt logo positions, text-only) will explode the top rail and push the Design sidebar toward structural controls. Users risk losing clarity on what is a new template versus a layout within one.
