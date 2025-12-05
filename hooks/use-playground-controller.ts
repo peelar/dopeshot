@@ -32,7 +32,6 @@ import {
   isScreenshotFocusedModeAtom,
   screenshotAssetAtom,
   shouldShowAspectLockAtom,
-  showVariantToggleAtom,
   lookCapabilitiesAtom,
 } from "@/hooks/atoms/derived";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
@@ -70,7 +69,6 @@ export function usePlaygroundController() {
   const isScreenshotFocusedMode = useAtomValue(isScreenshotFocusedModeAtom);
   const shouldShowAspectLock = useAtomValue(shouldShowAspectLockAtom);
   const isAspectLocked = useAtomValue(isAspectLockedAtom);
-  const showVariantToggle = useAtomValue(showVariantToggleAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
@@ -129,7 +127,6 @@ export function usePlaygroundController() {
     showFocusHint,
     hasScreenshot,
     isExporting,
-    showVariantToggle,
     shouldShowAspectLock,
     isAspectLocked,
     canvas,

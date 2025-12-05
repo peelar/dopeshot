@@ -69,15 +69,15 @@ export function LookSelector({ className }: { className?: string }) {
   ]);
 
   return (
-    <div className={cn("flex w-full flex-col gap-2", className)}>
-      <div className="flex items-center gap-2 px-1">
+    <div className={cn("flex w-full max-w-4xl flex-col gap-2 bg-muted/20 p-4", className)}>
+      <div className="ml-[2px] flex items-center gap-2">
         <Sparkles className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
           Look
         </p>
       </div>
 
-      <div className="flex w-full gap-4 overflow-x-auto border-b border-border bg-muted/20 p-4">
+      <div className="flex w-full gap-4 overflow-x-auto border-b border-border px-1 py-3">
         {previewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
           const isSelected = currentConfig.lookId === lookId;
 
@@ -106,8 +106,10 @@ export function LookSelector({ className }: { className?: string }) {
               type="button"
               onClick={handleSelect}
               className={cn(
-                "group relative flex flex-col gap-2 rounded-lg border-2 p-1 transition-all hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                isSelected ? "border-primary bg-muted" : "border-transparent hover:border-border",
+                "group relative flex flex-col gap-2 rounded-lg border border-transparent p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                isSelected
+                  ? "border-primary/60 ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
+                  : "hover:border-border/60 hover:bg-muted/40",
               )}
               aria-pressed={isSelected}
               aria-label={`Select ${displayName} look`}

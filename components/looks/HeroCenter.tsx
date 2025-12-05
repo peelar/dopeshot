@@ -190,7 +190,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
         <div
           className={cn(
             "absolute top-8 z-10 flex items-center gap-2",
-            variant === "right" ? "right-8" : "left-8",
+            variant === "right" ? "right-14" : "left-14",
           )}
         >
           {renderLogo()}

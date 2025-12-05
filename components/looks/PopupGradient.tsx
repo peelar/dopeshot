@@ -162,7 +162,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         <div
           className={cn(
             "absolute top-8 z-10 flex items-center",
-            textVariant === "right" ? "right-8 justify-end" : "left-8 justify-start",
+            textVariant === "right" ? "right-14 justify-end" : "left-14 justify-start",
           )}
         >
           {logo ? (
