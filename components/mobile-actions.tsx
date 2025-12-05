@@ -167,18 +167,20 @@ export function MobileActions({
             onPointerCancel={handleDragEnd}
             className="group h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden will-change-transform data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
-            <div className="-mx-4 -mt-2 mb-1 flex items-center justify-center">
+            <div className="relative mx-auto flex h-1.5 w-14 items-center justify-center">
               <div
-                className="flex h-12 w-24 items-center justify-center touch-none select-none rounded-full bg-muted/60 transition-colors data-[dragging=true]:bg-muted/80"
+                className="absolute inset-x-[-24px] top-[-20px] bottom-[-12px] touch-none select-none"
                 aria-hidden="true"
                 onPointerDown={handleDragStart}
                 onPointerMove={handleDragMove}
                 onPointerUp={handleDragEnd}
                 onPointerCancel={handleDragEnd}
                 data-dragging={isDragging ? "true" : "false"}
-              >
-                <div className="h-1.5 w-14 rounded-full bg-muted-foreground/40" />
-              </div>
+              />
+              <div
+                className="h-1.5 w-14 rounded-full bg-muted-foreground/40 transition-colors data-[dragging=true]:bg-muted-foreground/60"
+                aria-hidden="true"
+              />
             </div>
             <SheetHeader className="mt-4 text-left">
               <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
