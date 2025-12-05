@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+  type TransitionEvent,
+} from "react";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import {
   Sheet,
@@ -20,6 +28,9 @@ interface MobileActionsProps {
   onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
+const CLOSE_DRAG_DISTANCE = 120;
+const CLOSE_VELOCITY = 0.65;
+
 export function MobileActions({
   isOpen,
   onOpenChange,
@@ -27,6 +38,105 @@ export function MobileActions({
   isProcessingUpload,
   onUploadAsset,
 }: MobileActionsProps) {
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const settleTimerRef = useRef<number | null>(null);
+  const dragStateRef = useRef({
+    startY: 0,
+    lastY: 0,
+    lastTime: 0,
+    offset: 0,
+    velocity: 0,
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const [isSettling, setIsSettling] = useState(false);
+
+  const setDragOffset = useCallback((offset: number) => {
+    const clampedOffset = Math.max(0, offset);
+    dragStateRef.current.offset = clampedOffset;
+    if (sheetRef.current) {
+      sheetRef.current.style.setProperty("--drag-offset", `${clampedOffset}px`);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setIsDragging(false);
+      setIsSettling(false);
+      setDragOffset(0);
+    }
+  }, [isOpen, setDragOffset]);
+
+  useEffect(
+    () => () => {
+      if (settleTimerRef.current) {
+        window.clearTimeout(settleTimerRef.current);
+      }
+    },
+    [],
+  );
+
+  const handleDragStart = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!isOpen) return;
+      setIsSettling(false);
+      setIsDragging(true);
+      dragStateRef.current.startY = event.clientY;
+      dragStateRef.current.lastY = event.clientY;
+      dragStateRef.current.lastTime = performance.now();
+      dragStateRef.current.velocity = 0;
+      event.currentTarget.setPointerCapture(event.pointerId);
+    },
+    [isOpen],
+  );
+
+  const handleDragMove = useCallback(
+    (event: ReactPointerEvent<HTMLDivElement>) => {
+      if (!isDragging) return;
+      const currentY = event.clientY;
+      const delta = currentY - dragStateRef.current.startY;
+      const now = performance.now();
+      const dy = currentY - dragStateRef.current.lastY;
+      const dt = Math.max(1, now - dragStateRef.current.lastTime);
+
+      dragStateRef.current.velocity = dy / dt;
+      dragStateRef.current.lastY = currentY;
+      dragStateRef.current.lastTime = now;
+
+      const dampedDelta = delta < 0 ? delta * 0.35 : delta;
+      setDragOffset(dampedDelta);
+    },
+    [isDragging, setDragOffset],
+  );
+
+  const handleDragEnd = useCallback(() => {
+    if (!isDragging) return;
+    const { offset, velocity } = dragStateRef.current;
+    setIsDragging(false);
+
+    const shouldClose = offset > CLOSE_DRAG_DISTANCE || velocity > CLOSE_VELOCITY;
+
+    if (settleTimerRef.current) {
+      window.clearTimeout(settleTimerRef.current);
+    }
+
+    if (shouldClose) {
+      // Keep the current offset so the panel continues moving down when closing.
+      onOpenChange(false);
+    } else {
+      setIsSettling(true);
+      setDragOffset(0);
+      settleTimerRef.current = window.setTimeout(() => {
+        setIsSettling(false);
+      }, 220);
+    }
+  }, [isDragging, onOpenChange, setDragOffset]);
+
+  const handleTransitionEnd = useCallback((event: TransitionEvent<HTMLDivElement>) => {
+    if (event.propertyName === "transform") {
+      setIsSettling(false);
+    }
+  }, []);
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
       <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
@@ -42,9 +152,21 @@ export function MobileActions({
           </SheetTrigger>
           <SheetContent
             side="bottom"
-            className="h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden"
+            ref={sheetRef}
+            data-dragging={isDragging ? "true" : "false"}
+            data-settling={isSettling ? "true" : "false"}
+            onTransitionEnd={handleTransitionEnd}
+            className="h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden will-change-transform data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
-            <div className="mx-auto h-1.5 w-14 rounded-full bg-muted-foreground/30" aria-hidden="true" />
+            <div
+              className="mx-auto h-1.5 w-14 touch-none select-none rounded-full bg-muted-foreground/30 transition-colors data-[dragging=true]:bg-muted-foreground/50"
+              aria-hidden="true"
+              onPointerDown={handleDragStart}
+              onPointerMove={handleDragMove}
+              onPointerUp={handleDragEnd}
+              onPointerCancel={handleDragEnd}
+              data-dragging={isDragging ? "true" : "false"}
+            />
             <SheetHeader className="mt-4 text-left">
               <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
               <SheetDescription className="text-xs text-muted-foreground">
