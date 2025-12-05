@@ -5,12 +5,12 @@ status: TODO
 # Looks (Style Presets)
 
 ## Objective
-- Introduce `Looks` (style presets) as the primary styling control: one-tap bundles for gradient + pattern + outline/shadow + text color (and optionally font), while templates stay automatic and layouts remain a lightweight toggle.
+- Introduce `Looks` (style presets) as the primary styling control: one-tap bundles for gradient + pattern + outline/shadow + text color (and optionally font), while the only structural control is `Variants` built from primitives (no template rail).
 
 ## Background
-- Templates (composition) and layouts (placement) exist but feel abstract to users; they mainly want “make this look good fast.”
+- Templates (composition) were exposed but feel abstract; users mainly want “make this look good fast.”
 - Styling controls are scattered (background, grain, outline), making it hard to know what’s active.
-- We want an effortless default (auto-pick) and clear, minimal ways to swap vibes without exposing template complexity.
+- We want an effortless default (auto-pick) and clear, minimal ways to swap vibes without exposing template complexity. Implementation should be primitive-first (gradient, frame, flex/grid), so new Looks/Variants compose easily.
 
 ## Problem Statement
 - Current experience requires touching multiple controls to change the vibe; template vs layout vs styling is unclear.
@@ -21,7 +21,7 @@ status: TODO
 **Goals**
 - Single “Looks” picker that applies a cohesive bundle; never moves content.
 - Auto-select a Look on upload based on palette/aspect; user can swap quickly.
-- Keep layouts as a small, optional segmented control; templates stay under the hood (auto-chosen).
+- Replace layouts/templates with `Variants` (structural options) that stay small; underlying implementation composes primitives, not hard-coded templates.
 - Clear state: show what Look is applied; mark `Custom` if the user tweaks background/pattern after selecting a Look.
 
 **Non-Goals**
@@ -35,29 +35,36 @@ status: TODO
 - Brand matchers: pick one Look repeatedly for consistency.
 
 ## Proposed Solution
-- **Control placement:** Add `Looks` as a compact chip strip at the top of the Design sidebar, above Background. Avoid new tabs.
-- **Options:** `Auto` (default), `Base`, `Terminal`, `Beach Pop`, `Glass Clean`, `Noir`, `Vivid Duo`, `Muted Grain`.
-- **Behavior:** Selecting a Look applies its bundle (gradient, pattern, outline/shadow, text color, optional font). It does not change template or layout. Layout control remains a small segmented control shown only when variants exist.
-- **Auto behavior:** On upload, auto-select a Look using palette/brightness/contrast. Auto can update on new uploads but does not overwrite a user-chosen Look.
-- **State clarity:** Above Background, show “Applied Look: Beach Pop (Auto)” or “Custom” if user edits Background/Pattern after choosing a Look. Provide a quick “Reset to Look” link.
-- **Templates/layouts:** Template selection stays automatic by aspect ratio; layout toggle remains the only structural control users see.
+- **Looks rail (replaces template rail):** Top of Design sidebar, compact chip rail. Start with 5 curated options: `Auto` (default), `Base`, `Terminal`, `Glass Clean`, `Vivid Duo`. Future Looks append after this core set. Under the hood, Looks are bundles of primitives (gradient, pattern, frame, text tokens), not template swaps.
+- **Behavior:** Selecting a Look applies its bundle. It never moves content. The only structural control is `Variants`, a small segmented control shown when options exist (today these map one-to-one to current layout variants; later they’re primitive-driven).
+- **Auto behavior:** On upload, auto-select a Look using palette/brightness/contrast/aspect. Auto can update on new uploads but never overwrites a user-chosen Look (manual).
+- **State clarity:** Above Background, show “Applied Look: Base (Auto)” or “Custom” if user edits Background/Pattern after choosing a Look. Provide “Reset to Base” to reapply the bundle.
+- **Implementation note:** Remove template rail entirely. Rendering is driven by primitives (gradient/pattern/screenshot frame/flex composition). Existing layout variants map to `Variants` until we fully refactor to primitive variants.
+- **Initial Look set (tokens and vibe):**
+  - `Base`: neutral gradient, light grain, soft shadow; safe default for most content.
+  - `Terminal`: dark mono background with subtle scanline pattern, neon accent text, crisp outline.
+  - `Glass Clean`: frosted glass panel on muted gradient, faint glow, soft text.
+  - `Vivid Duo`: bold dual-tone gradient, higher contrast text, gentle grain and outer glow for depth.
+  - `Auto`: selector that maps input palette/aspect to one of the above.
 
 ## Requirements
 - Add `lookId` and `lookMode: auto|manual|custom` to config/state; default to `auto`.
 - Each Look stores tokens: gradient spec, patternId, shadow/outline preset, text color set, optional font choice. Applying a Look updates these fields atomically.
-- Changing Look must not alter template or layout; changing layout must not overwrite Look styling.
+- Changing Look must not alter Variants; changing Variant must not overwrite Look styling.
 - Auto Look selection runs on upload/palette ready; if manual Look is set, do not auto-switch.
-- UI: chip radiogroup, keyboard-accessible, wraps or collapses on narrow widths.
+- UI: chip radiogroup (Looks rail) replacing template rail, keyboard-accessible, wraps/collapses on narrow widths.
+- Variants segmented control replaces “Layouts” and pulls from current layout variants (one-to-one) until primitive variants land.
 - Visible state in Background area: applied Look name + reset affordance.
 - Export must match on-canvas styling; no perf regressions.
 
 ## UX Notes & Copy
 - Label: `Looks`.
 - Helper text (muted, 12px): “Preset styles. Keeps your layout.”
-- Chips: `Auto`, `Base`, `Terminal`, `Beach Pop`, `Glass Clean`, `Noir`, `Vivid Duo`, `Muted Grain`.
+- Chips: `Auto`, `Base`, `Terminal`, `Glass Clean`, `Vivid Duo`.
 - Tooltip on Auto: “Picks a style for you.”
-- Background section banner when a Look is active: “Applied Look: Beach Pop · Reset”.
-- If user tweaks Background/Pattern, banner changes to “Custom · Reapply Beach Pop”.
+- Background section banner when a Look is active: “Applied Look: Base · Reset”.
+- If user tweaks Background/Pattern, banner changes to “Custom · Reapply Base”.
+- Variants label: `Variants` (no “Layouts”/“Templates”).
 
 ## Success Metrics
 - ≥60% of sessions export with the Auto Look untouched.
