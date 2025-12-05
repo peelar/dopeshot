@@ -2,8 +2,7 @@ import { useCallback } from "react";
 import { useSetAtom, useAtom } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { processFileUpload } from "@/domain/asset/upload-orchestrator";
-import { applyTemplateRecommendation, ASPECT_COPY } from "@/domain/layout/recommendations";
-import { getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
+import { applyLookRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
 import {
   configAtom,
@@ -110,12 +109,12 @@ export function useFileUpload({
 
           if (kind === "screenshot" && aspectCategory) {
             const recommendation = getRecommendationForAspectCategory(aspectCategory);
-            const result = applyTemplateRecommendation(nextConfig, recommendation);
+            const result = applyLookRecommendation(nextConfig, recommendation);
             nextConfig = result.config;
 
-            if ((result.changedTemplate || result.changedVariant) && result.templateName) {
+            if ((result.changedLook || result.changedVariant) && result.lookName) {
               setStatusMessage(
-                `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.templateName}.`,
+                `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.lookName}.`,
               );
             }
           }

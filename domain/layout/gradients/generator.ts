@@ -14,7 +14,7 @@ type GradientVariation = {
  */
 export type GradientContext = {
   aspectCategory: AspectCategory;
-  templateVariant?: string; // e.g., "left", "right", "center"
+  variant?: string; // e.g., "left", "right", "center"
 };
 
 /**
@@ -68,7 +68,7 @@ function getGradientGeometry(context: GradientContext): {
   direction?: string;
   angle?: number;
 } {
-  const { aspectCategory, templateVariant } = context;
+  const { aspectCategory } = context;
 
   // Vertical/portrait: diagonal gradient to create depth
   if (aspectCategory === "portrait") {

@@ -29,8 +29,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
 import { configAtom } from "@/hooks/atoms";
 import {
-  currentTemplateAtom,
-  templateCapabilitiesAtom,
+  lookCapabilitiesAtom,
   screenshotAssetAtom,
   logoAssetAtom,
   backgroundAssetAtom,
@@ -73,25 +72,24 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
-  const template = useAtomValue(currentTemplateAtom);
-  const templateCapabilities = useAtomValue(templateCapabilitiesAtom);
+  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
   const backgroundAsset = useAtomValue(backgroundAssetAtom);
-  const outlineControls = templateCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
-  const showHeadlineInput = (templateCapabilities?.text.headline ?? "optional") !== "hidden";
-  const showSubtitleInput = (templateCapabilities?.text.subtitle ?? "optional") !== "hidden";
-  const showTypographyControls = templateCapabilities?.typography !== false;
+  const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+  const showHeadlineInput = (lookCapabilities?.text.headline ?? "optional") !== "hidden";
+  const showSubtitleInput = (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
+  const showTypographyControls = lookCapabilities?.typography !== false;
   const showOutlineSection =
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
-  const showLogoUpload = templateCapabilities?.logo !== "hidden";
+  const showLogoUpload = lookCapabilities?.logo !== "hidden";
 
   // Local state for background tab selection (default to current config type or gradient)
   const [bgType, setBgType] = useState<"gradient" | "image">(
     config.background?.type === "image" ? "image" : "gradient",
   );
 
-  // Sync local state with config type when it changes externally (e.g. template switch)
+  // Sync local state with config type when it changes externally (e.g. look switch)
   useEffect(() => {
     if (config.background?.type) {
       if (config.background.type === "image") {
