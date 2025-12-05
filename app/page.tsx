@@ -42,7 +42,6 @@ export default function PlaygroundPage() {
     showFocusHint,
     hasScreenshot,
     isExporting,
-    showVariantToggle,
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
@@ -87,14 +86,13 @@ export default function PlaygroundPage() {
       <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10 overflow-hidden">
         <LookSelector />
 
-        <PlaygroundWorkspace
-          isMobile={isMobile}
-          showVariantToggle={showVariantToggle}
-          onVariantChange={handleVariantChange}
-          shouldShowAspectLock={shouldShowAspectLock}
-          isAspectLocked={isAspectLocked}
-          onToggleAspect={toggleCanvasMode}
-          canvasHeight={canvas.height}
+          <PlaygroundWorkspace
+            isMobile={isMobile}
+            onVariantChange={handleVariantChange}
+            shouldShowAspectLock={shouldShowAspectLock}
+            isAspectLocked={isAspectLocked}
+            onToggleAspect={toggleCanvasMode}
+            canvasHeight={canvas.height}
           canvasWidth={canvas.width}
           isAnalyzingColors={isAnalyzingColors}
           onUploadAsset={handleFileProcess}

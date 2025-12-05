@@ -8,7 +8,6 @@ import { cn } from "@/utils";
 
 interface PlaygroundWorkspaceProps {
   isMobile: boolean;
-  showVariantToggle: boolean;
   onVariantChange: (variant: string) => void;
   shouldShowAspectLock: boolean;
   isAspectLocked: boolean;
@@ -22,7 +21,6 @@ interface PlaygroundWorkspaceProps {
 
 export function PlaygroundWorkspace({
   isMobile,
-  showVariantToggle,
   onVariantChange,
   shouldShowAspectLock,
   isAspectLocked,
@@ -37,7 +35,7 @@ export function PlaygroundWorkspace({
     <div className={cn("flex flex-1 min-h-0", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
       <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-          {showVariantToggle ? <VariantToggle onVariantChange={onVariantChange} /> : null}
+          <VariantToggle onVariantChange={onVariantChange} />
 
           {shouldShowAspectLock ? (
             <div className="flex justify-end">

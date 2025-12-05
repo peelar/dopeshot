@@ -201,7 +201,7 @@ export function VariantToggle({ onVariantChange }: VariantToggleProps) {
         )}
 
         {shouldShowPatterns && (
-          <div className="space-y-1.5 text-right sm:w-auto sm:min-w-0 sm:space-y-1">
+          <div className="ml-auto space-y-1.5 text-right sm:w-auto sm:min-w-0 sm:space-y-1">
             <p className="mr-[2px] text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
               Style
             </p>

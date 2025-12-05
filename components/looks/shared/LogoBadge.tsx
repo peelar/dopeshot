@@ -13,6 +13,9 @@ interface LogoBadgeProps {
   label?: string;
   replaceLabel?: string;
   className?: string;
+  width?: number;
+  height?: number;
+  borderRadius?: number;
 }
 
 export function LogoBadge({
@@ -22,9 +25,13 @@ export function LogoBadge({
   label = "Drop your logo",
   replaceLabel = "Replace logo",
   className,
+  width = 200,
+  height = 60,
+  borderRadius = 14,
 }: LogoBadgeProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const validateFile = useCallback((file: File) => {
@@ -89,7 +96,10 @@ export function LogoBadge({
     inputRef.current?.click();
   }, [onUploadLogo]);
 
-  const bgStyle = isDragging ? "rgba(255,255,255,0.3)" : mutedBg ?? "rgba(255,255,255,0.2)";
+  const idleTint = mutedBg ?? "rgba(255,255,255,0.05)";
+  const hoverTint = "rgba(255,255,255,0.12)";
+  const dragTint = "rgba(255,255,255,0.18)";
+  const activeTint = isDragging ? dragTint : isHovered ? hoverTint : idleTint;
 
   return (
     <div className="space-y-1 text-left">
@@ -107,29 +117,47 @@ export function LogoBadge({
         onDrop={handleDrop}
         onClick={handleClick}
         onKeyDown={handleKeyDown}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "relative flex min-w-[140px] items-center gap-3 rounded-full border border-white/40 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] shadow-sm backdrop-blur transition",
-          onUploadLogo ? "cursor-pointer hover:border-white/80" : "cursor-default",
-          isDragging && onUploadLogo && "border-white/80",
+          "group relative isolate inline-flex items-center justify-center overflow-hidden border border-dashed border-white/20 text-[11px] font-medium uppercase tracking-[0.16em] transition-all duration-200",
+          "bg-transparent backdrop-blur-[1px]",
+          onUploadLogo ? "cursor-pointer" : "cursor-default opacity-70",
+          isDragging && onUploadLogo && "border-white/70 shadow-[0_0_0_1px_rgba(255,255,255,0.25),0_12px_28px_-12px_rgba(0,0,0,0.45)]",
           className,
         )}
+        style={{
+          width,
+          height,
+          borderRadius,
+        }}
+        data-dragging={isDragging}
       >
         <div
-          className="pointer-events-none absolute inset-0 rounded-full"
-          style={{ background: bgStyle, isolation: "isolate" }}
+          className="pointer-events-none absolute inset-0 opacity-80 transition-colors duration-200 group-hover:opacity-100"
+          style={{
+            background: activeTint,
+            isolation: "isolate",
+            borderRadius,
+          }}
+          data-dragging={isDragging}
         />
-        <div className="relative z-10 flex items-center gap-3">
-          {logo ? (
-            <img
-              src={logo.url}
-              alt="Logo"
-              className="h-7 w-7 rounded-full object-contain"
-              crossOrigin="anonymous"
-            />
-          ) : (
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-white/70" />
-          )}
-          <span className="text-white mix-blend-difference">{logo ? replaceLabel : label}</span>
+        <div
+          className="pointer-events-none absolute inset-0 border border-dashed border-white/20 transition-colors duration-200 group-hover:border-white/60"
+          style={{ borderRadius }}
+          data-dragging={isDragging}
+        />
+
+        <div className="relative z-10 flex flex-col items-center justify-center gap-1 px-3 text-center text-white/80">
+          <span
+            className={cn(
+              "text-[11px] font-semibold uppercase tracking-[0.18em] transition-opacity",
+              "opacity-40 group-hover:opacity-80",
+              isDragging && "opacity-100 text-white",
+            )}
+          >
+            {logo ? replaceLabel : label}
+          </span>
         </div>
         <input
           ref={inputRef}

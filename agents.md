@@ -23,3 +23,4 @@ For all product documentation, see the [Product](product/index.md) folder.
 - Keep the Design sidebar for styling; look/variant switching stays in the rail/toggle above the canvas.
 - Be very hesitant about adding something new to the sidebar. It should be as intelligent as possible, with no extra clicks or steps.
 - Add UI comments only when clarifying non-obvious logic.
+- When building a more complex feature, ask yourself: what took the longest to build? What is the most complex part? And proactively propose ways to refactor it.
