@@ -1,7 +1,7 @@
 "use client";
 
 import { FontId, FontSize } from "@/domain/layout/types";
-import { FONTS, FONT_SIZES, getFontById, getFontSizeById } from "@/domain/layout/fonts";
+import { FONTS, FONT_SIZES, getFontSizeById } from "@/domain/layout/fonts";
 import {
   Select,
   SelectContent,
@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Minus, Plus } from "lucide-react";
 
 interface FontSelectorProps {
@@ -25,7 +24,6 @@ export function FontSelector({
   onFontChangeAction,
   onSizeChangeAction,
 }: FontSelectorProps) {
-  const selectedFont = getFontById(fontId);
   const currentSizeIndex = FONT_SIZES.findIndex((s) => s.id === fontSize);
   const currentSize = getFontSizeById(fontSize);
 
@@ -48,26 +46,14 @@ export function FontSelector({
         <div className="flex-[3]">
           <Select value={fontId} onValueChange={(v) => onFontChangeAction(v as FontId)}>
             <SelectTrigger>
-              <SelectValue>
-                {selectedFont && (
-                  <span style={{ fontFamily: `var(${selectedFont.cssVariable})` }}>
-                    {selectedFont.alias}
-                  </span>
-                )}
-              </SelectValue>
+              <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent modal={false}>
               {FONTS.map((font) => (
                 <SelectItem key={font.id} value={font.id}>
-                  <div className="flex flex-col gap-0.5">
-                    <span
-                      className="font-medium"
-                      style={{ fontFamily: `var(${font.cssVariable})` }}
-                    >
-                      {font.alias}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">{font.fontName}</span>
-                  </div>
+                  <span style={{ fontFamily: `var(${font.cssVariable})` }}>
+                    {font.alias}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
