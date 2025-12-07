@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { getLookById } from "@/domain/look/looks";
+import { getLookDefinition } from "@/domain/look/definitions";
 import {
   getCanvasDimensions,
   getScreenshotTreatment,
@@ -10,7 +10,7 @@ import { configAtom, assetsAtom } from "../atoms";
 // Derived atoms
 export const currentLookAtom = atom((get) => {
   const config = get(configAtom);
-  return getLookById(config.lookId);
+  return getLookDefinition(config.lookId);
 });
 
 export const lookCapabilitiesAtom = atom((get) => {

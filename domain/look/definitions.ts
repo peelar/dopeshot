@@ -1,10 +1,6 @@
-import { LayoutConfig } from "@/domain/layout/types";
-import { PopupGradient } from "@/components/looks/PopupGradient";
-import { HeroCenter } from "@/components/looks/HeroCenter";
-import type { ComponentType } from "react";
+import type { LayoutConfig } from "@/domain/layout/types";
 import { DEFAULT_GRADIENT } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
-import { AdaptiveScreenshot } from "@/components/looks/AdaptiveScreenshot";
 
 export type LookTextRequirement = "required" | "optional" | "hidden";
 
@@ -33,21 +29,22 @@ export interface LookCapabilities {
   };
 }
 
-export interface Look {
+/**
+ * Pure data definition of a Look (visual style/template).
+ * 
+ * Domain layer: Contains no React components or UI dependencies.
+ * This allows the domain to be imported by any layer without circular dependencies.
+ */
+export interface LookDefinition {
   id: string;
   name: string;
   description: string;
-  variants: string[]; // Available structural variants for this look
+  variants: string[];
   createConfig: () => LayoutConfig;
-  component: ComponentType<{
-    className?: string;
-    onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
-    isStatic?: boolean;
-  }>;
   capabilities: LookCapabilities;
 }
 
-export const LOOKS: Look[] = [
+export const LOOK_DEFINITIONS: LookDefinition[] = [
   {
     id: "popup-gradient",
     name: "Peak",
@@ -87,7 +84,6 @@ export const LOOKS: Look[] = [
         shape: "rounded",
       },
     }),
-    component: PopupGradient,
     capabilities: {
       focusMode: "never",
       canvasBehavior: "locked",
@@ -147,7 +143,6 @@ export const LOOKS: Look[] = [
         shape: "rounded",
       },
     }),
-    component: HeroCenter,
     capabilities: {
       focusMode: "never",
       canvasBehavior: "locked",
@@ -207,7 +202,6 @@ export const LOOKS: Look[] = [
         shape: "rounded",
       },
     }),
-    component: AdaptiveScreenshot,
     capabilities: {
       focusMode: "always",
       canvasBehavior: "adaptive",
@@ -226,11 +220,12 @@ export const LOOKS: Look[] = [
   },
 ];
 
-export function getLookById(id: string): Look | undefined {
+export function getLookDefinition(id: string): LookDefinition | undefined {
+  // Handle legacy "full-visual" ID
   if (id === "full-visual") {
-    return LOOKS.find((look) => look.id === "adaptive-stage");
+    return LOOK_DEFINITIONS.find((look) => look.id === "adaptive-stage");
   }
-  return LOOKS.find((look) => look.id === id);
+  return LOOK_DEFINITIONS.find((look) => look.id === id);
 }
 
 type LookTextDefaultOptions = {
@@ -249,12 +244,18 @@ function hasUserProvidedText(value: string | undefined, preserveEmptyText: boole
   return preserveEmptyText;
 }
 
+/**
+ * Applies default text values to a layout config based on look capabilities.
+ * 
+ * This is domain logic: it understands look requirements and config structure,
+ * but doesn't depend on UI components.
+ */
 export function withLookTextDefaults(
   config: LayoutConfig,
   options?: LookTextDefaultOptions,
 ): LayoutConfig {
   const normalizedLookId = config.lookId === "full-visual" ? "adaptive-stage" : config.lookId;
-  const look = getLookById(normalizedLookId);
+  const look = getLookDefinition(normalizedLookId);
   const defaults = look?.capabilities.copyDefaults;
   if (!look || !defaults) {
     return config;
@@ -287,3 +288,4 @@ export function withLookTextDefaults(
 
   return config;
 }
+

@@ -1,4 +1,15 @@
 /**
+ * Gradient Data Models
+ * 
+ * This module defines the shape of gradient data used throughout layouts.
+ * It does NOT contain generation/extraction logic - see domain/gradient-generation.
+ * 
+ * Purpose: Pure data types and type guards for gradient configurations
+ * Layer: Domain Model (data structures only)
+ * Dependencies: None
+ */
+
+/**
  * Color stop in a gradient with optional position (0-100% or 0-1)
  */
 export type GradientStop = {
