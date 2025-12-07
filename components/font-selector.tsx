@@ -48,7 +48,7 @@ export function FontSelector({
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent modal={false}>
+            <SelectContent>
               {FONTS.map((font) => (
                 <SelectItem key={font.id} value={font.id}>
                   <span style={{ fontFamily: `var(${font.cssVariable})` }}>
