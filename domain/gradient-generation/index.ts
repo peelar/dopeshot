@@ -1,3 +1,17 @@
+/**
+ * Gradient Generation Service
+ * 
+ * Intelligence layer for color extraction and gradient creation from images.
+ * 
+ * Purpose: Analyze images and generate aesthetically pleasing gradients
+ * Layer: Domain Service (business logic)
+ * Dependencies: 
+ *   - Uses gradient types from domain/layout/gradients (for output format)
+ *   - Does NOT import from domain/layout/gradients currently (good)
+ * 
+ * Used by: UI components and hooks for dynamic gradient generation
+ */
+
 import { extractPaletteFromImage, type ColorExtractionResult } from "./color-extraction";
 import { normalizeImageBuffer, isLikelyImageBuffer } from "./utils";
 import { analyzePaletteMood, determineStrategy, type PaletteMood } from "./strategy";

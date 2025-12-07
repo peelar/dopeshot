@@ -1,5 +1,5 @@
 import { LayoutConfig } from "./types";
-import { getLookById, withLookTextDefaults } from "@/domain/look/looks";
+import { getLookDefinition, withLookTextDefaults } from "@/domain/look/definitions";
 import { AspectCategory, getRecommendationForCategory } from "./aspect";
 
 export type LookRecommendation = {
@@ -27,7 +27,7 @@ export function applyLookRecommendation(
     return { config, changedLook: false, changedVariant: false };
   }
 
-  const look = getLookById(recommendation.lookId);
+  const look = getLookDefinition(recommendation.lookId);
   if (!look) {
     return { config, changedLook: false, changedVariant: false };
   }
@@ -43,8 +43,7 @@ export function applyLookRecommendation(
       {
         ...defaultConfig,
         lookId: look.id,
-        variant:
-          variantCandidate || defaultConfig.variant || look.variants[0] || config.variant,
+        variant: variantCandidate || defaultConfig.variant || look.variants[0] || config.variant,
         text: config.text,
         colors: config.colors,
         background: config.background,
@@ -86,4 +85,3 @@ export function getRecommendationForAspectCategory(
 ): LookRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }
-

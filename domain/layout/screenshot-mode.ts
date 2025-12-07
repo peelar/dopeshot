@@ -1,6 +1,6 @@
 import { Asset } from "@/domain/asset/types";
 import { CanvasMode, LayoutConfig, ScreenshotTreatment } from "./types";
-import { getLookById } from "@/domain/look/looks";
+import { getLookDefinition } from "@/domain/look/definitions";
 
 export const DEFAULT_LOCKED_ASPECT_RATIO = 1280 / 720;
 const BASE_CANVAS_WIDTH = 1280;
@@ -10,7 +10,7 @@ function isBlank(value?: string) {
 }
 
 export function isScreenshotFocused(config: LayoutConfig): boolean {
-  const look = getLookById(config.lookId);
+  const look = getLookDefinition(config.lookId);
   const focusMode = look?.capabilities.focusMode ?? "auto";
 
   if (focusMode === "always") {
@@ -38,7 +38,7 @@ export function getScreenshotTreatment(config: LayoutConfig): ScreenshotTreatmen
 }
 
 export function getEffectiveCanvasMode(config: LayoutConfig): CanvasMode {
-  const look = getLookById(config.lookId);
+  const look = getLookDefinition(config.lookId);
   const behavior = look?.capabilities.canvasBehavior ?? "locked";
 
   if (behavior === "locked") {

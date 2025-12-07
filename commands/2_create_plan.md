@@ -9,7 +9,7 @@ Generate detailed, phased implementation plans with clear success criteria.
 When the user describes a feature or change:
 
 1. **Research phase** (if needed):
-   - Check existing research in `thoughts/shared/research/`
+   - Check existing research in `thoughts/research/`
    - Conduct additional research if gaps exist
 
 2. **Generate a structured plan** with:
@@ -27,7 +27,7 @@ When the user describes a feature or change:
    - Manual verification steps
    - Rollback considerations
 
-4. **Save the plan** to `thoughts/shared/plans/[descriptive_name].md`
+4. **Save the plan** to `thoughts/plans/[descriptive_name].md`
 
 ## Plan Template
 
