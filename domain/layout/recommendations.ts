@@ -86,3 +86,4 @@ export function getRecommendationForAspectCategory(
 ): LookRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }
+
