@@ -26,7 +26,7 @@ When the user provides a research question, you will:
    - Potential concerns or complexity
    - Recommendations for implementation
 
-4. **Save the research** to `thoughts/shared/research/[descriptive_name].md`
+4. **Save the research** to `thoughts/research/[descriptive_name].md`
 
 ## Output Format
 

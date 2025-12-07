@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAtomValue, useSetAtom, Provider, createStore } from "jotai";
-import { LOOKS, withLookTextDefaults } from "@/domain/look/looks";
+import { LOOK_DEFINITIONS, withLookTextDefaults } from "@/domain/look/definitions";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
@@ -12,7 +12,7 @@ import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 
 // Memoize look default configs at module level to avoid recreation
-const LOOK_DEFAULTS = LOOKS.map((look) => {
+const LOOK_DEFAULTS = LOOK_DEFINITIONS.map((look) => {
   const defaultConfig = look.createConfig();
   const defaultVariant = defaultConfig.variant || look.variants[0];
 

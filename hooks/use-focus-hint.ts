@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { LookFocusMode } from "@/domain/look/looks";
+import type { LookFocusMode } from "@/domain/look/definitions";
 
 export function useFocusHint(
   isScreenshotFocusedMode: boolean,

@@ -49,4 +49,4 @@ Once resolved, I'll continue with [current phase].
 ## Example Usage
 
 > /4_implement_plan
-> thoughts/shared/plans/oauth2_integration.md
+> thoughts/plans/oauth2_integration.md
