@@ -1,10 +1,21 @@
 "use client";
 
-import { LayoutConfigPanel } from "@/components/layout-config";
 import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
+
+/**
+ * PlaygroundWorkspace
+ *
+ * Renders the main preview column containing:
+ * - Variant toggle controls
+ * - Aspect lock button (conditional)
+ * - Preview viewport with cover
+ *
+ * Note: This is now only the preview column. The sidebar
+ * is rendered at the page level in app/page.tsx
+ */
 
 interface PlaygroundWorkspaceProps {
   isMobile: boolean;
@@ -15,7 +26,6 @@ interface PlaygroundWorkspaceProps {
   canvasWidth: number;
   canvasHeight: number;
   isAnalyzingColors: boolean;
-  onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background") => void;
   showFocusHint: boolean;
 }
 
@@ -28,12 +38,10 @@ export function PlaygroundWorkspace({
   canvasHeight,
   canvasWidth,
   isAnalyzingColors,
-  onUploadAsset,
   showFocusHint,
 }: PlaygroundWorkspaceProps) {
   return (
-    <div className={cn("flex flex-1 min-h-0", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
-      <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+    <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
           <VariantToggle onVariantChange={onVariantChange} />
 
@@ -62,7 +70,7 @@ export function PlaygroundWorkspace({
               isLoading={isAnalyzingColors}
               loadingText="Analyzing colors..."
             >
-              <CoverPreview onUploadAsset={onUploadAsset} />
+              <CoverPreview />
             </PreviewViewport>
             {showFocusHint ? (
               <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
@@ -73,11 +81,6 @@ export function PlaygroundWorkspace({
             ) : null}
           </div>
         </div>
-      </div>
-
-      <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-        <LayoutConfigPanel onUploadAsset={onUploadAsset} />
-      </div>
     </div>
   );
 }
