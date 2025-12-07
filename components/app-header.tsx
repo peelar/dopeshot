@@ -35,7 +35,7 @@ export function AppHeader({
   const UploadIcon = isProcessingUpload ? Loader2 : hasCustomScreenshot ? RefreshCw : ImageUp;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
       <a href="/" aria-label="Go to homepage" className="flex items-center gap-2 pl-4 transition-opacity hover:opacity-80">
         <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-background" aria-hidden="true">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
