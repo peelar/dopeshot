@@ -6,7 +6,9 @@ import { DragOverlay } from "@/components/drag-overlay";
 import { MobileActions } from "@/components/mobile-actions";
 import { PlaygroundWorkspace } from "@/components/playground-workspace";
 import { LookSelector } from "@/components/look-selector";
+import { LayoutConfigPanel } from "@/components/layout-config";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
+import { cn } from "@/utils";
 
 function ExportContainer({ width, height }: { width: number; height: number }) {
   return (
@@ -83,8 +85,11 @@ export default function PlaygroundPage() {
         isExporting={isExporting}
       />
 
-      <div className="flex flex-1 min-h-0 flex-col gap-4 px-4 pb-12 pt-4 sm:px-8 sm:pb-10 overflow-hidden">
-        <LookSelector />
+      {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
+      <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
+        {/* Left: Content Column (Looks Rail + Preview) */}
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-hidden px-4 pb-12 pt-4 sm:px-8 sm:pb-10">
+          <LookSelector />
 
           <PlaygroundWorkspace
             isMobile={isMobile}
@@ -93,11 +98,16 @@ export default function PlaygroundPage() {
             isAspectLocked={isAspectLocked}
             onToggleAspect={toggleCanvasMode}
             canvasHeight={canvas.height}
-          canvasWidth={canvas.width}
-          isAnalyzingColors={isAnalyzingColors}
-          onUploadAsset={handleFileProcess}
-          showFocusHint={showFocusHint}
-        />
+            canvasWidth={canvas.width}
+            isAnalyzingColors={isAnalyzingColors}
+            showFocusHint={showFocusHint}
+          />
+        </div>
+
+        {/* Right: Sidebar - spans full height from below nav */}
+        <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
+          <LayoutConfigPanel onUploadAsset={handleFileProcess} />
+        </div>
       </div>
 
       {isMobile ? (
