@@ -38,7 +38,9 @@ const sheetVariants = cva(
           "data-[state=open]:[--sheet-translate:0%] data-[state=closed]:[--sheet-translate:100%]",
           "[--sheet-translate:100%] [--drag-offset:0px]",
           "[transform:translateY(calc(var(--sheet-translate,100%)+var(--drag-offset,0px)))]",
-          "transition-transform duration-[260ms] ease-[cubic-bezier(0.33,1,0.68,1)] data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]",
+          "transition-transform duration-[260ms] ease-[cubic-bezier(0.33,1,0.68,1)]",
+          "data-[dragging=true]:transition-none",
+          "data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]",
         ].join(" "),
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down sm:max-w-sm",
         right:
