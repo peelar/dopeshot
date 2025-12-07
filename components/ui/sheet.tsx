@@ -28,16 +28,17 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-white p-6 shadow-lg outline-none transition-transform duration-300 dark:bg-slate-950",
+  "fixed z-50 gap-4 bg-white p-6 shadow-lg outline-none dark:bg-slate-950",
   {
     variants: {
       side: {
         top: "inset-x-0 top-0 border-b data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down",
         bottom: [
-          "inset-x-0 bottom-0 border-t data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down",
+          "inset-x-0 bottom-0 border-t",
           "data-[state=open]:[--sheet-translate:0%] data-[state=closed]:[--sheet-translate:100%]",
           "[--sheet-translate:100%] [--drag-offset:0px]",
-          "[transform:translateY(calc(var(--sheet-translate,0%)+var(--drag-offset,0px)))]",
+          "[transform:translateY(calc(var(--sheet-translate,100%)+var(--drag-offset,0px)))]",
+          "transition-transform duration-[260ms] ease-[cubic-bezier(0.33,1,0.68,1)] data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]",
         ].join(" "),
         left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=open]:animate-sheet-slide-up data-[state=closed]:animate-sheet-slide-down sm:max-w-sm",
         right:
