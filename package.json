@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "knip": "knip",
-    "test:colors": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts"
+    "typecheck": "tsc --noEmit",
+    "test:domain": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts",
+    "test:ui": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -39,14 +43,21 @@
     "tailwind-merge": "^2.5.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.57.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
     "@types/chroma-js": "^3.1.2",
     "@types/culori": "^4.0.1",
     "@types/node": "^20.17.9",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^5.1.1",
+    "@vitest/ui": "^4.0.15",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.2.0",
     "eslint-config-next": "^15.5.6",
+    "jsdom": "^27.2.0",
     "knip": "^5.70.2",
     "postcss": "^8.4.49",
     "postcss-load-config": "^6.0.1",
@@ -54,6 +65,8 @@
     "prettier-plugin-tailwindcss": "^0.6.8",
     "tailwindcss": "^3.4.14",
     "tsx": "^4.21.0",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vite-tsconfig-paths": "^5.1.4",
+    "vitest": "^4.0.15"
   }
 }
