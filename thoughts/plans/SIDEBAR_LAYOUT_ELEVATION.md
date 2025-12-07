@@ -7,6 +7,7 @@ Move the sidebar from being nested inside `PlaygroundWorkspace` to the page-leve
 ## Implementation Approach
 
 Following **Approach A** from research: Keep looks rail spanning full width, then create a two-column layout below it containing the preview column and sidebar. This approach:
+
 - Minimizes disruption to existing looks rail behavior
 - Maintains clear separation of concerns
 - Preserves responsive behavior more easily
@@ -22,6 +23,7 @@ Following **Approach A** from research: Keep looks rail spanning full width, the
 **Changes**: Remove sidebar rendering from workspace, simplify to only handle preview column
 
 Remove lines 272-274 (the sidebar div and LayoutConfigPanel):
+
 ```typescript
 // DELETE THIS:
 <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
@@ -30,6 +32,7 @@ Remove lines 272-274 (the sidebar div and LayoutConfigPanel):
 ```
 
 Update the component interface to remove `onUploadAsset` prop:
+
 ```typescript
 interface PlaygroundWorkspaceProps {
   isMobile: boolean;
@@ -46,6 +49,7 @@ interface PlaygroundWorkspaceProps {
 ```
 
 Update the main container to remove horizontal flex behavior (no longer two-column):
+
 ```typescript
 // Change from:
 <div className={cn("flex flex-1 min-h-0", isMobile ? "flex-col gap-4" : "overflow-hidden")}>
@@ -59,11 +63,13 @@ The entire workspace now becomes just the preview column content (lines 36-269).
 ### Success Criteria
 
 #### Automated Verification
+
 - [x] Build passes: `pnpm run build`
 - [x] Types check: `pnpm typecheck`
 - [x] No linter errors: `pnpm lint`
 
 #### Manual Verification
+
 - [x] Page still renders without sidebar
 - [x] Preview column takes full width
 - [x] No TypeScript errors in IDE
@@ -109,18 +115,21 @@ Replace the current main content div (lines 86-101) with:
 ```
 
 Add import for LayoutConfigPanel at the top of page.tsx:
+
 ```typescript
-import { LayoutConfigPanel } from '@/components/layout-config';
+import { LayoutConfigPanel } from "@/components/layout-config";
 ```
 
 ### Success Criteria
 
 #### Automated Verification
+
 - [x] Build passes: `pnpm run build`
 - [x] Types check: `pnpm typecheck`
 - [x] No linter errors: `pnpm lint`
 
 #### Manual Verification
+
 - [ ] Sidebar appears at same height as looks rail
 - [ ] Preview column and sidebar are side-by-side on desktop
 - [ ] Both columns scroll independently
@@ -143,6 +152,7 @@ The conditional rendering of `MobileActions` (already in page.tsx around line 10
 #### 2. Test Edge Cases
 
 **Manual testing required**:
+
 - Tablet breakpoint (640px - sm breakpoint)
 - Narrow desktop windows
 - Sidebar content overflow scrolling
@@ -151,10 +161,12 @@ The conditional rendering of `MobileActions` (already in page.tsx around line 10
 ### Success Criteria
 
 #### Automated Verification
+
 - [x] Build passes: `pnpm run build`
 - [x] E2E tests pass: `pnpm test:e2e` (5/6 passed, 1 pre-existing failure)
 
 #### Manual Verification
+
 - [ ] Mobile (<640px): Sidebar hidden, MobileActions visible
 - [ ] Desktop (≥640px): Sidebar visible, fixed 320px width
 - [ ] Sidebar scrolls independently when content overflows
@@ -174,6 +186,7 @@ The conditional rendering of `MobileActions` (already in page.tsx around line 10
 **Changes**: Clean up any remaining references to removed props
 
 Verify these are removed:
+
 - `onUploadAsset` prop definition
 - Any unused imports
 
@@ -183,15 +196,16 @@ Verify these are removed:
 **Changes**: Update any JSDoc comments to reflect new single-column responsibility
 
 Add comment at top of component:
+
 ```typescript
 /**
  * PlaygroundWorkspace
- * 
+ *
  * Renders the main preview column containing:
  * - Variant toggle controls
  * - Aspect lock button (conditional)
  * - Preview viewport with cover
- * 
+ *
  * Note: This is now only the preview column. The sidebar
  * is rendered at the page level in app/page.tsx
  */
@@ -200,12 +214,14 @@ Add comment at top of component:
 ### Success Criteria
 
 #### Automated Verification
+
 - [x] Build passes: `pnpm run build`
 - [x] All tests pass: `pnpm test:ui`
 - [x] Types check: `pnpm typecheck`
 - [x] No linter warnings: `pnpm lint` (pre-existing warnings remain)
 
 #### Manual Verification
+
 - [ ] All interactive features work (variant toggle, aspect lock, uploads)
 - [ ] No console errors or warnings
 - [ ] Performance is acceptable (no janky scrolling)
@@ -218,7 +234,8 @@ Add comment at top of component:
 
 If issues arise:
 
-1. **Immediate revert**: 
+1. **Immediate revert**:
+
    ```bash
    git checkout components/playground-workspace.tsx app/page.tsx
    ```
@@ -230,12 +247,14 @@ If issues arise:
 ## Risk Assessment
 
 **Low Risk**:
+
 - Changes are isolated to layout structure
 - No state management changes
 - No new dependencies
 - Existing functionality preserved
 
 **Potential Issues**:
+
 - Height calculation edge cases with `min-h-0` and `flex-1`
 - Scroll behavior differences across browsers
 - Breakpoint transitions may need fine-tuning
@@ -246,4 +265,3 @@ If issues arise:
 2. **Interactive testing**: Verify all controls work (variants, uploads, toggles)
 3. **Browser testing**: Test in Chrome, Firefox, Safari
 4. **Mobile testing**: Test on actual mobile devices or emulator
-

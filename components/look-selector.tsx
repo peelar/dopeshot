@@ -79,15 +79,15 @@ export function LookSelector({ className }: { className?: string }) {
   ]);
 
   return (
-    <div className={cn("flex w-full max-w-4xl flex-col gap-2 bg-muted/20 p-4", className)}>
-      <div className="ml-[2px] flex items-center gap-2">
+    <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
+      <div className="ml-[2px] flex items-center gap-2 pt-4">
         <Sparkles className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
           Look
         </p>
       </div>
 
-      <div className="flex w-full gap-4 overflow-x-auto border-b border-border px-1 py-3">
+      <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
         {previewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
           const isSelected = currentConfig.lookId === lookId;
 
