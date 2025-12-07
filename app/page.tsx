@@ -89,11 +89,11 @@ export default function PlaygroundPage() {
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
         {/* Left: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="bg-muted/20 pl-8">
+          <div className="bg-muted/20 pl-4 sm:pl-8">
             <LookSelector />
           </div>
 
-          <div className="border-b border-border pl-6 sm:pl-12" />
+          <div className="border-b border-border pl-4 sm:pl-12" />
 
           <div className="flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
             <PlaygroundWorkspace
