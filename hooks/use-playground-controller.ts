@@ -11,7 +11,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import { getLookById, type Look } from "@/domain/look/looks";
+import { getLookDefinition, type LookDefinition } from "@/domain/look/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -45,7 +45,7 @@ interface ExportContext {
   setStatusMessage: Setter<string>;
   setIsExporting: Setter<boolean>;
   config: LayoutConfig;
-  currentLook: Look | undefined;
+  currentLook: LookDefinition | undefined;
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
 }
@@ -293,7 +293,7 @@ function useVariantChangeHandler(setConfig: Setter<LayoutConfig>) {
   return useCallback(
     (variant: string) => {
       setConfig((currentConfig) => {
-        const look = getLookById(currentConfig.lookId);
+        const look = getLookDefinition(currentConfig.lookId);
         if (!look || !look.variants.includes(variant) || currentConfig.variant === variant) {
           return currentConfig;
         }

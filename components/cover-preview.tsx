@@ -3,6 +3,7 @@
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { canvasAtom, currentLookAtom } from "@/hooks/atoms/derived";
+import { getLookComponent } from "@/components/looks/registry";
 
 interface CoverPreviewProps {
   className?: string;
@@ -29,7 +30,22 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
     );
   }
 
-  const LookComponent = look.component;
+  const LookComponent = getLookComponent(look.id);
+
+  if (!LookComponent) {
+    return (
+      <div
+        className={cn(
+          "flex items-center justify-center bg-white",
+          isStatic ? "" : "rounded-lg",
+          className,
+        )}
+        style={{ aspectRatio: "1280 / 720" }}
+      >
+        <span className="text-sm text-slate-500">Component not found</span>
+      </div>
+    );
+  }
 
   return (
     <div
