@@ -51,9 +51,15 @@ export function FontSelector({
             <SelectContent>
               {FONTS.map((font) => (
                 <SelectItem key={font.id} value={font.id}>
-                  <span style={{ fontFamily: `var(${font.cssVariable})` }}>
-                    {font.alias} — {font.fontName}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium">{font.alias}</span>
+                    <span
+                      style={{ fontFamily: `var(${font.cssVariable})` }}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {font.fontName}
+                    </span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
