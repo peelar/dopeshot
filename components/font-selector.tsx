@@ -26,6 +26,7 @@ export function FontSelector({
 }: FontSelectorProps) {
   const currentSizeIndex = FONT_SIZES.findIndex((s) => s.id === fontSize);
   const currentSize = getFontSizeById(fontSize);
+  const currentFont = FONTS.find((f) => f.id === fontId);
 
   const handleSizeDecrease = () => {
     if (currentSizeIndex > 0) {
@@ -46,14 +47,22 @@ export function FontSelector({
         <div className="flex-[3]">
           <Select value={fontId} onValueChange={(v) => onFontChangeAction(v as FontId)}>
             <SelectTrigger>
-              <SelectValue />
+              <SelectValue placeholder="Select font">
+                {currentFont?.alias}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {FONTS.map((font) => (
                 <SelectItem key={font.id} value={font.id}>
-                  <span style={{ fontFamily: `var(${font.cssVariable})` }}>
-                    {font.alias}
-                  </span>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium">{font.alias}</span>
+                    <span
+                      style={{ fontFamily: `var(${font.cssVariable})` }}
+                      className="text-xs text-muted-foreground"
+                    >
+                      {font.fontName}
+                    </span>
+                  </div>
                 </SelectItem>
               ))}
             </SelectContent>
