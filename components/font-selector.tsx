@@ -52,7 +52,7 @@ export function FontSelector({
               {FONTS.map((font) => (
                 <SelectItem key={font.id} value={font.id}>
                   <span style={{ fontFamily: `var(${font.cssVariable})` }}>
-                    {font.alias}
+                    {font.alias} — {font.fontName}
                   </span>
                 </SelectItem>
               ))}
