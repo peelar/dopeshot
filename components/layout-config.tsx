@@ -807,9 +807,10 @@ const AssetDropzone = ({
       >
         <span
           className={cn(
-            "font-semibold text-foreground",
+            "font-semibold text-foreground truncate",
             variant === "logo" ? "text-sm" : "text-xs",
           )}
+          title={asset?.name ?? label}
         >
           {asset ? asset.name : label}
         </span>
