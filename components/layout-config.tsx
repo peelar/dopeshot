@@ -21,7 +21,7 @@ import {
 } from "@/domain/layout/types";
 import { Label } from "@/components/ui/label";
 import { Asset } from "@/domain/asset/types";
-import { UploadCloud } from "lucide-react";
+import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/utils";
 import { GradientPicker } from "@/components/gradient-picker";
 import { FontSelector } from "@/components/font-selector";
@@ -134,6 +134,36 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
     },
     [setConfig],
   );
+
+  const handleRemoveLogo = useCallback(() => {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      assets: {
+        ...currentConfig.assets,
+        logo: undefined,
+      },
+    }));
+  }, [setConfig]);
+
+  const handleRemoveScreenshot = useCallback(() => {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      assets: {
+        ...currentConfig.assets,
+        screenshot: undefined,
+      },
+    }));
+  }, [setConfig]);
+
+  const handleRemoveBackground = useCallback(() => {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      assets: {
+        ...currentConfig.assets,
+        background: undefined,
+      },
+    }));
+  }, [setConfig]);
 
   const handleFontSizeChange = useCallback(
     (fontSize: FontSize) => {
@@ -338,6 +368,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                   <AssetDropzone
                     asset={backgroundAsset}
                     onUpload={(file) => onUploadAsset?.(file, "background")}
+                    onRemove={handleRemoveBackground}
                     disabled={!onUploadAsset}
                     label="Upload Background"
                   />
@@ -361,6 +392,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               <AssetDropzone
                 asset={screenshotAsset}
                 onUpload={(file) => onUploadAsset?.(file, "screenshot")}
+                onRemove={handleRemoveScreenshot}
                 disabled={!onUploadAsset}
                 label="Upload Screenshot"
               />
@@ -372,9 +404,9 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                 <AssetDropzone
                   asset={logoAsset}
                   onUpload={(file) => onUploadAsset?.(file, "logo")}
+                  onRemove={handleRemoveLogo}
                   disabled={!onUploadAsset}
-                  label="Drop your logo"
-                  variant="logo"
+                  label="Upload Logo"
                 />
               </div>
             )}
@@ -409,6 +441,7 @@ interface EffectToggleRowProps {
 interface AssetDropzoneProps {
   asset?: Asset;
   onUpload?: (file: File) => void;
+  onRemove?: () => void;
   disabled?: boolean;
   label: string;
   variant?: "default" | "logo";
@@ -653,6 +686,7 @@ function getEffectToggleVisuals(
 const AssetDropzone = ({
   asset,
   onUpload,
+  onRemove,
   disabled,
   label,
   variant = "default",
@@ -694,6 +728,14 @@ const AssetDropzone = ({
     [disabled],
   );
 
+  const handleRemove = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onRemove?.();
+    },
+    [onRemove],
+  );
+
   const ariaLabel = asset
     ? `${label}: ${asset.name}. Press Enter to replace`
     : `${label}. Press Enter to upload`;
@@ -732,12 +774,24 @@ const AssetDropzone = ({
         )}
       >
         {asset ? (
-          <img
-            src={asset.url}
-            alt={`Preview of ${asset.name}`}
-            className="h-full w-full object-cover"
-            crossOrigin="anonymous"
-          />
+          <>
+            <img
+              src={asset.url}
+              alt={`Preview of ${asset.name}`}
+              className="h-full w-full object-cover"
+              crossOrigin="anonymous"
+            />
+            {asset && onRemove && (
+              <button
+                type="button"
+                onClick={handleRemove}
+                aria-label="Remove asset"
+                className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
+              >
+                <X className="h-4 w-4 text-white" aria-hidden="true" />
+              </button>
+            )}
+          </>
         ) : (
           <UploadCloud className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
         )}
@@ -752,9 +806,10 @@ const AssetDropzone = ({
       >
         <span
           className={cn(
-            "font-semibold text-foreground",
+            "font-semibold text-foreground truncate",
             variant === "logo" ? "text-sm" : "text-xs",
           )}
+          title={asset?.name ?? label}
         >
           {asset ? asset.name : label}
         </span>
