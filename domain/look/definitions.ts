@@ -12,10 +12,12 @@ export type LookOutlineControls = {
 
 export type LookFocusMode = "auto" | "always" | "never";
 export type LookCanvasBehavior = "locked" | "adaptive" | "text-dependent";
+export type LookZoomBehavior = "scale-container" | "scale-content";
 
 export interface LookCapabilities {
   focusMode: LookFocusMode;
   canvasBehavior: LookCanvasBehavior;
+  zoomBehavior: LookZoomBehavior;
   text: {
     headline: LookTextRequirement;
     subtitle: LookTextRequirement;
@@ -87,6 +89,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     capabilities: {
       focusMode: "never",
       canvasBehavior: "locked",
+      zoomBehavior: "scale-content",
       text: {
         headline: "required",
         subtitle: "optional",
@@ -146,6 +149,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     capabilities: {
       focusMode: "never",
       canvasBehavior: "locked",
+      zoomBehavior: "scale-container",
       text: {
         headline: "required",
         subtitle: "optional",
@@ -205,6 +209,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     capabilities: {
       focusMode: "always",
       canvasBehavior: "adaptive",
+      zoomBehavior: "scale-container",
       text: {
         headline: "hidden",
         subtitle: "hidden",

@@ -3,6 +3,7 @@ import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
+import { getLookDefinition } from "@/domain/look/definitions";
 import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -53,6 +54,9 @@ export function useLookPrimitives() {
     return getShadowValue(config.screenshotShadow);
   }, [config.screenshotShadow, screenshotTreatment.shadowEnabled]);
 
+  const lookDefinition = getLookDefinition(config.lookId);
+  const zoomBehavior = lookDefinition?.capabilities.zoomBehavior ?? "scale-container";
+
   return {
     config,
     assets,
@@ -64,6 +68,7 @@ export function useLookPrimitives() {
     screenshotTreatment,
     screenshotShadow,
     screenshotZoom,
+    zoomBehavior,
   };
 }
 

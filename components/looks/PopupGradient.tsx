@@ -99,8 +99,6 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             borderRadius: getPeakBorderRadius("center"),
             background: "transparent",
             boxShadow: screenshotShadow,
-            transform: `scale(${screenshotZoom})`,
-            transformOrigin: "bottom center",
           }}
         >
           <div className="flex h-full w-full items-start justify-center">
@@ -108,7 +106,11 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
               src={screenshot.url}
               alt="Screenshot"
               className="block h-full w-full object-cover"
-              style={{ objectPosition: "top" }}
+              style={{
+                objectPosition: "top",
+                transform: `scale(${screenshotZoom})`,
+                transformOrigin: "top center",
+              }}
               crossOrigin="anonymous"
             />
           </div>
@@ -117,7 +119,6 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     }
 
     const objectPosition = SCREENSHOT_OBJECT_POSITIONS[placement];
-    const transformOrigin = placement === "left" ? "right bottom" : "left bottom";
     const baseStyle: CSSProperties = {
       top: SIDE_CONTENT_TOP,
       bottom: 0,
@@ -136,8 +137,6 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           borderRadius: getPeakBorderRadius(placement),
           background: "transparent",
           boxShadow: screenshotShadow,
-          transform: `scale(${screenshotZoom})`,
-          transformOrigin,
         }}
       >
         <img
@@ -146,7 +145,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           className="block h-full w-full object-cover"
           style={{
             objectPosition,
-            transform: `scale(${SIDE_SCREENSHOT_ZOOM})`,
+            transform: `scale(${SIDE_SCREENSHOT_ZOOM * screenshotZoom})`,
             transformOrigin: SIDE_SCREENSHOT_TRANSFORM_ORIGINS[placement],
           }}
           crossOrigin="anonymous"
