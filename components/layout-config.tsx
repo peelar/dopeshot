@@ -406,8 +406,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                   onUpload={(file) => onUploadAsset?.(file, "logo")}
                   onRemove={handleRemoveLogo}
                   disabled={!onUploadAsset}
-                  label="Drop your logo"
-                  variant="logo"
+                  label="Upload Logo"
                 />
               </div>
             )}
