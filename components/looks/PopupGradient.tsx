@@ -47,6 +47,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     logo,
     screenshot,
     screenshotShadow,
+    screenshotZoom,
     text,
   } = useLookPrimitives();
 
@@ -98,6 +99,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             borderRadius: getPeakBorderRadius("center"),
             background: "transparent",
             boxShadow: screenshotShadow,
+            transform: `scale(${screenshotZoom})`,
+            transformOrigin: "bottom center",
           }}
         >
           <div className="flex h-full w-full items-start justify-center">
@@ -114,6 +117,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     }
 
     const objectPosition = SCREENSHOT_OBJECT_POSITIONS[placement];
+    const transformOrigin = placement === "left" ? "right bottom" : "left bottom";
     const baseStyle: CSSProperties = {
       top: SIDE_CONTENT_TOP,
       bottom: 0,
@@ -132,6 +136,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           borderRadius: getPeakBorderRadius(placement),
           background: "transparent",
           boxShadow: screenshotShadow,
+          transform: `scale(${screenshotZoom})`,
+          transformOrigin,
         }}
       >
         <img

@@ -7,7 +7,7 @@ import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { cn } from "@/utils";
 import { Sparkles, Type } from "lucide-react";
-import { configAtom, assetsAtom } from "@/hooks/atoms";
+import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 
@@ -37,6 +37,7 @@ export function LookSelector({ className }: { className?: string }) {
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const setConfig = useSetAtom(configAtom);
+  const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
 
   // Memoize preview configs - only recalculate when user content changes
   // Preserve user's background, colors, and shadow settings across look switches
@@ -91,7 +92,7 @@ export function LookSelector({ className }: { className?: string }) {
         {previewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
           const isSelected = currentConfig.lookId === lookId;
 
-          const handleSelect = () =>
+          const handleSelect = () => {
             setConfig(
               withLookTextDefaults(
                 {
@@ -101,6 +102,8 @@ export function LookSelector({ className }: { className?: string }) {
                 { preserveEmptyText: true },
               ),
             );
+            setScreenshotZoom(1.0);
+          };
 
           return (
             <LookPreviewCard

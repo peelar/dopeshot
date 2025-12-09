@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
-import { configAtom, assetsAtom } from "@/hooks/atoms";
+import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
@@ -17,6 +17,7 @@ export function useLookPrimitives() {
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
   const logo = useAtomValue(logoAssetAtom);
+  const screenshotZoom = useAtomValue(screenshotZoomAtom);
 
   const assetMap = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
 
@@ -62,6 +63,7 @@ export function useLookPrimitives() {
     text,
     screenshotTreatment,
     screenshotShadow,
+    screenshotZoom,
   };
 }
 

@@ -1,8 +1,11 @@
 "use client";
 
+import { useAtom } from "jotai";
 import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
+import { ScreenshotZoomSlider } from "@/components/screenshot-zoom-slider";
+import { screenshotZoomAtom } from "@/hooks/atoms";
 import { cn } from "@/utils";
 
 /**
@@ -40,8 +43,10 @@ export function PlaygroundWorkspace({
   isAnalyzingColors,
   showFocusHint,
 }: PlaygroundWorkspaceProps) {
+  const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
+
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+    <div className="flex flex-1 flex-col overflow-auto bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
         <VariantToggle onVariantChange={onVariantChange} />
 
@@ -80,6 +85,8 @@ export function PlaygroundWorkspace({
             </div>
           ) : null}
         </div>
+
+        <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
       </div>
     </div>
   );

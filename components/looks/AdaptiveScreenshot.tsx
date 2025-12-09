@@ -18,6 +18,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshot,
     screenshotShadow,
     screenshotTreatment,
+    screenshotZoom,
   } = useLookPrimitives();
 
   const frameAppearance = useMemo(
@@ -64,6 +65,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
               maxWidth: frameMaxWidth,
               maxHeight: frameMaxHeight,
               aspectRatio: screenshotAspectRatio,
+              transform: `scale(${screenshotZoom})`,
             }}
           >
             {screenshot ? (

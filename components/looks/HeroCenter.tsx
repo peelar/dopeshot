@@ -24,6 +24,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     screenshot,
     screenshotShadow,
     screenshotTreatment,
+    screenshotZoom,
     text,
   } = useLookPrimitives();
 
@@ -121,6 +122,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
               aspectRatio: `${screenshotAspectRatio}`,
               maxHeight: `calc(100% - ${verticalPadding * 2}px)`,
               maxWidth: "480px",
+              transform: `scale(${screenshotZoom})`,
             }}
           >
             <img
@@ -159,6 +161,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
             maxWidth,
             maxHeight,
             aspectRatio: `${screenshotAspectRatio}`,
+            transform: `scale(${screenshotZoom})`,
           }}
         >
           <img
