@@ -174,6 +174,9 @@ function LookPreviewCard({
           </span>
         ) : null}
       </div>
+      <p className="text-[10px] text-muted-foreground/60">
+        {option.lookId === "adaptive-stage" ? "Screenshot only" : "With logo support"}
+      </p>
     </button>
   );
 }
