@@ -259,7 +259,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       screenshotShadow: "medium",
       screenshotFrame: {
         preset: "soft-glass",
-        canvasMode: "locked",
+        canvasMode: "adaptive",
         lockedAspectRatio: 16 / 9,
         shadowEnabled: true,
         shape: "rounded",
@@ -271,24 +271,20 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       },
     }),
     capabilities: {
-      focusMode: "never",
-      canvasBehavior: "locked",
+      focusMode: "always",
+      canvasBehavior: "adaptive",
       zoomBehavior: "scale-container",
       text: {
-        headline: "optional",
-        subtitle: "optional",
+        headline: "hidden",
+        subtitle: "hidden",
       },
-      typography: true,
+      typography: false,
       outline: {
         softGlass: true,
         shape: true,
         shadow: true,
       },
       logo: "hidden",
-      copyDefaults: {
-        title: "Code Snippet",
-        subtitle: "",
-      },
     },
   },
 ];
