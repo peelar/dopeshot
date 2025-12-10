@@ -62,17 +62,19 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
       assetMap={assetMap}
       screenshot={undefined}
     >
-      <div className="relative z-10 h-full w-full p-8">
-        <div
-          className="overflow-hidden rounded-2xl shadow-2xl"
-          style={{
-            boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-          }}
-        >
+      <div className="relative z-10 flex h-full w-full items-center justify-center p-8">
+        <div className="w-full max-w-4xl">
           <div
-            className="code-snippet"
-            dangerouslySetInnerHTML={{ __html: highlightedCode }}
-          />
+            className="overflow-hidden rounded-2xl shadow-2xl"
+            style={{
+              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+            }}
+          >
+            <div
+              className="code-snippet"
+              dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            />
+          </div>
         </div>
       </div>
 
