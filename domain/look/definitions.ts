@@ -247,7 +247,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       },
       background: {
         type: "gradient",
-        value: DEFAULT_GRADIENT.id,
+        value: "midnight",
         grainEnabled: true,
         patternMode: "auto",
       },

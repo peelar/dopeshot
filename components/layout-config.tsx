@@ -35,6 +35,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const showCodeSection = config.lookId === "code-snippet";
+  const showTextSection = !showCodeSection;
 
   // Initialize default expansion based on state
   useEffect(() => {
@@ -54,7 +55,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   };
 
   const defaultAccordionValues = showCodeSection
-    ? ["look", "code", "effects", "background"]
+    ? ["code", "effects", "background"]
     : ["look", "effects", "background"];
 
   return (
@@ -64,16 +65,18 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
         defaultValue={defaultAccordionValues}
         className="w-full"
       >
-        <AccordionItem value="look" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Text</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <LookSection />
-          </AccordionContent>
-        </AccordionItem>
+        {showTextSection && (
+          <AccordionItem value="look" className="border-b">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Text</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <LookSection />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
         {showCodeSection && (
           <AccordionItem value="code" className="border-b">
