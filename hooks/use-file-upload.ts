@@ -11,6 +11,7 @@ import {
   isProcessingUploadAtom,
   hasCustomScreenshotAtom,
 } from "./atoms";
+import { expandSidebarSectionAtom } from "./use-sidebar-state";
 const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
 const ACCEPTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -33,6 +34,7 @@ export function useFileUpload({
   const setConfig = useSetAtom(configAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
+  const expandSidebarSection = useSetAtom(expandSidebarSectionAtom);
 
   const validateFile = useCallback(
     (file: File) => {
@@ -129,6 +131,18 @@ export function useFileUpload({
         if (kind === "screenshot" && processColorAnalysis) {
           await processColorAnalysis(asset.url, asset.id, null);
         }
+
+        // Auto-expand relevant sections after upload
+        if (kind === "screenshot") {
+          // Expand background section after screenshot upload
+          expandSidebarSection("background");
+        } else if (kind === "logo") {
+          // Expand look section after logo upload
+          expandSidebarSection("look");
+        } else if (kind === "background") {
+          // Expand look section after background upload
+          expandSidebarSection("look");
+        }
       } catch (error) {
         setStatusMessage("Failed to read file. Please try another image.");
         console.error("File upload error:", error);
@@ -145,6 +159,7 @@ export function useFileUpload({
       setHasCustomScreenshot,
       onScreenshotUploaded,
       processColorAnalysis,
+      expandSidebarSection,
     ],
   );
 
