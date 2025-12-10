@@ -20,6 +20,11 @@ const SIDE_SCREENSHOT_TRANSFORM_ORIGINS: Record<"left" | "right", string> = {
 const CENTER_SCREENSHOT_GUTTER = 0.07;
 const PEAK_CORNER_RADIUS = "16px";
 
+// Minimum zoom values to ensure screenshot always fills the frame
+// These are calculated based on: minZoom >= 1.0 / baseScale
+const MIN_ZOOM_CENTER = 1.0; // No base scale for center variant
+const MIN_ZOOM_SIDE = 1.0 / SIDE_SCREENSHOT_ZOOM; // ≈ 0.74 for side variants
+
 function getPeakBorderRadius(placement: "left" | "right" | "center") {
   switch (placement) {
     case "left":
@@ -30,6 +35,16 @@ function getPeakBorderRadius(placement: "left" | "right" | "center") {
     default:
       return `${PEAK_CORNER_RADIUS} ${PEAK_CORNER_RADIUS} 0 0`;
   }
+}
+
+/**
+ * Clamps the screenshot zoom to ensure the image always fills the container.
+ * For center variant: minimum is 1.0 (no zoom out)
+ * For side variants: minimum is ~0.74 (accounts for base 1.35x scale)
+ */
+function getClampedZoom(screenshotZoom: number, placement: "left" | "right" | "center"): number {
+  const minZoom = placement === "center" ? MIN_ZOOM_CENTER : MIN_ZOOM_SIDE;
+  return Math.max(minZoom, screenshotZoom);
 }
 
 interface PopupGradientProps {
@@ -86,6 +101,9 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const renderScreenshot = (placement: "left" | "right" | "center") => {
     if (!screenshot) return null;
 
+    // Clamp zoom to ensure screenshot always fills the frame
+    const clampedZoom = getClampedZoom(screenshotZoom, placement);
+
     if (placement === "center") {
       const insetPercentage = `${CENTER_SCREENSHOT_GUTTER * 100}%`;
       return (
@@ -108,7 +126,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
               className="block h-full w-full object-cover"
               style={{
                 objectPosition: "top",
-                transform: `scale(${screenshotZoom})`,
+                transform: `scale(${clampedZoom})`,
                 transformOrigin: "top center",
               }}
               crossOrigin="anonymous"
@@ -145,7 +163,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           className="block h-full w-full object-cover"
           style={{
             objectPosition,
-            transform: `scale(${SIDE_SCREENSHOT_ZOOM * screenshotZoom})`,
+            transform: `scale(${SIDE_SCREENSHOT_ZOOM * clampedZoom})`,
             transformOrigin: SIDE_SCREENSHOT_TRANSFORM_ORIGINS[placement],
           }}
           crossOrigin="anonymous"
