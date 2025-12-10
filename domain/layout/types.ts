@@ -17,7 +17,7 @@ export type ColorToken =
   | "violet-400"
   | "violet-500";
 
-export type BackgroundType = "gradient" | "image" | "solid" | "ai-generated";
+export type BackgroundType = "gradient" | "image" | "solid";
 export type PatternId = "grain" | "glow" | "grid";
 export type PatternChoice = PatternId | "none";
 export type PatternMode = "auto" | "manual";
@@ -112,5 +112,10 @@ export type LayoutConfig = {
   aiBackgrounds?: AIBackgroundConfig[]; // Store generated AI backgrounds
   lookSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-look fade state
+  };
+  code?: {
+    content: string;
+    language: string;
+    theme?: string;
   };
 };
