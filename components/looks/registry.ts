@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { PopupGradient } from "./PopupGradient";
 import { HeroCenter } from "./HeroCenter";
 import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
+import { CodeSnippet } from "./CodeSnippet";
 
 /**
  * Component registry for Look rendering.
@@ -22,6 +23,7 @@ const LOOK_COMPONENTS: Record<string, LookComponent> = {
   "popup-gradient": PopupGradient,
   "hero-center": HeroCenter,
   "adaptive-stage": AdaptiveScreenshot,
+  "code-snippet": CodeSnippet,
 };
 
 export function getLookComponent(id: string): LookComponent | undefined {

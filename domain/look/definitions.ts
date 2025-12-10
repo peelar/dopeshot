@@ -226,6 +226,71 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       logo: "hidden",
     },
   },
+  {
+    id: "code-snippet",
+    name: "Code",
+    description: "Beautifully formatted code snippet on a gradient background.",
+    variants: ["center"],
+    createConfig: () => ({
+      lookId: "code-snippet",
+      variant: "center",
+      fontId: "developer",
+      fontSize: DEFAULT_FONT_SIZE,
+      text: {
+        title: "",
+        subtitle: "",
+      },
+      colors: {
+        background: "slate-900",
+        text: "slate-50",
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: DEFAULT_GRADIENT.id,
+        grainEnabled: true,
+        patternMode: "auto",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+      screenshotFrame: {
+        preset: "soft-glass",
+        canvasMode: "locked",
+        lockedAspectRatio: 16 / 9,
+        shadowEnabled: true,
+        shape: "rounded",
+      },
+      code: {
+        content: '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}',
+        language: "javascript",
+        theme: "github-dark",
+      },
+    }),
+    capabilities: {
+      focusMode: "never",
+      canvasBehavior: "locked",
+      zoomBehavior: "scale-container",
+      text: {
+        headline: "optional",
+        subtitle: "optional",
+      },
+      typography: true,
+      outline: {
+        softGlass: true,
+        shape: true,
+        shadow: true,
+      },
+      logo: "hidden",
+      copyDefaults: {
+        title: "Code Snippet",
+        subtitle: "",
+      },
+    },
+  },
 ];
 
 export function getLookDefinition(id: string): LookDefinition | undefined {
