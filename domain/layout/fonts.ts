@@ -127,7 +127,7 @@ export const FONTS: FontDefinition[] = [
 
 export const DEFAULT_FONT_ID: FontId = "clean";
 
-export function getFontById(id: FontId): FontDefinition | undefined {
+function getFontById(id: FontId): FontDefinition | undefined {
   return FONTS.find((f) => f.id === id);
 }
 

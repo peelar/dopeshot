@@ -5,7 +5,7 @@ import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
 
 /**
  * Component registry for Look rendering.
- * 
+ *
  * UI layer: Maps look IDs to their React component implementations.
  * Separated from domain definitions to avoid circular dependencies.
  */
@@ -18,7 +18,7 @@ export type LookComponentProps = {
 
 export type LookComponent = ComponentType<LookComponentProps>;
 
-export const LOOK_COMPONENTS: Record<string, LookComponent> = {
+const LOOK_COMPONENTS: Record<string, LookComponent> = {
   "popup-gradient": PopupGradient,
   "hero-center": HeroCenter,
   "adaptive-stage": AdaptiveScreenshot,
@@ -31,4 +31,3 @@ export function getLookComponent(id: string): LookComponent | undefined {
   }
   return LOOK_COMPONENTS[id];
 }
-

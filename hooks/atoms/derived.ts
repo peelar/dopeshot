@@ -51,11 +51,6 @@ export const isAspectLockedAtom = atom((get) => {
   return treatment.canvasMode === "locked";
 });
 
-export const showVariantToggleAtom = atom((get) => {
-  const look = get(currentLookAtom);
-  return (look?.variants.length ?? 0) > 1;
-});
-
 // Asset lookup atoms
 export const logoAssetAtom = atom((get) => {
   const config = get(configAtom);

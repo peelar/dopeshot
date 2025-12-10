@@ -80,3 +80,4 @@ Clarify the boundaries:
 *   **Platform Agnostic**: Try to keep `domain` free of React/Browser specifics where possible. Use "Adapters" or "Hooks" in the application layer to bridge Domain logic to the UI.
 *   **Types First**: Define the shape of data (`types.ts`) before the logic that manipulates it.
 
+
