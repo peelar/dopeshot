@@ -55,7 +55,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   };
 
   const defaultAccordionValues = showCodeSection
-    ? ["code", "effects", "background"]
+    ? ["code", "background"]
     : ["look", "effects", "background"];
 
   return (
@@ -79,28 +79,28 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
         )}
 
         {showCodeSection && (
-          <AccordionItem value="code" className="border-b">
+          <div className="border-b">
+            <div className="px-4 py-3">
+              <span className="text-sm font-semibold">Code</span>
+            </div>
+            <div className="px-4 pb-4">
+              <CodeSection />
+            </div>
+          </div>
+        )}
+
+        {!showCodeSection && (
+          <AccordionItem value="effects" className="border-b">
             <AccordionTrigger className="px-4 py-3 hover:no-underline">
               <div className="flex w-full items-center justify-between pr-4">
-                <span className="text-sm font-semibold">Code</span>
+                <span className="text-sm font-semibold">Effects</span>
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <CodeSection />
+              <EffectsSection />
             </AccordionContent>
           </AccordionItem>
         )}
-
-        <AccordionItem value="effects" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Effects</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <EffectsSection />
-          </AccordionContent>
-        </AccordionItem>
 
         <AccordionItem value="background" className="border-b">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -113,17 +113,19 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="screenshot" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Screenshot</span>
-              <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <ScreenshotSection onUploadAsset={onUploadAsset} />
-          </AccordionContent>
-        </AccordionItem>
+        {!showCodeSection && (
+          <AccordionItem value="screenshot" className="border-b">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Screenshot</span>
+                <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <ScreenshotSection onUploadAsset={onUploadAsset} />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
         {showLogoSection && (
           <AccordionItem value="logo" className="border-b">

@@ -94,17 +94,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
+  const isCodeSnippet = config.lookId === "code-snippet";
 
   // Generate multi-stop gradients from screenshot colors
+  // Code snippets should never use screenshot-derived gradients
   const dynamicGradients = useMemo((): CustomGradient[] => {
-    if (!colorPalette) return [];
+    if (!colorPalette || isCodeSnippet) return [];
 
     // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
     return generateGradientOptions(colorPalette, {
       aspectCategory: "landscape",
       variant: undefined,
     });
-  }, [colorPalette]);
+  }, [colorPalette, isCodeSnippet]);
 
   const resolvedGradient = useMemo<CustomGradient | undefined>(() => {
     if (background.customGradient) return background.customGradient;
@@ -158,7 +160,8 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       return "preset";
     }
 
-    if (shouldPreferScreenshot) {
+    // Code snippets should never default to screenshot source
+    if (!isCodeSnippet && shouldPreferScreenshot) {
       return "screenshot";
     }
 
@@ -166,7 +169,8 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       return "custom";
     }
 
-    if (hasScreenshotGradients || hasScreenshot) {
+    // Code snippets should never default to screenshot source
+    if (!isCodeSnippet && (hasScreenshotGradients || hasScreenshot)) {
       return "screenshot";
     }
 
@@ -178,10 +182,11 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     hasScreenshot,
     hasScreenshotGradients,
     shouldPreferScreenshot,
+    isCodeSnippet,
   ]);
 
   const [activeSource, setActiveSource] = useState<GradientSource>(() =>
-    hasScreenshot ? "screenshot" : defaultSource,
+    hasScreenshot && !isCodeSnippet ? "screenshot" : defaultSource,
   );
   const sourceOverrideRef = useRef(false);
   const lockManualSource = useCallback(() => {
@@ -219,7 +224,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     const textColor = getTextColorFromGradient(firstGradient);
     const grainEnabled = background.grainEnabled ?? true;
     onChangeAction(
-      { type: "gradient", value: "custom", customGradient: firstGradient, grainEnabled },
+      { type: "gradient", value: "custom", customGradient: firstGradient, gradientSource: "screenshot", grainEnabled },
       textColor,
     );
   }, [
@@ -256,7 +261,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       });
       setActiveSourceWithOverride("preset");
       onChangeAction(
-        { type: "gradient", value: gradientId, customGradient: undefined },
+        { type: "gradient", value: gradientId, customGradient: undefined, gradientSource: "preset" },
         gradient.textColor ?? "slate-900",
       );
     },
@@ -267,7 +272,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     (gradient: CustomGradient) => {
       lockManualSource();
       const textColor = getTextColorFromGradient(gradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient }, textColor);
+      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient, gradientSource: "custom" }, textColor);
     },
     [lockManualSource, onChangeAction],
   );
@@ -282,7 +287,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       const newGradient = buildThreeStopGradient(nextColors, currentAngle, resolvedGradient);
       lockManualSource();
       const textColor = getTextColorFromGradient(newGradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
+      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient, gradientSource: "custom" }, textColor);
     },
     [colorPalette, currentAngle, lockManualSource, onChangeAction, resolvedGradient],
   );
@@ -296,7 +301,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       const newGradient = buildThreeStopGradient(colors, angle, resolvedGradient);
       lockManualSource();
       const textColor = getTextColorFromGradient(newGradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient }, textColor);
+      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient, gradientSource: "custom" }, textColor);
     },
     [colorPalette, lockManualSource, onChangeAction, resolvedGradient],
   );
@@ -307,21 +312,22 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
         source: "screenshot",
       });
       setActiveSourceWithOverride("screenshot");
-      handleCustomGradientSelect(gradient);
+      const textColor = getTextColorFromGradient(gradient);
+      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient, gradientSource: "screenshot" }, textColor);
     },
-    [handleCustomGradientSelect, setActiveSourceWithOverride],
+    [onChangeAction, setActiveSourceWithOverride],
   );
 
   const screenshotTabDisabled = !hasScreenshotGradients && !isAnalyzingColors && !hasScreenshot;
 
   const gradientTabs = [
-    {
-      id: "screenshot",
+    ...(!isCodeSnippet ? [{
+      id: "screenshot" as const,
       label: "From Screenshot",
       disabled: screenshotTabDisabled,
-    },
-    { id: "custom", label: "Custom" },
-    { id: "preset", label: "Presets" },
+    }] : []),
+    { id: "custom" as const, label: "Custom" },
+    { id: "preset" as const, label: "Presets" },
   ] satisfies { id: GradientSource; label: string; disabled?: boolean }[];
 
   const handleTabChange = useCallback(
