@@ -1,16 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
-import { useAtomValue, useSetAtom, Provider, createStore } from "jotai";
-import { track } from "@/lib/analytics";
-import { LOOK_DEFINITIONS, withLookTextDefaults } from "@/domain/look/definitions";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
-import { cn } from "@/utils";
-import { Sparkles, Type } from "lucide-react";
-import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
-import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
+import type { LayoutConfig } from "@/domain/layout/types";
+import {
+  LOOK_DEFINITIONS,
+  supportsScreenshots,
+  withLookTextDefaults,
+} from "@/domain/look/definitions";
+import { assetsAtom, configAtom, screenshotGradientAtom, screenshotZoomAtom } from "@/hooks/atoms";
+import { track } from "@/lib/analytics";
+import { cn } from "@/utils";
+import { Provider, createStore, useAtomValue, useSetAtom } from "jotai";
+import { Sparkles, Type } from "lucide-react";
+import { useMemo } from "react";
 
 // Memoize look default configs at module level to avoid recreation
 const LOOK_DEFAULTS = LOOK_DEFINITIONS.map((look) => {
@@ -37,21 +41,46 @@ type PreviewCard = {
 export function LookSelector({ className }: { className?: string }) {
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
+  const screenshotGradient = useAtomValue(screenshotGradientAtom);
   const setConfig = useSetAtom(configAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
 
   // Memoize preview configs - only recalculate when user content changes
   // Preserve user's background, colors, and shadow settings across look switches
+  // BUT reset gradient when switching to non-screenshot looks
   const previewConfigs = useMemo(() => {
+    const currentLookSupportsScreenshots = supportsScreenshots(currentConfig.lookId);
+
+    // Check if we have a stored screenshot gradient (persists across look switches)
+    const hasScreenshotGradient = screenshotGradient !== null;
+
     return LOOK_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, look }) => {
       const isTextLook = look.capabilities.text.headline !== "hidden";
+      const targetLookSupportsScreenshots = look.capabilities.screenshot === "supported";
+
+      // Determine background preservation strategy:
+      // 1. If target look supports screenshots AND we have a screenshot gradient → use stored screenshot gradient
+      // 2. If both looks have same screenshot support → preserve current background
+      // 3. Otherwise → use default background
+      let backgroundToUse;
+      if (targetLookSupportsScreenshots && hasScreenshotGradient) {
+        // Always use stored screenshot gradient for screenshot-capable looks
+        backgroundToUse = screenshotGradient;
+      } else if (currentLookSupportsScreenshots === targetLookSupportsScreenshots) {
+        // Preserve background when staying in same category (screenshot→screenshot or non-screenshot→non-screenshot)
+        backgroundToUse = currentConfig.background;
+      } else {
+        // Reset to default when switching categories without a screenshot gradient
+        backgroundToUse = defaultConfig.background;
+      }
+
       const previewConfig = withLookTextDefaults(
         {
           ...defaultConfig,
           variant: defaultVariant,
           text: currentConfig.text,
           assets: currentConfig.assets,
-          background: currentConfig.background,
+          background: backgroundToUse,
           colors: currentConfig.colors,
           screenshotShadow: currentConfig.screenshotShadow,
           fontId: currentConfig.fontId,
@@ -75,9 +104,11 @@ export function LookSelector({ className }: { className?: string }) {
     currentConfig.colors,
     currentConfig.fontId,
     currentConfig.fontSize,
+    currentConfig.lookId,
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
     currentConfig.text,
+    screenshotGradient,
   ]);
 
   return (

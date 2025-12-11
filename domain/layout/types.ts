@@ -77,10 +77,13 @@ export interface AIBackgroundConfig {
   createdAt: number;
 }
 
+export type GradientSource = "preset" | "screenshot" | "custom" | "ai-generated";
+
 export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, AI background ID, or ColorToken
   customGradient?: CustomGradient; // for custom/dynamic gradients
+  gradientSource?: GradientSource; // tracks where the gradient came from
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
   patternId?: PatternChoice; // explicit pattern selection
   patternMode?: PatternMode; // auto or manual selection

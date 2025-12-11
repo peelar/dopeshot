@@ -1,5 +1,5 @@
 import type { LayoutConfig } from "@/domain/layout/types";
-import { DEFAULT_GRADIENT } from "@/domain/layout/gradient-presets";
+import { DEFAULT_GRADIENT, GRADIENTS } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
 
 export type LookTextRequirement = "required" | "optional" | "hidden";
@@ -26,6 +26,7 @@ export interface LookCapabilities {
   typography: boolean;
   outline: LookOutlineControls;
   logo: "supported" | "hidden";
+  screenshot: "supported" | "hidden";
   copyDefaults?: {
     title?: string;
     subtitle?: string;
@@ -70,6 +71,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       background: {
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
+        gradientSource: "preset",
         grainEnabled: true,
         patternMode: "auto",
       },
@@ -103,6 +105,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         fade: true,
       },
       logo: "supported",
+      screenshot: "supported",
       copyDefaults: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -131,6 +134,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       background: {
         type: "gradient",
         value: "cotton-candy",
+        gradientSource: "preset",
         grainEnabled: true,
         patternMode: "auto",
       },
@@ -163,6 +167,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         shadow: true,
       },
       logo: "supported",
+      screenshot: "supported",
       copyDefaults: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -191,6 +196,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       background: {
         type: "gradient",
         value: DEFAULT_GRADIENT.id,
+        gradientSource: "preset",
         grainEnabled: true,
         patternMode: "auto",
       },
@@ -224,6 +230,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         fade: true,
       },
       logo: "hidden",
+      screenshot: "supported",
     },
   },
   {
@@ -231,45 +238,42 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     name: "Code",
     description: "Beautifully formatted code snippet on a gradient background.",
     variants: ["center"],
-    createConfig: () => ({
-      lookId: "code-snippet",
-      variant: "center",
-      fontId: "developer",
-      fontSize: DEFAULT_FONT_SIZE,
-      text: {
-        title: "",
-        subtitle: "",
-      },
-      colors: {
-        background: "slate-900",
-        text: "slate-50",
-        accent: "violet-400",
-      },
-      background: {
-        type: "gradient",
-        value: "midnight",
-        grainEnabled: true,
-        patternMode: "auto",
-      },
+    createConfig: () => {
+      // Use DEFAULT_GRADIENT for consistent SSR hydration
+      // Random gradient selection happens client-side via gradient picker
+      return {
+        lookId: "code-snippet",
+        variant: "center",
+        fontId: "developer",
+        fontSize: DEFAULT_FONT_SIZE,
+        text: {
+          title: "",
+          subtitle: "",
+        },
+        colors: {
+          background: "slate-900",
+          text: DEFAULT_GRADIENT.textColor,
+          accent: "violet-400",
+        },
+        background: {
+          type: "gradient",
+          value: DEFAULT_GRADIENT.id,
+          gradientSource: "preset",
+          grainEnabled: true,
+          patternMode: "auto",
+        },
       assets: {
         screenshot: undefined,
         logo: undefined,
         background: undefined,
-      },
-      screenshotShadow: "medium",
-      screenshotFrame: {
-        preset: "soft-glass",
-        canvasMode: "adaptive",
-        lockedAspectRatio: 16 / 9,
-        shadowEnabled: true,
-        shape: "rounded",
       },
       code: {
         content: '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}',
         language: "javascript",
         theme: "github-dark",
       },
-    }),
+      };
+    },
     capabilities: {
       focusMode: "always",
       canvasBehavior: "adaptive",
@@ -285,6 +289,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         shadow: true,
       },
       logo: "hidden",
+      screenshot: "hidden",
     },
   },
 ];
@@ -295,6 +300,14 @@ export function getLookDefinition(id: string): LookDefinition | undefined {
     return LOOK_DEFINITIONS.find((look) => look.id === "adaptive-stage");
   }
   return LOOK_DEFINITIONS.find((look) => look.id === id);
+}
+
+/**
+ * Check if a look supports screenshots based on its capabilities
+ */
+export function supportsScreenshots(lookId: string): boolean {
+  const lookDef = getLookDefinition(lookId);
+  return lookDef?.capabilities.screenshot === "supported";
 }
 
 type LookTextDefaultOptions = {
@@ -357,5 +370,6 @@ export function withLookTextDefaults(
 
   return config;
 }
+
 
 

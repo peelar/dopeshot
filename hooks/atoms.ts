@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { LayoutConfig } from "@/domain/layout/types";
+import { LayoutConfig, BackgroundConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getDefaultDemoPreset } from "@/domain/demo/presets";
 
@@ -19,4 +19,7 @@ export const isDraggingAtom = atom<boolean>(false);
 export const isAnalyzingColorsAtom = atom<boolean>(false);
 export const isProcessingUploadAtom = atom<boolean>(false);
 export const screenshotZoomAtom = atom<number>(1.0);
+
+// Store the last screenshot-derived gradient to preserve it across look switches
+export const screenshotGradientAtom = atom<BackgroundConfig | null>(null);
 
