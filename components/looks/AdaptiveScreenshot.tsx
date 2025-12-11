@@ -77,8 +77,8 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
                   borderRadius: frameAppearance.contentRadius,
                   objectPosition: "top",
                   ...(screenshotTreatment.fadeEnabled && {
-                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 100%)",
-                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.6) 100%)",
+                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)",
                   }),
                 }}
                 crossOrigin="anonymous"
