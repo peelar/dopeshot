@@ -36,6 +36,7 @@ export type ScreenshotTreatment = {
   lockedAspectRatio?: number; // defaults to 16:9 when locked
   shadowEnabled?: boolean;
   shape?: FrameShape;
+  fadeEnabled?: boolean;
 };
 
 export type FontId =
