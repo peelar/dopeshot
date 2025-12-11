@@ -8,6 +8,7 @@ export type LookOutlineControls = {
   softGlass: boolean;
   shape: boolean;
   shadow: boolean;
+  fade?: boolean;
 };
 
 export type LookFocusMode = "auto" | "always" | "never";
@@ -204,6 +205,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         lockedAspectRatio: 16 / 9,
         shadowEnabled: true,
         shape: "rounded",
+        fadeEnabled: true,
       },
     }),
     capabilities: {
@@ -219,6 +221,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         softGlass: true,
         shape: true,
         shadow: true,
+        fade: true,
       },
       logo: "hidden",
     },

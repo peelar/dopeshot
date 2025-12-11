@@ -19,6 +19,7 @@ const FULL_OUTLINE_CONTROLS = {
   softGlass: true,
   shape: true,
   shadow: true,
+  fade: false,
 };
 
 export function EffectsSection() {
@@ -70,8 +71,21 @@ export function EffectsSection() {
     });
   }, [setConfig]);
 
+  const toggleFade = useCallback(() => {
+    setConfig((currentConfig) => {
+      const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      return {
+        ...currentConfig,
+        screenshotFrame: {
+          ...treatment,
+          fadeEnabled: !(treatment.fadeEnabled ?? false),
+        },
+      };
+    });
+  }, [setConfig]);
+
   const showOutlineSection =
-    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
+    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow || outlineControls.fade;
 
   if (!showOutlineSection) {
     return (
@@ -109,11 +123,19 @@ export function EffectsSection() {
           onToggle={toggleFrameShadow}
         />
       )}
+      {outlineControls.fade && (
+        <EffectToggleRow
+          label="Fade"
+          variant="fade"
+          checked={config.screenshotFrame?.fadeEnabled ?? true}
+          onToggle={toggleFade}
+        />
+      )}
     </div>
   );
 }
 
-type EffectToggleVariant = "glass" | "corners" | "shadow";
+type EffectToggleVariant = "glass" | "corners" | "shadow" | "fade";
 
 interface EffectToggleRowProps {
   label: string;
@@ -306,6 +328,18 @@ function getEffectToggleVisuals(variant: EffectToggleVariant, isOn: boolean): Ef
         },
         {
           trackClass: "ring-1 ring-white/15 shadow-[0_0_18px_rgba(255,255,255,0.35)]",
+        },
+      );
+    case "fade":
+      if (!isOn) {
+        return createSharedVisuals();
+      }
+      return createThemedVisuals(
+        {
+          trackClass: "bg-gradient-to-b from-slate-600 to-slate-300",
+        },
+        {
+          trackClass: "bg-gradient-to-b from-slate-400 to-slate-600",
         },
       );
     default:
