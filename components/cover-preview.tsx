@@ -47,12 +47,19 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
     );
   }
 
+  // Code snippet look should not have fixed aspect ratio
+  const useFluidLayout = look.id === "code-snippet";
+
   return (
     <div
       className={cn("relative w-full overflow-hidden", isStatic ? "" : "rounded-lg", className)}
-      style={{
-        aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
-      }}
+      style={
+        useFluidLayout
+          ? undefined
+          : {
+              aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
+            }
+      }
     >
       <LookComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
     </div>

@@ -1,9 +1,10 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { configAtom } from "@/hooks/atoms";
 import { Label } from "@/components/ui/label";
+import { detectLanguage } from "@/domain/code/language-detection";
 
 const LANGUAGE_OPTIONS = [
   { value: "javascript", label: "JavaScript" },
@@ -42,20 +43,40 @@ const THEME_OPTIONS = [
 export function CodeSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const previousContentRef = useRef<string>(config.code?.content || "");
 
   const handleCodeChange = useCallback(
     (value: string) => {
+      const previousContent = previousContentRef.current;
+      const currentLanguage = config.code?.language || "javascript";
+
+      // Detect if this is a paste operation (substantial change in content length)
+      const lengthDiff = Math.abs(value.length - previousContent.length);
+      const isPaste = lengthDiff > 20; // Threshold for paste vs typing
+
+      // Auto-detect language only on paste, and only if content is substantial
+      let newLanguage = currentLanguage;
+      if (isPaste && value.trim().length > 10) {
+        const detected = detectLanguage(value);
+        // Only override if we detected something other than 'text'
+        if (detected !== 'text') {
+          newLanguage = detected;
+        }
+      }
+
+      previousContentRef.current = value;
+
       setConfig((currentConfig) => ({
         ...currentConfig,
         code: {
           ...currentConfig.code,
           content: value,
-          language: currentConfig.code?.language || "javascript",
+          language: newLanguage,
           theme: currentConfig.code?.theme || "github-dark",
         },
       }));
     },
-    [setConfig],
+    [setConfig, config.code?.language],
   );
 
   const handleLanguageChange = useCallback(

@@ -57,6 +57,20 @@ export function getCanvasDimensions(
   config: LayoutConfig,
   screenshotAsset?: Asset | null,
 ): { width: number; height: number; aspectRatio: number; mode: CanvasMode } {
+  const look = getLookDefinition(config.lookId);
+
+  // Code snippet look uses content-based sizing, not fixed canvas
+  if (config.lookId === "code-snippet") {
+    // Return a flexible aspect ratio that will be overridden by content
+    // The actual size will be determined by the code content + padding
+    return {
+      width: BASE_CANVAS_WIDTH,
+      height: 720,
+      aspectRatio: 16 / 9,
+      mode: "adaptive",
+    };
+  }
+
   const treatment = getScreenshotTreatment(config);
   const effectiveMode = getEffectiveCanvasMode(config);
   const lockedAspect = treatment.lockedAspectRatio || DEFAULT_LOCKED_ASPECT_RATIO;
