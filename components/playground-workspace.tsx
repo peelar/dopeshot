@@ -5,6 +5,7 @@ import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/screenshot-zoom-slider";
+import { OrientationToggle } from "@/components/orientation-toggle";
 import { screenshotZoomAtom } from "@/hooks/atoms";
 import { cn } from "@/utils";
 
@@ -67,6 +68,8 @@ export function PlaygroundWorkspace({
             </button>
           </div>
         ) : null}
+
+        <OrientationToggle />
 
         <div className="relative flex w-full justify-center">
           <PreviewViewport

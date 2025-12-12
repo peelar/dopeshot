@@ -19,4 +19,5 @@ export const isDraggingAtom = atom<boolean>(false);
 export const isAnalyzingColorsAtom = atom<boolean>(false);
 export const isProcessingUploadAtom = atom<boolean>(false);
 export const screenshotZoomAtom = atom<number>(1.0);
+export const canvasOrientationAtom = atom<"landscape" | "portrait">("landscape");
 

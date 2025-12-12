@@ -30,6 +30,8 @@ export type FrameShape = "rounded" | "rectangular";
 
 export type CanvasMode = "adaptive" | "locked";
 
+export type CanvasOrientation = "landscape" | "portrait";
+
 export type ScreenshotTreatment = {
   preset: ScreenshotFramePreset;
   canvasMode: CanvasMode;
