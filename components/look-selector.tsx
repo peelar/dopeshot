@@ -86,6 +86,8 @@ export function LookSelector({ className }: { className?: string }) {
           fontId: currentConfig.fontId,
           fontSize: currentConfig.fontSize,
           screenshotFrame: currentConfig.screenshotFrame,
+          // Preserve code snippet content, but fall back to default if undefined
+          code: currentConfig.code ?? defaultConfig.code,
         } as typeof currentConfig,
         { preserveEmptyText: true },
       );
@@ -108,6 +110,7 @@ export function LookSelector({ className }: { className?: string }) {
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
     currentConfig.text,
+    currentConfig.code,
     screenshotGradient,
   ]);
 

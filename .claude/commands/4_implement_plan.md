@@ -27,15 +27,17 @@ When given a plan file or description:
      - Suggesting resolution steps
      - Pausing for user input if needed
 
-4. **After each phase**:
+4. **After completing all changes for a phase**:
    - Summarize what was completed
    - Show verification results
+   - **If domain code was modified, run `/sync_docs` to update module READMEs**
    - Confirm before proceeding to next phase (if configured)
 
 5. **On completion**:
    - Summarize all changes made
    - List any manual verification needed
    - **Verify README.md was updated** with new features/commands
+   - **Confirm module READMEs were updated (if domain code changed)**
    - Suggest next steps
 
 ## Blocker Handling

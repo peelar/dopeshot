@@ -1,7 +1,14 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useMemo,
+  useEffect,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useTheme } from "next-themes";
 import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
@@ -33,7 +40,7 @@ export function EffectsSection() {
   const shouldAutoEnableFade = useMemo(() => {
     const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
     if (!isBackdropLook || !screenshot?.metadata) return false;
-    
+
     const { height, aspectRatio } = screenshot.metadata;
     // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
     return height > 720 && aspectRatio < 1;
@@ -102,13 +109,16 @@ export function EffectsSection() {
 
   const toggleFade = useCallback(() => {
     setConfig((currentConfig) => {
-      const lookSpecificFadeEnabled = currentConfig.lookSpecificSettings?.fadeEnabled?.[currentConfig.lookId];
-      const isBackdropLook = currentConfig.lookId === "adaptive-stage" || currentConfig.lookId === "full-visual";
-      const autoEnableFade = isBackdropLook && screenshot?.metadata
-        ? screenshot.metadata.height > 720 && screenshot.metadata.aspectRatio < 1
-        : false;
+      const lookSpecificFadeEnabled =
+        currentConfig.lookSpecificSettings?.fadeEnabled?.[currentConfig.lookId];
+      const isBackdropLook =
+        currentConfig.lookId === "adaptive-stage" || currentConfig.lookId === "full-visual";
+      const autoEnableFade =
+        isBackdropLook && screenshot?.metadata
+          ? screenshot.metadata.height > 720 && screenshot.metadata.aspectRatio < 1
+          : false;
       const currentState = lookSpecificFadeEnabled ?? autoEnableFade;
-      
+
       return {
         ...currentConfig,
         lookSpecificSettings: {
@@ -123,7 +133,10 @@ export function EffectsSection() {
   }, [setConfig, screenshot?.metadata]);
 
   const showOutlineSection =
-    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow || outlineControls.fade;
+    outlineControls.softGlass ||
+    outlineControls.shape ||
+    outlineControls.shadow ||
+    outlineControls.fade;
 
   if (!showOutlineSection) {
     return (
@@ -233,9 +246,15 @@ function EffectToggleControl({
 }: EffectToggleControlProps) {
   const isCorners = variant === "corners";
   const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-  // Use resolvedTheme directly - it's already handled by next-themes
-  const themeMode: ThemeMode = resolvedTheme === "dark" ? "dark" : "light";
+  // Prevent hydration mismatch by waiting for client-side mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use resolvedTheme after mount, default to light during SSR
+  const themeMode: ThemeMode = mounted && resolvedTheme === "dark" ? "dark" : "light";
   const themeVisuals = visuals[themeMode] ?? {};
 
   const trackClasses = cn(

@@ -8,59 +8,39 @@ This directory contains the core business logic and data models for the applicat
 - **Clear Separation**: Models (data structures) are separated from services (business logic)
 - **No Circular Dependencies**: Dependencies flow in one direction only
 
+## Module Documentation
+
+Each subdirectory contains a README.md documenting its current architecture:
+
+- [asset/](./asset/README.md) - Asset upload and metadata extraction
+- [gradient-generation/](./gradient-generation/README.md) - Gradient generation service
+- [layout/](./layout/README.md) - Layout configuration and models
+- [layout/gradients/](./layout/gradients/README.md) - Gradient type definitions
+- [look/](./look/README.md) - Look definitions (visual templates)
+
+**For Claude Code**: Always read module READMEs first before exploring code. They document the current state and are updated with code changes.
+
+**For developers**: When modifying domain code, run `/sync_docs` before committing to update affected module READMEs.
+
 ## Structure
 
 ### `asset/`
-Asset models and upload orchestration.
-
-- `types.ts` - Asset data model (metadata, URLs)
-- `upload-orchestrator.ts` - Orchestrates file upload flow
-- `analyze-colors.ts` - Extract color information from assets
-- `get-image-metadata.ts` - Extract image dimensions and aspect ratio
-- `data-url.ts` - Handle data URL conversions
+Asset models and upload orchestration. See [asset/README.md](./asset/README.md) for details.
 
 ### `demo/`
 Demo presets and sample data for showcasing the app.
 
 ### `gradient-generation/`
-**Service Layer**: Color extraction and gradient generation algorithms.
-
-- Purpose: Analyze images and create aesthetically pleasing gradients
-- Dependencies: None (standalone service)
-- Used by: UI components via hooks
-
-Key exports:
-- `generateGradientFromImage()` - Main entry point
+**Service Layer**: Color extraction and gradient generation algorithms. See [gradient-generation/README.md](./gradient-generation/README.md) for details.
 
 ### `layout/`
-Layout models, configuration, and data structures.
+Layout models, configuration, and data structures. See [layout/README.md](./layout/README.md) for details.
 
 #### `layout/gradients/`
-**Model Layer**: Gradient type definitions and utilities.
-
-- Purpose: Define the shape of gradient data used in layouts
-- Dependencies: None
-- Note: Does NOT contain generation logic (see `gradient-generation/`)
-
-Key types:
-- `GradientStop`, `GradientType`, `GradientColorSpace`
-- `CustomGradient`, `LegacyGradient`, `AdvancedGradient`
-
-#### Other layout modules:
-- `types.ts` - Core layout config types
-- `aspect.ts` - Aspect ratio calculations
-- `export.ts` - Layout export functionality
-- `fonts.ts` - Font definitions
-- `gradient-presets.ts` - Pre-defined gradient styles
-- `patterns.ts` - Background pattern definitions
-- `recommendations.ts` - Look recommendations based on content
-- `screenshot-mode.ts` - Screenshot display modes
+**Model Layer**: Gradient type definitions and utilities. See [layout/gradients/README.md](./layout/gradients/README.md) for details.
 
 ### `look/`
-Look definitions (visual templates/styles).
-
-- `definitions.ts` - Pure data definitions of available looks
-- `AUTHORING.md` - Guide for creating new looks
+Look definitions (visual templates/styles). See [look/README.md](./look/README.md) for details.
 
 Note: Look React components live in `components/looks/` to avoid circular dependencies.
 
@@ -76,10 +56,13 @@ layout (configuration)
 look/definitions (visual templates)
 ```
 
-**Important**: 
+**Important**:
 - `gradient-generation` is independent and could import types from `layout/gradients` if needed
 - `layout/gradients` should NEVER import from `gradient-generation`
 - Domain layer should NEVER import from `components/` or `hooks/`
+
+See individual module READMEs for detailed dependency information.
+
 
 
 

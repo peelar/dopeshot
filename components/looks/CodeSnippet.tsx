@@ -16,6 +16,7 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
     assetMap,
     backgroundStyle,
     config,
+    screenshotZoom,
   } = useLookPrimitives();
 
   const [highlightedCode, setHighlightedCode] = useState<string>("");
@@ -25,6 +26,7 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
   const configuredLanguage = config.code?.language;
   const detectedLanguage = configuredLanguage || detectLanguage(code);
   const theme = config.code?.theme || "github-dark";
+
 
   useEffect(() => {
     let isMounted = true;
@@ -55,30 +57,44 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
     };
   }, [code, detectedLanguage, theme]);
 
+  const stagePadding = 48;
+  const canvasWidth = 1280;
+  const canvasHeight = 720;
+
   return (
-    <LookSurface
-      className={cn("bg-cover bg-center bg-no-repeat", className)}
-      backgroundStyle={backgroundStyle}
-      assets={assets}
-      config={config}
-      assetMap={assetMap}
-      screenshot={undefined}
-    >
-      {/* Outer padding: 24px (1.5rem) on all sides */}
-      <div className="relative z-10 flex h-full w-full items-center justify-center p-6">
+    <div className={cn("relative h-full w-full overflow-hidden", className)} style={{ background: 'transparent', isolation: 'isolate' }}>
+      <div className="relative z-10 h-full w-full">
         <div
-          className="max-w-[688px]"
+          className="flex h-full w-full items-center justify-center"
+          style={{ padding: `${stagePadding}px` }}
         >
+          {/* Invisible canvas container - fixed 1280x720 */}
           <div
-            className="overflow-hidden rounded-2xl shadow-2xl"
+            className="relative flex items-center justify-center"
             style={{
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+              width: `${canvasWidth}px`,
+              height: `${canvasHeight}px`,
+              transform: `scale(${screenshotZoom})`,
             }}
           >
-            <div
-              className="code-snippet"
-              dangerouslySetInnerHTML={{ __html: highlightedCode }}
-            />
+            {/* Code content centered inside, maintaining its natural size */}
+            <div className="max-w-[688px]">
+              {/* Gradient wrapper with 36px padding */}
+              <div
+                className="overflow-hidden rounded-2xl shadow-2xl"
+                style={{
+                  boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+                  background: backgroundStyle?.background || backgroundStyle?.backgroundImage || 'linear-gradient(90deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%)',
+                  padding: '36px',
+                }}
+              >
+                {/* Code snippet with Shiki background */}
+                <div
+                  className="code-snippet overflow-hidden rounded-xl"
+                  dangerouslySetInnerHTML={{ __html: highlightedCode }}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -100,7 +116,7 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
           white-space: pre-wrap;
         }
       `}</style>
-    </LookSurface>
+    </div>
   );
 }
 
