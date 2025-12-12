@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
 import { useAtomValue } from "jotai";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
 import {
   AdvancedGradient,

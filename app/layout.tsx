@@ -12,7 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Analytics } from "@vercel/analytics/next";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -137,10 +137,11 @@ export default function RootLayout({
         }
         suppressHydrationWarning
       >
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-          {children}
-          <Analytics />
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            {children}
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
