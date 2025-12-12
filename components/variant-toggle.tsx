@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
+import { track } from "@vercel/analytics";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -46,6 +47,11 @@ function usePatternControls(
 
   const handlePatternSelect = useCallback(
     (patternId: PatternOption) => {
+      track("pattern_changed", {
+        pattern: patternId,
+        look_id: config.lookId,
+      });
+
       setConfig((current) => {
         const background =
           current.background ?? ({
@@ -63,7 +69,7 @@ function usePatternControls(
         };
       });
     },
-    [setConfig],
+    [setConfig, config.lookId],
   );
 
   const getPatternLabel = useCallback((id: PatternOption) => {
@@ -195,17 +201,26 @@ export function VariantToggle({ onVariantChange }: VariantToggleProps) {
       const nextIndex =
         (currentIndex + direction + displayVariants.length) % displayVariants.length;
       const nextVariant = displayVariants[nextIndex];
+      track("variant_changed", {
+        variant: nextVariant,
+        look_id: config.lookId,
+        interaction: "keyboard",
+      });
       onVariantChange(nextVariant);
       requestAnimationFrame(() => buttonRefs.current[nextIndex]?.focus());
     },
-    [displayVariants, onVariantChange],
+    [displayVariants, onVariantChange, config.lookId],
   );
 
   const handleSelectChange = useCallback(
     (value: string) => {
+      track("variant_changed", {
+        variant: value,
+        look_id: config.lookId,
+      });
       onVariantChange(value);
     },
-    [onVariantChange],
+    [onVariantChange, config.lookId],
   );
 
   return (
@@ -239,7 +254,13 @@ export function VariantToggle({ onVariantChange }: VariantToggleProps) {
                         "hover:border-border hover:bg-background/70 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0",
                         isActive && "border-primary/40 bg-primary/10 text-primary shadow-sm",
                       )}
-                      onClick={() => onVariantChange(variant)}
+                      onClick={() => {
+                        track("variant_changed", {
+                          variant,
+                          look_id: config.lookId,
+                        });
+                        onVariantChange(variant);
+                      }}
                       onKeyDown={(event) => handleArrowNavigation(event, index)}
                       ref={(el) => {
                         buttonRefs.current[index] = el;
