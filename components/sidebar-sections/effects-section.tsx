@@ -1,10 +1,10 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { configAtom } from "@/hooks/atoms";
-import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { lookCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 
@@ -26,7 +26,17 @@ export function EffectsSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const screenshot = useAtomValue(screenshotAssetAtom);
   const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+
+  const shouldAutoEnableFade = useMemo(() => {
+    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
+    if (!isBackdropLook || !screenshot?.metadata) return false;
+    
+    const { height, aspectRatio } = screenshot.metadata;
+    // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
+    return height > 720 && aspectRatio < 1;
+  }, [config.lookId, screenshot?.metadata]);
 
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
@@ -74,15 +84,16 @@ export function EffectsSection() {
   const toggleFade = useCallback(() => {
     setConfig((currentConfig) => {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      const currentFadeState = treatment.fadeEnabled ?? shouldAutoEnableFade;
       return {
         ...currentConfig,
         screenshotFrame: {
           ...treatment,
-          fadeEnabled: !(treatment.fadeEnabled ?? true),
+          fadeEnabled: !currentFadeState,
         },
       };
     });
-  }, [setConfig]);
+  }, [setConfig, shouldAutoEnableFade]);
 
   const showOutlineSection =
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow || outlineControls.fade;
@@ -127,7 +138,7 @@ export function EffectsSection() {
         <EffectToggleRow
           label="Fade"
           variant="fade"
-          checked={config.screenshotFrame?.fadeEnabled ?? true}
+          checked={config.screenshotFrame?.fadeEnabled ?? shouldAutoEnableFade}
           onToggle={toggleFade}
         />
       )}
