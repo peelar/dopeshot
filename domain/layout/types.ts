@@ -65,23 +65,11 @@ export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 import type { CustomGradient } from "./gradients/types";
 
-export type AIBackgroundStyle = "abstract-shapes" | "geometric" | "flowing" | "particles";
-
-export interface AIBackgroundConfig {
-  id: string;
-  prompt: string;
-  style: AIBackgroundStyle;
-  complexity: number; // 1-10
-  colorSource: "screenshot" | "custom";
-  imageUrl: string; // placeholder or real URL
-  createdAt: number;
-}
-
-export type GradientSource = "preset" | "screenshot" | "custom" | "ai-generated";
+export type GradientSource = "preset" | "screenshot" | "custom";
 
 export type BackgroundConfig = {
   type: BackgroundType;
-  value: string; // gradientId, assetId, AI background ID, or ColorToken
+  value: string; // gradientId, assetId, or ColorToken
   customGradient?: CustomGradient; // for custom/dynamic gradients
   gradientSource?: GradientSource; // tracks where the gradient came from
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
@@ -112,7 +100,6 @@ export type LayoutConfig = {
   };
   screenshotShadow?: ShadowIntensity;
   screenshotFrame?: ScreenshotTreatment;
-  aiBackgrounds?: AIBackgroundConfig[]; // Store generated AI backgrounds
   lookSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-look fade state
   };
