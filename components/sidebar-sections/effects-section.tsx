@@ -3,6 +3,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "next-themes";
+import { track } from "@vercel/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
@@ -31,11 +32,16 @@ export function EffectsSection() {
     setConfig((currentConfig) => {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
       const isSoftGlass = treatment.preset === "soft-glass";
+      const newPreset = isSoftGlass ? "solid" : "soft-glass";
+      track("effect_toggled", {
+        effect: "soft_glass",
+        enabled: !isSoftGlass,
+      });
       return {
         ...currentConfig,
         screenshotFrame: {
           ...treatment,
-          preset: isSoftGlass ? "solid" : "soft-glass",
+          preset: newPreset,
           shape: treatment.shape ?? "rounded",
         },
       };
@@ -47,6 +53,10 @@ export function EffectsSection() {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
       const currentShape = treatment.shape ?? "rounded";
       const nextShape = currentShape === "rounded" ? "rectangular" : "rounded";
+      track("effect_toggled", {
+        effect: "rounded_corners",
+        enabled: nextShape === "rounded",
+      });
       return {
         ...currentConfig,
         screenshotFrame: {
@@ -60,11 +70,16 @@ export function EffectsSection() {
   const toggleFrameShadow = useCallback(() => {
     setConfig((currentConfig) => {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
+      const newShadowEnabled = !(treatment.shadowEnabled ?? true);
+      track("effect_toggled", {
+        effect: "shadow",
+        enabled: newShadowEnabled,
+      });
       return {
         ...currentConfig,
         screenshotFrame: {
           ...treatment,
-          shadowEnabled: !(treatment.shadowEnabled ?? true),
+          shadowEnabled: newShadowEnabled,
         },
       };
     });

@@ -2,6 +2,7 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useState, useCallback } from "react";
+import { track } from "@vercel/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { backgroundAssetAtom } from "@/hooks/atoms/derived";
 import { GradientPicker } from "@/components/gradient-picker";
@@ -64,9 +65,11 @@ export function BackgroundSection({ onUploadAsset }: BackgroundSectionProps) {
       <SegmentedControl
         value={bgType}
         onChange={(value) => {
-          if (value === "image") setBgType("image");
-          else if (value === "ai") setBgType("ai");
-          else setBgType("gradient");
+          const newType = value === "image" ? "image" : value === "ai" ? "ai" : "gradient";
+          track("background_type_changed", {
+            type: newType,
+          });
+          setBgType(newType);
         }}
         options={[
           { id: "gradient", label: "Gradient" },

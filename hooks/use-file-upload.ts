@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useSetAtom, useAtom } from "jotai";
+import { track } from "@vercel/analytics";
 import { Asset } from "@/domain/asset/types";
 import { processFileUpload } from "@/domain/asset/upload-orchestrator";
 import { applyLookRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
@@ -73,6 +74,18 @@ export function useFileUpload({
 
         if (kind === "screenshot") {
           setHasCustomScreenshot(true);
+          track("screenshot_uploaded", {
+            aspect_category: aspectCategory || "unknown",
+            file_size_kb: Math.round(file.size / 1024),
+          });
+        } else if (kind === "background") {
+          track("background_image_uploaded", {
+            file_size_kb: Math.round(file.size / 1024),
+          });
+        } else if (kind === "logo") {
+          track("logo_uploaded", {
+            file_size_kb: Math.round(file.size / 1024),
+          });
         }
 
         setConfig((currentConfig) => {

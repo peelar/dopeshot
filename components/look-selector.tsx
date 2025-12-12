@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useAtomValue, useSetAtom, Provider, createStore } from "jotai";
+import { track } from "@vercel/analytics";
 import { LOOK_DEFINITIONS, withLookTextDefaults } from "@/domain/look/definitions";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
@@ -93,6 +94,12 @@ export function LookSelector({ className }: { className?: string }) {
           const isSelected = currentConfig.lookId === lookId;
 
           const handleSelect = () => {
+            track("look_changed", {
+              from_look: currentConfig.lookId,
+              to_look: lookId,
+              look_name: displayName,
+            });
+
             setConfig(
               withLookTextDefaults(
                 {
