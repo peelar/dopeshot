@@ -21,6 +21,10 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshotZoom,
   } = useLookPrimitives();
 
+  // Default fadeEnabled to true for Backdrop look when undefined
+  const fadeEnabled = screenshotTreatment.fadeEnabled ?? 
+    (config.lookId === "adaptive-stage" || config.lookId === "full-visual");
+
   const frameAppearance = useMemo(
     () =>
       getScreenshotFrameAppearance({
@@ -76,9 +80,9 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
                 style={{
                   borderRadius: frameAppearance.contentRadius,
                   objectPosition: "top",
-                  ...(screenshotTreatment.fadeEnabled && {
-                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)",
-                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.2) 100%)",
+                  ...(fadeEnabled && {
+                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
                   }),
                 }}
                 crossOrigin="anonymous"
