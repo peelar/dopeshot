@@ -12,7 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import PlausibleProvider from "next-plausible";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -127,28 +127,22 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <PlausibleProvider
-        domain="dopeshot.vercel.app"
-        customDomain="https://plausible.io"
-        selfHosted={false}
-        enabled={true}
-        trackOutboundLinks={true}
+      <body
+        className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
+        style={
+          {
+            "--font-clean": "var(--font-geist-sans)",
+            "--font-sans": "var(--font-ui)",
+          } as React.CSSProperties
+        }
+        suppressHydrationWarning
       >
-        <body
-          className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
-          style={
-            {
-              "--font-clean": "var(--font-geist-sans)",
-              "--font-sans": "var(--font-ui)",
-            } as React.CSSProperties
-          }
-          suppressHydrationWarning
-        >
+        <PostHogProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             {children}
           </ThemeProvider>
-        </body>
-      </PlausibleProvider>
+        </PostHogProvider>
+      </body>
     </html>
   );
 }
