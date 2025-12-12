@@ -4,7 +4,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import {
   useCallback,
   useMemo,
-  useEffect,
+  useLayoutEffect,
   useState,
   type CSSProperties,
   type ReactNode,
@@ -130,7 +130,7 @@ export function EffectsSection() {
         },
       };
     });
-  }, [setConfig, screenshot?.metadata]);
+  }, [setConfig, screenshot]);
 
   const showOutlineSection =
     outlineControls.softGlass ||
@@ -249,8 +249,11 @@ function EffectToggleControl({
   const [mounted, setMounted] = useState(false);
 
   // Prevent hydration mismatch by waiting for client-side mount
-  useEffect(() => {
-    setMounted(true);
+  useLayoutEffect(() => {
+    const rafId = requestAnimationFrame(() => {
+      setMounted(true);
+    });
+    return () => cancelAnimationFrame(rafId);
   }, []);
 
   // Use resolvedTheme after mount, default to light during SSR
