@@ -21,9 +21,17 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshotZoom,
   } = useLookPrimitives();
 
-  // Default fadeEnabled to true for Backdrop look when undefined
-  const fadeEnabled = screenshotTreatment.fadeEnabled ?? 
-    (config.lookId === "adaptive-stage" || config.lookId === "full-visual");
+  // Default fadeEnabled based on screenshot dimensions for Backdrop look
+  const shouldAutoEnableFade = useMemo(() => {
+    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
+    if (!isBackdropLook || !screenshot?.metadata) return false;
+    
+    const { height, aspectRatio } = screenshot.metadata;
+    // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
+    return height > 720 && aspectRatio < 1;
+  }, [config.lookId, screenshot?.metadata]);
+
+  const fadeEnabled = screenshotTreatment.fadeEnabled ?? shouldAutoEnableFade;
 
   const frameAppearance = useMemo(
     () =>

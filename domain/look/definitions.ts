@@ -205,7 +205,6 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         lockedAspectRatio: 16 / 9,
         shadowEnabled: true,
         shape: "rounded",
-        fadeEnabled: true,
       },
     }),
     capabilities: {
