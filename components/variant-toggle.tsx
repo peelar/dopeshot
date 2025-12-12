@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 import {
   Select,

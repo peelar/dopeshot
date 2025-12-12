@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useSetAtom, useAtom } from "jotai";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { Asset } from "@/domain/asset/types";
 import { processFileUpload } from "@/domain/asset/upload-orchestrator";
 import { applyLookRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";

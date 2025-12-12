@@ -3,7 +3,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "next-themes";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { lookCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
