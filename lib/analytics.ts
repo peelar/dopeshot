@@ -1,21 +1,20 @@
 /**
- * Plausible Analytics tracking utility
- * Provides type-safe event tracking with custom properties
+ * PostHog Analytics tracking utility
+ * Privacy-first event tracking with no persistent identifiers
+ *
+ * Features:
+ * - No cookies or localStorage (memory-only)
+ * - No user profiling or identification
+ * - Only tracks explicit product interactions
+ * - EU-compliant, no consent required
  */
 
-declare global {
-  interface Window {
-    plausible?: (
-      eventName: string,
-      options?: { props?: Record<string, string | number | boolean> }
-    ) => void;
-  }
-}
+import posthog from "posthog-js";
 
 /**
- * Track a custom event with Plausible Analytics
+ * Track a custom event with PostHog
  * @param eventName - The name of the event to track
- * @param props - Optional event properties (all values will be converted to strings)
+ * @param props - Optional event properties
  */
 export function track(
   eventName: string,
@@ -26,16 +25,9 @@ export function track(
   }
 
   try {
-    // Plausible is loaded via script tag in layout
-    if (window.plausible) {
-      // Convert all prop values to strings as Plausible expects
-      const normalizedProps = props
-        ? Object.fromEntries(
-            Object.entries(props).map(([key, value]) => [key, String(value)])
-          )
-        : undefined;
-
-      window.plausible(eventName, normalizedProps ? { props: normalizedProps } : undefined);
+    // Only track if PostHog is initialized
+    if (posthog.__loaded) {
+      posthog.capture(eventName, props);
     }
   } catch (error) {
     // Silently fail in development/testing
