@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useAtomValue, useSetAtom, Provider, createStore } from "jotai";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { LOOK_DEFINITIONS, withLookTextDefaults } from "@/domain/look/definitions";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";

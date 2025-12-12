@@ -2,7 +2,7 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useState, useCallback } from "react";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { backgroundAssetAtom } from "@/hooks/atoms/derived";
 import { GradientPicker } from "@/components/gradient-picker";

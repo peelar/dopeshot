@@ -2,7 +2,7 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useRef } from "react";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";

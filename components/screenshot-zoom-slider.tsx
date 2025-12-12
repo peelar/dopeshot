@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { track } from "@vercel/analytics";
+import { track } from "@/lib/analytics";
 import { cn } from "@/utils";
 
 interface ScreenshotZoomSliderProps {
