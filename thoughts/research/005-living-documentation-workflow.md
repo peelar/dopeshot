@@ -1,5 +1,10 @@
 # Living Documentation for Claude Code: Module READMEs
 
+> **Status**: ✅ Implemented (2024-12-12)
+> - Module READMEs created in all `domain/` subdirectories
+> - `/sync_docs` command available
+> - Workflow integrated into `/4_implement_plan`
+
 ## Problem
 
 Your `thoughts/research/` and `thoughts/plans/` docs are great for initial context but become **stale as code evolves**. They're **far from the code**, so Claude Code (and you) waste time piecing together "where things are, how it works" every time you start a new task.
