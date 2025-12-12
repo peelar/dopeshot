@@ -21,6 +21,20 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshotZoom,
   } = useLookPrimitives();
 
+  // Default fadeEnabled based on screenshot dimensions for Backdrop look
+  const shouldAutoEnableFade = useMemo(() => {
+    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
+    if (!isBackdropLook || !screenshot?.metadata) return false;
+    
+    const { height, aspectRatio } = screenshot.metadata;
+    // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
+    return height > 720 && aspectRatio < 1;
+  }, [config.lookId, screenshot?.metadata]);
+
+  // Use look-specific fade state
+  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
+  const fadeEnabled = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
+
   const frameAppearance = useMemo(
     () =>
       getScreenshotFrameAppearance({
@@ -76,6 +90,10 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
                 style={{
                   borderRadius: frameAppearance.contentRadius,
                   objectPosition: "top",
+                  ...(fadeEnabled && {
+                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                  }),
                 }}
                 crossOrigin="anonymous"
               />

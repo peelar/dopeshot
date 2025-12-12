@@ -1,11 +1,11 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useMemo, type CSSProperties, type ReactNode } from "react";
 import { useTheme } from "next-themes";
 import { track } from "@vercel/analytics";
 import { configAtom } from "@/hooks/atoms";
-import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { lookCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 
@@ -20,13 +20,28 @@ const FULL_OUTLINE_CONTROLS = {
   softGlass: true,
   shape: true,
   shadow: true,
+  fade: false,
 };
 
 export function EffectsSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const screenshot = useAtomValue(screenshotAssetAtom);
   const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+
+  const shouldAutoEnableFade = useMemo(() => {
+    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
+    if (!isBackdropLook || !screenshot?.metadata) return false;
+    
+    const { height, aspectRatio } = screenshot.metadata;
+    // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
+    return height > 720 && aspectRatio < 1;
+  }, [config.lookId, screenshot?.metadata]);
+
+  // Get look-specific fade state
+  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
+  const currentFadeState = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
 
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
@@ -85,8 +100,30 @@ export function EffectsSection() {
     });
   }, [setConfig]);
 
+  const toggleFade = useCallback(() => {
+    setConfig((currentConfig) => {
+      const lookSpecificFadeEnabled = currentConfig.lookSpecificSettings?.fadeEnabled?.[currentConfig.lookId];
+      const isBackdropLook = currentConfig.lookId === "adaptive-stage" || currentConfig.lookId === "full-visual";
+      const autoEnableFade = isBackdropLook && screenshot?.metadata
+        ? screenshot.metadata.height > 720 && screenshot.metadata.aspectRatio < 1
+        : false;
+      const currentState = lookSpecificFadeEnabled ?? autoEnableFade;
+      
+      return {
+        ...currentConfig,
+        lookSpecificSettings: {
+          ...currentConfig.lookSpecificSettings,
+          fadeEnabled: {
+            ...currentConfig.lookSpecificSettings?.fadeEnabled,
+            [currentConfig.lookId]: !currentState,
+          },
+        },
+      };
+    });
+  }, [setConfig, screenshot?.metadata]);
+
   const showOutlineSection =
-    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow;
+    outlineControls.softGlass || outlineControls.shape || outlineControls.shadow || outlineControls.fade;
 
   if (!showOutlineSection) {
     return (
@@ -124,11 +161,19 @@ export function EffectsSection() {
           onToggle={toggleFrameShadow}
         />
       )}
+      {outlineControls.fade && (
+        <EffectToggleRow
+          label="Fade"
+          variant="fade"
+          checked={currentFadeState}
+          onToggle={toggleFade}
+        />
+      )}
     </div>
   );
 }
 
-type EffectToggleVariant = "glass" | "corners" | "shadow";
+type EffectToggleVariant = "glass" | "corners" | "shadow" | "fade";
 
 interface EffectToggleRowProps {
   label: string;
@@ -321,6 +366,18 @@ function getEffectToggleVisuals(variant: EffectToggleVariant, isOn: boolean): Ef
         },
         {
           trackClass: "ring-1 ring-white/15 shadow-[0_0_18px_rgba(255,255,255,0.35)]",
+        },
+      );
+    case "fade":
+      if (!isOn) {
+        return createSharedVisuals();
+      }
+      return createThemedVisuals(
+        {
+          trackClass: "bg-gradient-to-b from-slate-600 to-slate-300",
+        },
+        {
+          trackClass: "bg-gradient-to-b from-slate-400 to-slate-600",
         },
       );
     default:

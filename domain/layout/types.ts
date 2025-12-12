@@ -36,6 +36,7 @@ export type ScreenshotTreatment = {
   lockedAspectRatio?: number; // defaults to 16:9 when locked
   shadowEnabled?: boolean;
   shape?: FrameShape;
+  fadeEnabled?: boolean;
 };
 
 export type FontId =
@@ -109,4 +110,7 @@ export type LayoutConfig = {
   screenshotShadow?: ShadowIntensity;
   screenshotFrame?: ScreenshotTreatment;
   aiBackgrounds?: AIBackgroundConfig[]; // Store generated AI backgrounds
+  lookSpecificSettings?: {
+    fadeEnabled?: Record<string, boolean>; // Per-look fade state
+  };
 };
