@@ -130,6 +130,9 @@ importers:
       knip:
         specifier: ^5.70.2
         version: 5.71.0(@types/node@20.19.25)(typescript@5.9.3)
+      playwright:
+        specifier: ^1.57.0
+        version: 1.57.0
       postcss:
         specifier: ^8.4.49
         version: 8.5.6
