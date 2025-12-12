@@ -84,7 +84,7 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
                 className="overflow-hidden rounded-2xl shadow-2xl"
                 style={{
                   boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                  background: backgroundStyle?.background || backgroundStyle?.backgroundImage || 'linear-gradient(90deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%)',
+                  background: backgroundStyle || 'linear-gradient(90deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%)',
                   padding: '36px',
                 }}
               >
