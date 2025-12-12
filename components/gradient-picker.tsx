@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useRef, useEffect, type ChangeEvent } from "react";
 import { useAtomValue } from "jotai";
+import { track } from "@vercel/analytics";
 import { GRADIENTS, getGradientById } from "@/domain/layout/gradient-presets";
 import {
   AdvancedGradient,
@@ -249,6 +250,10 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     (gradientId: string) => {
       const gradient = getGradientById(gradientId);
       if (!gradient) return;
+      track("gradient_preset_selected", {
+        preset_id: gradientId,
+        preset_name: gradient.name,
+      });
       setActiveSourceWithOverride("preset");
       onChangeAction(
         { type: "gradient", value: gradientId, customGradient: undefined },
@@ -269,6 +274,9 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const handleColorChange = useCallback(
     (colorType: CustomColorStop, value: string) => {
+      track("gradient_color_customized", {
+        stop: colorType,
+      });
       const colors = getCustomGradientColors(resolvedGradient, colorPalette);
       const nextColors = { ...colors, [colorType]: value };
       const newGradient = buildThreeStopGradient(nextColors, currentAngle, resolvedGradient);
@@ -281,6 +289,9 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const handleDirectionChange = useCallback(
     (angle: number) => {
+      track("gradient_angle_changed", {
+        angle,
+      });
       const colors = getCustomGradientColors(resolvedGradient, colorPalette);
       const newGradient = buildThreeStopGradient(colors, angle, resolvedGradient);
       lockManualSource();
@@ -292,6 +303,9 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const handleScreenshotSelect = useCallback(
     (gradient: CustomGradient) => {
+      track("gradient_source_changed", {
+        source: "screenshot",
+      });
       setActiveSourceWithOverride("screenshot");
       handleCustomGradientSelect(gradient);
     },

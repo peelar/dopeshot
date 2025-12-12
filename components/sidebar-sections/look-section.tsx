@@ -1,7 +1,8 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
+import { track } from "@vercel/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,8 @@ export function LookSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const headlineTrackedRef = useRef(false);
+  const subtitleTrackedRef = useRef(false);
 
   const showHeadlineInput = (lookCapabilities?.text.headline ?? "optional") !== "hidden";
   const showSubtitleInput = (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
@@ -32,6 +35,9 @@ export function LookSection() {
 
   const handleFontChange = useCallback(
     (fontId: FontId) => {
+      track("font_changed", {
+        font_id: fontId,
+      });
       setConfig((currentConfig) => ({
         ...currentConfig,
         fontId,
@@ -42,6 +48,9 @@ export function LookSection() {
 
   const handleFontSizeChange = useCallback(
     (fontSize: FontSize) => {
+      track("font_size_changed", {
+        size: fontSize,
+      });
       setConfig((currentConfig) => ({
         ...currentConfig,
         fontSize,
@@ -49,6 +58,26 @@ export function LookSection() {
     },
     [setConfig],
   );
+
+  const handleHeadlineBlur = useCallback(() => {
+    const text = config.text.title?.trim();
+    if (text && text.length > 0 && !headlineTrackedRef.current) {
+      track("headline_modified", {
+        length: text.length,
+      });
+      headlineTrackedRef.current = true;
+    }
+  }, [config.text.title]);
+
+  const handleSubtitleBlur = useCallback(() => {
+    const text = config.text.subtitle?.trim();
+    if (text && text.length > 0 && !subtitleTrackedRef.current) {
+      track("subtitle_modified", {
+        length: text.length,
+      });
+      subtitleTrackedRef.current = true;
+    }
+  }, [config.text.subtitle]);
 
   if (!showHeadlineInput && !showSubtitleInput) {
     return (
@@ -69,6 +98,7 @@ export function LookSection() {
             id="look-headline"
             value={config.text.title ?? ""}
             onChange={(event) => handleTextInputChange("title", event.target.value)}
+            onBlur={handleHeadlineBlur}
             placeholder="Bring the heat"
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -88,6 +118,7 @@ export function LookSection() {
             id="look-subtitle"
             value={config.text.subtitle ?? ""}
             onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
+            onBlur={handleSubtitleBlur}
             placeholder="Keep the heat going"
             rows={2}
             maxLength={240}
