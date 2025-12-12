@@ -100,6 +100,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
         softGlass: false,
         shape: false,
         shadow: true,
+        fade: true,
       },
       logo: "supported",
       copyDefaults: {

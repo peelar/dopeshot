@@ -62,9 +62,12 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     logo,
     screenshot,
     screenshotShadow,
+    screenshotTreatment,
     screenshotZoom,
     text,
   } = useLookPrimitives();
+
+  const fadeEnabled = screenshotTreatment.fadeEnabled ?? false;
 
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
@@ -128,6 +131,10 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
                 objectPosition: "top",
                 transform: `scale(${clampedZoom})`,
                 transformOrigin: "top center",
+                ...(fadeEnabled && {
+                  maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                  WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                }),
               }}
               crossOrigin="anonymous"
             />
@@ -165,6 +172,10 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             objectPosition,
             transform: `scale(${SIDE_SCREENSHOT_ZOOM * clampedZoom})`,
             transformOrigin: SIDE_SCREENSHOT_TRANSFORM_ORIGINS[placement],
+            ...(fadeEnabled && {
+              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+            }),
           }}
           crossOrigin="anonymous"
         />
