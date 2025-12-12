@@ -38,6 +38,10 @@ export function EffectsSection() {
     return height > 720 && aspectRatio < 1;
   }, [config.lookId, screenshot?.metadata]);
 
+  // Get look-specific fade state
+  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
+  const currentFadeState = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
+
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
@@ -83,17 +87,25 @@ export function EffectsSection() {
 
   const toggleFade = useCallback(() => {
     setConfig((currentConfig) => {
-      const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
-      const currentFadeState = treatment.fadeEnabled ?? shouldAutoEnableFade;
+      const lookSpecificFadeEnabled = currentConfig.lookSpecificSettings?.fadeEnabled?.[currentConfig.lookId];
+      const isBackdropLook = currentConfig.lookId === "adaptive-stage" || currentConfig.lookId === "full-visual";
+      const autoEnableFade = isBackdropLook && screenshot?.metadata
+        ? screenshot.metadata.height > 720 && screenshot.metadata.aspectRatio < 1
+        : false;
+      const currentState = lookSpecificFadeEnabled ?? autoEnableFade;
+      
       return {
         ...currentConfig,
-        screenshotFrame: {
-          ...treatment,
-          fadeEnabled: !currentFadeState,
+        lookSpecificSettings: {
+          ...currentConfig.lookSpecificSettings,
+          fadeEnabled: {
+            ...currentConfig.lookSpecificSettings?.fadeEnabled,
+            [currentConfig.lookId]: !currentState,
+          },
         },
       };
     });
-  }, [setConfig, shouldAutoEnableFade]);
+  }, [setConfig, screenshot?.metadata]);
 
   const showOutlineSection =
     outlineControls.softGlass || outlineControls.shape || outlineControls.shadow || outlineControls.fade;
@@ -138,7 +150,7 @@ export function EffectsSection() {
         <EffectToggleRow
           label="Fade"
           variant="fade"
-          checked={config.screenshotFrame?.fadeEnabled ?? shouldAutoEnableFade}
+          checked={currentFadeState}
           onToggle={toggleFade}
         />
       )}

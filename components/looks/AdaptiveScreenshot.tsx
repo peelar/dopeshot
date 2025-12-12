@@ -31,7 +31,9 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     return height > 720 && aspectRatio < 1;
   }, [config.lookId, screenshot?.metadata]);
 
-  const fadeEnabled = screenshotTreatment.fadeEnabled ?? shouldAutoEnableFade;
+  // Use look-specific fade state
+  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
+  const fadeEnabled = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
 
   const frameAppearance = useMemo(
     () =>

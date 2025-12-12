@@ -110,4 +110,7 @@ export type LayoutConfig = {
   screenshotShadow?: ShadowIntensity;
   screenshotFrame?: ScreenshotTreatment;
   aiBackgrounds?: AIBackgroundConfig[]; // Store generated AI backgrounds
+  lookSpecificSettings?: {
+    fadeEnabled?: Record<string, boolean>; // Per-look fade state
+  };
 };
