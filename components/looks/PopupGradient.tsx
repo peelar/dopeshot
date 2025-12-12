@@ -67,7 +67,9 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     text,
   } = useLookPrimitives();
 
-  const fadeEnabled = screenshotTreatment.fadeEnabled ?? false;
+  // Use look-specific fade state, defaulting to false for Peak look
+  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
+  const fadeEnabled = lookSpecificFadeEnabled ?? false;
 
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
