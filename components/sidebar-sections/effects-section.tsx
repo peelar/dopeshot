@@ -78,7 +78,7 @@ export function EffectsSection() {
         ...currentConfig,
         screenshotFrame: {
           ...treatment,
-          fadeEnabled: !(treatment.fadeEnabled ?? false),
+          fadeEnabled: !(treatment.fadeEnabled ?? true),
         },
       };
     });
