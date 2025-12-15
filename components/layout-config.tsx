@@ -5,6 +5,7 @@ import { useAtomValue } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/utils";
+import { configAtom } from "@/hooks/atoms";
 import { lookCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 import {
   Accordion,
@@ -18,12 +19,14 @@ import { LogoSection } from "@/components/sidebar-sections/logo-section";
 import { BackgroundSection } from "@/components/sidebar-sections/background-section";
 import { LookSection } from "@/components/sidebar-sections/look-section";
 import { EffectsSection } from "@/components/sidebar-sections/effects-section";
+import { CodeSection } from "@/components/sidebar-sections/code-section";
 
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
 export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
+  const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
   const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
@@ -31,6 +34,8 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const { expandedSection, expandSection } = useSidebarState();
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
+  const showCodeSection = config.lookId === "code-snippet";
+  const showTextSection = !showCodeSection;
 
   // Initialize default expansion based on state
   useEffect(() => {
@@ -49,34 +54,53 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
     return "Optional";
   };
 
+  const defaultAccordionValues = showCodeSection
+    ? ["code", "background"]
+    : ["look", "effects", "background"];
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <Accordion
         type="multiple"
-        defaultValue={["look", "effects", "background"]}
+        defaultValue={defaultAccordionValues}
         className="w-full"
       >
-        <AccordionItem value="look" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Text</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <LookSection />
-          </AccordionContent>
-        </AccordionItem>
+        {showTextSection && (
+          <AccordionItem value="look" className="border-b">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Text</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <LookSection />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
-        <AccordionItem value="effects" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Effects</span>
+        {showCodeSection && (
+          <div className="border-b">
+            <div className="px-4 py-3">
+              <span className="text-sm font-semibold">Code</span>
             </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <EffectsSection />
-          </AccordionContent>
-        </AccordionItem>
+            <div className="px-4 pb-4">
+              <CodeSection />
+            </div>
+          </div>
+        )}
+
+        {!showCodeSection && (
+          <AccordionItem value="effects" className="border-b">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Effects</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <EffectsSection />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
         <AccordionItem value="background" className="border-b">
           <AccordionTrigger className="px-4 py-3 hover:no-underline">
@@ -89,17 +113,19 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="screenshot" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
-              <span className="text-sm font-semibold">Screenshot</span>
-              <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
-            </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
-            <ScreenshotSection onUploadAsset={onUploadAsset} />
-          </AccordionContent>
-        </AccordionItem>
+        {!showCodeSection && (
+          <AccordionItem value="screenshot" className="border-b">
+            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+              <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Screenshot</span>
+                <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent className="px-4 pb-4">
+              <ScreenshotSection onUploadAsset={onUploadAsset} />
+            </AccordionContent>
+          </AccordionItem>
+        )}
 
         {showLogoSection && (
           <AccordionItem value="logo" className="border-b">

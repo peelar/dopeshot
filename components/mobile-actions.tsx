@@ -25,6 +25,7 @@ interface MobileActionsProps {
   onOpenChange: (open: boolean) => void;
   onUploadClick: () => void;
   isProcessingUpload: boolean;
+  showUploadButton: boolean;
   onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
@@ -36,6 +37,7 @@ export function MobileActions({
   onOpenChange,
   onUploadClick,
   isProcessingUpload,
+  showUploadButton,
   onUploadAsset,
 }: MobileActionsProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -144,7 +146,10 @@ export function MobileActions({
           <SheetTrigger asChild>
             <button
               type="button"
-              className="flex h-12 basis-2/3 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0"
+              className={cn(
+                "flex h-12 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0",
+                showUploadButton ? "basis-2/3" : "flex-1",
+              )}
             >
               <Palette className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm font-semibold">Design</span>
@@ -194,15 +199,17 @@ export function MobileActions({
           </SheetContent>
         </Sheet>
 
-        <button
-          type="button"
-          onClick={onUploadClick}
-          disabled={isProcessingUpload}
-          className="flex h-12 basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
-        >
-          <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
-          <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
-        </button>
+        {showUploadButton ? (
+          <button
+            type="button"
+            onClick={onUploadClick}
+            disabled={isProcessingUpload}
+            className="flex h-12 basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
+          >
+            <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
+            <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
+          </button>
+        ) : null}
       </div>
     </div>
   );

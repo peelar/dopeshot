@@ -1,11 +1,11 @@
 "use client";
 
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/screenshot-zoom-slider";
-import { screenshotZoomAtom } from "@/hooks/atoms";
+import { screenshotZoomAtom, configAtom } from "@/hooks/atoms";
 import { cn } from "@/utils";
 
 /**
@@ -44,6 +44,10 @@ export function PlaygroundWorkspace({
   showFocusHint,
 }: PlaygroundWorkspaceProps) {
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
+  const config = useAtomValue(configAtom);
+
+  // Code snippet uses fluid layout (content-based sizing)
+  const useFluidLayout = config.lookId === "code-snippet";
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
@@ -74,6 +78,7 @@ export function PlaygroundWorkspace({
             surfaceHeight={canvasHeight}
             isLoading={isAnalyzingColors}
             loadingText="Analyzing colors..."
+            fluidLayout={useFluidLayout}
           >
             <CoverPreview />
           </PreviewViewport>
@@ -86,7 +91,9 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+        {!useFluidLayout && (
+          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+        )}
       </div>
     </div>
   );

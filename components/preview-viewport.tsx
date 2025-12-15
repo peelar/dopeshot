@@ -11,6 +11,7 @@ interface PreviewViewportProps {
   surfaceHeight?: number;
   isLoading?: boolean;
   loadingText?: string;
+  fluidLayout?: boolean; // For content-based sizing (code snippet)
 }
 
 const DEFAULT_SURFACE = {
@@ -25,6 +26,7 @@ export function PreviewViewport({
   surfaceHeight = DEFAULT_SURFACE.height,
   isLoading = false,
   loadingText = "Loading...",
+  fluidLayout = false,
 }: PreviewViewportProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
@@ -47,6 +49,11 @@ export function PreviewViewport({
   }, [surfaceWidth]);
 
   useLayoutEffect(() => {
+    if (fluidLayout) {
+      setHasMeasured(true);
+      return;
+    }
+
     const node = containerRef.current;
     if (!node) return;
 
@@ -65,8 +72,31 @@ export function PreviewViewport({
       observer.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [surfaceWidth, updateScale]);
+  }, [surfaceWidth, updateScale, fluidLayout]);
 
+  // Fluid layout: content determines size, no fixed canvas
+  if (fluidLayout) {
+    return (
+      <div
+        ref={containerRef}
+        className={cn("flex h-full w-full items-center justify-center", className)}
+      >
+        <div className="relative overflow-hidden rounded-lg">
+          {children}
+          {isLoading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-2xl">
+              <div className="flex flex-col items-center gap-3 text-center">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
+                <p className="text-sm text-muted-foreground">{loadingText}</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Fixed canvas: scale to fit container
   return (
     <div
       ref={containerRef}
