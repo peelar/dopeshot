@@ -43,6 +43,8 @@ export default function PlaygroundPage() {
     isAnalyzingColors,
     showFocusHint,
     hasScreenshot,
+    canExport,
+    requiresScreenshot,
     isExporting,
     shouldShowAspectLock,
     isAspectLocked,
@@ -80,7 +82,8 @@ export default function PlaygroundPage() {
         hasCustomScreenshot={hasCustomScreenshot}
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
-        hasScreenshot={hasScreenshot}
+        showUploadButton={requiresScreenshot}
+        canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
       />
@@ -122,11 +125,12 @@ export default function PlaygroundPage() {
           onOpenChange={setIsConfigDrawerOpen}
           onUploadClick={openFilePicker}
           isProcessingUpload={isProcessingUpload}
+          showUploadButton={requiresScreenshot}
           onUploadAsset={handleFileProcess}
         />
       ) : null}
 
-      {hasScreenshot ? <ExportContainer width={canvas.width} height={canvas.height} /> : null}
+      {canExport ? <ExportContainer width={canvas.width} height={canvas.height} /> : null}
 
       <input
         type="file"

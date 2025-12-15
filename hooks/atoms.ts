@@ -1,4 +1,5 @@
 import { atom } from "jotai";
+import { atomWithStorage } from "jotai/utils";
 import { LayoutConfig, BackgroundConfig } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getDefaultDemoPreset } from "@/domain/demo/presets";
@@ -8,6 +9,8 @@ export const PLACEHOLDER_ASSET_ID = "placeholder-screenshot";
 
 // Use deterministic demo preset for SSR - random selection happens client-side
 const defaultPreset = getDefaultDemoPreset();
+
+export type AssetType = "screenshot" | "code";
 
 // Base atoms
 export const configAtom = atom<LayoutConfig>(defaultPreset.config);
@@ -23,3 +26,12 @@ export const screenshotZoomAtom = atom<number>(1.0);
 // Store the last screenshot-derived gradient to preserve it across look switches
 export const screenshotGradientAtom = atom<BackgroundConfig | null>(null);
 
+export const assetTypeAtom = atomWithStorage<AssetType>("dopeshot:assetType", "screenshot");
+
+export const lastLookByAssetTypeAtom = atomWithStorage<Record<AssetType, string>>(
+  "dopeshot:lastLookByAssetType",
+  {
+    screenshot: defaultPreset.config.lookId,
+    code: "code-snippet",
+  },
+);

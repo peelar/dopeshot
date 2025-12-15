@@ -1,8 +1,8 @@
-import { memo, useEffect, useState } from "react";
-import { cn } from "@/utils";
-import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
-import { codeToHtml } from "shiki";
+import { useLookPrimitives } from "@/components/looks/shared/look-primitives";
 import { detectLanguage } from "@/domain/code/language-detection";
+import { cn } from "@/utils";
+import { memo, useEffect, useState } from "react";
+import { codeToHtml } from "shiki";
 
 interface CodeSnippetProps {
   className?: string;
@@ -11,22 +11,17 @@ interface CodeSnippetProps {
 }
 
 function CodeSnippetComponent({ className }: CodeSnippetProps) {
-  const {
-    assets,
-    assetMap,
-    backgroundStyle,
-    config,
-    screenshotZoom,
-  } = useLookPrimitives();
+  const { backgroundStyle, config, screenshotZoom } = useLookPrimitives();
 
   const [highlightedCode, setHighlightedCode] = useState<string>("");
 
   // Get code from config
-  const code = config.code?.content || '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}';
+  const code =
+    config.code?.content ||
+    '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}';
   const configuredLanguage = config.code?.language;
   const detectedLanguage = configuredLanguage || detectLanguage(code);
   const theme = config.code?.theme || "github-dark";
-
 
   useEffect(() => {
     let isMounted = true;
@@ -57,12 +52,15 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
     };
   }, [code, detectedLanguage, theme]);
 
-  const stagePadding = 48;
+  const stagePadding = 0;
   const canvasWidth = 1280;
   const canvasHeight = 720;
 
   return (
-    <div className={cn("relative h-full w-full overflow-hidden", className)} style={{ background: 'transparent', isolation: 'isolate' }}>
+    <div
+      className={cn("relative h-full w-full overflow-hidden", className)}
+      style={{ background: "transparent", isolation: "isolate" }}
+    >
       <div className="relative z-10 h-full w-full">
         <div
           className="flex h-full w-full items-center justify-center"
@@ -84,8 +82,10 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
                 className="overflow-hidden rounded-2xl shadow-2xl"
                 style={{
                   boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-                  background: backgroundStyle || 'linear-gradient(90deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%)',
-                  padding: '36px',
+                  background:
+                    backgroundStyle ||
+                    "linear-gradient(90deg, #ec4899 0%, #d946ef 50%, #8b5cf6 100%)",
+                  padding: "36px",
                 }}
               >
                 {/* Code snippet with Shiki background */}
