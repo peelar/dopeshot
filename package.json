@@ -45,6 +45,7 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "sharp": "0.32.6",
+    "shiki": "^3.19.0",
     "tailwind-merge": "^2.5.3"
   },
   "devDependencies": {
@@ -64,6 +65,7 @@
     "eslint-config-next": "16.0.7",
     "jsdom": "^27.2.0",
     "knip": "^5.70.2",
+    "playwright": "^1.57.0",
     "postcss": "^8.4.49",
     "postcss-load-config": "^6.0.1",
     "prettier": "^3.3.3",

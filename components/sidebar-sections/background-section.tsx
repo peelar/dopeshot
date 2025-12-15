@@ -2,11 +2,9 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useState, useCallback } from "react";
-import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { backgroundAssetAtom } from "@/hooks/atoms/derived";
 import { GradientPicker } from "@/components/gradient-picker";
-import { AIBackgroundGenerator } from "@/components/ai-background-generator";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import { AssetDropzone } from "@/components/layout-config";
@@ -21,7 +19,7 @@ export function BackgroundSection({ onUploadAsset }: BackgroundSectionProps) {
   const backgroundAsset = useAtomValue(backgroundAssetAtom);
 
   // Local state for background tab selection
-  const [bgType, setBgType] = useState<"gradient" | "image" | "ai">(
+  const [bgType, setBgType] = useState<"gradient" | "image">(
     config.background?.type === "image" ? "image" : "gradient",
   );
 
@@ -65,16 +63,12 @@ export function BackgroundSection({ onUploadAsset }: BackgroundSectionProps) {
       <SegmentedControl
         value={bgType}
         onChange={(value) => {
-          const newType = value === "image" ? "image" : value === "ai" ? "ai" : "gradient";
-          track("background_type_changed", {
-            type: newType,
-          });
-          setBgType(newType);
+          if (value === "image") setBgType("image");
+          else setBgType("gradient");
         }}
         options={[
           { id: "gradient", label: "Gradient" },
           { id: "image", label: "Image" },
-          { id: "ai", label: "AI ✨" },
         ]}
         ariaLabel="Background type"
       />
@@ -92,8 +86,6 @@ export function BackgroundSection({ onUploadAsset }: BackgroundSectionProps) {
           />
         </div>
       )}
-
-      {bgType === "ai" && <AIBackgroundGenerator />}
     </div>
   );
 }

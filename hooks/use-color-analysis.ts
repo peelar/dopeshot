@@ -7,8 +7,9 @@ import {
   applyPreferredAngle,
   getGradientColorsForContrast,
 } from "@/domain/layout/gradient-application";
+import { supportsScreenshots } from "@/domain/look/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
-import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
+import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom, screenshotGradientAtom } from "./atoms";
 
 export interface UseColorAnalysisOptions {
   gradientPreferences: GradientPreferences;
@@ -16,9 +17,11 @@ export interface UseColorAnalysisOptions {
 
 export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOptions) {
   const [isAnalyzingColors, setIsAnalyzingColors] = useAtom(isAnalyzingColorsAtom);
+  const [config] = useAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
   const setConfig = useSetAtom(configAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     return analyzeImageColors(dataUrl);
@@ -26,6 +29,12 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
 
   const processColorAnalysis = useCallback(
     async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
+      // EARLY RETURN: Skip color analysis for looks that don't support screenshots
+      if (!supportsScreenshots(config.lookId)) {
+        console.log(`Skipping color analysis for ${config.lookId} - look does not support screenshots`);
+        return;
+      }
+
       setIsAnalyzingColors(true);
       setStatusMessage("Analyzing colors from screenshot...");
 
@@ -68,21 +77,27 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
             }
 
             appliedGradient = true;
+            const screenshotBackground = {
+              ...(currentConfig.background ?? { type: "gradient", value: "custom" }),
+              type: "gradient" as const,
+              value: "custom",
+              customGradient: fallbackGradient,
+              gradientSource: "screenshot" as const,
+              grainEnabled: currentConfig.background?.grainEnabled ?? true,
+              patternId: currentConfig.background?.patternId,
+              patternMode: currentConfig.background?.patternMode,
+            };
+
+            // Store screenshot gradient separately so it persists across look switches
+            setScreenshotGradient(screenshotBackground);
+
             return {
               ...currentConfig,
               colors: {
                 ...currentConfig.colors,
                 text: textColor,
               },
-              background: {
-                ...(currentConfig.background ?? { type: "gradient", value: "custom" }),
-                type: "gradient",
-                value: "custom",
-                customGradient: fallbackGradient,
-                grainEnabled: currentConfig.background?.grainEnabled ?? true,
-                patternId: currentConfig.background?.patternId,
-                patternMode: currentConfig.background?.patternMode,
-              },
+              background: screenshotBackground,
             };
           });
 
@@ -99,8 +114,10 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
     },
     [
       analyzeColors,
+      config.lookId,
       setAssets,
       setConfig,
+      setScreenshotGradient,
       setStatusMessage,
       setIsAnalyzingColors,
       gradientPreferences,

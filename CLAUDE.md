@@ -20,3 +20,4 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - Be very hesitant about adding something new to the sidebar. It should be as intelligent as possible, with no extra clicks or steps.
 - Actively look for ways to refactor crucial parts of the codebase.
 - After you are done with implementation, verify if the types & tests work via scripts in `package.json`.
+- Whenever you have "a bigger fix" in mind or a refactor, go for it. We are building for tomorrow, not today.
