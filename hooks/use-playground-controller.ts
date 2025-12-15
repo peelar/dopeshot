@@ -42,6 +42,7 @@ import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 interface ExportContext {
   hasScreenshot: boolean;
+  requiresScreenshot: boolean;
   setStatusMessage: Setter<string>;
   setIsExporting: Setter<boolean>;
   config: LayoutConfig;
@@ -91,9 +92,12 @@ export function usePlaygroundController() {
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);
+  const requiresScreenshot = lookCapabilities?.screenshot === "supported";
+  const canExport = requiresScreenshot ? hasScreenshot : true;
 
   const handleExport = useExportHandler({
     hasScreenshot,
+    requiresScreenshot,
     setStatusMessage,
     setIsExporting,
     config,
@@ -108,14 +112,16 @@ export function usePlaygroundController() {
   const handleScreenshotUpload = useCallback(
     async (file?: File) => {
       if (!file) return;
+      if (!requiresScreenshot) return;
       await handleFileProcess(file, "screenshot");
     },
-    [handleFileProcess],
+    [handleFileProcess, requiresScreenshot],
   );
 
   const dragAndUpload = useDragAndUpload({
     onFileUpload: handleScreenshotUpload,
     isProcessingUpload,
+    enabled: requiresScreenshot,
   });
 
   return {
@@ -126,6 +132,8 @@ export function usePlaygroundController() {
     isAnalyzingColors,
     showFocusHint,
     hasScreenshot,
+    canExport,
+    requiresScreenshot,
     isExporting,
     shouldShowAspectLock,
     isAspectLocked,
@@ -229,6 +237,7 @@ function usePlaceholderGradientBootstrap({
 
 function useExportHandler({
   hasScreenshot,
+  requiresScreenshot,
   setStatusMessage,
   setIsExporting,
   config,
@@ -237,7 +246,7 @@ function useExportHandler({
   screenshotAsset,
 }: ExportContext) {
   return useCallback(async () => {
-    if (!hasScreenshot) {
+    if (requiresScreenshot && !hasScreenshot) {
       setStatusMessage("Please upload a screenshot before exporting.");
       return;
     }

@@ -9,7 +9,8 @@ interface AppHeaderProps {
   hasCustomScreenshot: boolean;
   isProcessingUpload: boolean;
   onUploadClick: () => void;
-  hasScreenshot: boolean;
+  showUploadButton: boolean;
+  canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
 }
@@ -18,7 +19,8 @@ export function AppHeader({
   hasCustomScreenshot,
   isProcessingUpload,
   onUploadClick,
-  hasScreenshot,
+  showUploadButton,
+  canExport,
   onExport,
   isExporting,
 }: AppHeaderProps) {
@@ -45,20 +47,22 @@ export function AppHeader({
         <span className="font-bold text-sm tracking-tight">dopeshot</span>
       </a>
       <div className="flex items-center gap-3">
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
-          onClick={onUploadClick}
-          disabled={isProcessingUpload}
-          aria-label={hasCustomScreenshot ? "Change screenshot" : "Upload your screenshot"}
-          aria-busy={isProcessingUpload}
-        >
-          <UploadIcon className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
-          <span>{uploadButtonLabel}</span>
-        </Button>
-        {hasScreenshot ? (
+        {showUploadButton ? (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
+            onClick={onUploadClick}
+            disabled={isProcessingUpload}
+            aria-label={hasCustomScreenshot ? "Change screenshot" : "Upload your screenshot"}
+            aria-busy={isProcessingUpload}
+          >
+            <UploadIcon className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
+            <span>{uploadButtonLabel}</span>
+          </Button>
+        ) : null}
+        {canExport ? (
           <Button
             size="sm"
             className="flex cursor-pointer items-center gap-2 bg-foreground text-background shadow-none hover:bg-foreground focus-visible:ring-foreground/40 disabled:cursor-not-allowed disabled:bg-foreground/70"

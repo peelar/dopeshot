@@ -2,6 +2,7 @@
 
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
@@ -9,12 +10,20 @@ import {
   supportsScreenshots,
   withLookTextDefaults,
 } from "@/domain/look/definitions";
-import { assetsAtom, configAtom, screenshotGradientAtom, screenshotZoomAtom } from "@/hooks/atoms";
-import { track } from "@/lib/analytics";
+import {
+  assetTypeAtom,
+  assetsAtom,
+  configAtom,
+  lastLookByAssetTypeAtom,
+  screenshotGradientAtom,
+  screenshotZoomAtom,
+  type AssetType,
+} from "@/hooks/atoms";
 import { cn } from "@/utils";
-import { Provider, createStore, useAtomValue, useSetAtom } from "jotai";
-import { Sparkles, Type } from "lucide-react";
-import { useMemo } from "react";
+import { track } from "@/lib/analytics";
+import { Provider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Type } from "lucide-react";
+import { useCallback, useEffect, useMemo } from "react";
 
 // Memoize look default configs at module level to avoid recreation
 const LOOK_DEFAULTS = LOOK_DEFINITIONS.map((look) => {
@@ -39,6 +48,8 @@ type PreviewCard = {
 };
 
 export function LookSelector({ className }: { className?: string }) {
+  const [assetType, setAssetType] = useAtom(assetTypeAtom);
+  const [lastLookByAssetType, setLastLookByAssetType] = useAtom(lastLookByAssetTypeAtom);
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
@@ -114,36 +125,119 @@ export function LookSelector({ className }: { className?: string }) {
     screenshotGradient,
   ]);
 
+  const previewConfigByLookId = useMemo(() => {
+    const map = new Map<string, LayoutConfig>();
+    for (const option of previewConfigs) {
+      map.set(option.lookId, option.previewConfig);
+    }
+    return map;
+  }, [previewConfigs]);
+
+  const filteredPreviewConfigs = useMemo(() => {
+    if (assetType === "code") {
+      return previewConfigs.filter((option) => option.lookId === "code-snippet");
+    }
+    return previewConfigs.filter((option) => supportsScreenshots(option.lookId));
+  }, [assetType, previewConfigs]);
+
+  const applyLookSelection = useCallback(
+    (lookId: string, displayName?: string) => {
+      const nextConfig = previewConfigByLookId.get(lookId);
+      if (!nextConfig) return;
+
+      if (displayName) {
+        track("look_changed", {
+          from_look: currentConfig.lookId,
+          to_look: lookId,
+          look_name: displayName,
+        });
+      }
+
+      setConfig(
+        withLookTextDefaults(
+          {
+            ...nextConfig,
+            variant: nextConfig.variant,
+          },
+          { preserveEmptyText: true },
+        ),
+      );
+      setScreenshotZoom(1.0);
+    },
+    [currentConfig.lookId, previewConfigByLookId, setConfig, setScreenshotZoom],
+  );
+
+  const handleAssetTypeChange = useCallback(
+    (nextType: AssetType) => {
+      setLastLookByAssetType((current) => ({
+        ...current,
+        [assetType]: currentConfig.lookId,
+      }));
+      setAssetType(nextType);
+
+      const fallbackLookId = nextType === "code" ? "code-snippet" : "popup-gradient";
+      const preferredLookId = lastLookByAssetType[nextType] ?? fallbackLookId;
+      const nextLookId =
+        nextType === "code"
+          ? "code-snippet"
+          : supportsScreenshots(preferredLookId)
+            ? preferredLookId
+            : fallbackLookId;
+
+      setLastLookByAssetType((current) => ({ ...current, [nextType]: nextLookId }));
+      applyLookSelection(nextLookId);
+    },
+    [
+      applyLookSelection,
+      assetType,
+      currentConfig.lookId,
+      lastLookByAssetType,
+      setAssetType,
+      setLastLookByAssetType,
+    ],
+  );
+
+  useEffect(() => {
+    const currentIsCode = currentConfig.lookId === "code-snippet";
+    if (assetType === "code" && !currentIsCode) {
+      handleAssetTypeChange("code");
+    }
+    if (assetType === "screenshot" && currentIsCode) {
+      handleAssetTypeChange("screenshot");
+    }
+  }, [assetType, currentConfig.lookId, handleAssetTypeChange]);
+
   return (
     <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
-      <div className="ml-[2px] flex items-center gap-2 pt-4">
-        <Sparkles className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
-        <p className="text-[12px] font-semibold uppercase tracking-wide text-muted-foreground">
-          Look
-        </p>
+      <div className="flex items-center pt-4">
+        <Select
+          value={assetType}
+          onValueChange={(value) => handleAssetTypeChange(value as AssetType)}
+        >
+          <SelectTrigger
+            className={cn(
+              "h-auto w-auto gap-1 border-0 bg-transparent px-0 py-0 shadow-none ring-offset-0 focus:ring-0 focus:ring-offset-0",
+            )}
+            aria-label="Select asset type"
+          >
+            <span className="text-sm font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-4">
+              {assetType === "screenshot" ? "Screenshot" : "Code"}
+            </span>
+          </SelectTrigger>
+          <SelectContent align="start">
+            <SelectItem value="screenshot">Screenshot</SelectItem>
+            <SelectItem value="code">Code</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
-        {previewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
+        {filteredPreviewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
           const isSelected = currentConfig.lookId === lookId;
 
           const handleSelect = () => {
-            track("look_changed", {
-              from_look: currentConfig.lookId,
-              to_look: lookId,
-              look_name: displayName,
-            });
-
-            setConfig(
-              withLookTextDefaults(
-                {
-                  ...previewConfig,
-                  variant: previewConfig.variant,
-                },
-                { preserveEmptyText: true },
-              ),
-            );
-            setScreenshotZoom(1.0);
+            setLastLookByAssetType((current) => ({ ...current, [assetType]: lookId }));
+            applyLookSelection(lookId, displayName);
           };
 
           return (

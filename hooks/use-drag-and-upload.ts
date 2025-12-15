@@ -1,33 +1,50 @@
 "use client";
 
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useAtom } from "jotai";
 import { isDraggingAtom } from "@/hooks/atoms";
 
 interface UseDragAndUploadOptions {
   onFileUpload: (file?: File) => Promise<void>;
   isProcessingUpload: boolean;
+  enabled?: boolean;
 }
 
-export function useDragAndUpload({ onFileUpload, isProcessingUpload }: UseDragAndUploadOptions) {
+export function useDragAndUpload({
+  onFileUpload,
+  isProcessingUpload,
+  enabled = true,
+}: UseDragAndUploadOptions) {
   const [isDragging, setIsDragging] = useAtom(isDraggingAtom);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const dragCounterRef = useRef(0);
 
+  useEffect(() => {
+    if (!enabled) {
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+    }
+  }, [enabled, setIsDragging]);
+
   const openFilePicker = useCallback(() => {
+    if (!enabled) return;
     if (isProcessingUpload) return;
     uploadInputRef.current?.click();
-  }, [isProcessingUpload]);
+  }, [enabled, isProcessingUpload]);
 
   const handleFilePickerChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!enabled) {
+        event.target.value = "";
+        return;
+      }
       const file = event.target.files?.[0];
       if (file) {
         await onFileUpload(file);
       }
       event.target.value = "";
     },
-    [onFileUpload],
+    [enabled, onFileUpload],
   );
 
   const isFileDrag = useCallback((event: React.DragEvent<HTMLElement>) => {
@@ -36,25 +53,28 @@ export function useDragAndUpload({ onFileUpload, isProcessingUpload }: UseDragAn
 
   const handleDragEnter = useCallback(
     (event: React.DragEvent<HTMLElement>) => {
+      if (!enabled) return;
       if (!isFileDrag(event)) return;
       event.preventDefault();
       dragCounterRef.current += 1;
       setIsDragging(true);
     },
-    [isFileDrag, setIsDragging],
+    [enabled, isFileDrag, setIsDragging],
   );
 
   const handleDragOver = useCallback(
     (event: React.DragEvent<HTMLElement>) => {
+      if (!enabled) return;
       if (!isFileDrag(event)) return;
       event.preventDefault();
       event.dataTransfer.dropEffect = "copy";
     },
-    [isFileDrag],
+    [enabled, isFileDrag],
   );
 
   const handleDragLeave = useCallback(
     (event: React.DragEvent<HTMLElement>) => {
+      if (!enabled) return;
       if (!isFileDrag(event)) return;
       event.preventDefault();
       dragCounterRef.current = Math.max(0, dragCounterRef.current - 1);
@@ -62,11 +82,12 @@ export function useDragAndUpload({ onFileUpload, isProcessingUpload }: UseDragAn
         setIsDragging(false);
       }
     },
-    [isFileDrag, setIsDragging],
+    [enabled, isFileDrag, setIsDragging],
   );
 
   const handleDrop = useCallback(
     async (event: React.DragEvent<HTMLElement>) => {
+      if (!enabled) return;
       if (!isFileDrag(event)) return;
       event.preventDefault();
       dragCounterRef.current = 0;
@@ -76,7 +97,7 @@ export function useDragAndUpload({ onFileUpload, isProcessingUpload }: UseDragAn
         await onFileUpload(file);
       }
     },
-    [isFileDrag, onFileUpload, setIsDragging],
+    [enabled, isFileDrag, onFileUpload, setIsDragging],
   );
 
   return {
