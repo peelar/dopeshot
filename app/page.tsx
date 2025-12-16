@@ -5,7 +5,7 @@ import { CoverPreview } from "@/components/cover-preview";
 import { DragOverlay } from "@/components/drag-overlay";
 import { MobileActions } from "@/components/mobile-actions";
 import { PlaygroundWorkspace } from "@/components/playground-workspace";
-import { LookSelector } from "@/components/look-selector";
+import { LayoutSelector } from "@/components/layout-selector";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { cn } from "@/utils";
@@ -49,7 +49,6 @@ export default function PlaygroundPage() {
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
-    handleVariantChange,
     toggleCanvasMode,
     handleExport,
     handleFileProcess,
@@ -93,7 +92,7 @@ export default function PlaygroundPage() {
         {/* Left: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col">
           <div className="bg-muted/20 pl-4 sm:pl-8">
-            <LookSelector />
+            <LayoutSelector />
           </div>
 
           <div className="border-b border-border pl-4 sm:pl-12" />
@@ -101,7 +100,6 @@ export default function PlaygroundPage() {
           <div className="flex-1 overflow-auto px-4 pb-12 sm:px-8 sm:pb-10">
             <PlaygroundWorkspace
               isMobile={isMobile}
-              onVariantChange={handleVariantChange}
               shouldShowAspectLock={shouldShowAspectLock}
               isAspectLocked={isAspectLocked}
               onToggleAspect={toggleCanvasMode}

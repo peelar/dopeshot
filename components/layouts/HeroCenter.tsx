@@ -4,9 +4,9 @@ import {
   DEFAULT_LOCKED_ASPECT_RATIO,
   getEffectiveCanvasMode,
 } from "@/domain/layout/screenshot-mode";
-import { LogoBadge } from "@/components/looks/shared/LogoBadge";
-import { getScreenshotFrameAppearance } from "@/components/looks/shared/screenshot-frame";
-import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
+import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
+import { getScreenshotFrameAppearance } from "@/components/layouts/shared/screenshot-frame";
+import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 
 interface HeroCenterProps {
   className?: string;
@@ -26,7 +26,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     screenshotTreatment,
     screenshotZoom,
     text,
-  } = useLookPrimitives();
+  } = useLayoutPrimitives();
 
   const frameAppearance = useMemo(
     () =>
@@ -181,7 +181,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
   };
 
   return (
-    <LookSurface
+    <LayoutSurface
       className={className}
       backgroundStyle={backgroundStyle}
       assets={assets}
@@ -217,7 +217,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
           </div>
         </div>
       </div>
-    </LookSurface>
+    </LayoutSurface>
   );
 }
 
