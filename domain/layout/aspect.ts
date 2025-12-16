@@ -5,11 +5,11 @@ const SQUARE_MAX = 1.2;
 const LANDSCAPE_MAX = 2.2;
 const PORTRAIT_MAX = 0.9;
 
-const DEFAULT_RECOMMENDATIONS: Record<AspectCategory, { lookId: string; variant?: string }> = {
-  portrait: { lookId: "hero-center", variant: "left" },
-  square: { lookId: "adaptive-stage" },
-  landscape: { lookId: "popup-gradient", variant: "right" },
-  ultrawide: { lookId: "popup-gradient", variant: "right" },
+const DEFAULT_RECOMMENDATIONS: Record<AspectCategory, { layoutId: string; variant?: string }> = {
+  portrait: { layoutId: "hero-center", variant: "left" },
+  square: { layoutId: "adaptive-stage" },
+  landscape: { layoutId: "popup-gradient", variant: "right" },
+  ultrawide: { layoutId: "popup-gradient", variant: "right" },
 };
 
 export function getAspectCategory(aspectRatio: number): AspectCategory {

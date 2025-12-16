@@ -24,7 +24,7 @@ const DEMO_PRESETS: DemoPreset[] = DEMO_TEXTS.map((text, index) => ({
     createdAt: "2024-01-01T00:00:00.000Z",
   },
   config: {
-    lookId: "popup-gradient",
+    layoutId: "popup-gradient",
     variant: "center",
     fontId: "clean",
     fontSize: "xl",

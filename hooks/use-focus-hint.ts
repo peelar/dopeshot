@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import type { LookFocusMode } from "@/domain/look/definitions";
+import type { LayoutFocusMode } from "@/domain/layout-def/definitions";
 
 export function useFocusHint(
   isScreenshotFocusedMode: boolean,
-  focusMode: LookFocusMode | undefined,
+  focusMode: LayoutFocusMode | undefined,
 ) {
   const [showFocusHint, setShowFocusHint] = useState(false);
   const focusHintTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);

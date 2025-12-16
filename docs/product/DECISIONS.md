@@ -2,9 +2,9 @@
 
 High-confidence calls that shape the product today.
 
-## Fonts chosen by vibe, not name
-- **Chose**: 8 curated presets labeled by mood (Founder Mode, Terminal, Unhinged, etc.)
-- **Because**: Users pick based on feeling; every option should be safe.
+## Hardcoded typography for speed
+- **Chose**: Single production font (formerly 8 vibe presets)
+- **Because**: Removes decision paralysis; optimizes for speed and cohesion; future brand integration will restore choice via brand tokens.
 
 ## Auto-select template based on aspect ratio
 - **Chose**: Popup for vertical, Split for horizontal/square
@@ -23,12 +23,24 @@ High-confidence calls that shape the product today.
 - **Because**: Matches the screenshot aesthetic without manual picking.
 
 ## Separate structure from styling
-- **Chose**: Templates/variants handle layout; styling (gradients/fonts) is bundled into presets
-- **Because**: Clear mental model; fewer knobs.
+- **Chose**: Layouts control geometry; effects (Grain/Glow/Grid) are independent toggles; backgrounds are auto-generated
+- **Because**: Clear mental model with three distinct concerns; composable and brand-ready.
 
-## Variant switching preserves content
-- **Chose**: Changing variants keeps user text and assets intact
+## Layout switching preserves content
+- **Chose**: Changing layouts (formerly templates/variants) keeps user text and assets intact
 - **Because**: Encourages exploration without rework.
+
+## Layouts show structure, not style
+- **Chose**: Wireframe thumbnails for layout selection; effects applied after layout choice
+- **Because**: Separates geometry from styling; faster cognitive load; brand-ready architecture.
+
+## Effects as independent toggles
+- **Chose**: Grain, Glow, Grid live in sidebar as on/off switches
+- **Because**: Composable treatments work across all layouts; no bundled "style variants."
+
+## Orientation selector over fixed aspect
+- **Chose**: Three aspect ratio modes (Horizontal/Vertical/Square) replace auto-detection only
+- **Because**: Gives users control while maintaining speed; matches common social platform formats.
 
 ## No account or watermark (MVP)
 - **Chose**: Frictionless try-and-share experience

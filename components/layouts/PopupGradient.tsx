@@ -1,7 +1,7 @@
 import { memo, useMemo, type CSSProperties } from "react";
 import { cn } from "@/utils";
-import { LogoBadge } from "@/components/looks/shared/LogoBadge";
-import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
+import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
+import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 
 const SIDE_CONTENT_TOP = "30%";
 const CENTER_CONTENT_TOP = "15%";
@@ -65,11 +65,11 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     screenshotTreatment,
     screenshotZoom,
     text,
-  } = useLookPrimitives();
+  } = useLayoutPrimitives();
 
-  // Use look-specific fade state, defaulting to false for Peak look
-  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
-  const fadeEnabled = lookSpecificFadeEnabled ?? false;
+  // Use layout-specific fade state, defaulting to false for Peak layout
+  const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
+  const fadeEnabled = layoutSpecificFadeEnabled ?? false;
 
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
@@ -186,7 +186,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   };
 
   return (
-    <LookSurface
+    <LayoutSurface
       className={cn("bg-cover bg-center bg-no-repeat", className)}
       backgroundStyle={backgroundStyle}
       assets={assets}
@@ -294,7 +294,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           </>
         )}
       </div>
-    </LookSurface>
+    </LayoutSurface>
   );
 }
 

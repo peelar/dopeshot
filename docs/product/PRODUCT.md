@@ -11,23 +11,24 @@ Indie hackers and small builders shipping fast, posting often, and wanting profe
 ## Core flow
 
 1. Upload a screenshot (PNG/JPG)
-2. Auto-detect aspect, extract palette, and pick a template
-3. Apply gradient + typography preset (8 vibes)
-4. Optional: tweak headline/subheadline or swap layout variant
+2. Auto-detect aspect, extract palette, select layout
+3. Apply auto-matched background gradient
+4. Optional: choose orientation, toggle effects (Grain/Glow/Grid), edit text
 5. Export a PNG sized for Twitter/LinkedIn
 
 ## Current capabilities
 
-- Smart upload: palette extraction and template suggestion
-- Templates: Popup for vertical, Split for horizontal/square, with quick variant switching
-- Typography: 8 vibe-based presets; smart text sizing and contrast-aware colors
-- Backgrounds: auto gradients matched to the screenshot aesthetic
+- Smart upload: palette extraction and automatic layout selection
+- Layouts: geometry-based options (formerly "Looks") with wireframe thumbnails
+- Orientation selector: Horizontal, Vertical, Square aspect ratios
+- Effects: independent toggles for Grain, Glow, Grid
+- Backgrounds: auto gradients matched to screenshot palette
 - Export: high-res PNG optimized for Twitter/LinkedIn
 
 ## In flight / near term
 
-- Layout rail and variant switching clarity
-- Screenshot-first templates (Peak/Full/Adaptive) evaluation
+- Brand integration architecture (backgrounds accept brand tokens)
+- Future vibe looks (Bay Area, Hacker, etc.) as curated combinations
 - Additional text color options beyond the default safe pick
 
 ## Boundaries (intentional)

@@ -1,9 +1,9 @@
 import { memo, useMemo } from "react";
-import { GrainOverlay } from "@/components/looks/shared/GrainOverlay";
+import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 import type { Asset, ColorPalette } from "@/domain/asset/types";
 import type { LayoutConfig, PatternChoice } from "@/domain/layout/types";
-import { tokenToCssColor } from "@/components/looks/shared/color-utils";
+import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
 type RGB = [number, number, number];
 

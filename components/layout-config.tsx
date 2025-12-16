@@ -6,7 +6,7 @@ import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/utils";
 import { configAtom } from "@/hooks/atoms";
-import { lookCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
+import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 import {
   Accordion,
   AccordionContent,
@@ -17,7 +17,7 @@ import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { ScreenshotSection } from "@/components/sidebar-sections/screenshot-section";
 import { LogoSection } from "@/components/sidebar-sections/logo-section";
 import { BackgroundSection } from "@/components/sidebar-sections/background-section";
-import { LookSection } from "@/components/sidebar-sections/look-section";
+import { LayoutSection } from "@/components/sidebar-sections/layout-section";
 import { EffectsSection } from "@/components/sidebar-sections/effects-section";
 import { CodeSection } from "@/components/sidebar-sections/code-section";
 
@@ -29,12 +29,12 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
-  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
 
   const { expandedSection, expandSection } = useSidebarState();
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
-  const showCodeSection = config.lookId === "code-snippet";
+  const showCodeSection = config.layoutId === "code-snippet";
   const showTextSection = !showCodeSection;
 
   // Initialize default expansion based on state
@@ -73,7 +73,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
               </div>
             </AccordionTrigger>
             <AccordionContent className="px-4 pb-4">
-              <LookSection />
+              <LayoutSection />
             </AccordionContent>
           </AccordionItem>
         )}

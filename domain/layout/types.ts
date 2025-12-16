@@ -79,8 +79,8 @@ export type BackgroundConfig = {
 
 // Layout configuration - simple data structure
 export type LayoutConfig = {
-  lookId: string;
-  variant: string; // Look-specific variant (e.g., "left", "right", "center")
+  layoutId: string;
+  variant: string; // Layout-specific variant (e.g., "left", "right", "center")
   fontId: FontId;
   fontSize: FontSize;
   text: {
@@ -100,8 +100,8 @@ export type LayoutConfig = {
   };
   screenshotShadow?: ShadowIntensity;
   screenshotFrame?: ScreenshotTreatment;
-  lookSpecificSettings?: {
-    fadeEnabled?: Record<string, boolean>; // Per-look fade state
+  layoutSpecificSettings?: {
+    fadeEnabled?: Record<string, boolean>; // Per-layout fade state
   };
   code?: {
     content: string;

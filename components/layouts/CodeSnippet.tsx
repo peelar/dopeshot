@@ -1,4 +1,4 @@
-import { useLookPrimitives } from "@/components/looks/shared/look-primitives";
+import { useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 import { detectLanguage } from "@/domain/code/language-detection";
 import { cn } from "@/utils";
 import { memo, useEffect, useState } from "react";
@@ -11,7 +11,7 @@ interface CodeSnippetProps {
 }
 
 function CodeSnippetComponent({ className }: CodeSnippetProps) {
-  const { backgroundStyle, config, screenshotZoom } = useLookPrimitives();
+  const { backgroundStyle, config, screenshotZoom } = useLayoutPrimitives();
 
   const [highlightedCode, setHighlightedCode] = useState<string>("");
 

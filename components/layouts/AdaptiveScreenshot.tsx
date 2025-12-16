@@ -1,8 +1,8 @@
 import { memo, useMemo } from "react";
 import { cn } from "@/utils";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
-import { getScreenshotFrameAppearance } from "@/components/looks/shared/screenshot-frame";
-import { LookSurface, useLookPrimitives } from "@/components/looks/shared/look-primitives";
+import { getScreenshotFrameAppearance } from "@/components/layouts/shared/screenshot-frame";
+import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 
 interface AdaptiveScreenshotProps {
   className?: string;
@@ -19,21 +19,21 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshotShadow,
     screenshotTreatment,
     screenshotZoom,
-  } = useLookPrimitives();
+  } = useLayoutPrimitives();
 
-  // Default fadeEnabled based on screenshot dimensions for Backdrop look
+  // Default fadeEnabled based on screenshot dimensions for Backdrop layout
   const shouldAutoEnableFade = useMemo(() => {
-    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
-    if (!isBackdropLook || !screenshot?.metadata) return false;
-    
+    const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+    if (!isBackdropLayout || !screenshot?.metadata) return false;
+
     const { height, aspectRatio } = screenshot.metadata;
     // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
     return height > 720 && aspectRatio < 1;
-  }, [config.lookId, screenshot?.metadata]);
+  }, [config.layoutId, screenshot?.metadata]);
 
-  // Use look-specific fade state
-  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
-  const fadeEnabled = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
+  // Use layout-specific fade state
+  const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
+  const fadeEnabled = layoutSpecificFadeEnabled ?? shouldAutoEnableFade;
 
   const frameAppearance = useMemo(
     () =>
@@ -57,7 +57,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
   const frameMaxHeight = `calc(100% - ${stagePadding * 2}px)`;
 
   return (
-    <LookSurface
+    <LayoutSurface
       className={className}
       backgroundStyle={backgroundStyle}
       assets={assets}
@@ -105,7 +105,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
           </div>
         </div>
       </div>
-    </LookSurface>
+    </LayoutSurface>
   );
 }
 

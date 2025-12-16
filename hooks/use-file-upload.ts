@@ -3,7 +3,7 @@ import { useSetAtom, useAtom } from "jotai";
 import { track } from "@/lib/analytics";
 import { Asset } from "@/domain/asset/types";
 import { processFileUpload } from "@/domain/asset/upload-orchestrator";
-import { applyLookRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
+import { applyLayoutRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
 import {
   configAtom,
@@ -124,12 +124,12 @@ export function useFileUpload({
 
           if (kind === "screenshot" && aspectCategory) {
             const recommendation = getRecommendationForAspectCategory(aspectCategory);
-            const result = applyLookRecommendation(nextConfig, recommendation);
+            const result = applyLayoutRecommendation(nextConfig, recommendation);
             nextConfig = result.config;
 
-            if ((result.changedLook || result.changedVariant) && result.lookName) {
+            if ((result.changedLayout || result.changedVariant) && result.layoutName) {
               setStatusMessage(
-                `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.lookName}.`,
+                `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.layoutName}.`,
               );
             }
           }
