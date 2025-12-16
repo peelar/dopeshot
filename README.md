@@ -58,3 +58,7 @@ Want to add a look or typography preset? Check out the [authoring guide](./AUTHO
 ---
 
 Built by indie hackers, for indie hackers. Ship fast, post faster.
+
+## Supabase Foundation
+
+Phase 1 persistence requirements for Supabase (schema, buckets, RLS, and seeds) live in `docs/SUPABASE_PHASE1.md`.

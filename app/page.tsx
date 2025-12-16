@@ -81,15 +81,15 @@ export default function PlaygroundPage() {
     >
       <DragOverlay visible={isDragging} />
 
-      <AppHeader
-        hasCustomScreenshot={hasCustomScreenshot}
-        isProcessingUpload={isProcessingUpload}
-        onUploadClick={openFilePicker}
-        showUploadButton={requiresScreenshot}
-        canExport={canExport}
-        onExport={handleExport}
-        isExporting={isExporting}
-      />
+        <AppHeader
+          hasCustomScreenshot={hasCustomScreenshot}
+          isProcessingUpload={isProcessingUpload}
+          onUploadClick={openFilePicker}
+          showUploadButton={requiresScreenshot}
+          canExport={canExport}
+          onExport={handleExport}
+          isExporting={isExporting}
+        />
 
       {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>

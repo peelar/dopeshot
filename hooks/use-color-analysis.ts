@@ -2,14 +2,11 @@ import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ColorPalette } from "@/domain/asset/types";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import { generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
-import {
-  applyPreferredAngle,
-  getGradientColorsForContrast,
-} from "@/domain/layout/gradient-application";
+import { createScreenshotColorSource } from "@/domain/layout/gradients/color-source";
 import { supportsScreenshots } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
-import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom, screenshotGradientAtom } from "./atoms";
+import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
+import { useGradientGeneration } from "./use-gradient-generation";
 
 export interface UseColorAnalysisOptions {
   gradientPreferences: GradientPreferences;
@@ -19,9 +16,10 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
   const [isAnalyzingColors, setIsAnalyzingColors] = useAtom(isAnalyzingColorsAtom);
   const [config] = useAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
-  const setConfig = useSetAtom(configAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
-  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
+
+  // Use new gradient generation hook
+  const { generateFromColorSource } = useGradientGeneration({ gradientPreferences });
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     return analyzeImageColors(dataUrl);
@@ -42,71 +40,12 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
         const colorPalette = await analyzeColors(dataUrl);
 
         if (colorPalette) {
+          // Store color palette in asset
           setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
-        }
 
-        const gradientOptions = colorPalette
-          ? generateGradientOptions(colorPalette, {
-              aspectCategory: "landscape",
-              variant: undefined,
-            })
-          : [];
-
-        // Randomly select a gradient from the available options
-        const randomIndex = Math.floor(Math.random() * gradientOptions.length);
-        const preferredGradient = gradientOptions[randomIndex];
-        const fallbackGradient = preferredGradient
-          ? applyPreferredAngle(preferredGradient, gradientPreferences.angle)
-          : undefined;
-
-        if (fallbackGradient) {
-          const textColor = getContrastTextColor(getGradientColorsForContrast(fallbackGradient));
-          let appliedGradient = false;
-
-          setConfig((currentConfig) => {
-            // Respect any manual background choice while analysis was running
-            const userSelectedPreset =
-              currentConfig.background?.type === "gradient" &&
-              currentConfig.background.customGradient === undefined &&
-              currentConfig.background.value !== "custom";
-            const userHasCustomGradient = currentConfig.background?.customGradient !== undefined;
-            const hasImageBackground = currentConfig.background?.type === "image";
-
-            if (userSelectedPreset || userHasCustomGradient || hasImageBackground) {
-              return currentConfig;
-            }
-
-            appliedGradient = true;
-            const screenshotBackground = {
-              ...(currentConfig.background ?? { type: "gradient", value: "custom" }),
-              type: "gradient" as const,
-              value: "custom",
-              customGradient: fallbackGradient,
-              gradientSource: "screenshot" as const,
-              grainEnabled: currentConfig.background?.grainEnabled ?? true,
-              patternId: currentConfig.background?.patternId,
-              patternMode: currentConfig.background?.patternMode,
-            };
-
-            // Store screenshot gradient separately so it persists across look switches
-            setScreenshotGradient(screenshotBackground);
-
-            return {
-              ...currentConfig,
-              colors: {
-                ...currentConfig.colors,
-                text: textColor,
-              },
-              background: screenshotBackground,
-            };
-          });
-
-          if (appliedGradient) {
-            const gradientMessage = autoLayoutMessage
-              ? `${autoLayoutMessage} Gradient applied based on your screenshot colors.`
-              : "Gradient applied based on your screenshot colors.";
-            setStatusMessage(gradientMessage);
-          }
+          // Create color source and generate gradients
+          const colorSource = createScreenshotColorSource(assetId, colorPalette);
+          await generateFromColorSource(colorSource, { autoLayoutMessage });
         }
       } finally {
         setIsAnalyzingColors(false);
@@ -116,11 +55,9 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
       analyzeColors,
       config.layoutId,
       setAssets,
-      setConfig,
-      setScreenshotGradient,
       setStatusMessage,
       setIsAnalyzingColors,
-      gradientPreferences,
+      generateFromColorSource,
     ],
   );
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The `domain` folder serves as the core business logic layer for Dopeshot. It is structured into subdomains: `asset`, `demo`, `gradient-generation`, `layout`, and `look`. The separation generally follows good Domain-Driven Design (DDD) principles, isolating business rules from UI components. However, there are some architectural layer violations (domain importing components) and overlapping responsibilities in gradient handling.
+The `domain` folder serves as the core business logic layer for dopeshot. It is structured into subdomains: `asset`, `demo`, `gradient-generation`, `layout`, and `look`. The separation generally follows good Domain-Driven Design (DDD) principles, isolating business rules from UI components. However, there are some architectural layer violations (domain importing components) and overlapping responsibilities in gradient handling.
 
 ## Key Files & Locations
 
@@ -79,7 +79,6 @@ Clarify the boundaries:
 *   **Colocation**: Keep pure logic in `domain/`.
 *   **Platform Agnostic**: Try to keep `domain` free of React/Browser specifics where possible. Use "Adapters" or "Hooks" in the application layer to bridge Domain logic to the UI.
 *   **Types First**: Define the shape of data (`types.ts`) before the logic that manipulates it.
-
 
 
 
