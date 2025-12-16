@@ -227,7 +227,7 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
-      <div className="flex items-center pt-4">
+      <div className="flex items-center pt-2 sm:pt-4">
         <Select
           value={assetType}
           onValueChange={(value) => handleAssetTypeChange(value as AssetType)}
@@ -249,7 +249,7 @@ export function LayoutSelector({ className }: { className?: string }) {
         </Select>
       </div>
 
-      <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
+      <div className="flex w-full gap-3 overflow-x-auto px-1 py-2 sm:gap-4 sm:py-3">
         {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig }) => {
           // Normalize current config's layoutId before comparison to handle legacy IDs
           const normalizedCurrentLayoutId = normalizeLayoutId(currentConfig.layoutId);
@@ -403,7 +403,7 @@ function LayoutPreviewCard({
       type="button"
       onClick={onSelect}
       className={cn(
-        "group relative flex flex-col gap-2 rounded-lg border border-transparent p-2 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+        "group relative flex flex-col gap-1 rounded-lg border border-transparent p-1.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:gap-2 sm:p-2",
         isSelected
           ? "border-primary/60 ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
           : "hover:border-border/60 hover:bg-muted/40",
@@ -411,7 +411,7 @@ function LayoutPreviewCard({
       aria-pressed={isSelected}
       aria-label={`Select ${option.displayName} look`}
     >
-      <div className="relative h-[120px] w-[160px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10">
+      <div className="relative h-[64px] w-[140px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10 sm:h-[120px] sm:w-[160px]">
         <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
