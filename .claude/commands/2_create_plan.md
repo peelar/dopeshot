@@ -25,6 +25,7 @@ When the user describes a feature or change:
      - Automated verification commands
      - Manual verification checklist
    - **Always include a Documentation phase** to update README.md
+   - **Always include Analytics Tracking** for user-facing features using `track()` from `@/lib/analytics`
 
 3. **Success criteria for each phase**:
    - Automated checks (tests, build, lint, types)
@@ -58,6 +59,9 @@ When the user describes a feature or change:
 
 ```typescript
 // Example code
+// Remember to add tracking events for user interactions:
+import { track } from "@/lib/analytics";
+track("event_name", { property: value });
 ```
 
 ### Success Criteria
@@ -70,6 +74,7 @@ When the user describes a feature or change:
 #### Manual Verification
 - [ ] [Specific behavior to verify]
 - [ ] [Edge case to check]
+- [ ] Analytics events fire correctly (check browser console or analytics dashboard)
 
 ---
 
