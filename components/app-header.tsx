@@ -75,7 +75,7 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
-        <ThemeToggle />
+        {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
     </header>
   );
