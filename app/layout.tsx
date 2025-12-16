@@ -12,7 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { PostHogProvider } from "@/components/posthog-provider";
+import { UmamiProvider } from "@/components/umami-provider";
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -137,11 +137,11 @@ export default function RootLayout({
         }
         suppressHydrationWarning
       >
-        <PostHogProvider>
+        <UmamiProvider>
           <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
             {children}
           </ThemeProvider>
-        </PostHogProvider>
+        </UmamiProvider>
       </body>
     </html>
   );
