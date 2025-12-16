@@ -12,7 +12,7 @@ Generate detailed, phased implementation plans with clear success criteria.
 When the user describes a feature or change:
 
 1. **Research phase** (if needed):
-   - Check existing research in `thoughts/shared/research/`
+   - Check existing research in `thoughts/research/`
    - Conduct additional research if gaps exist
 
 2. **Generate a structured plan** with:
@@ -25,6 +25,7 @@ When the user describes a feature or change:
      - Automated verification commands
      - Manual verification checklist
    - **Always include a Documentation phase** to update README.md
+   - **Always include Analytics Tracking** for user-facing features using `track()` from `@/lib/analytics`
 
 3. **Success criteria for each phase**:
    - Automated checks (tests, build, lint, types)
@@ -32,9 +33,9 @@ When the user describes a feature or change:
    - Rollback considerations
 
 4. **Save the plan** with auto-incremented index:
-   - Read existing files in `thoughts/shared/plans/`
+   - Read existing files in `thoughts/plans/`
    - Find the highest numeric prefix (e.g., `01-`, `02-`, `07-`)
-   - Save to `thoughts/shared/plans/{highest_index+1}-[descriptive_name].md`
+   - Save to `thoughts/plans/{highest_index+1}-[descriptive_name].md`
    - Example: If highest is `07-`, save as `08-my_new_plan.md`
 
 ## Plan Template
@@ -58,6 +59,9 @@ When the user describes a feature or change:
 
 ```typescript
 // Example code
+// Remember to add tracking events for user interactions:
+import { track } from "@/lib/analytics";
+track("event_name", { property: value });
 ```
 
 ### Success Criteria
@@ -70,6 +74,7 @@ When the user describes a feature or change:
 #### Manual Verification
 - [ ] [Specific behavior to verify]
 - [ ] [Edge case to check]
+- [ ] Analytics events fire correctly (check browser console or analytics dashboard)
 
 ---
 

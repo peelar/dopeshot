@@ -16,8 +16,6 @@ import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/deriv
 import { cn } from "@/utils";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 
 const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
   preset: "soft-glass" as const,
@@ -79,6 +77,37 @@ function usePatternControls(setConfig: ReturnType<typeof useSetAtom<typeof confi
   }, []);
 
   return { resolvedPattern, shouldShowStyle, handlePatternSelect, getPatternLabel };
+}
+
+interface PatternStyleRowProps {
+  selectedPattern: PatternOption;
+  onSelectPattern: (pattern: PatternOption) => void;
+  getPatternLabel: (id: PatternOption) => string;
+}
+
+function PatternStyleRow({ selectedPattern, onSelectPattern, getPatternLabel }: PatternStyleRowProps) {
+  return (
+    <div className="flex w-full flex-col gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]">
+      <span>Pattern</span>
+      <div className="grid grid-cols-4 gap-1.5">
+        {PATTERN_OPTIONS.map((pattern) => (
+          <button
+            key={pattern}
+            type="button"
+            onClick={() => onSelectPattern(pattern)}
+            className={cn(
+              "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
+              selectedPattern === pattern
+                ? "bg-foreground text-background"
+                : "border border-border/40 bg-white text-foreground/70 hover:border-border/60 hover:bg-muted/80 hover:text-foreground dark:border-white/10 dark:bg-white/5 dark:text-white/70 dark:hover:border-white/20 dark:hover:bg-white/10 dark:hover:text-white/90"
+            )}
+          >
+            {getPatternLabel(pattern)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 export function EffectsSection() {
@@ -238,22 +267,11 @@ export function EffectsSection() {
 
       {/* Pattern Style Controls - Only show for gradient backgrounds */}
       {shouldShowStyle && (
-        <div className="flex flex-col gap-2 pt-3">
-          <Label className="text-xs font-medium text-muted-foreground">Pattern Style</Label>
-          <div className="grid grid-cols-4 gap-1.5">
-            {PATTERN_OPTIONS.map((pattern) => (
-              <Button
-                key={pattern}
-                variant={resolvedPattern === pattern ? "default" : "ghost"}
-                size="sm"
-                onClick={() => handlePatternSelect(pattern)}
-                className="text-xs"
-              >
-                {getPatternLabel(pattern)}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <PatternStyleRow
+          selectedPattern={resolvedPattern}
+          onSelectPattern={handlePatternSelect}
+          getPatternLabel={getPatternLabel}
+        />
       )}
     </div>
   );

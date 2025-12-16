@@ -13,10 +13,11 @@ Defines available visual templates/styles (called "Looks") as pure data. Each Lo
 
 - `LOOK_DEFINITIONS` - Array of all available look definitions
 - `LookDefinition` - Type for look metadata, capabilities, and config factory
-- `LookCapabilities` - Describes what each look supports (text requirements, screenshot, logo, etc.)
+- `LookCapabilities` - Describes what each look supports (text requirements, screenshot, logo, orientation support, etc.)
 - `LookTextRequirement` - "required" | "optional" | "hidden" for text fields
 - `LookFocusMode` - How screenshot focus/zoom works ("auto" | "always" | "never")
 - `LookCanvasBehavior` - Canvas sizing behavior ("locked" | "adaptive" | "text-dependent")
+- `supportedOrientations` - Optional array of supported device modes ("mobile" | "desktop")
 
 ## Dependencies
 
