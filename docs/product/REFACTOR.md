@@ -1,4 +1,4 @@
-# DopeShot Refactor: Architecture Redesign
+# dopeshot Refactor: Architecture Redesign
 
 ## Overview
 

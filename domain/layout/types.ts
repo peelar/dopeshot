@@ -65,13 +65,18 @@ export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 import type { CustomGradient } from "./gradients/types";
 
+// Import color source types for detailed gradient tracking
+export type { ColorSourceInfo, ColorSourceType } from "./gradients/color-source";
+
+// Keep legacy type for backward compatibility
 export type GradientSource = "preset" | "screenshot" | "custom";
 
 export type BackgroundConfig = {
   type: BackgroundType;
   value: string; // gradientId, assetId, or ColorToken
   customGradient?: CustomGradient; // for custom/dynamic gradients
-  gradientSource?: GradientSource; // tracks where the gradient came from
+  // Union type: accepts both string (legacy) and detailed info (new)
+  gradientSource?: GradientSource | import("./gradients/color-source").ColorSourceInfo;
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
   patternId?: PatternChoice; // explicit pattern selection
   patternMode?: PatternMode; // auto or manual selection
