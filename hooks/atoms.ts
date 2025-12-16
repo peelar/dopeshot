@@ -12,6 +12,21 @@ const defaultPreset = getDefaultDemoPreset();
 
 export type AssetType = "screenshot" | "code";
 
+// Orientation types - mobile (9:16) or desktop (16:9)
+export type Orientation = "mobile" | "desktop";
+
+/**
+ * Detect default orientation based on device type
+ * Mobile devices default to mobile (9:16), desktop to desktop (16:9)
+ */
+const getDefaultOrientation = (): Orientation => {
+  if (typeof window === 'undefined') return "desktop";
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
+  );
+  return isMobile ? "mobile" : "desktop";
+};
+
 // Base atoms
 export const configAtom = atom<LayoutConfig>(defaultPreset.config);
 export const assetsAtom = atom<Asset[]>([defaultPreset.asset]);
@@ -28,10 +43,14 @@ export const screenshotGradientAtom = atom<BackgroundConfig | null>(null);
 
 export const assetTypeAtom = atomWithStorage<AssetType>("dopeshot:assetType", "screenshot");
 
+// Orientation atom - resets to device default on each page load (not persisted)
+// This ensures desktop users always start with desktop orientation
+export const orientationAtom = atom<Orientation>(getDefaultOrientation());
+
 export const lastLayoutByAssetTypeAtom = atomWithStorage<Record<AssetType, string>>(
   "dopeshot:lastLayoutByAssetType",
   {
-    screenshot: defaultPreset.config.layoutId,
+    screenshot: "popup-gradient-left", // First layout in rail
     code: "code-snippet",
   },
 );

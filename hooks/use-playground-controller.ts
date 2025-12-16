@@ -6,6 +6,7 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useTheme } from "next-themes";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
+  EXPORT_ORIENTATION_DIMENSIONS,
   getScreenshotTreatment,
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
@@ -23,6 +24,7 @@ import {
   hasCustomScreenshotAtom,
   isAnalyzingColorsAtom,
   isExportingAtom,
+  orientationAtom,
   statusMessageAtom,
 } from "@/hooks/atoms";
 import {
@@ -49,6 +51,7 @@ interface ExportContext {
   currentLook: LayoutDefinition | undefined;
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
+  orientation: "mobile" | "desktop";
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -59,6 +62,7 @@ export function usePlaygroundController() {
 
   const [config, setConfig] = useAtom(configAtom);
   const [assets, setAssets] = useAtom(assetsAtom);
+  const orientation = useAtomValue(orientationAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
@@ -104,6 +108,7 @@ export function usePlaygroundController() {
     currentLook,
     canvas,
     screenshotAsset,
+    orientation,
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -242,6 +247,7 @@ function useExportHandler({
   currentLook,
   canvas,
   screenshotAsset,
+  orientation,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -255,21 +261,25 @@ function useExportHandler({
       variant: config.variant,
       background_type: config.background?.type ?? "unknown",
       font_id: config.fontId,
+      orientation,
     });
     setIsExporting(true);
     setStatusMessage("Exporting image...");
     try {
+      // Use high-resolution export dimensions
+      const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+
       const maxImageScale =
         screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
           ? Math.min(
-              screenshotAsset.metadata.width / canvas.width,
-              screenshotAsset.metadata.height / canvas.height,
+              screenshotAsset.metadata.width / exportDims.width,
+              screenshotAsset.metadata.height / exportDims.height,
             )
           : undefined;
 
       await exportLayoutAsPng("export-container", "cover-image.png", {
-        width: canvas.width,
-        height: canvas.height,
+        width: exportDims.width,
+        height: exportDims.height,
         maxImageScale,
       });
       setStatusMessage("Image exported successfully.");
@@ -289,6 +299,8 @@ function useExportHandler({
     config.variant,
     currentLook?.name,
     hasScreenshot,
+    orientation,
+    requiresScreenshot,
     screenshotAsset?.metadata?.height,
     screenshotAsset?.metadata?.width,
     setIsExporting,

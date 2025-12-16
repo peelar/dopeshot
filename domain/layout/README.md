@@ -13,7 +13,7 @@ Defines layout configuration models and utilities for the entire visual output s
 - `gradient-application.ts` - Logic for applying gradients to different background contexts
 - `patterns.ts` - Background pattern definitions (grain, glow, grid)
 - `recommendations.ts` - Suggests looks based on content type
-- `screenshot-mode.ts` - Screenshot display mode logic and aspect ratio handling
+- `screenshot-mode.ts` - Screenshot display mode logic, aspect ratio handling, and orientation-based canvas dimensions
 - `export.ts` - Layout export functionality and serialization
 - `gradients/` - Gradient type definitions and utilities (separate submodule)
 
@@ -48,11 +48,14 @@ Defines layout configuration models and utilities for the entire visual output s
 - Screenshot: Treatment preset, aspect ratio, shadow, shape
 - Look: Selected visual template/style
 
-**Aspect Ratio Flow**:
+**Aspect Ratio & Device Mode Flow**:
 1. Image uploaded → metadata extracted (domain/asset)
 2. Aspect ratio calculated → categorized (portrait/landscape/etc)
-3. Screenshot mode determined based on category
-4. Layout adjusted for optimal display
+3. User selects device mode (desktop/mobile) via UI with device-aware defaults
+4. Canvas dimensions calculated based on mode (Desktop: 1920×1080 for 16:9, Mobile: 1080×1920 for 9:16)
+5. Screenshot mode determined based on category and device mode
+6. Layout adjusted for optimal display
+7. Legacy orientation values (horizontal/vertical/square) automatically normalized to desktop/mobile
 
 ## Design Notes
 

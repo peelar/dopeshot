@@ -3,7 +3,7 @@
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useRef } from "react";
 import { track } from "@/lib/analytics";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
 import { FontSelector } from "@/components/font-selector";
@@ -12,13 +12,18 @@ import type { FontId, FontSize } from "@/domain/layout/types";
 export function LayoutSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const orientation = useAtomValue(orientationAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const headlineTrackedRef = useRef(false);
   const subtitleTrackedRef = useRef(false);
 
-  const showHeadlineInput = (lookCapabilities?.text.headline ?? "optional") !== "hidden";
-  const showSubtitleInput = (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
-  const showTypographyControls = lookCapabilities?.typography !== false;
+  // Hide text inputs for Peak Left/Right on mobile orientation
+  const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
+  const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
+
+  const showHeadlineInput = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
+  const showSubtitleInput = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
+  const showTypographyControls = !hideTextOnMobile && lookCapabilities?.typography !== false;
 
   const handleTextInputChange = useCallback(
     (field: "title" | "subtitle", value: string) => {
@@ -78,14 +83,6 @@ export function LayoutSection() {
       subtitleTrackedRef.current = true;
     }
   }, [config.text.subtitle]);
-
-  if (!showHeadlineInput && !showSubtitleInput) {
-    return (
-      <div className="py-4 text-center text-sm text-muted-foreground">
-        This look doesn&apos;t support text content
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col gap-4 pt-2">

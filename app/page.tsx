@@ -8,6 +8,9 @@ import { PlaygroundWorkspace } from "@/components/playground-workspace";
 import { LayoutSelector } from "@/components/layout-selector";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
+import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import { orientationAtom } from "@/hooks/atoms";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 
 function ExportContainer({ width, height }: { width: number; height: number }) {
@@ -34,6 +37,7 @@ function ExportContainer({ width, height }: { width: number; height: number }) {
 }
 
 export default function PlaygroundPage() {
+  const orientation = useAtomValue(orientationAtom);
   const {
     dragAndUpload,
     isMobile,
@@ -90,14 +94,14 @@ export default function PlaygroundPage() {
       {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
         {/* Left: Content Column (Looks Rail + Preview) */}
-        <div className="flex min-h-0 flex-1 flex-col">
-          <div className="bg-muted/20 pl-4 sm:pl-8">
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
             <LayoutSelector />
           </div>
 
-          <div className="border-b border-border pl-4 sm:pl-12" />
+          <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
 
-          <div className="flex-1 overflow-auto px-4 pb-12 sm:px-8 sm:pb-10">
+          <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
             <PlaygroundWorkspace
               isMobile={isMobile}
               shouldShowAspectLock={shouldShowAspectLock}
@@ -128,7 +132,12 @@ export default function PlaygroundPage() {
         />
       ) : null}
 
-      {canExport ? <ExportContainer width={canvas.width} height={canvas.height} /> : null}
+      {canExport ? (
+        <ExportContainer
+          width={EXPORT_ORIENTATION_DIMENSIONS[orientation].width}
+          height={EXPORT_ORIENTATION_DIMENSIONS[orientation].height}
+        />
+      ) : null}
 
       <input
         type="file"
