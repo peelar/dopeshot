@@ -18,10 +18,16 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Get pnpm version from package.json
+        id: pnpm-version
+        run: |
+          PNPM_VERSION=$(node -p "require('./package.json').packageManager?.replace('pnpm@', '') || ''")
+          echo "version=$PNPM_VERSION" >> $GITHUB_OUTPUT
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 8
+          version: ${{ steps.pnpm-version.outputs.version }}
 
       - name: Get pnpm store directory
         shell: bash
