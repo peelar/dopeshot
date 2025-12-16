@@ -48,7 +48,54 @@ export interface LayoutDefinition {
   capabilities: LayoutCapabilities;
 }
 
-export const LAYOUT_DEFINITIONS: LayoutDefinition[] = [
+/**
+ * Capitalizes the first letter of a string
+ */
+function capitalize(str: string): string {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+/**
+ * Expands a layout definition with multiple variants into separate layout entries.
+ * Each variant becomes its own layout with a composite ID and updated name.
+ *
+ * Example:
+ *   Input:  { id: "popup-gradient", name: "Peak", variants: ["left", "right", "center"] }
+ *   Output: [
+ *     { id: "popup-gradient-left", name: "Peak Left", variants: ["left"], ... },
+ *     { id: "popup-gradient-right", name: "Peak Right", variants: ["right"], ... },
+ *     { id: "popup-gradient-center", name: "Peak Center", variants: ["center"], ... }
+ *   ]
+ */
+function expandLayoutVariants(layoutDef: LayoutDefinition): LayoutDefinition[] {
+  // Layouts with 0 or 1 variant don't need expansion
+  if (layoutDef.variants.length <= 1) {
+    return [layoutDef];
+  }
+
+  // Create a separate layout entry for each variant
+  return layoutDef.variants.map((variant) => {
+    const baseConfig = layoutDef.createConfig();
+
+    return {
+      ...layoutDef,
+      id: `${layoutDef.id}-${variant}`,
+      name: `${layoutDef.name} ${capitalize(variant)}`,
+      variants: [variant], // Single variant only
+      createConfig: () => ({
+        ...baseConfig,
+        layoutId: `${layoutDef.id}-${variant}`, // Update layoutId to match new composite ID
+        variant, // Bake in the variant
+      }),
+    };
+  });
+}
+
+/**
+ * Raw layout definitions with variants array.
+ * These will be expanded into individual layout+variant combinations.
+ */
+const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
   {
     id: "popup-gradient",
     name: "Peak",
@@ -294,12 +341,45 @@ export const LAYOUT_DEFINITIONS: LayoutDefinition[] = [
   },
 ];
 
+/**
+ * Exported layout definitions with variants flattened.
+ * Each layout+variant combination is its own entry.
+ *
+ * Total: 7 layouts
+ * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
+ * - hero-center-left, hero-center-right (Spotlight)
+ * - adaptive-stage (Backdrop, no variants)
+ * - code-snippet (Code, single variant)
+ */
+export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
+
 export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
+  // Try to find by exact ID first
+  const byId = LAYOUT_DEFINITIONS.find((layout) => layout.id === id);
+  if (byId) {
+    return byId;
+  }
+
   // Handle legacy "full-visual" ID
   if (id === "full-visual") {
     return LAYOUT_DEFINITIONS.find((layout) => layout.id === "adaptive-stage");
   }
-  return LAYOUT_DEFINITIONS.find((layout) => layout.id === id);
+
+  // Handle old layout IDs without variant suffix
+  // Map old base IDs to their default variant
+  const legacyDefaults: Record<string, string> = {
+    "popup-gradient": "popup-gradient-right", // Default was "right" in createConfig
+    "hero-center": "hero-center-left",        // First variant was "left"
+    "adaptive-stage": "adaptive-stage",       // No variants (unchanged)
+    "code-snippet": "code-snippet",           // Single variant (unchanged)
+  };
+
+  const mappedId = legacyDefaults[id];
+  if (mappedId) {
+    return LAYOUT_DEFINITIONS.find((layout) => layout.id === mappedId);
+  }
+
+  return undefined;
 }
 
 /**

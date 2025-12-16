@@ -22,17 +22,15 @@ import {
 import { cn } from "@/utils";
 import { track } from "@/lib/analytics";
 import { Provider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Type } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 
 // Memoize layout default configs at module level to avoid recreation
+// Since layouts are now pre-flattened, each layout has exactly one variant baked in
 const LAYOUT_DEFAULTS = LAYOUT_DEFINITIONS.map((layout) => {
   const defaultConfig = layout.createConfig();
-  const defaultVariant = defaultConfig.variant || layout.variants[0];
 
   return {
     layout,
-    defaultVariant,
     defaultConfig,
     key: layout.id,
     displayName: layout.name,
@@ -44,7 +42,6 @@ type PreviewCard = {
   displayName: string;
   layoutId: string;
   previewConfig: LayoutConfig;
-  showTextIcon: boolean;
 };
 
 export function LayoutSelector({ className }: { className?: string }) {
@@ -65,8 +62,7 @@ export function LayoutSelector({ className }: { className?: string }) {
     // Check if we have a stored screenshot gradient (persists across layout switches)
     const hasScreenshotGradient = screenshotGradient !== null;
 
-    return LAYOUT_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, layout }) => {
-      const isTextLayout = layout.capabilities.text.headline !== "hidden";
+    return LAYOUT_DEFAULTS.map(({ defaultConfig, key, displayName, layout }) => {
       const targetLayoutSupportsScreenshots = layout.capabilities.screenshot === "supported";
 
       // Determine background preservation strategy:
@@ -88,7 +84,7 @@ export function LayoutSelector({ className }: { className?: string }) {
       const previewConfig = withLayoutTextDefaults(
         {
           ...defaultConfig,
-          variant: defaultVariant,
+          // variant is already baked into defaultConfig by expandLayoutVariants
           text: currentConfig.text,
           assets: currentConfig.assets,
           background: backgroundToUse,
@@ -108,7 +104,6 @@ export function LayoutSelector({ className }: { className?: string }) {
         displayName,
         layoutId: layout.id,
         previewConfig,
-        showTextIcon: isTextLayout,
       };
     });
   }, [
@@ -157,7 +152,7 @@ export function LayoutSelector({ className }: { className?: string }) {
         withLayoutTextDefaults(
           {
             ...nextConfig,
-            variant: nextConfig.variant,
+            // variant is already in nextConfig from the flattened layout definition
           },
           { preserveEmptyText: true },
         ),
@@ -175,7 +170,8 @@ export function LayoutSelector({ className }: { className?: string }) {
       }));
       setAssetType(nextType);
 
-      const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient";
+      // Use flattened layout IDs with default variants
+      const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient-right";
       const preferredLayoutId = lastLayoutByAssetType[nextType] ?? fallbackLayoutId;
       const nextLayoutId =
         nextType === "code"
@@ -232,7 +228,7 @@ export function LayoutSelector({ className }: { className?: string }) {
       </div>
 
       <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
-        {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig, showTextIcon }) => {
+        {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig }) => {
           const isSelected = currentConfig.layoutId === layoutId;
 
           const handleSelect = () => {
@@ -243,7 +239,7 @@ export function LayoutSelector({ className }: { className?: string }) {
           return (
             <LayoutPreviewCard
               key={key}
-              option={{ key, displayName, layoutId, previewConfig, showTextIcon }}
+              option={{ key, displayName, layoutId, previewConfig }}
               assets={assets}
               isSelected={isSelected}
               onSelect={handleSelect}
@@ -305,12 +301,6 @@ function LayoutPreviewCard({
         >
           {option.displayName}
         </span>
-        {option.showTextIcon ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-            <Type className="h-3 w-3" aria-hidden="true" />
-            Text
-          </span>
-        ) : null}
       </div>
     </button>
   );
