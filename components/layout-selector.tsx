@@ -192,7 +192,9 @@ export function LayoutSelector({ className }: { className?: string }) {
       const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient-right";
       const storedLayoutId = lastLayoutByAssetType[nextType];
       // Normalize stored ID to handle legacy IDs (e.g., "popup-gradient" → "popup-gradient-right")
-      const preferredLayoutId = storedLayoutId ? normalizeLayoutId(storedLayoutId) : fallbackLayoutId;
+      const preferredLayoutId = storedLayoutId
+        ? normalizeLayoutId(storedLayoutId)
+        : fallbackLayoutId;
       const nextLayoutId =
         nextType === "code"
           ? "code-snippet"
@@ -273,36 +275,42 @@ export function LayoutSelector({ className }: { className?: string }) {
   );
 }
 
-function LayoutSketch({ layoutId, orientation }: { layoutId: string; orientation: "mobile" | "desktop" }) {
+function LayoutSketch({
+  layoutId,
+  orientation,
+}: {
+  layoutId: string;
+  orientation: "mobile" | "desktop";
+}) {
   const isMobile = orientation === "mobile";
   const isCodeSnippet = layoutId === "code-snippet";
-  
+
   // Extract variant from layout ID (e.g., "popup-gradient-left" -> "left")
-  const variant = layoutId.includes("-") 
-    ? layoutId.split("-").pop() as "left" | "right" | "center" | undefined
+  const variant = layoutId.includes("-")
+    ? (layoutId.split("-").pop() as "left" | "right" | "center" | undefined)
     : undefined;
-  
+
   const isPeakLayout = layoutId.startsWith("popup-gradient");
   const isSpotlightLayout = layoutId.startsWith("hero-center");
-  const isBackdropLayout = layoutId.startsWith("adaptive-screenshot");
-  
+  const isBackdropLayout = layoutId.startsWith("adaptive-stage");
+
   if (isCodeSnippet) {
     // Code snippet: centered code block
     return (
-      <div className="flex h-full w-full items-center justify-center bg-stone-100 dark:bg-stone-800 p-3">
-        <div className="h-full w-full rounded bg-stone-200 dark:bg-stone-700 p-2">
-          <div className="h-full w-full rounded border border-stone-300 dark:border-stone-600 bg-stone-50 dark:bg-stone-900/50" />
+      <div className="flex h-full w-full items-center justify-center bg-stone-100 p-3 dark:bg-stone-800">
+        <div className="h-full w-full rounded bg-stone-200 p-2 dark:bg-stone-700">
+          <div className="h-full w-full rounded border border-stone-300 bg-stone-50 dark:border-stone-600 dark:bg-stone-900/50" />
         </div>
       </div>
     );
   }
-  
+
   if (isPeakLayout && variant) {
     // Peak layouts: text on one side, screenshot on the other or center
     if (variant === "center") {
       // Center variant: text at top, screenshot below
       return (
-        <div className="flex h-full w-full flex-col bg-stone-100 dark:bg-stone-800 p-2">
+        <div className="flex h-full w-full flex-col bg-stone-100 p-2 dark:bg-stone-800">
           {/* Text area at top */}
           <div className="mb-1.5 flex h-4 w-full items-center justify-center">
             <div className="h-2 w-16 rounded bg-stone-400 dark:bg-stone-500" />
@@ -318,7 +326,7 @@ function LayoutSketch({ layoutId, orientation }: { layoutId: string; orientation
       const isLeft = variant === "left";
       const showText = !isMobile;
       return (
-        <div className="flex h-full w-full bg-stone-100 dark:bg-stone-800 p-2">
+        <div className="flex h-full w-full bg-stone-100 p-2 dark:bg-stone-800">
           {isLeft && (
             <div className="mr-1 flex w-1/3 flex-col justify-center">
               {showText && (
@@ -344,11 +352,11 @@ function LayoutSketch({ layoutId, orientation }: { layoutId: string; orientation
       );
     }
   }
-  
+
   if (isSpotlightLayout) {
     // Spotlight: centered screenshot with text overlay or above
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center bg-stone-100 dark:bg-stone-800 p-2">
+      <div className="flex h-full w-full flex-col items-center justify-center bg-stone-100 p-2 dark:bg-stone-800">
         <div className="mb-1.5 flex h-3 w-full items-center justify-center">
           <div className="h-2 w-20 rounded bg-stone-400 dark:bg-stone-500" />
         </div>
@@ -356,11 +364,11 @@ function LayoutSketch({ layoutId, orientation }: { layoutId: string; orientation
       </div>
     );
   }
-  
+
   if (isBackdropLayout) {
     // Backdrop: screenshot fills background, text overlay
     return (
-      <div className="relative h-full w-full bg-stone-200 dark:bg-stone-800 p-2">
+      <div className="relative h-full w-full bg-stone-200 p-2 dark:bg-stone-800">
         <div className="h-full w-full rounded bg-stone-300/80 dark:bg-stone-700/80" />
         <div className="absolute inset-2 flex items-center justify-center">
           <div className="h-2.5 w-24 rounded bg-stone-500/30 dark:bg-stone-400/30" />
@@ -368,7 +376,7 @@ function LayoutSketch({ layoutId, orientation }: { layoutId: string; orientation
       </div>
     );
   }
-  
+
   // Default fallback
   return (
     <div className="flex h-full w-full items-center justify-center bg-stone-100 dark:bg-stone-800">
@@ -389,7 +397,7 @@ function LayoutPreviewCard({
   onSelect: () => void;
 }) {
   const orientation = useAtomValue(orientationAtom);
-  
+
   return (
     <button
       type="button"

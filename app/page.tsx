@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { AppHeader } from "@/components/app-header";
 import { CoverPreview } from "@/components/cover-preview";
 import { DragOverlay } from "@/components/drag-overlay";
@@ -9,8 +10,8 @@ import { LayoutSelector } from "@/components/layout-selector";
 import { LayoutConfigPanel } from "@/components/layout-config";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom } from "@/hooks/atoms";
-import { useAtomValue } from "jotai";
+import { orientationAtom, getDefaultOrientation } from "@/hooks/atoms";
+import { useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/utils";
 
 function ExportContainer({ width, height }: { width: number; height: number }) {
@@ -38,6 +39,15 @@ function ExportContainer({ width, height }: { width: number; height: number }) {
 
 export default function PlaygroundPage() {
   const orientation = useAtomValue(orientationAtom);
+  const setOrientation = useSetAtom(orientationAtom);
+
+  // Initialize orientation client-side after mount to avoid hydration mismatch
+  // Server always renders with "desktop", then we update on client if needed
+  useEffect(() => {
+    const detectedOrientation = getDefaultOrientation();
+    setOrientation(detectedOrientation);
+  }, [setOrientation]);
+
   const {
     dragAndUpload,
     isMobile,
