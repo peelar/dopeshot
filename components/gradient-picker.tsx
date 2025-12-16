@@ -333,10 +333,14 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   const handleTabChange = useCallback(
     (next: string) => {
       if (next === "screenshot" || next === "custom" || next === "preset") {
+        track("gradient_source_changed", {
+          from: activeSource,
+          to: next,
+        });
         setActiveSourceWithOverride(next);
       }
     },
-    [setActiveSourceWithOverride],
+    [activeSource, setActiveSourceWithOverride],
   );
 
   return (
