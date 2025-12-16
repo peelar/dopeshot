@@ -13,6 +13,9 @@
     "test:domain": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts",
     "test:ui": "vitest run",
     "test:e2e": "playwright test",
+    "test:e2e:install": "playwright install --with-deps chromium",
+    "test": "pnpm test:domain && pnpm test:ui && pnpm test:e2e",
+    "test:ci": "pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e"
   },
   "pnpm": {

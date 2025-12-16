@@ -7,6 +7,7 @@ import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
   LAYOUT_DEFINITIONS,
+  normalizeLayoutId,
   supportsScreenshots,
   withLayoutTextDefaults,
 } from "@/domain/layout-def/definitions";
@@ -172,7 +173,9 @@ export function LayoutSelector({ className }: { className?: string }) {
 
       // Use flattened layout IDs with default variants
       const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient-right";
-      const preferredLayoutId = lastLayoutByAssetType[nextType] ?? fallbackLayoutId;
+      const storedLayoutId = lastLayoutByAssetType[nextType];
+      // Normalize stored ID to handle legacy IDs (e.g., "popup-gradient" → "popup-gradient-right")
+      const preferredLayoutId = storedLayoutId ? normalizeLayoutId(storedLayoutId) : fallbackLayoutId;
       const nextLayoutId =
         nextType === "code"
           ? "code-snippet"
@@ -229,7 +232,9 @@ export function LayoutSelector({ className }: { className?: string }) {
 
       <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
         {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig }) => {
-          const isSelected = currentConfig.layoutId === layoutId;
+          // Normalize current config's layoutId before comparison to handle legacy IDs
+          const normalizedCurrentLayoutId = normalizeLayoutId(currentConfig.layoutId);
+          const isSelected = normalizedCurrentLayoutId === layoutId;
 
           const handleSelect = () => {
             setLastLayoutByAssetType((current) => ({ ...current, [assetType]: layoutId }));
