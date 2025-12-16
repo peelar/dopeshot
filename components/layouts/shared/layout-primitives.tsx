@@ -4,7 +4,7 @@ import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
-import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
+import { configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
@@ -13,12 +13,17 @@ import { tokenToTextColorClass } from "./color-utils";
 import { getShadowValue } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
 
+// Font size scale factor for mobile orientation (9:16)
+// Mobile gets smaller font sizes to fit the taller, narrower format
+const MOBILE_FONT_SCALE = 0.75;
+
 export function useLayoutPrimitives() {
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
   const logo = useAtomValue(logoAssetAtom);
   const screenshotZoom = useAtomValue(screenshotZoomAtom);
+  const orientation = useAtomValue(orientationAtom);
 
   const assetMap = useMemo(() => new Map(assets.map((asset) => [asset.id, asset])), [assets]);
 
@@ -28,12 +33,15 @@ export function useLayoutPrimitives() {
   const fontFamily = useMemo(() => getFontCssValue(config.fontId), [config.fontId]);
   const textColorClass = useMemo(() => tokenToTextColorClass(config.colors.text), [config.colors.text]);
 
+  // Scale font sizes down for mobile orientation
+  const fontScale = orientation === "mobile" ? MOBILE_FONT_SCALE : 1.0;
+
   const text = useMemo(
     () => ({
       title: config.text.title?.trim(),
       subtitle: config.text.subtitle?.trim(),
-      titleStyle: { fontFamily, fontSize: `${fontSize.titleRem}rem` },
-      subtitleStyle: { fontFamily, fontSize: `${fontSize.subtitleRem}rem` },
+      titleStyle: { fontFamily, fontSize: `${fontSize.titleRem * fontScale}rem` },
+      subtitleStyle: { fontFamily, fontSize: `${fontSize.subtitleRem * fontScale}rem` },
       fontFamily,
       fontSize,
       textColorClass,
@@ -45,6 +53,7 @@ export function useLayoutPrimitives() {
       fontSize.subtitleRem,
       fontSize.titleRem,
       textColorClass,
+      fontScale,
     ],
   );
 

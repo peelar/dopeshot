@@ -1,10 +1,22 @@
 "use client";
 
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/screenshot-zoom-slider";
-import { screenshotZoomAtom, configAtom } from "@/hooks/atoms";
+import {
+  screenshotZoomAtom,
+  configAtom,
+  orientationAtom,
+  type Orientation,
+} from "@/hooks/atoms";
+import {
+  LAYOUT_DEFINITIONS,
+  getLayoutDefinition,
+  withLayoutTextDefaults,
+} from "@/domain/layout-def/definitions";
+import { track } from "@/lib/analytics";
 import { cn } from "@/utils";
 
 /**
@@ -41,22 +53,111 @@ export function PlaygroundWorkspace({
   showFocusHint,
 }: PlaygroundWorkspaceProps) {
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
+  const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
+  const setConfig = useSetAtom(configAtom);
 
   // Code snippet uses fluid layout (content-based sizing)
   const useFluidLayout = config.layoutId === "code-snippet";
 
+  const handleOrientationChange = (newOrientation: Orientation) => {
+    // Check if current layout supports new orientation
+    const currentDef = getLayoutDefinition(config.layoutId);
+    const supportedOrientations = currentDef?.capabilities.supportedOrientations ?? [
+      "mobile",
+      "desktop",
+    ];
+
+    const previousLayoutId = config.layoutId;
+    let layoutChanged = false;
+    let newLayoutId = previousLayoutId;
+
+    if (!supportedOrientations.includes(newOrientation)) {
+      // Find first compatible layout
+      const compatibleLayout = LAYOUT_DEFINITIONS.find((def) => {
+        const orientations = def.capabilities.supportedOrientations ?? ["mobile", "desktop"];
+        return orientations.includes(newOrientation);
+      });
+
+      if (compatibleLayout) {
+        const nextConfig = compatibleLayout.createConfig();
+        setConfig(
+          withLayoutTextDefaults(
+            {
+              ...nextConfig,
+              text: config.text,
+              assets: config.assets,
+              background: config.background,
+              colors: config.colors,
+              screenshotShadow: config.screenshotShadow,
+              fontId: config.fontId,
+              fontSize: config.fontSize,
+              screenshotFrame: config.screenshotFrame,
+            },
+            { preserveEmptyText: true }
+          )
+        );
+        layoutChanged = compatibleLayout.id !== previousLayoutId;
+        newLayoutId = compatibleLayout.id;
+      }
+    }
+
+    setOrientation(newOrientation);
+    track("orientation_changed", {
+      orientation: newOrientation,
+      previous_orientation: orientation,
+      layout_changed: layoutChanged,
+      previous_layout: previousLayoutId,
+      new_layout: newLayoutId,
+    });
+  };
+
   return (
-    <div className="flex flex-1 flex-col overflow-auto bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-        {shouldShowAspectLock ? (
-          <div className="flex justify-end">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-background">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+        <div className="relative z-10 flex flex-shrink-0 items-center justify-center">
+          {/* Tiny icon-only orientation toggle - hidden for code snippets - centered against screenshot */}
+          {!useFluidLayout ? (
+            <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
+              <button
+                type="button"
+                onClick={() => handleOrientationChange("desktop")}
+                aria-pressed={orientation === "desktop"}
+                aria-label="Desktop mode (16:9)"
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded transition-colors",
+                  orientation === "desktop"
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Monitor className="h-3.5 w-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOrientationChange("mobile")}
+                aria-pressed={orientation === "mobile"}
+                aria-label="Mobile mode (9:16)"
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded transition-colors",
+                  orientation === "mobile"
+                    ? "bg-foreground text-background shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Smartphone className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ) : null}
+
+          {/* Aspect lock positioned absolutely on the right */}
+          {shouldShowAspectLock ? (
             <button
               type="button"
               onClick={onToggleAspect}
               aria-pressed={isAspectLocked}
               className={cn(
-                "flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-colors",
+                "absolute right-0 flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide transition-colors",
                 isAspectLocked
                   ? "border-foreground/30 bg-foreground/5 text-foreground"
                   : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
@@ -64,10 +165,10 @@ export function PlaygroundWorkspace({
             >
               {isAspectLocked ? "Locked · 16:9" : "Lock to 16:9"}
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
 
-        <div className="relative flex w-full justify-center">
+        <div className="relative flex min-h-0 flex-1 w-full justify-center">
           <PreviewViewport
             surfaceWidth={canvasWidth}
             surfaceHeight={canvasHeight}

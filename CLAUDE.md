@@ -21,3 +21,4 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - Actively look for ways to refactor crucial parts of the codebase.
 - After you are done with implementation, verify if the types & tests work via scripts in `package.json`.
 - Whenever you have "a bigger fix" in mind or a refactor, go for it. We are building for tomorrow, not today.
+- **Always add tracking events** for all new user-facing functionalities using `track()` from `@/lib/analytics`. Track user interactions, state changes, and feature usage with descriptive event names and relevant properties (e.g., `track("feature_used", { property: value })`).

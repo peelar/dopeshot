@@ -1,11 +1,24 @@
 import { memo, useMemo, type CSSProperties } from "react";
+import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
+import { orientationAtom } from "@/hooks/atoms";
 
-const SIDE_CONTENT_TOP = "30%";
-const CENTER_CONTENT_TOP = "15%";
-const CENTER_SCREENSHOT_TOP = "40%";
+// Desktop dimensions (16:9)
+const SIDE_CONTENT_TOP_DESKTOP = "30%";
+const CENTER_CONTENT_TOP_DESKTOP = "15%";
+const CENTER_SCREENSHOT_TOP_DESKTOP = "40%";
+const CENTER_SCREENSHOT_GUTTER_DESKTOP = 0.07;
+const SCREENSHOT_FRAME_WIDTH_DESKTOP = "62%";
+
+// Mobile dimensions (9:16) - bigger screenshot coverage
+const SIDE_CONTENT_TOP_MOBILE = "20%";
+const CENTER_CONTENT_TOP_MOBILE = "8%";
+const CENTER_SCREENSHOT_TOP_MOBILE = "20%";
+const CENTER_SCREENSHOT_GUTTER_MOBILE = 0; // No side margins on mobile
+const SCREENSHOT_FRAME_WIDTH_MOBILE = "85%"; // Screenshots "peak" from the side, not full width
+
 const CENTER_TEXT_GUTTER_PX = 12;
 const SCREENSHOT_OBJECT_POSITIONS: Record<"left" | "right", string> = {
   left: "0% 0%",
@@ -17,7 +30,6 @@ const SIDE_SCREENSHOT_TRANSFORM_ORIGINS: Record<"left" | "right", string> = {
   right: "right top",
 };
 
-const CENTER_SCREENSHOT_GUTTER = 0.07;
 const PEAK_CORNER_RADIUS = "16px";
 
 // Minimum zoom values to ensure screenshot always fills the frame
@@ -54,6 +66,7 @@ interface PopupGradientProps {
 }
 
 function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: PopupGradientProps) {
+  const orientation = useAtomValue(orientationAtom);
   const {
     assets,
     assetMap,
@@ -71,6 +84,13 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const fadeEnabled = layoutSpecificFadeEnabled ?? false;
 
+  // Responsive dimensions based on orientation
+  const isMobile = orientation === "mobile";
+  const SIDE_CONTENT_TOP = isMobile ? SIDE_CONTENT_TOP_MOBILE : SIDE_CONTENT_TOP_DESKTOP;
+  const CENTER_CONTENT_TOP = isMobile ? CENTER_CONTENT_TOP_MOBILE : CENTER_CONTENT_TOP_DESKTOP;
+  const CENTER_SCREENSHOT_TOP = isMobile ? CENTER_SCREENSHOT_TOP_MOBILE : CENTER_SCREENSHOT_TOP_DESKTOP;
+  const CENTER_SCREENSHOT_GUTTER = isMobile ? CENTER_SCREENSHOT_GUTTER_MOBILE : CENTER_SCREENSHOT_GUTTER_DESKTOP;
+
   const textColumnStyle: CSSProperties = useMemo(() => ({ width: "min(420px, calc(45%))" }), []);
 
   const textVariant: "left" | "right" | "center" = (() => {
@@ -85,22 +105,26 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     text.fontSize.subtitleClass,
     text.textColorClass,
   );
-  const title = text.title;
-  const subtitle = text.subtitle;
+
+  // Hide text on mobile for Peak Left/Right (only show on Peak Center)
+  const shouldShowText = !(isMobile && (textVariant === "left" || textVariant === "right"));
+  const title = shouldShowText ? text.title : undefined;
+  const subtitle = shouldShowText ? text.subtitle : undefined;
 
   const screenshotFrameWidth = useMemo(() => {
     if (textVariant === "center") {
       return "100%";
     }
-    return "62%";
-  }, [textVariant]);
+    // On mobile, use full width for side variants (left/right)
+    return isMobile ? SCREENSHOT_FRAME_WIDTH_MOBILE : SCREENSHOT_FRAME_WIDTH_DESKTOP;
+  }, [textVariant, isMobile]);
 
   const centerTextRegionStyle = useMemo(
     () => ({
       top: CENTER_CONTENT_TOP,
       height: `calc(${CENTER_SCREENSHOT_TOP} - ${CENTER_CONTENT_TOP} - ${CENTER_TEXT_GUTTER_PX}px)`,
     }),
-    [],
+    [CENTER_CONTENT_TOP, CENTER_SCREENSHOT_TOP],
   );
 
   const renderScreenshot = (placement: "left" | "right" | "center") => {

@@ -1,12 +1,11 @@
 "use client";
 
-import { CoverPreview } from "@/components/cover-preview";
-import { PreviewViewport } from "@/components/preview-viewport";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
   LAYOUT_DEFINITIONS,
+  getLayoutDefinition,
   normalizeLayoutId,
   supportsScreenshots,
   withLayoutTextDefaults,
@@ -16,13 +15,14 @@ import {
   assetsAtom,
   configAtom,
   lastLayoutByAssetTypeAtom,
+  orientationAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
   type AssetType,
 } from "@/hooks/atoms";
 import { cn } from "@/utils";
 import { track } from "@/lib/analytics";
-import { Provider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
 
 // Memoize layout default configs at module level to avoid recreation
@@ -48,6 +48,7 @@ type PreviewCard = {
 export function LayoutSelector({ className }: { className?: string }) {
   const [assetType, setAssetType] = useAtom(assetTypeAtom);
   const [lastLayoutByAssetType, setLastLayoutByAssetType] = useAtom(lastLayoutByAssetTypeAtom);
+  const orientation = useAtomValue(orientationAtom);
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
@@ -130,11 +131,27 @@ export function LayoutSelector({ className }: { className?: string }) {
   }, [previewConfigs]);
 
   const filteredPreviewConfigs = useMemo(() => {
+    let options = previewConfigs;
+
+    // Filter by asset type
     if (assetType === "code") {
-      return previewConfigs.filter((option) => option.layoutId === "code-snippet");
+      options = options.filter((option) => option.layoutId === "code-snippet");
+    } else {
+      options = options.filter((option) => supportsScreenshots(option.layoutId));
     }
-    return previewConfigs.filter((option) => supportsScreenshots(option.layoutId));
-  }, [assetType, previewConfigs]);
+
+    // Filter by orientation
+    options = options.filter((option) => {
+      const def = getLayoutDefinition(option.layoutId);
+      const supportedOrientations = def?.capabilities.supportedOrientations ?? [
+        "mobile",
+        "desktop",
+      ];
+      return supportedOrientations.includes(orientation);
+    });
+
+    return options;
+  }, [assetType, orientation, previewConfigs]);
 
   const applyLayoutSelection = useCallback(
     (layoutId: string, displayName?: string) => {
@@ -175,7 +192,9 @@ export function LayoutSelector({ className }: { className?: string }) {
       const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient-right";
       const storedLayoutId = lastLayoutByAssetType[nextType];
       // Normalize stored ID to handle legacy IDs (e.g., "popup-gradient" → "popup-gradient-right")
-      const preferredLayoutId = storedLayoutId ? normalizeLayoutId(storedLayoutId) : fallbackLayoutId;
+      const preferredLayoutId = storedLayoutId
+        ? normalizeLayoutId(storedLayoutId)
+        : fallbackLayoutId;
       const nextLayoutId =
         nextType === "code"
           ? "code-snippet"
@@ -256,6 +275,116 @@ export function LayoutSelector({ className }: { className?: string }) {
   );
 }
 
+function LayoutSketch({
+  layoutId,
+  orientation,
+}: {
+  layoutId: string;
+  orientation: "mobile" | "desktop";
+}) {
+  const isMobile = orientation === "mobile";
+  const isCodeSnippet = layoutId === "code-snippet";
+
+  // Extract variant from layout ID (e.g., "popup-gradient-left" -> "left")
+  const variant = layoutId.includes("-")
+    ? (layoutId.split("-").pop() as "left" | "right" | "center" | undefined)
+    : undefined;
+
+  const isPeakLayout = layoutId.startsWith("popup-gradient");
+  const isSpotlightLayout = layoutId.startsWith("hero-center");
+  const isBackdropLayout = layoutId.startsWith("adaptive-stage");
+
+  if (isCodeSnippet) {
+    // Code snippet: centered code block
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-stone-100 p-3 dark:bg-stone-800">
+        <div className="h-full w-full rounded bg-stone-200 p-2 dark:bg-stone-700">
+          <div className="h-full w-full rounded border border-stone-300 bg-stone-50 dark:border-stone-600 dark:bg-stone-900/50" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isPeakLayout && variant) {
+    // Peak layouts: text on one side, screenshot on the other or center
+    if (variant === "center") {
+      // Center variant: text at top, screenshot below
+      return (
+        <div className="flex h-full w-full flex-col bg-stone-100 p-2 dark:bg-stone-800">
+          {/* Text area at top */}
+          <div className="mb-1.5 flex h-4 w-full items-center justify-center">
+            <div className="h-2 w-16 rounded bg-stone-400 dark:bg-stone-500" />
+          </div>
+          {/* Screenshot area */}
+          <div className="flex-1 rounded bg-stone-300 dark:bg-stone-700" />
+        </div>
+      );
+    } else {
+      // Left/Right variants: text on one side, screenshot on the other
+      // Note: variant "left" = image peaks from right, variant "right" = image peaks from left
+      // On mobile, these variants don't show text (but keep the column structure)
+      const isLeft = variant === "left";
+      const showText = !isMobile;
+      return (
+        <div className="flex h-full w-full bg-stone-100 p-2 dark:bg-stone-800">
+          {isLeft && (
+            <div className="mr-1 flex w-1/3 flex-col justify-center">
+              {showText && (
+                <>
+                  <div className="mb-1 h-2 w-full rounded bg-stone-400 dark:bg-stone-500" />
+                  <div className="h-1.5 w-3/4 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+                </>
+              )}
+            </div>
+          )}
+          <div className={cn("flex-1 rounded bg-stone-300 dark:bg-stone-700", !isLeft && "ml-1")} />
+          {!isLeft && (
+            <div className="ml-1 flex w-1/3 flex-col items-end justify-center">
+              {showText && (
+                <>
+                  <div className="mb-1 h-2 w-full rounded bg-stone-400 dark:bg-stone-500" />
+                  <div className="h-1.5 w-3/4 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+                </>
+              )}
+            </div>
+          )}
+        </div>
+      );
+    }
+  }
+
+  if (isSpotlightLayout) {
+    // Spotlight: centered screenshot with text overlay or above
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center bg-stone-100 p-2 dark:bg-stone-800">
+        <div className="mb-1.5 flex h-3 w-full items-center justify-center">
+          <div className="h-2 w-20 rounded bg-stone-400 dark:bg-stone-500" />
+        </div>
+        <div className="h-3/4 w-4/5 rounded bg-stone-300 dark:bg-stone-700" />
+      </div>
+    );
+  }
+
+  if (isBackdropLayout) {
+    // Backdrop: screenshot fills background, text overlay
+    return (
+      <div className="relative h-full w-full bg-stone-200 p-2 dark:bg-stone-800">
+        <div className="h-full w-full rounded bg-stone-300/80 dark:bg-stone-700/80" />
+        <div className="absolute inset-2 flex items-center justify-center">
+          <div className="h-2.5 w-24 rounded bg-stone-500/30 dark:bg-stone-400/30" />
+        </div>
+      </div>
+    );
+  }
+
+  // Default fallback
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-stone-100 dark:bg-stone-800">
+      <div className="h-3/4 w-4/5 rounded bg-stone-300/70 dark:bg-stone-700/70" />
+    </div>
+  );
+}
+
 function LayoutPreviewCard({
   option,
   assets,
@@ -267,13 +396,7 @@ function LayoutPreviewCard({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  // Create isolated store for each preview to prevent preview interactions from affecting main state
-  const previewStore = useMemo(() => {
-    const store = createStore();
-    store.set(configAtom, option.previewConfig);
-    store.set(assetsAtom, assets);
-    return store;
-  }, [option.previewConfig, assets]);
+  const orientation = useAtomValue(orientationAtom);
 
   return (
     <button
@@ -288,14 +411,8 @@ function LayoutPreviewCard({
       aria-pressed={isSelected}
       aria-label={`Select ${option.displayName} look`}
     >
-      <div className="relative h-[90px] w-[160px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10">
-        <PreviewViewport surfaceWidth={1280} surfaceHeight={720}>
-          <Provider store={previewStore}>
-            <CoverPreview />
-          </Provider>
-        </PreviewViewport>
-        {/* Overlay to prevent interactions within the preview */}
-        <div className="absolute inset-0 z-10 bg-transparent" />
+      <div className="relative h-[120px] w-[160px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10">
+        <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
         <span

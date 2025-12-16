@@ -5,7 +5,7 @@ import {
   getScreenshotTreatment,
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
-import { configAtom, assetsAtom } from "../atoms";
+import { configAtom, assetsAtom, orientationAtom } from "../atoms";
 
 // Derived atoms
 export const currentLayoutAtom = atom((get) => {
@@ -27,7 +27,8 @@ export const screenshotAssetAtom = atom((get) => {
 export const canvasAtom = atom((get) => {
   const config = get(configAtom);
   const screenshotAsset = get(screenshotAssetAtom);
-  return getCanvasDimensions(config, screenshotAsset);
+  const orientation = get(orientationAtom);
+  return getCanvasDimensions(config, screenshotAsset, orientation);
 });
 
 const screenshotTreatmentAtom = atom((get) => {

@@ -30,9 +30,9 @@ When the user provides a research question, you will:
    - Recommendations for implementation
 
 4. **Save the research** with auto-incremented index:
-   - Read existing files in `thoughts/shared/research/`
+   - Read existing files in `thoughts/research/`
    - Find the highest numeric prefix (e.g., `01-`, `02-`, `03-`)
-   - Save to `thoughts/shared/research/{highest_index+1}-[descriptive_name].md`
+   - Save to `thoughts/research/{highest_index+1}-[descriptive_name].md`
    - Example: If highest is `05-`, save as `06-my_new_research.md`
 
 ## Output Format

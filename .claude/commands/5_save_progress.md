@@ -25,7 +25,7 @@ Save current work session state for later resumption.
    - What to check first
    - Priority items
 
-4. **Save to** `thoughts/shared/sessions/[YYYY-MM-DD]_[topic].md`
+4. **Save to** `thoughts/sessions/[YYYY-MM-DD]_[topic].md`
 
 ## Session Template
 
@@ -55,7 +55,7 @@ Date: [YYYY-MM-DD HH:MM]
 ### Commands
 ```bash
 /6_resume_work
-> thoughts/shared/sessions/[this-file].md
+> thoughts/sessions/[this-file].md
 ```
 
 ### First Steps
