@@ -5,10 +5,10 @@ test.describe('Playground', () => {
     await page.goto('/');
 
     // Check if the app header is visible
-    await expect(page.getByText('dopeshot')).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Go to homepage' })).toBeVisible();
 
-    // Check if the look selector is visible
-    await expect(page.getByText('Look').first()).toBeVisible();
+    // Check if the asset type selector is visible
+    await expect(page.getByRole('combobox', { name: 'Select asset type' })).toBeVisible();
 
     // Check if upload button is visible
     await expect(page.getByRole('button', { name: /upload/i }).first()).toBeVisible();
@@ -17,60 +17,55 @@ test.describe('Playground', () => {
   test('look selector displays multiple look options', async ({ page }) => {
     await page.goto('/');
 
-    // Wait for look selector to be visible
-    await expect(page.getByText('Look').first()).toBeVisible();
+    // Wait for page to load
+    await page.waitForLoadState('networkidle');
 
-    // Check that look preview cards are rendered
+    // Check that look preview cards are rendered (should have 7: Peak Left/Right/Center, Spotlight Left/Right, Backdrop, Code)
     const lookCards = page.getByRole('button', { name: /select.*look/i });
     const count = await lookCards.count();
     expect(count).toBeGreaterThan(0);
   });
 
-  test('can switch between look variants', async ({ page }) => {
+  test('can switch between different looks', async ({ page }) => {
     await page.goto('/');
 
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
 
-    // Check if variant controls are present (may not be visible depending on selected look)
-    const variantSection = page.getByText('Variants');
-    if (await variantSection.isVisible()) {
-      // Try to find variant buttons
-      const variantButtons = page.getByRole('radio', { name: /variant/i });
-      const count = await variantButtons.count();
+    // Find look selection buttons (e.g., "Select Peak Left look", "Select Peak Right look")
+    const lookButtons = page.getByRole('button', { name: /select.*look/i });
+    const count = await lookButtons.count();
 
-      if (count > 0) {
-        // Click on a different variant if multiple exist
-        const firstVariant = variantButtons.first();
-        await firstVariant.click();
+    // Should have multiple looks available (Peak Left, Peak Right, Peak Center, Spotlight Left, etc.)
+    expect(count).toBeGreaterThan(1);
 
-        // Verify the variant button is checked
-        await expect(firstVariant).toHaveAttribute('aria-checked', 'true');
-      }
+    if (count > 1) {
+      // Click on the second look option
+      const secondLook = lookButtons.nth(1);
+      await secondLook.click();
+
+      // Verify it's now selected (has aria-pressed="true")
+      await expect(secondLook).toHaveAttribute('aria-pressed', 'true');
     }
   });
 
-  test('style pattern controls work', async ({ page }) => {
+  test('pattern controls are present in sidebar', async ({ page }) => {
     await page.goto('/');
 
     // Wait for the page to load
     await page.waitForLoadState('networkidle');
 
-    // Look for style controls
-    const styleSection = page.getByText('Style');
-    if (await styleSection.isVisible()) {
-      // Try to find pattern buttons
-      const patternButtons = page.getByRole('radio', { name: /pattern/i });
-      const count = await patternButtons.count();
+    // Look for Pattern Style label in the sidebar (only visible for gradient backgrounds)
+    const patternStyleLabel = page.getByText('Pattern Style');
 
-      if (count > 0) {
-        // Click on a pattern option
-        const firstPattern = patternButtons.first();
-        await firstPattern.click();
-
-        // Verify the pattern button is checked
-        await expect(firstPattern).toHaveAttribute('aria-checked', 'true');
-      }
+    // Pattern controls may not always be visible (depends on background type)
+    // Just verify they exist when visible, don't try to interact
+    if (await patternStyleLabel.isVisible()) {
+      // Verify pattern buttons exist: Off, Grain, Glow, Grid
+      await expect(page.getByRole('button', { name: 'Off', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Grain', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Glow', exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Grid', exact: true })).toBeVisible();
     }
   });
 

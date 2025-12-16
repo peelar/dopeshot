@@ -353,16 +353,18 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 
-export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
-  // Try to find by exact ID first
-  const byId = LAYOUT_DEFINITIONS.find((layout) => layout.id === id);
-  if (byId) {
-    return byId;
-  }
-
+/**
+ * Normalizes legacy layout IDs to their current flattened equivalents.
+ * Maps old base IDs (e.g., "popup-gradient") to their default variant
+ * (e.g., "popup-gradient-right").
+ *
+ * @param id - The layout ID to normalize (may be legacy or current)
+ * @returns The normalized layout ID
+ */
+export function normalizeLayoutId(id: string): string {
   // Handle legacy "full-visual" ID
   if (id === "full-visual") {
-    return LAYOUT_DEFINITIONS.find((layout) => layout.id === "adaptive-stage");
+    return "adaptive-stage";
   }
 
   // Handle old layout IDs without variant suffix
@@ -374,12 +376,12 @@ export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
     "code-snippet": "code-snippet",           // Single variant (unchanged)
   };
 
-  const mappedId = legacyDefaults[id];
-  if (mappedId) {
-    return LAYOUT_DEFINITIONS.find((layout) => layout.id === mappedId);
-  }
+  return legacyDefaults[id] ?? id;
+}
 
-  return undefined;
+export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
+  const normalizedId = normalizeLayoutId(id);
+  return LAYOUT_DEFINITIONS.find((layout) => layout.id === normalizedId);
 }
 
 /**
