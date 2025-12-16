@@ -16,16 +16,13 @@ export type AssetType = "screenshot" | "code";
 export type Orientation = "mobile" | "desktop";
 
 /**
- * Detect default orientation based on device type
- * Mobile devices default to mobile (9:16), desktop to desktop (16:9)
- * This should only be called client-side to avoid hydration mismatches
+ * Default orientation for first load.
+ *
+ * We intentionally do **not** use device/viewport detection here:
+ * the app always starts in desktop (16:9) unless the user changes it.
  */
 export const getDefaultOrientation = (): Orientation => {
-  if (typeof window === "undefined") return "desktop";
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-    navigator.userAgent,
-  );
-  return isMobile ? "mobile" : "desktop";
+  return "desktop";
 };
 
 // Base atoms
