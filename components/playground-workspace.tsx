@@ -47,7 +47,7 @@ export function PlaygroundWorkspace({
   const config = useAtomValue(configAtom);
 
   // Code snippet uses fluid layout (content-based sizing)
-  const useFluidLayout = config.lookId === "code-snippet";
+  const useFluidLayout = config.layoutId === "code-snippet";
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">

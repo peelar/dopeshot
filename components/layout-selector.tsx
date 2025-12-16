@@ -6,15 +6,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
-  LOOK_DEFINITIONS,
+  LAYOUT_DEFINITIONS,
   supportsScreenshots,
-  withLookTextDefaults,
-} from "@/domain/look/definitions";
+  withLayoutTextDefaults,
+} from "@/domain/layout-def/definitions";
 import {
   assetTypeAtom,
   assetsAtom,
   configAtom,
-  lastLookByAssetTypeAtom,
+  lastLayoutByAssetTypeAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
   type AssetType,
@@ -25,31 +25,31 @@ import { Provider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai"
 import { Type } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 
-// Memoize look default configs at module level to avoid recreation
-const LOOK_DEFAULTS = LOOK_DEFINITIONS.map((look) => {
-  const defaultConfig = look.createConfig();
-  const defaultVariant = defaultConfig.variant || look.variants[0];
+// Memoize layout default configs at module level to avoid recreation
+const LAYOUT_DEFAULTS = LAYOUT_DEFINITIONS.map((layout) => {
+  const defaultConfig = layout.createConfig();
+  const defaultVariant = defaultConfig.variant || layout.variants[0];
 
   return {
-    look,
+    layout,
     defaultVariant,
     defaultConfig,
-    key: look.id,
-    displayName: look.name,
+    key: layout.id,
+    displayName: layout.name,
   };
 });
 
 type PreviewCard = {
   key: string;
   displayName: string;
-  lookId: string;
+  layoutId: string;
   previewConfig: LayoutConfig;
   showTextIcon: boolean;
 };
 
-export function LookSelector({ className }: { className?: string }) {
+export function LayoutSelector({ className }: { className?: string }) {
   const [assetType, setAssetType] = useAtom(assetTypeAtom);
-  const [lastLookByAssetType, setLastLookByAssetType] = useAtom(lastLookByAssetTypeAtom);
+  const [lastLayoutByAssetType, setLastLayoutByAssetType] = useAtom(lastLayoutByAssetTypeAtom);
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
@@ -57,27 +57,27 @@ export function LookSelector({ className }: { className?: string }) {
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
 
   // Memoize preview configs - only recalculate when user content changes
-  // Preserve user's background, colors, and shadow settings across look switches
-  // BUT reset gradient when switching to non-screenshot looks
+  // Preserve user's background, colors, and shadow settings across layout switches
+  // BUT reset gradient when switching to non-screenshot layouts
   const previewConfigs = useMemo(() => {
-    const currentLookSupportsScreenshots = supportsScreenshots(currentConfig.lookId);
+    const currentLayoutSupportsScreenshots = supportsScreenshots(currentConfig.layoutId);
 
-    // Check if we have a stored screenshot gradient (persists across look switches)
+    // Check if we have a stored screenshot gradient (persists across layout switches)
     const hasScreenshotGradient = screenshotGradient !== null;
 
-    return LOOK_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, look }) => {
-      const isTextLook = look.capabilities.text.headline !== "hidden";
-      const targetLookSupportsScreenshots = look.capabilities.screenshot === "supported";
+    return LAYOUT_DEFAULTS.map(({ defaultConfig, defaultVariant, key, displayName, layout }) => {
+      const isTextLayout = layout.capabilities.text.headline !== "hidden";
+      const targetLayoutSupportsScreenshots = layout.capabilities.screenshot === "supported";
 
       // Determine background preservation strategy:
       // 1. If target look supports screenshots AND we have a screenshot gradient → use stored screenshot gradient
       // 2. If both looks have same screenshot support → preserve current background
       // 3. Otherwise → use default background
       let backgroundToUse;
-      if (targetLookSupportsScreenshots && hasScreenshotGradient) {
+      if (targetLayoutSupportsScreenshots && hasScreenshotGradient) {
         // Always use stored screenshot gradient for screenshot-capable looks
         backgroundToUse = screenshotGradient;
-      } else if (currentLookSupportsScreenshots === targetLookSupportsScreenshots) {
+      } else if (currentLayoutSupportsScreenshots === targetLayoutSupportsScreenshots) {
         // Preserve background when staying in same category (screenshot→screenshot or non-screenshot→non-screenshot)
         backgroundToUse = currentConfig.background;
       } else {
@@ -85,7 +85,7 @@ export function LookSelector({ className }: { className?: string }) {
         backgroundToUse = defaultConfig.background;
       }
 
-      const previewConfig = withLookTextDefaults(
+      const previewConfig = withLayoutTextDefaults(
         {
           ...defaultConfig,
           variant: defaultVariant,
@@ -106,9 +106,9 @@ export function LookSelector({ className }: { className?: string }) {
       return {
         key,
         displayName,
-        lookId: look.id,
+        layoutId: layout.id,
         previewConfig,
-        showTextIcon: isTextLook,
+        showTextIcon: isTextLayout,
       };
     });
   }, [
@@ -117,7 +117,7 @@ export function LookSelector({ className }: { className?: string }) {
     currentConfig.colors,
     currentConfig.fontId,
     currentConfig.fontSize,
-    currentConfig.lookId,
+    currentConfig.layoutId,
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
     currentConfig.text,
@@ -125,36 +125,36 @@ export function LookSelector({ className }: { className?: string }) {
     screenshotGradient,
   ]);
 
-  const previewConfigByLookId = useMemo(() => {
+  const previewConfigByLayoutId = useMemo(() => {
     const map = new Map<string, LayoutConfig>();
     for (const option of previewConfigs) {
-      map.set(option.lookId, option.previewConfig);
+      map.set(option.layoutId, option.previewConfig);
     }
     return map;
   }, [previewConfigs]);
 
   const filteredPreviewConfigs = useMemo(() => {
     if (assetType === "code") {
-      return previewConfigs.filter((option) => option.lookId === "code-snippet");
+      return previewConfigs.filter((option) => option.layoutId === "code-snippet");
     }
-    return previewConfigs.filter((option) => supportsScreenshots(option.lookId));
+    return previewConfigs.filter((option) => supportsScreenshots(option.layoutId));
   }, [assetType, previewConfigs]);
 
-  const applyLookSelection = useCallback(
-    (lookId: string, displayName?: string) => {
-      const nextConfig = previewConfigByLookId.get(lookId);
+  const applyLayoutSelection = useCallback(
+    (layoutId: string, displayName?: string) => {
+      const nextConfig = previewConfigByLayoutId.get(layoutId);
       if (!nextConfig) return;
 
       if (displayName) {
         track("look_changed", {
-          from_look: currentConfig.lookId,
-          to_look: lookId,
+          from_look: currentConfig.layoutId,
+          to_look: layoutId,
           look_name: displayName,
         });
       }
 
       setConfig(
-        withLookTextDefaults(
+        withLayoutTextDefaults(
           {
             ...nextConfig,
             variant: nextConfig.variant,
@@ -164,48 +164,48 @@ export function LookSelector({ className }: { className?: string }) {
       );
       setScreenshotZoom(1.0);
     },
-    [currentConfig.lookId, previewConfigByLookId, setConfig, setScreenshotZoom],
+    [currentConfig.layoutId, previewConfigByLayoutId, setConfig, setScreenshotZoom],
   );
 
   const handleAssetTypeChange = useCallback(
     (nextType: AssetType) => {
-      setLastLookByAssetType((current) => ({
+      setLastLayoutByAssetType((current) => ({
         ...current,
-        [assetType]: currentConfig.lookId,
+        [assetType]: currentConfig.layoutId,
       }));
       setAssetType(nextType);
 
-      const fallbackLookId = nextType === "code" ? "code-snippet" : "popup-gradient";
-      const preferredLookId = lastLookByAssetType[nextType] ?? fallbackLookId;
-      const nextLookId =
+      const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient";
+      const preferredLayoutId = lastLayoutByAssetType[nextType] ?? fallbackLayoutId;
+      const nextLayoutId =
         nextType === "code"
           ? "code-snippet"
-          : supportsScreenshots(preferredLookId)
-            ? preferredLookId
-            : fallbackLookId;
+          : supportsScreenshots(preferredLayoutId)
+            ? preferredLayoutId
+            : fallbackLayoutId;
 
-      setLastLookByAssetType((current) => ({ ...current, [nextType]: nextLookId }));
-      applyLookSelection(nextLookId);
+      setLastLayoutByAssetType((current) => ({ ...current, [nextType]: nextLayoutId }));
+      applyLayoutSelection(nextLayoutId);
     },
     [
-      applyLookSelection,
+      applyLayoutSelection,
       assetType,
-      currentConfig.lookId,
-      lastLookByAssetType,
+      currentConfig.layoutId,
+      lastLayoutByAssetType,
       setAssetType,
-      setLastLookByAssetType,
+      setLastLayoutByAssetType,
     ],
   );
 
   useEffect(() => {
-    const currentIsCode = currentConfig.lookId === "code-snippet";
-    if (assetType === "code" && !currentIsCode) {
+    const currentIsCodeLayout = currentConfig.layoutId === "code-snippet";
+    if (assetType === "code" && !currentIsCodeLayout) {
       handleAssetTypeChange("code");
     }
-    if (assetType === "screenshot" && currentIsCode) {
+    if (assetType === "screenshot" && currentIsCodeLayout) {
       handleAssetTypeChange("screenshot");
     }
-  }, [assetType, currentConfig.lookId, handleAssetTypeChange]);
+  }, [assetType, currentConfig.layoutId, handleAssetTypeChange]);
 
   return (
     <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
@@ -232,18 +232,18 @@ export function LookSelector({ className }: { className?: string }) {
       </div>
 
       <div className="flex w-full gap-4 overflow-x-auto px-1 py-3">
-        {filteredPreviewConfigs.map(({ key, displayName, lookId, previewConfig, showTextIcon }) => {
-          const isSelected = currentConfig.lookId === lookId;
+        {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig, showTextIcon }) => {
+          const isSelected = currentConfig.layoutId === layoutId;
 
           const handleSelect = () => {
-            setLastLookByAssetType((current) => ({ ...current, [assetType]: lookId }));
-            applyLookSelection(lookId, displayName);
+            setLastLayoutByAssetType((current) => ({ ...current, [assetType]: layoutId }));
+            applyLayoutSelection(layoutId, displayName);
           };
 
           return (
-            <LookPreviewCard
+            <LayoutPreviewCard
               key={key}
-              option={{ key, displayName, lookId, previewConfig, showTextIcon }}
+              option={{ key, displayName, layoutId, previewConfig, showTextIcon }}
               assets={assets}
               isSelected={isSelected}
               onSelect={handleSelect}
@@ -255,7 +255,7 @@ export function LookSelector({ className }: { className?: string }) {
   );
 }
 
-function LookPreviewCard({
+function LayoutPreviewCard({
   option,
   assets,
   isSelected,

@@ -2,29 +2,29 @@ import type { LayoutConfig } from "@/domain/layout/types";
 import { DEFAULT_GRADIENT, GRADIENTS } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
 
-export type LookTextRequirement = "required" | "optional" | "hidden";
+export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
-export type LookOutlineControls = {
+export type LayoutOutlineControls = {
   softGlass: boolean;
   shape: boolean;
   shadow: boolean;
   fade?: boolean;
 };
 
-export type LookFocusMode = "auto" | "always" | "never";
-export type LookCanvasBehavior = "locked" | "adaptive" | "text-dependent";
-export type LookZoomBehavior = "scale-container" | "scale-content";
+export type LayoutFocusMode = "auto" | "always" | "never";
+export type LayoutCanvasBehavior = "locked" | "adaptive" | "text-dependent";
+export type LayoutZoomBehavior = "scale-container" | "scale-content";
 
-export interface LookCapabilities {
-  focusMode: LookFocusMode;
-  canvasBehavior: LookCanvasBehavior;
-  zoomBehavior: LookZoomBehavior;
+export interface LayoutCapabilities {
+  focusMode: LayoutFocusMode;
+  canvasBehavior: LayoutCanvasBehavior;
+  zoomBehavior: LayoutZoomBehavior;
   text: {
-    headline: LookTextRequirement;
-    subtitle: LookTextRequirement;
+    headline: LayoutTextRequirement;
+    subtitle: LayoutTextRequirement;
   };
   typography: boolean;
-  outline: LookOutlineControls;
+  outline: LayoutOutlineControls;
   logo: "supported" | "hidden";
   screenshot: "supported" | "hidden";
   copyDefaults?: {
@@ -34,28 +34,28 @@ export interface LookCapabilities {
 }
 
 /**
- * Pure data definition of a Look (visual style/template).
- * 
+ * Pure data definition of a Layout (compositional template).
+ *
  * Domain layer: Contains no React components or UI dependencies.
  * This allows the domain to be imported by any layer without circular dependencies.
  */
-export interface LookDefinition {
+export interface LayoutDefinition {
   id: string;
   name: string;
   description: string;
   variants: string[];
   createConfig: () => LayoutConfig;
-  capabilities: LookCapabilities;
+  capabilities: LayoutCapabilities;
 }
 
-export const LOOK_DEFINITIONS: LookDefinition[] = [
+export const LAYOUT_DEFINITIONS: LayoutDefinition[] = [
   {
     id: "popup-gradient",
     name: "Peak",
     description: "Gradient hero with headline, subtitle, and an elevated screenshot frame.",
     variants: ["left", "right", "center"],
     createConfig: () => ({
-      lookId: "popup-gradient",
+      layoutId: "popup-gradient",
       variant: "right",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -118,7 +118,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     description: "Split layout with copy on one side and a tall screenshot on the other.",
     variants: ["left", "right"],
     createConfig: () => ({
-      lookId: "hero-center",
+      layoutId: "hero-center",
       variant: "left",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -180,7 +180,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
     description: "Let a single screenshot shine with adaptive sizing and a curated background.",
     variants: [],
     createConfig: () => ({
-      lookId: "adaptive-stage",
+      layoutId: "adaptive-stage",
       variant: "default",
       fontId: DEFAULT_FONT_ID,
       fontSize: DEFAULT_FONT_SIZE,
@@ -242,7 +242,7 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
       // Use DEFAULT_GRADIENT for consistent SSR hydration
       // Random gradient selection happens client-side via gradient picker
       return {
-        lookId: "code-snippet",
+        layoutId: "code-snippet",
         variant: "center",
         fontId: "developer",
         fontSize: DEFAULT_FONT_SIZE,
@@ -294,23 +294,23 @@ export const LOOK_DEFINITIONS: LookDefinition[] = [
   },
 ];
 
-export function getLookDefinition(id: string): LookDefinition | undefined {
+export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
   // Handle legacy "full-visual" ID
   if (id === "full-visual") {
-    return LOOK_DEFINITIONS.find((look) => look.id === "adaptive-stage");
+    return LAYOUT_DEFINITIONS.find((layout) => layout.id === "adaptive-stage");
   }
-  return LOOK_DEFINITIONS.find((look) => look.id === id);
+  return LAYOUT_DEFINITIONS.find((layout) => layout.id === id);
 }
 
 /**
- * Check if a look supports screenshots based on its capabilities
+ * Check if a layout supports screenshots based on its capabilities
  */
-export function supportsScreenshots(lookId: string): boolean {
-  const lookDef = getLookDefinition(lookId);
-  return lookDef?.capabilities.screenshot === "supported";
+export function supportsScreenshots(layoutId: string): boolean {
+  const layoutDef = getLayoutDefinition(layoutId);
+  return layoutDef?.capabilities.screenshot === "supported";
 }
 
-type LookTextDefaultOptions = {
+type LayoutTextDefaultOptions = {
   preserveEmptyText?: boolean;
 };
 
@@ -327,23 +327,23 @@ function hasUserProvidedText(value: string | undefined, preserveEmptyText: boole
 }
 
 /**
- * Applies default text values to a layout config based on look capabilities.
- * 
- * This is domain logic: it understands look requirements and config structure,
+ * Applies default text values to a layout config based on layout capabilities.
+ *
+ * This is domain logic: it understands layout requirements and config structure,
  * but doesn't depend on UI components.
  */
-export function withLookTextDefaults(
+export function withLayoutTextDefaults(
   config: LayoutConfig,
-  options?: LookTextDefaultOptions,
+  options?: LayoutTextDefaultOptions,
 ): LayoutConfig {
-  const normalizedLookId = config.lookId === "full-visual" ? "adaptive-stage" : config.lookId;
-  const look = getLookDefinition(normalizedLookId);
-  const defaults = look?.capabilities.copyDefaults;
-  if (!look || !defaults) {
+  const normalizedLayoutId = config.layoutId === "full-visual" ? "adaptive-stage" : config.layoutId;
+  const layout = getLayoutDefinition(normalizedLayoutId);
+  const defaults = layout?.capabilities.copyDefaults;
+  if (!layout || !defaults) {
     return config;
   }
 
-  const requirements = look.capabilities.text;
+  const requirements = layout.capabilities.text;
   const nextText = { ...config.text };
   let shouldUpdate = false;
   const preserveEmptyText = options?.preserveEmptyText ?? false;
@@ -360,10 +360,10 @@ export function withLookTextDefaults(
     shouldUpdate = true;
   }
 
-  if (shouldUpdate || normalizedLookId !== config.lookId) {
+  if (shouldUpdate || normalizedLayoutId !== config.layoutId) {
     return {
       ...config,
-      lookId: normalizedLookId,
+      layoutId: normalizedLayoutId,
       text: shouldUpdate ? nextText : config.text,
     };
   }

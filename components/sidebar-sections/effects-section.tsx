@@ -12,7 +12,7 @@ import {
 import { useTheme } from "next-themes";
 import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
-import { lookCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 
@@ -33,22 +33,22 @@ const FULL_OUTLINE_CONTROLS = {
 export function EffectsSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
-  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
   const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
 
   const shouldAutoEnableFade = useMemo(() => {
-    const isBackdropLook = config.lookId === "adaptive-stage" || config.lookId === "full-visual";
-    if (!isBackdropLook || !screenshot?.metadata) return false;
+    const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+    if (!isBackdropLayout || !screenshot?.metadata) return false;
 
     const { height, aspectRatio } = screenshot.metadata;
     // Enable fade for tall vertical images (height > 720px and aspect ratio < 1)
     return height > 720 && aspectRatio < 1;
-  }, [config.lookId, screenshot?.metadata]);
+  }, [config.layoutId, screenshot?.metadata]);
 
   // Get look-specific fade state
-  const lookSpecificFadeEnabled = config.lookSpecificSettings?.fadeEnabled?.[config.lookId];
-  const currentFadeState = lookSpecificFadeEnabled ?? shouldAutoEnableFade;
+  const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
+  const currentFadeState = layoutSpecificFadeEnabled ?? shouldAutoEnableFade;
 
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
@@ -109,23 +109,23 @@ export function EffectsSection() {
 
   const toggleFade = useCallback(() => {
     setConfig((currentConfig) => {
-      const lookSpecificFadeEnabled =
-        currentConfig.lookSpecificSettings?.fadeEnabled?.[currentConfig.lookId];
-      const isBackdropLook =
-        currentConfig.lookId === "adaptive-stage" || currentConfig.lookId === "full-visual";
+      const layoutSpecificFadeEnabled =
+        currentConfig.layoutSpecificSettings?.fadeEnabled?.[currentConfig.layoutId];
+      const isBackdropLayout =
+        currentConfig.layoutId === "adaptive-stage" || currentConfig.layoutId === "full-visual";
       const autoEnableFade =
-        isBackdropLook && screenshot?.metadata
+        isBackdropLayout && screenshot?.metadata
           ? screenshot.metadata.height > 720 && screenshot.metadata.aspectRatio < 1
           : false;
-      const currentState = lookSpecificFadeEnabled ?? autoEnableFade;
+      const currentState = layoutSpecificFadeEnabled ?? autoEnableFade;
 
       return {
         ...currentConfig,
-        lookSpecificSettings: {
-          ...currentConfig.lookSpecificSettings,
+        layoutSpecificSettings: {
+          ...currentConfig.layoutSpecificSettings,
           fadeEnabled: {
-            ...currentConfig.lookSpecificSettings?.fadeEnabled,
-            [currentConfig.lookId]: !currentState,
+            ...currentConfig.layoutSpecificSettings?.fadeEnabled,
+            [currentConfig.layoutId]: !currentState,
           },
         },
       };

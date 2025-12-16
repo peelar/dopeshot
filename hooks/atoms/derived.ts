@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { getLookDefinition } from "@/domain/look/definitions";
+import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import {
   getCanvasDimensions,
   getScreenshotTreatment,
@@ -8,14 +8,14 @@ import {
 import { configAtom, assetsAtom } from "../atoms";
 
 // Derived atoms
-export const currentLookAtom = atom((get) => {
+export const currentLayoutAtom = atom((get) => {
   const config = get(configAtom);
-  return getLookDefinition(config.lookId);
+  return getLayoutDefinition(config.layoutId);
 });
 
-export const lookCapabilitiesAtom = atom((get) => {
-  const look = get(currentLookAtom);
-  return look?.capabilities;
+export const layoutCapabilitiesAtom = atom((get) => {
+  const layout = get(currentLayoutAtom);
+  return layout?.capabilities;
 });
 
 export const screenshotAssetAtom = atom((get) => {
@@ -41,9 +41,9 @@ export const isScreenshotFocusedModeAtom = atom((get) => {
 });
 
 export const shouldShowAspectLockAtom = atom((get) => {
-  const lookCapabilities = get(lookCapabilitiesAtom);
+  const layoutCapabilities = get(layoutCapabilitiesAtom);
   const isScreenshotFocusedMode = get(isScreenshotFocusedModeAtom);
-  return lookCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
+  return layoutCapabilities?.canvasBehavior === "text-dependent" && !isScreenshotFocusedMode;
 });
 
 export const isAspectLockedAtom = atom((get) => {

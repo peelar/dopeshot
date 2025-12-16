@@ -4,7 +4,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useRef, type ChangeEvent } from "react";
 import { UploadCloud } from "lucide-react";
 import { cn } from "@/utils";
-import { logoAssetAtom, lookCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { logoAssetAtom, layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { configAtom } from "@/hooks/atoms";
 import { Button } from "@/components/ui/button";
 import type { Asset } from "@/domain/asset/types";
@@ -15,7 +15,7 @@ interface LogoSectionProps {
 
 export function LogoSection({ onUploadAsset }: LogoSectionProps) {
   const logoAsset = useAtomValue(logoAssetAtom);
-  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const setConfig = useSetAtom(configAtom);
 
   const handleRemove = useCallback(() => {

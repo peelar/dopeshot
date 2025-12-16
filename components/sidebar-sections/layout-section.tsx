@@ -4,15 +4,15 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useRef } from "react";
 import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
-import { lookCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
 import { FontSelector } from "@/components/font-selector";
 import type { FontId, FontSize } from "@/domain/layout/types";
 
-export function LookSection() {
+export function LayoutSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
-  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const headlineTrackedRef = useRef(false);
   const subtitleTrackedRef = useRef(false);
 

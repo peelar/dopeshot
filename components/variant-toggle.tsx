@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/utils";
 import { configAtom } from "@/hooks/atoms";
-import { currentLookAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { currentLayoutAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
@@ -49,7 +49,7 @@ function usePatternControls(
     (patternId: PatternOption) => {
       track("pattern_changed", {
         pattern: patternId,
-        look_id: config.lookId,
+        look_id: config.layoutId,
       });
 
       setConfig((current) => {
@@ -69,7 +69,7 @@ function usePatternControls(
         };
       });
     },
-    [setConfig, config.lookId],
+    [setConfig, config.layoutId],
   );
 
   const getPatternLabel = useCallback((id: PatternOption) => {
@@ -146,16 +146,16 @@ interface VariantToggleProps {
 export function VariantToggle({ onVariantChange }: VariantToggleProps) {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
-  const look = useAtomValue(currentLookAtom);
+  const layout = useAtomValue(currentLayoutAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const buttonRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [hasSeenFull, setHasSeenFull] = useState(false);
 
-  if (!look) {
+  if (!layout) {
     return null;
   }
 
-  const variants = look.variants;
+  const variants = layout.variants;
   const hasMultipleVariants = variants.length > 1;
   const activeVariant = variants.includes(config.variant) ? config.variant : variants[0];
 
@@ -203,24 +203,24 @@ export function VariantToggle({ onVariantChange }: VariantToggleProps) {
       const nextVariant = displayVariants[nextIndex];
       track("variant_changed", {
         variant: nextVariant,
-        look_id: config.lookId,
+        look_id: config.layoutId,
         interaction: "keyboard",
       });
       onVariantChange(nextVariant);
       requestAnimationFrame(() => buttonRefs.current[nextIndex]?.focus());
     },
-    [displayVariants, onVariantChange, config.lookId],
+    [displayVariants, onVariantChange, config.layoutId],
   );
 
   const handleSelectChange = useCallback(
     (value: string) => {
       track("variant_changed", {
         variant: value,
-        look_id: config.lookId,
+        look_id: config.layoutId,
       });
       onVariantChange(value);
     },
-    [onVariantChange, config.lookId],
+    [onVariantChange, config.layoutId],
   );
 
   return (
@@ -257,7 +257,7 @@ export function VariantToggle({ onVariantChange }: VariantToggleProps) {
                       onClick={() => {
                         track("variant_changed", {
                           variant,
-                          look_id: config.lookId,
+                          look_id: config.layoutId,
                         });
                         onVariantChange(variant);
                       }}

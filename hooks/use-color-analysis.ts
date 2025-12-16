@@ -7,7 +7,7 @@ import {
   applyPreferredAngle,
   getGradientColorsForContrast,
 } from "@/domain/layout/gradient-application";
-import { supportsScreenshots } from "@/domain/look/definitions";
+import { supportsScreenshots } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom, screenshotGradientAtom } from "./atoms";
 
@@ -30,8 +30,8 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
   const processColorAnalysis = useCallback(
     async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
       // EARLY RETURN: Skip color analysis for looks that don't support screenshots
-      if (!supportsScreenshots(config.lookId)) {
-        console.log(`Skipping color analysis for ${config.lookId} - look does not support screenshots`);
+      if (!supportsScreenshots(config.layoutId)) {
+        console.log(`Skipping color analysis for ${config.layoutId} - look does not support screenshots`);
         return;
       }
 
@@ -114,7 +114,7 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
     },
     [
       analyzeColors,
-      config.lookId,
+      config.layoutId,
       setAssets,
       setConfig,
       setScreenshotGradient,
