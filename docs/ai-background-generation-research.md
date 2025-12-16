@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document explores adding AI-generated abstract backgrounds to Dope Shot, addressing key product questions around timing (pre-persistence), UI surfacing, and feature design.
+This document explores adding AI-generated abstract backgrounds to dopeshot, addressing key product questions around timing (pre-persistence), UI surfacing, and feature design.
 
 **Key Recommendations:**
 1. **Add AI backgrounds now** - Use session persistence and set clear expectations
@@ -56,7 +56,7 @@ This document explores adding AI-generated abstract backgrounds to Dope Shot, ad
 
 **3. AI features drive product differentiation**
 - Competitors (Canva, Figma, Bannerbear) are all racing to add AI
-- Being early positions Dope Shot as innovative
+- Being early positions dopeshot as innovative
 - AI features can be the hook that makes users want persistence
 
 **4. Cost control is manageable**
