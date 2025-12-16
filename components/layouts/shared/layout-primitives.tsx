@@ -3,7 +3,7 @@ import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
-import { getLookDefinition } from "@/domain/look/definitions";
+import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import { configAtom, assetsAtom, screenshotZoomAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -13,7 +13,7 @@ import { tokenToTextColorClass } from "./color-utils";
 import { getShadowValue } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
 
-export function useLookPrimitives() {
+export function useLayoutPrimitives() {
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
@@ -54,8 +54,8 @@ export function useLookPrimitives() {
     return getShadowValue(config.screenshotShadow);
   }, [config.screenshotShadow, screenshotTreatment.shadowEnabled]);
 
-  const lookDefinition = getLookDefinition(config.lookId);
-  const zoomBehavior = lookDefinition?.capabilities.zoomBehavior ?? "scale-container";
+  const layoutDefinition = getLayoutDefinition(config.layoutId);
+  const zoomBehavior = layoutDefinition?.capabilities.zoomBehavior ?? "scale-container";
 
   return {
     config,
@@ -72,7 +72,7 @@ export function useLookPrimitives() {
   };
 }
 
-interface LookSurfaceProps {
+interface LayoutSurfaceProps {
   className?: string;
   backgroundStyle: string;
   assets: Asset[];
@@ -82,7 +82,7 @@ interface LookSurfaceProps {
   children: ReactNode;
 }
 
-export function LookSurface({
+export function LayoutSurface({
   className,
   backgroundStyle,
   assets,
@@ -90,7 +90,7 @@ export function LookSurface({
   assetMap,
   screenshot,
   children,
-}: LookSurfaceProps) {
+}: LayoutSurfaceProps) {
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}

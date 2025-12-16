@@ -15,12 +15,14 @@ Be the fastest way for indie hackers and small builders to turn their product in
 
 - Start from user content, not a blank canvas.
 - Offer a few curated choices instead of dozens of knobs.
-- Automatic color, layout, and typography that feel intentionally indie-hacker.
+- Automatic color extraction and palette matching; layouts show structure, effects add polish.
+- Clear mental model: layouts (geometry), effects (treatments), backgrounds (surfaces).
 
 ## Scope guardrails
 
 - Focus now: product screenshots to Twitter/LinkedIn-friendly graphics.
-- Next surfaces (after validation): headers and content covers.
+- Architecture: clean separation of layouts (geometry), effects (treatments), backgrounds (surfaces).
+- Next surfaces (after validation): headers and content covers; brand integration via background tokens.
 - Avoid enterprise workflows and heavy customization that slow people down.
 
 ## Success measures

@@ -94,7 +94,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
-  const isCodeSnippet = config.lookId === "code-snippet";
+  const isCodeSnippet = config.layoutId === "code-snippet";
 
   // Generate multi-stop gradients from screenshot colors
   // Code snippets should never use screenshot-derived gradients

@@ -1,6 +1,6 @@
 import { Asset } from "@/domain/asset/types";
 import { CanvasMode, LayoutConfig, ScreenshotTreatment } from "./types";
-import { getLookDefinition } from "@/domain/look/definitions";
+import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 
 export const DEFAULT_LOCKED_ASPECT_RATIO = 1280 / 720;
 const BASE_CANVAS_WIDTH = 1280;
@@ -10,8 +10,8 @@ function isBlank(value?: string) {
 }
 
 export function isScreenshotFocused(config: LayoutConfig): boolean {
-  const look = getLookDefinition(config.lookId);
-  const focusMode = look?.capabilities.focusMode ?? "auto";
+  const layout = getLayoutDefinition(config.layoutId);
+  const focusMode = layout?.capabilities.focusMode ?? "auto";
 
   if (focusMode === "always") {
     return true;
@@ -38,8 +38,8 @@ export function getScreenshotTreatment(config: LayoutConfig): ScreenshotTreatmen
 }
 
 export function getEffectiveCanvasMode(config: LayoutConfig): CanvasMode {
-  const look = getLookDefinition(config.lookId);
-  const behavior = look?.capabilities.canvasBehavior ?? "locked";
+  const layout = getLayoutDefinition(config.layoutId);
+  const behavior = layout?.capabilities.canvasBehavior ?? "locked";
 
   if (behavior === "locked") {
     return "locked";
@@ -57,10 +57,10 @@ export function getCanvasDimensions(
   config: LayoutConfig,
   screenshotAsset?: Asset | null,
 ): { width: number; height: number; aspectRatio: number; mode: CanvasMode } {
-  const look = getLookDefinition(config.lookId);
+  const layout = getLayoutDefinition(config.layoutId);
 
-  // Code snippet look uses content-based sizing, not fixed canvas
-  if (config.lookId === "code-snippet") {
+  // Code snippet layout uses content-based sizing, not fixed canvas
+  if (config.layoutId === "code-snippet") {
     // Return a flexible aspect ratio that will be overridden by content
     // The actual size will be determined by the code content + padding
     return {

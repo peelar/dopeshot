@@ -23,15 +23,15 @@ export const isAnalyzingColorsAtom = atom<boolean>(false);
 export const isProcessingUploadAtom = atom<boolean>(false);
 export const screenshotZoomAtom = atom<number>(1.0);
 
-// Store the last screenshot-derived gradient to preserve it across look switches
+// Store the last screenshot-derived gradient to preserve it across layout switches
 export const screenshotGradientAtom = atom<BackgroundConfig | null>(null);
 
 export const assetTypeAtom = atomWithStorage<AssetType>("dopeshot:assetType", "screenshot");
 
-export const lastLookByAssetTypeAtom = atomWithStorage<Record<AssetType, string>>(
-  "dopeshot:lastLookByAssetType",
+export const lastLayoutByAssetTypeAtom = atomWithStorage<Record<AssetType, string>>(
+  "dopeshot:lastLayoutByAssetType",
   {
-    screenshot: defaultPreset.config.lookId,
+    screenshot: defaultPreset.config.layoutId,
     code: "code-snippet",
   },
 );

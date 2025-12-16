@@ -11,7 +11,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import { getLookDefinition, type LookDefinition } from "@/domain/look/definitions";
+import type { LayoutDefinition } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -27,12 +27,12 @@ import {
 } from "@/hooks/atoms";
 import {
   canvasAtom,
-  currentLookAtom,
+  currentLayoutAtom,
   isAspectLockedAtom,
   isScreenshotFocusedModeAtom,
   screenshotAssetAtom,
   shouldShowAspectLockAtom,
-  lookCapabilitiesAtom,
+  layoutCapabilitiesAtom,
 } from "@/hooks/atoms/derived";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { useDragAndUpload } from "@/hooks/use-drag-and-upload";
@@ -46,7 +46,7 @@ interface ExportContext {
   setStatusMessage: Setter<string>;
   setIsExporting: Setter<boolean>;
   config: LayoutConfig;
-  currentLook: LookDefinition | undefined;
+  currentLook: LayoutDefinition | undefined;
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
 }
@@ -63,8 +63,8 @@ export function usePlaygroundController() {
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
-  const currentLook = useAtomValue(currentLookAtom);
-  const lookCapabilities = useAtomValue(lookCapabilitiesAtom);
+  const currentLook = useAtomValue(currentLayoutAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const canvas = useAtomValue(canvasAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isScreenshotFocusedMode = useAtomValue(isScreenshotFocusedModeAtom);
@@ -106,7 +106,6 @@ export function usePlaygroundController() {
     screenshotAsset,
   });
 
-  const handleVariantChange = useVariantChangeHandler(setConfig);
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
 
   const handleScreenshotUpload = useCallback(
@@ -138,7 +137,6 @@ export function usePlaygroundController() {
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
-    handleVariantChange,
     toggleCanvasMode,
     handleExport,
     handleFileProcess,
@@ -252,7 +250,7 @@ function useExportHandler({
     }
 
     track("export_button_clicked", {
-      look_id: config.lookId,
+      look_id: config.layoutId,
       look_name: currentLook?.name ?? "unknown",
       variant: config.variant,
       background_type: config.background?.type ?? "unknown",
@@ -287,7 +285,7 @@ function useExportHandler({
     canvas.width,
     config.background?.type,
     config.fontId,
-    config.lookId,
+    config.layoutId,
     config.variant,
     currentLook?.name,
     hasScreenshot,
@@ -296,25 +294,6 @@ function useExportHandler({
     setIsExporting,
     setStatusMessage,
   ]);
-}
-
-function useVariantChangeHandler(setConfig: Setter<LayoutConfig>) {
-  return useCallback(
-    (variant: string) => {
-      setConfig((currentConfig) => {
-        const look = getLookDefinition(currentConfig.lookId);
-        if (!look || !look.variants.includes(variant) || currentConfig.variant === variant) {
-          return currentConfig;
-        }
-
-        return {
-          ...currentConfig,
-          variant,
-        };
-      });
-    },
-    [setConfig],
-  );
 }
 
 function useCanvasModeToggle(setConfig: Setter<LayoutConfig>) {

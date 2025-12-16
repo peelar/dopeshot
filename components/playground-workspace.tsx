@@ -1,7 +1,6 @@
 "use client";
 
 import { useAtom, useAtomValue } from "jotai";
-import { VariantToggle } from "@/components/variant-toggle";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/screenshot-zoom-slider";
@@ -22,7 +21,6 @@ import { cn } from "@/utils";
 
 interface PlaygroundWorkspaceProps {
   isMobile: boolean;
-  onVariantChange: (variant: string) => void;
   shouldShowAspectLock: boolean;
   isAspectLocked: boolean;
   onToggleAspect: () => void;
@@ -34,7 +32,6 @@ interface PlaygroundWorkspaceProps {
 
 export function PlaygroundWorkspace({
   isMobile,
-  onVariantChange,
   shouldShowAspectLock,
   isAspectLocked,
   onToggleAspect,
@@ -47,13 +44,11 @@ export function PlaygroundWorkspace({
   const config = useAtomValue(configAtom);
 
   // Code snippet uses fluid layout (content-based sizing)
-  const useFluidLayout = config.lookId === "code-snippet";
+  const useFluidLayout = config.layoutId === "code-snippet";
 
   return (
     <div className="flex flex-1 flex-col overflow-auto bg-background px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
       <div className="mx-auto flex w-full max-w-4xl flex-col gap-4">
-        <VariantToggle onVariantChange={onVariantChange} />
-
         {shouldShowAspectLock ? (
           <div className="flex justify-end">
             <button

@@ -1,9 +1,9 @@
 import { LayoutConfig } from "./types";
-import { getLookDefinition, withLookTextDefaults } from "@/domain/look/definitions";
+import { getLayoutDefinition, withLayoutTextDefaults } from "@/domain/layout-def/definitions";
 import { AspectCategory, getRecommendationForCategory } from "./aspect";
 
-export type LookRecommendation = {
-  lookId: string;
+export type LayoutRecommendation = {
+  layoutId: string;
   variant?: string;
 };
 
@@ -14,36 +14,36 @@ export const ASPECT_COPY: Record<AspectCategory, string> = {
   ultrawide: "ultra-wide",
 };
 
-export function applyLookRecommendation(
+export function applyLayoutRecommendation(
   config: LayoutConfig,
-  recommendation?: LookRecommendation,
+  recommendation?: LayoutRecommendation,
 ): {
   config: LayoutConfig;
-  changedLook: boolean;
+  changedLayout: boolean;
   changedVariant: boolean;
-  lookName?: string;
+  layoutName?: string;
 } {
   if (!recommendation) {
-    return { config, changedLook: false, changedVariant: false };
+    return { config, changedLayout: false, changedVariant: false };
   }
 
-  const look = getLookDefinition(recommendation.lookId);
-  if (!look) {
-    return { config, changedLook: false, changedVariant: false };
+  const layout = getLayoutDefinition(recommendation.layoutId);
+  if (!layout) {
+    return { config, changedLayout: false, changedVariant: false };
   }
 
-  const defaultConfig = look.createConfig();
+  const defaultConfig = layout.createConfig();
   const variantCandidate =
-    recommendation.variant && look.variants.includes(recommendation.variant)
+    recommendation.variant && layout.variants.includes(recommendation.variant)
       ? recommendation.variant
       : undefined;
 
-  if (config.lookId !== look.id) {
-    const nextConfig = withLookTextDefaults(
+  if (config.layoutId !== layout.id) {
+    const nextConfig = withLayoutTextDefaults(
       {
         ...defaultConfig,
-        lookId: look.id,
-        variant: variantCandidate || defaultConfig.variant || look.variants[0] || config.variant,
+        layoutId: layout.id,
+        variant: variantCandidate || defaultConfig.variant || layout.variants[0] || config.variant,
         text: config.text,
         colors: config.colors,
         background: config.background,
@@ -58,9 +58,9 @@ export function applyLookRecommendation(
 
     return {
       config: nextConfig,
-      changedLook: true,
+      changedLayout: true,
       changedVariant: true,
-      lookName: look.name,
+      layoutName: layout.name,
     };
   }
 
@@ -71,17 +71,17 @@ export function applyLookRecommendation(
         variant: variantCandidate,
         screenshotFrame: config.screenshotFrame ?? defaultConfig.screenshotFrame,
       },
-      changedLook: false,
+      changedLayout: false,
       changedVariant: true,
-      lookName: look.name,
+      layoutName: layout.name,
     };
   }
 
-  return { config, changedLook: false, changedVariant: false };
+  return { config, changedLayout: false, changedVariant: false };
 }
 
 export function getRecommendationForAspectCategory(
   aspectCategory: AspectCategory,
-): LookRecommendation | undefined {
+): LayoutRecommendation | undefined {
   return getRecommendationForCategory(aspectCategory);
 }
