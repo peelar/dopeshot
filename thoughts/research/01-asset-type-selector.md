@@ -1,7 +1,7 @@
 # Research: Asset Type Selector (Screenshot vs Code)
 
 ## Overview
-Dope Shot currently treats “Screenshot looks” (Peak, Spotlight, Backdrop) and the “Code” look as part of one rail. The requested feature is an **asset type** selector that:
+dopeshot currently treats “Screenshot looks” (Peak, Spotlight, Backdrop) and the “Code” look as part of one rail. The requested feature is an **asset type** selector that:
 - Persists active mode (`Screenshot` / `Code`)
 - Filters the looks rail based on mode
 - Ensures each mode remembers its last selected look

@@ -1,7 +1,8 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/ui/logo";
 import { cn } from "@/utils";
 import { Download, ImageUp, Loader2, RefreshCw } from "lucide-react";
 
@@ -38,13 +39,8 @@ export function AppHeader({
 
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
-      <a href="/" aria-label="Go to homepage" className="flex items-center gap-2 pl-4 transition-opacity hover:opacity-80">
-        <div className="flex h-5 w-5 items-center justify-center rounded-sm bg-foreground text-background" aria-hidden="true">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
-          </svg>
-        </div>
-        <span className="font-bold text-sm tracking-tight">dopeshot</span>
+      <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
+        <Logo />
       </a>
       <div className="flex items-center gap-3">
         {showUploadButton ? (

@@ -13,6 +13,7 @@ import {
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { UmamiProvider } from "@/components/umami-provider";
+import { AuthProvider } from "@/lib/auth";
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -137,11 +138,13 @@ export default function RootLayout({
         }
         suppressHydrationWarning
       >
-        <UmamiProvider>
-          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-            {children}
-          </ThemeProvider>
-        </UmamiProvider>
+        <AuthProvider>
+          <UmamiProvider>
+            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+              {children}
+            </ThemeProvider>
+          </UmamiProvider>
+        </AuthProvider>
       </body>
     </html>
   );
