@@ -411,7 +411,7 @@ function LayoutPreviewCard({
       aria-pressed={isSelected}
       aria-label={`Select ${option.displayName} look`}
     >
-      <div className="relative h-[64px] w-[140px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10 sm:h-[120px] sm:w-[160px]">
+      <div className="relative h-[64px] w-[105px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10 sm:h-[120px] sm:w-[160px]">
         <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
