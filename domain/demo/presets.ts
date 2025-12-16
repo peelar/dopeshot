@@ -24,8 +24,8 @@ const DEMO_PRESETS: DemoPreset[] = DEMO_TEXTS.map((text, index) => ({
     createdAt: "2024-01-01T00:00:00.000Z",
   },
   config: {
-    layoutId: "popup-gradient-center", // Use flattened layout ID
-    variant: "center",
+    layoutId: "popup-gradient-left", // Use flattened layout ID (first in rail)
+    variant: "left",
     fontId: "clean",
     fontSize: "xl",
     text,

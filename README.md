@@ -25,11 +25,19 @@ Auto-matched to your screenshot's palette. No color theory required.
 
 Pick a mood, not a font. Founder. Terminal. Billboard. Edge. Circuit. BlackTie. Buddy. Civic.
 
+### Device modes
+
+Choose your target platform:
+- **Desktop (16:9)** - 1920×1080 - Perfect for desktop screenshots, tutorials, LinkedIn posts, Twitter
+- **Mobile (9:16)** - 1080×1920 - Optimized for mobile screenshots, Instagram stories, TikTok, Reels
+
+Intelligently defaults based on your device. Automatically filters compatible layouts.
+
 ### Three looks
 
-- **Peak** - Gradient hero with headline and elevated screenshot frame
-- **Spotlight** - Split layout with copy on one side, tall screenshot on the other
-- **Backdrop** - Let a single screenshot shine with adaptive sizing
+- **Peak** - Gradient hero with headline and elevated screenshot frame (mobile & desktop)
+- **Spotlight** - Split layout with copy on one side, tall screenshot on the other (desktop only)
+- **Backdrop** - Let a single screenshot shine with adaptive sizing (mobile & desktop)
 
 ### Export ready
 

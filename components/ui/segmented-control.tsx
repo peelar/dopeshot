@@ -2,7 +2,7 @@ import { cn } from "@/utils";
 
 export interface SegmentedOption {
   id: string;
-  label: string;
+  label: string | React.ReactNode;
   disabled?: boolean;
 }
 

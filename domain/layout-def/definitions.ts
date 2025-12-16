@@ -1,4 +1,5 @@
 import type { LayoutConfig } from "@/domain/layout/types";
+import type { Orientation } from "@/hooks/atoms";
 import { DEFAULT_GRADIENT, GRADIENTS } from "@/domain/layout/gradient-presets";
 import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
 
@@ -27,6 +28,7 @@ export interface LayoutCapabilities {
   outline: LayoutOutlineControls;
   logo: "supported" | "hidden";
   screenshot: "supported" | "hidden";
+  supportedOrientations?: Orientation[];
   copyDefaults?: {
     title?: string;
     subtitle?: string;
@@ -76,16 +78,23 @@ function expandLayoutVariants(layoutDef: LayoutDefinition): LayoutDefinition[] {
   // Create a separate layout entry for each variant
   return layoutDef.variants.map((variant) => {
     const baseConfig = layoutDef.createConfig();
+    
+    // For Peak layout, swap variant names so they reflect where the image peaks from
+    // variant "left" means text left/image right (image peaks from right) → display as "Right"
+    // variant "right" means text right/image left (image peaks from left) → display as "Left"
+    const displayVariant = layoutDef.id === "popup-gradient" && variant !== "center"
+      ? (variant === "left" ? "right" : variant === "right" ? "left" : variant)
+      : variant;
 
     return {
       ...layoutDef,
       id: `${layoutDef.id}-${variant}`,
-      name: `${layoutDef.name} ${capitalize(variant)}`,
+      name: `${layoutDef.name} ${capitalize(displayVariant)}`,
       variants: [variant], // Single variant only
       createConfig: () => ({
         ...baseConfig,
         layoutId: `${layoutDef.id}-${variant}`, // Update layoutId to match new composite ID
-        variant, // Bake in the variant
+        variant, // Bake in the variant (keep internal variant value unchanged)
       }),
     };
   });
@@ -153,6 +162,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "supported",
+      supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -215,6 +225,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "supported",
+      supportedOrientations: ["desktop"],
       copyDefaults: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -278,6 +289,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "hidden",
       screenshot: "supported",
+      supportedOrientations: ["mobile", "desktop"],
     },
   },
   {
@@ -337,6 +349,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "hidden",
       screenshot: "hidden",
+      supportedOrientations: ["mobile", "desktop"],
     },
   },
 ];

@@ -40,13 +40,19 @@ export function PreviewViewport({
     rafRef.current = requestAnimationFrame(() => {
       rafRef.current = undefined;
       if (!containerRef.current) return;
-      const width = containerRef.current.clientWidth;
-      if (!width || !surfaceWidth) return;
-      const nextScale = Math.min(width / surfaceWidth, 1);
+      const containerWidth = containerRef.current.clientWidth;
+      const containerHeight = containerRef.current.clientHeight;
+      if (!containerWidth || !containerHeight || !surfaceWidth || !surfaceHeight) return;
+
+      // Scale to fit both width and height, ensuring entire canvas is visible without scrolling
+      const scaleX = containerWidth / surfaceWidth;
+      const scaleY = containerHeight / surfaceHeight;
+      const nextScale = Math.min(scaleX, scaleY, 1);
+
       setScale(nextScale);
       setHasMeasured(true);
     });
-  }, [surfaceWidth]);
+  }, [surfaceWidth, surfaceHeight]);
 
   useLayoutEffect(() => {
     if (fluidLayout) {
@@ -57,10 +63,14 @@ export function PreviewViewport({
     const node = containerRef.current;
     if (!node) return;
 
-    // Initial scale calculation
-    const width = node.clientWidth;
-    if (width && surfaceWidth) {
-      const nextScale = Math.min(width / surfaceWidth, 1);
+    // Initial scale calculation - fit both width and height
+    const containerWidth = node.clientWidth;
+    const containerHeight = node.clientHeight;
+    if (containerWidth && containerHeight && surfaceWidth && surfaceHeight) {
+      const scaleX = containerWidth / surfaceWidth;
+      const scaleY = containerHeight / surfaceHeight;
+      const nextScale = Math.min(scaleX, scaleY, 1);
+      
       setScale(nextScale);
       setHasMeasured(true);
     }
@@ -72,7 +82,7 @@ export function PreviewViewport({
       observer.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [surfaceWidth, updateScale, fluidLayout]);
+  }, [surfaceWidth, surfaceHeight, updateScale, fluidLayout]);
 
   // Fluid layout: content determines size, no fixed canvas
   if (fluidLayout) {
@@ -100,11 +110,17 @@ export function PreviewViewport({
   return (
     <div
       ref={containerRef}
-      className={cn("flex h-full w-full items-center justify-center", className)}
+      className={cn("flex h-full w-full justify-center", className)}
     >
       <div
-        className="relative w-full overflow-hidden rounded-lg"
-        style={{ aspectRatio: `${surfaceWidth} / ${surfaceHeight}`, maxWidth: surfaceWidth }}
+        className="relative overflow-hidden rounded-lg shadow-sm"
+        style={{
+          width: hasMeasured ? surfaceWidth * scale : undefined,
+          height: hasMeasured ? surfaceHeight * scale : undefined,
+          aspectRatio: `${surfaceWidth} / ${surfaceHeight}`,
+          maxWidth: "100%",
+          maxHeight: "100%",
+        }}
       >
         <div
           className="absolute left-0 top-0 origin-top-left"

@@ -5,7 +5,7 @@ import { useAtomValue } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/utils";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 import {
   Accordion,
@@ -30,12 +30,19 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
+  const orientation = useAtomValue(orientationAtom);
 
   const { expandedSection, expandSection } = useSidebarState();
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const showCodeSection = config.layoutId === "code-snippet";
-  const showTextSection = !showCodeSection;
+
+  // Check if text is actually supported (not just hidden by layout type)
+  const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
+  const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
+  const hasHeadlineSupport = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
+  const hasSubtitleSupport = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
+  const showTextSection = !showCodeSection && (hasHeadlineSupport || hasSubtitleSupport);
 
   // Initialize default expansion based on state
   useEffect(() => {
