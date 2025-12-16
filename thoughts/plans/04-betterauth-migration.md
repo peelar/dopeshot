@@ -2,13 +2,14 @@
 
 ## Overview
 
-This plan migrates DopeShot from Supabase Auth to BetterAuth while keeping Supabase as the persistence layer. The goal is to make identity a product primitive that's owned by DopeShot, not dictated by external auth services. Since DopeShot is pre-users, we can do a clean migration without worrying about existing sessions.
+This plan migrates dopeshot from Supabase Auth to BetterAuth while keeping Supabase as the persistence layer. The goal is to make identity a product primitive that's owned by dopeshot, not dictated by external auth services. Since dopeshot is pre-users, we can do a clean migration without worrying about existing sessions.
 
 **Key Principle:** Auth becomes an implementation detail. Product code talks about "identity" through a clean API, never imports auth libraries directly.
 
 ## Implementation Approach
 
 **Why BetterAuth?**
+
 - Supports Supabase as database adapter (no data migration needed)
 - Identity logic is product-owned (not vendor-locked to Supabase Auth)
 - Extensible for future needs (teams, SSO, multi-tenancy)
@@ -16,6 +17,7 @@ This plan migrates DopeShot from Supabase Auth to BetterAuth while keeping Supab
 - No rewrite needed when adding payments or brand features
 
 **Migration Strategy:**
+
 1. Clean up broken Supabase Auth references (missing hook)
 2. Install BetterAuth with Supabase adapter
 3. Create identity abstraction layer at `/lib/auth/`
@@ -24,12 +26,14 @@ This plan migrates DopeShot from Supabase Auth to BetterAuth while keeping Supab
 6. Add analytics tracking for auth events
 
 **What Stays:**
+
 - Supabase Postgres database (all existing tables)
 - RLS policies (continue to protect user data)
 - Storage buckets (brand logos, generated assets)
 - Database triggers (auto-create profiles on signup)
 
 **What Changes:**
+
 - Auth client: `lib/supabase-client.ts` → `lib/auth/client.ts`
 - Auth provider: `SupabaseAuthProvider` → `AuthProvider`
 - Auth hook: `useSupabaseAuth()` → `useAuth()`
@@ -40,11 +44,13 @@ This plan migrates DopeShot from Supabase Auth to BetterAuth while keeping Supab
 ## Phase 1: Remove Broken Supabase Auth References
 
 ### Goal
+
 Clean up all references to the non-existent `use-supabase-auth` hook so the app can build without errors. This prepares for BetterAuth implementation.
 
 ### Changes Required
 
 #### 1. Remove Auth Provider from Layout
+
 **File**: `app/layout.tsx`
 **Changes**: Remove `SupabaseAuthProvider` import and wrapper
 
@@ -71,6 +77,7 @@ import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 ```
 
 #### 2. Temporarily Disable Auth Form
+
 **File**: `components/auth/auth-form.tsx`
 **Changes**: Comment out hook usage to prevent build errors
 
@@ -88,15 +95,18 @@ const signOut = async () => ({ error: { message: "Auth not configured" } });
 ```
 
 #### 3. Keep Supabase Client for Direct Queries
+
 **File**: `lib/supabase-client.ts`
 **Changes**: None - keep this file for direct database queries (not auth)
 
 **Rename** for clarity:
+
 ```bash
 mv lib/supabase-client.ts lib/supabase-db.ts
 ```
 
 Update the client to remove auth config:
+
 ```typescript
 // lib/supabase-db.ts
 import { createClient } from "@supabase/supabase-js";
@@ -122,11 +132,13 @@ export const supabaseDb = createClient(supabaseUrl, supabaseAnonKey, {
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] Build passes: `pnpm build`
 - [ ] Type check passes: `pnpm typecheck`
 - [ ] No import errors for missing hooks
 
 #### Manual Verification
+
 - [ ] App loads without crashing
 - [ ] Main playground still works (auth-agnostic)
 - [ ] Auth page shows form but buttons don't work (expected)
@@ -137,11 +149,13 @@ export const supabaseDb = createClient(supabaseUrl, supabaseAnonKey, {
 ## Phase 2: Install and Configure BetterAuth
 
 ### Goal
+
 Install BetterAuth with the Supabase database adapter and configure it to work with the existing database schema.
 
 ### Changes Required
 
 #### 1. Install BetterAuth Dependencies
+
 **Command**: Install via pnpm
 
 ```bash
@@ -150,6 +164,7 @@ pnpm add -D @types/better-auth
 ```
 
 #### 2. Add Environment Variables
+
 **File**: `.env.example`
 **Changes**: Add BetterAuth configuration
 
@@ -173,12 +188,14 @@ openssl rand -base64 32
 ```
 
 Add to `.env.local`:
+
 ```env
 BETTER_AUTH_SECRET=<generated-secret>
 BETTER_AUTH_URL=http://localhost:3000
 ```
 
 #### 3. Create BetterAuth Server Client
+
 **File**: `lib/auth/auth-server.ts` (new file)
 **Purpose**: Server-side auth client for API routes and server components
 
@@ -211,6 +228,7 @@ export type User = typeof auth.$Infer.User;
 ```
 
 #### 4. Create BetterAuth Client (React)
+
 **File**: `lib/auth/auth-client.ts` (new file)
 **Purpose**: Client-side auth client for React components
 
@@ -221,16 +239,11 @@ export const authClient = createAuthClient({
   baseURL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
 });
 
-export const {
-  signIn,
-  signUp,
-  signOut,
-  useSession,
-  $Infer,
-} = authClient;
+export const { signIn, signUp, signOut, useSession, $Infer } = authClient;
 ```
 
 #### 5. Create API Route Handler
+
 **File**: `app/api/auth/[...all]/route.ts` (new file)
 **Purpose**: Handle all auth-related API requests
 
@@ -241,6 +254,7 @@ export const { GET, POST } = auth.handler;
 ```
 
 #### 6. Update Environment Variables Type Safety
+
 **File**: `lib/auth/env.ts` (new file)
 **Purpose**: Validate required environment variables
 
@@ -262,6 +276,7 @@ export const authEnv = {
 ```
 
 Update `lib/auth/auth-server.ts` to use validated env:
+
 ```typescript
 import { authEnv } from "./env";
 
@@ -279,12 +294,14 @@ export const auth = betterAuth({
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] Build passes: `pnpm build`
 - [ ] Type check passes: `pnpm typecheck`
 - [ ] No TypeScript errors in auth files
 - [ ] Environment variables validated
 
 #### Manual Verification
+
 - [ ] API route responds: `curl http://localhost:3000/api/auth/session`
 - [ ] Returns `{"session": null}` when not authenticated
 - [ ] No errors in server logs
@@ -295,11 +312,13 @@ export const auth = betterAuth({
 ## Phase 3: Create Identity Abstraction Layer
 
 ### Goal
+
 Create a clean product-facing API for identity that wraps BetterAuth. Product code never imports BetterAuth directly.
 
 ### Changes Required
 
 #### 1. Create Identity Types
+
 **File**: `lib/auth/types.ts` (new file)
 **Purpose**: Product-facing identity types
 
@@ -342,6 +361,7 @@ export interface BrandProfile {
 ```
 
 #### 2. Create Auth Context Provider
+
 **File**: `lib/auth/provider.tsx` (new file)
 **Purpose**: React context provider for auth state
 
@@ -399,6 +419,7 @@ export function useAuth(): AuthContextValue {
 ```
 
 #### 3. Create Auth Actions
+
 **File**: `lib/auth/actions.ts` (new file)
 **Purpose**: Wrapper functions for auth operations with analytics tracking
 
@@ -409,10 +430,7 @@ import { signIn, signUp, signOut } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import type { AuthResult } from "./types";
 
-export async function signInWithEmail(
-  email: string,
-  password: string
-): Promise<AuthResult> {
+export async function signInWithEmail(email: string, password: string): Promise<AuthResult> {
   try {
     const result = await signIn.email({
       email,
@@ -446,10 +464,7 @@ export async function signInWithEmail(
   }
 }
 
-export async function signUpWithEmail(
-  email: string,
-  password: string
-): Promise<AuthResult> {
+export async function signUpWithEmail(email: string, password: string): Promise<AuthResult> {
   try {
     const result = await signUp.email({
       email,
@@ -497,6 +512,7 @@ export async function signOutUser(): Promise<AuthResult> {
 ```
 
 #### 4. Create Public API Barrel Export
+
 **File**: `lib/auth/index.ts` (new file)
 **Purpose**: Single entry point for all auth-related imports
 
@@ -514,12 +530,14 @@ export type { User, Session, AuthError, AuthResult, BrandProfile } from "./types
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] Build passes: `pnpm build`
 - [ ] Type check passes: `pnpm typecheck`
 - [ ] All exports resolve correctly
 - [ ] No circular dependency warnings
 
 #### Manual Verification
+
 - [ ] Can import from `@/lib/auth` without errors
 - [ ] `useAuth()` hook returns expected shape
 - [ ] Auth actions are properly typed
@@ -530,11 +548,13 @@ export type { User, Session, AuthError, AuthResult, BrandProfile } from "./types
 ## Phase 4: Update UI Components
 
 ### Goal
+
 Update all UI components to use the new auth abstraction layer. Remove all direct Supabase Auth references.
 
 ### Changes Required
 
 #### 1. Update Root Layout
+
 **File**: `app/layout.tsx`
 **Changes**: Replace Supabase provider with new AuthProvider
 
@@ -556,6 +576,7 @@ import { AuthProvider } from "@/lib/auth";
 ```
 
 #### 2. Update Auth Form Component
+
 **File**: `components/auth/auth-form.tsx`
 **Changes**: Use new auth API
 
@@ -646,6 +667,7 @@ export function AuthForm() {
 ```
 
 #### 3. Update Supabase DB Client References
+
 **File**: Search and replace any imports of `supabase-client.ts`
 
 ```bash
@@ -654,6 +676,7 @@ grep -r "from '@/lib/supabase-client'" .
 ```
 
 Update any found files to use the renamed client:
+
 ```typescript
 // OLD:
 import { supabase } from "@/lib/supabase-client";
@@ -665,12 +688,14 @@ import { supabaseDb } from "@/lib/supabase-db";
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] Build passes: `pnpm build`
 - [ ] Type check passes: `pnpm typecheck`
 - [ ] Lint passes: `pnpm lint`
 - [ ] No unused imports
 
 #### Manual Verification
+
 - [ ] Auth form renders without errors
 - [ ] Sign up flow works (creates account)
 - [ ] Sign in flow works (authenticates)
@@ -685,19 +710,23 @@ import { supabaseDb } from "@/lib/supabase-db";
 ## Phase 5: Database Schema Compatibility
 
 ### Goal
+
 Ensure BetterAuth works with the existing Supabase schema. Add any missing tables or columns BetterAuth requires.
 
 ### Changes Required
 
 #### 1. Check BetterAuth Table Requirements
+
 **Investigation**: Review what tables BetterAuth expects
 
 BetterAuth typically expects:
+
 - `auth.users` table (Supabase has this)
 - `sessions` table (may need to create)
 - `accounts` table (for OAuth, not needed yet)
 
 Our existing schema:
+
 ```sql
 -- Supabase automatically provides:
 auth.users (id, email, created_at, encrypted_password, etc.)
@@ -709,6 +738,7 @@ public.user_metadata (references auth.users.id)
 ```
 
 #### 2. Create Migration for Sessions Table (if needed)
+
 **File**: `supabase/migrations/20250116T000000_betterauth_sessions.sql` (new file)
 **Purpose**: Add session storage for BetterAuth (if using database sessions)
 
@@ -753,6 +783,7 @@ $$ language plpgsql security definer;
 ```
 
 #### 3. Apply Migration
+
 **Command**: Apply via Supabase CLI or MCP
 
 ```bash
@@ -764,6 +795,7 @@ supabase db push
 ```
 
 #### 4. Update BetterAuth Config for Database Sessions
+
 **File**: `lib/auth/auth-server.ts`
 **Changes**: Configure session storage (only if using database sessions)
 
@@ -798,11 +830,13 @@ export const auth = betterAuth({
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] Build passes: `pnpm build`
 - [ ] Type check passes: `pnpm typecheck`
 - [ ] Migration applies without errors
 
 #### Manual Verification
+
 - [ ] Sign up creates user in `auth.users` table
 - [ ] User ID is UUID format
 - [ ] `brand_profiles` auto-created via trigger
@@ -816,11 +850,13 @@ export const auth = betterAuth({
 ## Phase 6: Testing and Verification
 
 ### Goal
+
 Comprehensively test the auth system to ensure all flows work correctly.
 
 ### Changes Required
 
 #### 1. Create Auth Test Suite
+
 **File**: `tests/auth.test.ts` (new file)
 **Purpose**: Unit tests for auth functions
 
@@ -873,6 +909,7 @@ describe("Auth Actions", () => {
 ```
 
 #### 2. Create E2E Auth Tests
+
 **File**: `tests/e2e/auth.spec.ts` (new file)
 **Purpose**: End-to-end tests with Playwright
 
@@ -955,6 +992,7 @@ test.describe("Authentication Flow", () => {
 ```
 
 #### 3. Update Test Scripts
+
 **File**: `package.json`
 **Changes**: Add auth test commands
 
@@ -969,6 +1007,7 @@ test.describe("Authentication Flow", () => {
 ```
 
 #### 4. Manual Test Checklist
+
 Create a manual testing checklist in the docs.
 
 **File**: `docs/AUTH_TESTING.md` (new file)
@@ -977,6 +1016,7 @@ Create a manual testing checklist in the docs.
 # Auth Testing Checklist
 
 ## Sign Up Flow
+
 - [ ] Can access `/auth` page
 - [ ] Form shows "Create account" tab
 - [ ] Email field validates format
@@ -990,6 +1030,7 @@ Create a manual testing checklist in the docs.
 - [ ] `user_metadata` record auto-created (check Supabase Table Editor)
 
 ## Sign In Flow
+
 - [ ] Can switch to "Sign in" tab
 - [ ] Email/password fields work
 - [ ] Invalid credentials show error
@@ -999,24 +1040,28 @@ Create a manual testing checklist in the docs.
 - [ ] Session persists across browser tabs
 
 ## Sign Out Flow
+
 - [ ] "Sign out" button visible when authenticated
 - [ ] Click signs out successfully
 - [ ] Returns to sign in form
 - [ ] Session cleared (refresh shows unauthenticated)
 
 ## Analytics Tracking
+
 - [ ] `auth_sign_up_success` event fires on signup (check browser console)
 - [ ] `auth_sign_in_success` event fires on signin
 - [ ] `auth_sign_out_success` event fires on signout
 - [ ] `auth_sign_in_failed` event fires on wrong password
 
 ## Security
+
 - [ ] Can't access other users' brand profiles (test with 2 accounts)
 - [ ] Can't view other users' generated assets
 - [ ] RLS policies enforced (try direct API calls)
 - [ ] Service role key not exposed in client code
 
 ## Error Handling
+
 - [ ] Network error shows user-friendly message
 - [ ] Invalid email format rejected
 - [ ] Weak password rejected (if configured)
@@ -1026,6 +1071,7 @@ Create a manual testing checklist in the docs.
 ### Success Criteria
 
 #### Automated Verification
+
 - [ ] All unit tests pass: `pnpm test:auth`
 - [ ] All E2E tests pass: `pnpm test:e2e:auth`
 - [ ] Full test suite passes: `pnpm test:all`
@@ -1033,6 +1079,7 @@ Create a manual testing checklist in the docs.
 - [ ] Type check passes: `pnpm typecheck`
 
 #### Manual Verification
+
 - [ ] All items in `docs/AUTH_TESTING.md` checklist pass
 - [ ] Analytics events tracked correctly
 - [ ] Auth works in both development and production build
@@ -1044,20 +1091,22 @@ Create a manual testing checklist in the docs.
 ## Phase 7: Documentation
 
 ### Goal
+
 Document the new auth system for future developers and users.
 
 ### Changes Required
 
 #### 1. Update Project README
+
 **File**: `README.md`
 **Changes**: Document auth architecture
 
 Add new section after existing content:
 
-```markdown
+````markdown
 ## Authentication
 
-DopeShot uses [BetterAuth](https://www.better-auth.com/) for authentication with Supabase as the persistence layer.
+dopeshot uses [BetterAuth](https://www.better-auth.com/) for authentication with Supabase as the persistence layer.
 
 ### Architecture
 
@@ -1082,10 +1131,12 @@ const result = await signInWithEmail(email, password);
 // Sign out:
 const result = await signOutUser();
 ```
+````
 
 ### Database Schema
 
 User-related data is stored in Supabase:
+
 - `auth.users` - Core auth records (managed by BetterAuth)
 - `public.brand_profiles` - User brand identity (colors, fonts, logo)
 - `public.generated_assets` - Screenshot history
@@ -1120,7 +1171,8 @@ pnpm test:e2e:auth
 # Manual test checklist
 See docs/AUTH_TESTING.md
 ```
-```
+
+````
 
 #### 2. Create Auth Architecture Doc
 **File**: `docs/ARCHITECTURE_AUTH.md` (new file)
@@ -1130,7 +1182,7 @@ See docs/AUTH_TESTING.md
 
 ## Design Principles
 
-1. **Identity is a Product Primitive** - Auth is part of DopeShot's product model, not an external service
+1. **Identity is a Product Primitive** - Auth is part of dopeshot's product model, not an external service
 2. **Separation of Concerns** - Identity logic (BetterAuth) is separate from data storage (Supabase)
 3. **Progressive Commitment** - Users can start anonymous, attach identity later (future)
 4. **Extensible** - Ready for teams, SSO, multi-tenancy without rewrites
@@ -1139,41 +1191,43 @@ See docs/AUTH_TESTING.md
 
 We chose BetterAuth over Supabase Auth because:
 
-- **Product Ownership**: Identity logic lives in DopeShot code, not vendor SDK
+- **Product Ownership**: Identity logic lives in dopeshot code, not vendor SDK
 - **Flexibility**: Can swap storage backends without changing product code
 - **Future-Proof**: Supports advanced features (teams, SSO) without vendor lock-in
 - **Compatibility**: Uses Supabase as database (no data migration needed)
 
 ## Component Layers
 
-```
+````
+
 ┌─────────────────────────────────────────────┐
-│  Product Code (components, pages)          │
-│  Imports from: @/lib/auth                  │
+│ Product Code (components, pages) │
+│ Imports from: @/lib/auth │
 └─────────────────────────────────────────────┘
-                    ↓
+↓
 ┌─────────────────────────────────────────────┐
-│  Identity Abstraction (@/lib/auth/)         │
-│  • useAuth() hook                           │
-│  • signInWithEmail(), signUpWithEmail()     │
-│  • AuthProvider context                     │
+│ Identity Abstraction (@/lib/auth/) │
+│ • useAuth() hook │
+│ • signInWithEmail(), signUpWithEmail() │
+│ • AuthProvider context │
 └─────────────────────────────────────────────┘
-                    ↓
+↓
 ┌─────────────────────────────────────────────┐
-│  BetterAuth (better-auth)                   │
-│  • Session management                       │
-│  • Password hashing                         │
-│  • API routes (/api/auth/*)                 │
+│ BetterAuth (better-auth) │
+│ • Session management │
+│ • Password hashing │
+│ • API routes (/api/auth/\*) │
 └─────────────────────────────────────────────┘
-                    ↓
+↓
 ┌─────────────────────────────────────────────┐
-│  Supabase Postgres                          │
-│  • auth.users (core records)                │
-│  • public.brand_profiles                    │
-│  • public.user_metadata                     │
-│  • public.sessions (if using DB sessions)   │
+│ Supabase Postgres │
+│ • auth.users (core records) │
+│ • public.brand_profiles │
+│ • public.user_metadata │
+│ • public.sessions (if using DB sessions) │
 └─────────────────────────────────────────────┘
-```
+
+````
 
 ## Data Flow
 
@@ -1212,14 +1266,16 @@ create policy "Owners can select brand profile"
   on public.brand_profiles
   for select
   using (user_id = auth.uid());
-```
+````
 
 ### Service Role Key
+
 - Used by BetterAuth (server-side only)
 - Never exposed to client
 - Bypasses RLS for auth operations
 
 ### Password Security
+
 - Hashed using BetterAuth's default (bcrypt)
 - Minimum length enforced (8 chars)
 - Stored in `auth.users.encrypted_password`
@@ -1227,20 +1283,24 @@ create policy "Owners can select brand profile"
 ## Future Extensions
 
 ### Anonymous Sessions
+
 - Allow users to use playground without account
 - Attach identity later with "Sign up to save"
 - Migrate local state → database on signup
 
 ### OAuth Providers
+
 - Add Google, GitHub sign-in
 - BetterAuth handles OAuth flow
 - Link to existing email accounts
 
 ### Multi-Tenancy / Teams
+
 - Add `teams` table with member relationships
 - Extend `brand_profiles` to support team ownership
 - BetterAuth supports organization context
-```
+
+````
 
 #### 3. Update Development Setup Docs
 **File**: `docs/DEVELOPMENT.md` (update or create)
@@ -1253,7 +1313,7 @@ Add section on running the auth system locally:
 1. **Set up environment variables**:
    ```bash
    cp .env.example .env.local
-   ```
+````
 
 2. **Add Supabase credentials**:
    - Get from Supabase dashboard → Project Settings → API
@@ -1261,9 +1321,11 @@ Add section on running the auth system locally:
    - Get service role key from Supabase dashboard (keep secret!)
 
 3. **Generate BetterAuth secret**:
+
    ```bash
    openssl rand -base64 32
    ```
+
    Add to `.env.local` as `BETTER_AUTH_SECRET`
 
 4. **Apply database migrations**:
@@ -1271,6 +1333,7 @@ Add section on running the auth system locally:
    - If adding new migrations, use Supabase CLI or MCP
 
 5. **Start dev server**:
+
    ```bash
    pnpm dev
    ```
@@ -1279,7 +1342,8 @@ Add section on running the auth system locally:
    - Visit http://localhost:3000/auth
    - Create account, sign in, sign out
    - Check Supabase dashboard for created users
-```
+
+````
 
 ### Success Criteria
 
@@ -1308,7 +1372,7 @@ If the migration fails or causes critical issues, here's how to revert:
    git revert HEAD
    pnpm install
    pnpm build
-   ```
+````
 
 2. **Or reset to before migration**:
    ```bash
@@ -1320,6 +1384,7 @@ If the migration fails or causes critical issues, here's how to revert:
 ### Selective Rollback (Keep Some Changes)
 
 1. **Revert auth files only**:
+
    ```bash
    git checkout HEAD~1 -- lib/auth/
    git checkout HEAD~1 -- app/api/auth/
@@ -1328,6 +1393,7 @@ If the migration fails or causes critical issues, here's how to revert:
    ```
 
 2. **Remove BetterAuth dependencies**:
+
    ```bash
    pnpm remove better-auth @better-auth/supabase-adapter
    ```
@@ -1346,6 +1412,7 @@ If the migration fails or causes critical issues, here's how to revert:
 ### Reversion Testing
 
 After rollback:
+
 - [ ] App builds successfully: `pnpm build`
 - [ ] No TypeScript errors: `pnpm typecheck`
 - [ ] Main playground works (auth-agnostic)
@@ -1358,18 +1425,21 @@ After rollback:
 After successful migration:
 
 ### Immediate
+
 - [ ] Delete old Supabase Auth references (if any remain)
 - [ ] Remove commented-out code
 - [ ] Update `.gitignore` to include `.env.local` (should already be there)
 - [ ] Commit changes with clear message
 
 ### Within 1 Week
+
 - [ ] Monitor error logs for auth issues
 - [ ] Track auth analytics events (signup rate, signin rate)
 - [ ] Gather user feedback on auth experience
 - [ ] Test on staging environment (if applicable)
 
 ### Future Enhancements
+
 - [ ] Add email verification flow
 - [ ] Add password reset flow
 - [ ] Add OAuth providers (Google, GitHub)
@@ -1381,9 +1451,9 @@ After successful migration:
 
 ## Summary
 
-This migration moves DopeShot from broken Supabase Auth references to a working BetterAuth implementation with a clean abstraction layer. The key benefits:
+This migration moves dopeshot from broken Supabase Auth references to a working BetterAuth implementation with a clean abstraction layer. The key benefits:
 
-1. **Identity is a product primitive** - Auth is owned by DopeShot, not Supabase
+1. **Identity is a product primitive** - Auth is owned by dopeshot, not Supabase
 2. **Future-proof architecture** - Ready for teams, SSO, advanced features
 3. **No data migration** - Uses existing Supabase schema
 4. **Clean API** - Product code never imports auth libraries directly

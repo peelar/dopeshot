@@ -2,13 +2,13 @@
 
 **Date:** 2025-12-16
 **Status:** Foundation research for migration
-**Context:** DopeShot is pre-users; choosing auth architecture for product evolution
+**Context:** dopeshot is pre-users; choosing auth architecture for product evolution
 
 ---
 
 ## Executive Summary
 
-DopeShot currently has **partial Supabase Auth implementation** - the infrastructure is configured but the integration layer (`use-supabase-auth` hook) is missing. This analysis maps the current state to inform a migration to BetterAuth that treats identity as a product primitive rather than an external service.
+dopeshot currently has **partial Supabase Auth implementation** - the infrastructure is configured but the integration layer (`use-supabase-auth` hook) is missing. This analysis maps the current state to inform a migration to BetterAuth that treats identity as a product primitive rather than an external service.
 
 ### Key Findings
 
@@ -28,15 +28,18 @@ DopeShot currently has **partial Supabase Auth implementation** - the infrastruc
 **Environment:** `.env.local` with anon key configured
 
 **Database Schema:**
+
 - `brand_profiles` - User brand identity (colors, fonts, logo)
 - `generated_assets` - Screenshot history with settings snapshots
 - `user_metadata` - Subscription tier, onboarding, feature flags
 
 **Storage Buckets:**
+
 - `brand-logos` (private) - User logos with owner-only access
 - `generated-assets` (public) - Exported screenshots with public read
 
 **Security:**
+
 - RLS policies on all tables (user can only access their own data)
 - Automatic user bootstrapping via triggers on signup
 - UUID-based primary keys throughout
@@ -44,6 +47,7 @@ DopeShot currently has **partial Supabase Auth implementation** - the infrastruc
 ### 2. Client-Side Auth (Partially Implemented ⚠️)
 
 **Supabase Client** (`lib/supabase-client.ts:1-17`)
+
 ```typescript
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
@@ -52,20 +56,24 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 });
 ```
+
 - Singleton client instance
 - Session persistence via localStorage
 - OAuth redirect handling enabled
 
 **Auth Provider** (MISSING ✗)
+
 ```typescript
 // Referenced but doesn't exist:
 import { SupabaseAuthProvider } from "@/hooks/use-supabase-auth";
 ```
+
 - Imported in `app/layout.tsx:16`
 - Wraps entire app at root level (`app/layout.tsx:141-147`)
 - No implementation found
 
 **Auth Hook** (MISSING ✗)
+
 ```typescript
 // Expected interface (inferred from usage):
 function useSupabaseAuth() {
@@ -74,22 +82,25 @@ function useSupabaseAuth() {
     signInWithEmail: (email, password) => Promise<{ error? }>,
     signUpWithEmail: (email, password) => Promise<{ error? }>,
     signOut: () => Promise<{ error? }>,
-    isAuthenticating: boolean
-  }
+    isAuthenticating: boolean,
+  };
 }
 ```
+
 - Used in `components/auth/auth-form.tsx:14-17`
 - Hook implementation doesn't exist
 
 ### 3. UI Components (Implemented ✓)
 
 **Auth Form** (`components/auth/auth-form.tsx`)
+
 - Sign-in / sign-up modes with email/password
 - Shows user profile when authenticated (email, member date)
 - Sign-out functionality
 - Form validation and error handling
 
 **Auth Page** (`app/auth/page.tsx`)
+
 - Dedicated route at `/auth`
 - Renders `AuthForm` component
 - Not integrated with main app flow
@@ -97,11 +108,13 @@ function useSupabaseAuth() {
 ### 4. Application State (Auth-Agnostic ✓)
 
 **Main Playground** (`app/page.tsx`)
+
 - Works completely without auth
 - Uses Jotai atoms for state (not auth-aware)
 - Export downloads locally (no database persistence)
 
 **Current Data Flow:**
+
 ```
 User → Playground → Jotai Atoms → Export PNG → Download
 (No auth, no persistence, no user context)
@@ -113,23 +126,25 @@ User → Playground → Jotai Atoms → Export PNG → Download
 
 ### Current Coupling to Supabase
 
-| Component | Coupling Type | Location | Impact |
-|-----------|---------------|----------|--------|
-| Client initialization | **Tight** | `lib/supabase-client.ts` | Direct import of `@supabase/supabase-js` |
-| Auth provider wrapper | **Tight** | `app/layout.tsx:141-147` | Wraps entire app, forces initialization |
-| Auth form | **Medium** | `components/auth/auth-form.tsx` | Depends on hook interface, not Supabase directly |
-| Database schema | **Tight** | `supabase/migrations/` | Supabase-specific SQL (RLS, triggers) |
-| Storage paths | **Medium** | Schema defines paths | Bucket structure is Supabase-specific |
+| Component             | Coupling Type | Location                        | Impact                                           |
+| --------------------- | ------------- | ------------------------------- | ------------------------------------------------ |
+| Client initialization | **Tight**     | `lib/supabase-client.ts`        | Direct import of `@supabase/supabase-js`         |
+| Auth provider wrapper | **Tight**     | `app/layout.tsx:141-147`        | Wraps entire app, forces initialization          |
+| Auth form             | **Medium**    | `components/auth/auth-form.tsx` | Depends on hook interface, not Supabase directly |
+| Database schema       | **Tight**     | `supabase/migrations/`          | Supabase-specific SQL (RLS, triggers)            |
+| Storage paths         | **Medium**    | Schema defines paths            | Bucket structure is Supabase-specific            |
 
 ### Where Identity Shapes Product Behavior
 
 **Currently:** Identity has **zero influence** on product behavior
+
 - Playground works the same for everyone
 - No brand defaults applied
 - No asset history shown
 - No subscription tier differences
 
 **After Migration:** Identity should drive:
+
 1. **Brand defaults** - "Your brand is the default" (logged-in users see their colors/fonts)
 2. **Asset persistence** - History is automatic for authenticated users
 3. **Progressive commitment** - Start anonymous, attach identity later
@@ -155,6 +170,7 @@ User → Playground → Jotai Atoms → Export PNG → Download
 ```
 
 **Key Changes:**
+
 - Replace `useSupabaseAuth()` with `useIdentity()`
 - Auth becomes implementation detail, not API surface
 - Product code never imports BetterAuth directly
@@ -164,11 +180,13 @@ User → Playground → Jotai Atoms → Export PNG → Download
 **Current:** Supabase Auth = Identity + Persistence + Session Management (bundled)
 
 **Target:**
+
 - **Identity logic** → BetterAuth (owns concept of user, session, auth flow)
 - **Persistence** → Supabase Postgres (just data storage, no auth logic)
 - **Product state** → Jotai atoms + identity context (drives defaults)
 
 **Migration Path:**
+
 1. BetterAuth uses Supabase as database adapter (not auth provider)
 2. Identity tables live in Supabase but BetterAuth manages them
 3. Product queries identity via BetterAuth, not Supabase client
@@ -176,16 +194,19 @@ User → Playground → Jotai Atoms → Export PNG → Download
 ### 3. Enable Identity-Driven Defaults
 
 **Database Schema Ready:**
+
 - `brand_profiles` table exists (colors, fonts, logo)
 - `generated_assets` table exists (history)
 - Triggers auto-create profile on signup
 
 **What Needs to Change:**
+
 - Playground should query brand profile when user is authenticated
 - Config atoms should initialize from brand profile (not hardcoded defaults)
 - Export should auto-save to `generated_assets` when authenticated
 
 **Example Flow:**
+
 ```typescript
 // Current (auth-agnostic):
 const [config] = useAtom(configAtom); // Hardcoded defaults
@@ -198,17 +219,20 @@ const [config] = useAtom(configAtom); // Initializes from brandProfile if user e
 ### 4. Support Progressive Commitment
 
 **Requirement:** User should be able to:
+
 1. Start using playground immediately (anonymous)
 2. Build something they like
 3. Sign up to save it (attach identity)
 4. Continue from where they left off
 
 **Current Gap:**
+
 - Auth page is isolated (`/auth`)
 - No "save your work" prompt
 - No session migration (anonymous → authenticated)
 
 **Migration Need:**
+
 - BetterAuth must support anonymous sessions
 - State migration when upgrading from anon → authenticated
 - "Sign up to save" CTA in playground
@@ -216,12 +240,14 @@ const [config] = useAtom(configAtom); // Initializes from brandProfile if user e
 ### 5. Avoid Future Rewrites
 
 **What Must Work Without Breaking:**
+
 - Adding payment subscriptions (Stripe webhooks → `user_metadata.tier`)
 - Brand onboarding flow (wizard → `brand_profiles`)
 - Asset history view (query `generated_assets`)
 - Sharing/teams (extend identity model)
 
 **Key Decision:** Choose BetterAuth because:
+
 - Supports Supabase as persistence layer (no data migration needed)
 - Identity logic is product-owned (not vendor-locked)
 - Extensible for teams, SSO, multi-tenancy
@@ -233,30 +259,30 @@ const [config] = useAtom(configAtom); // Initializes from brandProfile if user e
 
 ### Files to Replace
 
-| File | Current State | Migration Action | New Location |
-|------|---------------|------------------|--------------|
-| `lib/supabase-client.ts` | Supabase client singleton | Replace with BetterAuth client | `lib/auth/client.ts` |
-| `hooks/use-supabase-auth.ts` | Missing (should exist) | Create with BetterAuth | `lib/auth/hooks.ts` |
-| `app/layout.tsx` | Wraps with `SupabaseAuthProvider` | Replace with BetterAuth provider | Update import |
-| `components/auth/auth-form.tsx` | Uses `useSupabaseAuth()` | Update to `useAuth()` | Update import |
+| File                            | Current State                     | Migration Action                 | New Location         |
+| ------------------------------- | --------------------------------- | -------------------------------- | -------------------- |
+| `lib/supabase-client.ts`        | Supabase client singleton         | Replace with BetterAuth client   | `lib/auth/client.ts` |
+| `hooks/use-supabase-auth.ts`    | Missing (should exist)            | Create with BetterAuth           | `lib/auth/hooks.ts`  |
+| `app/layout.tsx`                | Wraps with `SupabaseAuthProvider` | Replace with BetterAuth provider | Update import        |
+| `components/auth/auth-form.tsx` | Uses `useSupabaseAuth()`          | Update to `useAuth()`            | Update import        |
 
 ### Files to Keep (Data Layer)
 
-| File | Reason | Notes |
-|------|--------|-------|
+| File                                           | Reason                      | Notes                            |
+| ---------------------------------------------- | --------------------------- | -------------------------------- |
 | `supabase/migrations/20240401T000000_init.sql` | Schema is Supabase-agnostic | BetterAuth will use these tables |
-| `supabase/seed/phase1_seed.sql` | Test data | Update user references if needed |
-| Database tables (`brand_profiles`, etc.) | Data stays in Supabase | BetterAuth queries them |
+| `supabase/seed/phase1_seed.sql`                | Test data                   | Update user references if needed |
+| Database tables (`brand_profiles`, etc.)       | Data stays in Supabase      | BetterAuth queries them          |
 
 ### Files to Create
 
-| File | Purpose | Example Content |
-|------|---------|-----------------|
-| `lib/auth/client.ts` | BetterAuth client setup | Initialize with Supabase adapter |
-| `lib/auth/provider.tsx` | Auth context provider | Wraps app, exposes identity |
-| `lib/auth/hooks.ts` | `useAuth()` hook | Product-facing auth API |
-| `lib/auth/types.ts` | Identity types | `User`, `Session`, `BrandProfile` |
-| `middleware.ts` (root) | Session validation | Protect routes if needed |
+| File                    | Purpose                 | Example Content                   |
+| ----------------------- | ----------------------- | --------------------------------- |
+| `lib/auth/client.ts`    | BetterAuth client setup | Initialize with Supabase adapter  |
+| `lib/auth/provider.tsx` | Auth context provider   | Wraps app, exposes identity       |
+| `lib/auth/hooks.ts`     | `useAuth()` hook        | Product-facing auth API           |
+| `lib/auth/types.ts`     | Identity types          | `User`, `Session`, `BrandProfile` |
+| `middleware.ts` (root)  | Session validation      | Protect routes if needed          |
 
 ---
 
@@ -331,11 +357,13 @@ export function useIdentity() {
 ### Decision 1: Where Does BetterAuth Live?
 
 **Option A:** `/lib/auth/` (Recommended)
+
 - Clear separation from product code
 - All identity logic in one place
 - Easy to replace if needed
 
 **Option B:** `/lib/identity/`
+
 - More product-centric naming
 - Emphasizes identity as product primitive
 
@@ -344,11 +372,13 @@ export function useIdentity() {
 ### Decision 2: BetterAuth Session Strategy
 
 **Option A:** JWT sessions (BetterAuth default)
+
 - Fast, stateless, no DB queries per request
 - Works well with Next.js middleware
 - Can store limited data in token
 
 **Option B:** Database sessions (Supabase as storage)
+
 - More secure (can revoke instantly)
 - Can store more session data
 - Requires DB query per request
@@ -358,11 +388,13 @@ export function useIdentity() {
 ### Decision 3: Anonymous User Support
 
 **Option A:** Full anonymous sessions (BetterAuth guest mode)
+
 - Users start with temporary identity
 - Upgrade to permanent identity on signup
 - Requires session migration logic
 
 **Option B:** No anonymous sessions (auth-required for persistence)
+
 - Simpler implementation
 - Users must sign up to save anything
 
@@ -371,16 +403,18 @@ export function useIdentity() {
 ### Decision 4: Migration Path
 
 **Option A:** Big bang (replace Supabase Auth entirely)
+
 - Remove all Supabase Auth code at once
 - Implement BetterAuth completely
 - Test everything before deploy
 
 **Option B:** Gradual (run both temporarily)
+
 - Keep Supabase Auth for existing users
 - Add BetterAuth for new users
 - Migrate users over time
 
-**Recommendation:** Option A (big bang) because DopeShot is pre-users - no existing users to migrate
+**Recommendation:** Option A (big bang) because dopeshot is pre-users - no existing users to migrate
 
 ---
 
@@ -425,19 +459,23 @@ export function useIdentity() {
 After migration to BetterAuth, the system should:
 
 ✓ **Auth no longer dictates product shape**
+
 - Components import from `/lib/auth/`, not `@supabase/supabase-js`
 - Auth logic is replaceable without product changes
 
 ✓ **Identity is modeled in product terms**
+
 - `useIdentity()` hook exposes user + brand profile
 - Product code talks about "identity", not "auth"
 
 ✓ **Future features fit naturally**
+
 - Adding payments updates `user_metadata.tier` (no auth changes)
 - Adding brand onboarding updates `brand_profiles` (no auth changes)
 - Adding asset history queries `generated_assets` (no auth changes)
 
-✓ **No migration needed when DopeShot becomes "real"**
+✓ **No migration needed when dopeshot becomes "real"**
+
 - BetterAuth supports teams, SSO, multi-tenancy (future-proof)
 - Database schema is already prepared (no rewrites)
 
@@ -446,23 +484,27 @@ After migration to BetterAuth, the system should:
 ## Next Steps
 
 ### Phase 1: Remove Supabase Auth Dependency
+
 1. Delete references to missing `use-supabase-auth` hook
 2. Remove `SupabaseAuthProvider` from layout
 3. Keep Supabase client for direct DB queries (not auth)
 
 ### Phase 2: Implement BetterAuth
+
 1. Install `better-auth` and Supabase adapter
 2. Create `/lib/auth/` directory with client, provider, hooks
 3. Configure BetterAuth to use existing database schema
 4. Test auth flow (signup, login, logout)
 
 ### Phase 3: Connect Identity to Product
+
 1. Update playground to query brand profile when authenticated
 2. Initialize config atoms from brand profile
 3. Auto-save exports to `generated_assets` table
 4. Add "Sign up to save" CTA in playground
 
 ### Phase 4: Support Progressive Commitment
+
 1. Enable anonymous sessions in BetterAuth
 2. Implement state migration (local → database)
 3. Add "upgrade to save" flow
@@ -473,32 +515,32 @@ After migration to BetterAuth, the system should:
 
 ### Critical Files
 
-| File | Status | Line References |
-|------|--------|-----------------|
-| `lib/supabase-client.ts` | ✓ Exists | 1-17 (client init) |
-| `app/layout.tsx` | ✓ Exists | 16 (import), 141-147 (provider wrap) |
-| `components/auth/auth-form.tsx` | ✓ Exists | 9 (import hook), 14-17 (hook usage) |
-| `app/auth/page.tsx` | ✓ Exists | Full file (auth route) |
-| `hooks/use-supabase-auth.ts` | ✗ Missing | Referenced but not implemented |
-| `supabase/migrations/20240401T000000_init.sql` | ✓ Exists | Full schema |
-| `docs/SUPABASE_SETUP_COMPLETE.md` | ✓ Exists | Project credentials |
+| File                                           | Status    | Line References                      |
+| ---------------------------------------------- | --------- | ------------------------------------ |
+| `lib/supabase-client.ts`                       | ✓ Exists  | 1-17 (client init)                   |
+| `app/layout.tsx`                               | ✓ Exists  | 16 (import), 141-147 (provider wrap) |
+| `components/auth/auth-form.tsx`                | ✓ Exists  | 9 (import hook), 14-17 (hook usage)  |
+| `app/auth/page.tsx`                            | ✓ Exists  | Full file (auth route)               |
+| `hooks/use-supabase-auth.ts`                   | ✗ Missing | Referenced but not implemented       |
+| `supabase/migrations/20240401T000000_init.sql` | ✓ Exists  | Full schema                          |
+| `docs/SUPABASE_SETUP_COMPLETE.md`              | ✓ Exists  | Project credentials                  |
 
 ### Key Atoms (State Management)
 
-| Atom | File | Purpose | Auth-Aware? |
-|------|------|---------|-------------|
-| `configAtom` | `hooks/atoms.ts` | Layout config | No |
-| `assetsAtom` | `hooks/atoms.ts` | Uploaded screenshots | No |
-| `orientationAtom` | `hooks/atoms.ts` | Portrait/landscape | No |
-| `assetTypeAtom` | `hooks/atoms.ts` | Asset type selection | No |
+| Atom              | File             | Purpose              | Auth-Aware? |
+| ----------------- | ---------------- | -------------------- | ----------- |
+| `configAtom`      | `hooks/atoms.ts` | Layout config        | No          |
+| `assetsAtom`      | `hooks/atoms.ts` | Uploaded screenshots | No          |
+| `orientationAtom` | `hooks/atoms.ts` | Portrait/landscape   | No          |
+| `assetTypeAtom`   | `hooks/atoms.ts` | Asset type selection | No          |
 
 ### Database Tables
 
-| Table | Purpose | RLS Policy |
-|-------|---------|------------|
-| `brand_profiles` | User brand identity | Owner-only access |
-| `generated_assets` | Screenshot history | Owner-only write, public read if shared |
-| `user_metadata` | Subscription, onboarding, flags | Owner-only access |
+| Table              | Purpose                         | RLS Policy                              |
+| ------------------ | ------------------------------- | --------------------------------------- |
+| `brand_profiles`   | User brand identity             | Owner-only access                       |
+| `generated_assets` | Screenshot history              | Owner-only write, public read if shared |
+| `user_metadata`    | Subscription, onboarding, flags | Owner-only access                       |
 
 ---
 
