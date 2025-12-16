@@ -12,7 +12,7 @@ Generate detailed, phased implementation plans with clear success criteria.
 When the user describes a feature or change:
 
 1. **Research phase** (if needed):
-   - Check existing research in `thoughts/shared/research/`
+   - Check existing research in `thoughts/research/`
    - Conduct additional research if gaps exist
 
 2. **Generate a structured plan** with:
@@ -32,9 +32,9 @@ When the user describes a feature or change:
    - Rollback considerations
 
 4. **Save the plan** with auto-incremented index:
-   - Read existing files in `thoughts/shared/plans/`
+   - Read existing files in `thoughts/plans/`
    - Find the highest numeric prefix (e.g., `01-`, `02-`, `07-`)
-   - Save to `thoughts/shared/plans/{highest_index+1}-[descriptive_name].md`
+   - Save to `thoughts/plans/{highest_index+1}-[descriptive_name].md`
    - Example: If highest is `07-`, save as `08-my_new_plan.md`
 
 ## Plan Template
