@@ -68,6 +68,10 @@ export function PlaygroundWorkspace({
       "desktop",
     ];
 
+    const previousLayoutId = config.layoutId;
+    let layoutChanged = false;
+    let newLayoutId = previousLayoutId;
+
     if (!supportedOrientations.includes(newOrientation)) {
       // Find first compatible layout
       const compatibleLayout = LAYOUT_DEFINITIONS.find((def) => {
@@ -93,11 +97,19 @@ export function PlaygroundWorkspace({
             { preserveEmptyText: true }
           )
         );
+        layoutChanged = compatibleLayout.id !== previousLayoutId;
+        newLayoutId = compatibleLayout.id;
       }
     }
 
     setOrientation(newOrientation);
-    track("orientation_changed", { orientation: newOrientation });
+    track("orientation_changed", {
+      orientation: newOrientation,
+      previous_orientation: orientation,
+      layout_changed: layoutChanged,
+      previous_layout: previousLayoutId,
+      new_layout: newLayoutId,
+    });
   };
 
   return (
