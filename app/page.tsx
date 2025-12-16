@@ -49,7 +49,6 @@ export default function PlaygroundPage() {
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
-    handleVariantChange,
     toggleCanvasMode,
     handleExport,
     handleFileProcess,
@@ -101,7 +100,6 @@ export default function PlaygroundPage() {
           <div className="flex-1 overflow-auto px-4 pb-12 sm:px-8 sm:pb-10">
             <PlaygroundWorkspace
               isMobile={isMobile}
-              onVariantChange={handleVariantChange}
               shouldShowAspectLock={shouldShowAspectLock}
               isAspectLocked={isAspectLocked}
               onToggleAspect={toggleCanvasMode}

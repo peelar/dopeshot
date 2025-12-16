@@ -15,6 +15,9 @@ import { configAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/utils";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
+import { resolvePatternChoice } from "@/domain/layout/patterns";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
   preset: "soft-glass" as const,
@@ -30,12 +33,62 @@ const FULL_OUTLINE_CONTROLS = {
   fade: false,
 };
 
+const PATTERN_OPTIONS = ["none", "grain", "glow", "grid"] as const;
+type PatternOption = (typeof PATTERN_OPTIONS)[number];
+
+/**
+ * Hook for managing pattern selection
+ */
+function usePatternControls(setConfig: ReturnType<typeof useSetAtom<typeof configAtom>>) {
+  const config = useAtomValue(configAtom);
+  const screenshotAsset = useAtomValue(screenshotAssetAtom);
+  const backgroundType = config.background?.type;
+  const isImageBackground = backgroundType === "image";
+  const resolvedPattern = resolvePatternChoice(config, screenshotAsset?.colorPalette) as PatternOption;
+  const shouldShowStyle = !isImageBackground;
+
+  const handlePatternSelect = useCallback(
+    (patternId: PatternOption) => {
+      track("pattern_changed", {
+        pattern: patternId,
+        look_id: config.layoutId,
+      });
+
+      setConfig((current) => {
+        const background =
+          current.background ?? ({
+            type: "gradient",
+            value: "custom",
+          } as typeof current.background);
+        return {
+          ...current,
+          background: {
+            ...background,
+            patternMode: "manual",
+            patternId,
+            grainEnabled: patternId === "grain",
+          },
+        };
+      });
+    },
+    [setConfig, config.layoutId],
+  );
+
+  const getPatternLabel = useCallback((id: PatternOption) => {
+    return id === "none" ? "Off" : id.charAt(0).toUpperCase() + id.slice(1);
+  }, []);
+
+  return { resolvedPattern, shouldShowStyle, handlePatternSelect, getPatternLabel };
+}
+
 export function EffectsSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const screenshot = useAtomValue(screenshotAssetAtom);
   const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+  const { resolvedPattern, shouldShowStyle, handlePatternSelect, getPatternLabel } =
+    usePatternControls(setConfig);
 
   const shouldAutoEnableFade = useMemo(() => {
     const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -181,6 +234,26 @@ export function EffectsSection() {
           checked={currentFadeState}
           onToggle={toggleFade}
         />
+      )}
+
+      {/* Pattern Style Controls - Only show for gradient backgrounds */}
+      {shouldShowStyle && (
+        <div className="flex flex-col gap-2 pt-3">
+          <Label className="text-xs font-medium text-muted-foreground">Pattern Style</Label>
+          <div className="grid grid-cols-4 gap-1.5">
+            {PATTERN_OPTIONS.map((pattern) => (
+              <Button
+                key={pattern}
+                variant={resolvedPattern === pattern ? "default" : "ghost"}
+                size="sm"
+                onClick={() => handlePatternSelect(pattern)}
+                className="text-xs"
+              >
+                {getPatternLabel(pattern)}
+              </Button>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

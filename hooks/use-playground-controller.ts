@@ -11,7 +11,7 @@ import {
 } from "@/domain/layout/screenshot-mode";
 import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import { getLayoutDefinition, type LayoutDefinition } from "@/domain/layout-def/definitions";
+import type { LayoutDefinition } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { exportLayoutAsPng } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -106,7 +106,6 @@ export function usePlaygroundController() {
     screenshotAsset,
   });
 
-  const handleVariantChange = useVariantChangeHandler(setConfig);
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
 
   const handleScreenshotUpload = useCallback(
@@ -138,7 +137,6 @@ export function usePlaygroundController() {
     shouldShowAspectLock,
     isAspectLocked,
     canvas,
-    handleVariantChange,
     toggleCanvasMode,
     handleExport,
     handleFileProcess,
@@ -296,25 +294,6 @@ function useExportHandler({
     setIsExporting,
     setStatusMessage,
   ]);
-}
-
-function useVariantChangeHandler(setConfig: Setter<LayoutConfig>) {
-  return useCallback(
-    (variant: string) => {
-      setConfig((currentConfig) => {
-        const layout = getLayoutDefinition(currentConfig.layoutId);
-        if (!layout || !layout.variants.includes(variant) || currentConfig.variant === variant) {
-          return currentConfig;
-        }
-
-        return {
-          ...currentConfig,
-          variant,
-        };
-      });
-    },
-    [setConfig],
-  );
 }
 
 function useCanvasModeToggle(setConfig: Setter<LayoutConfig>) {

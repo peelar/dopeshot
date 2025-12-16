@@ -30,22 +30,9 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
     );
   }
 
+  // getLayoutComponent throws an error if component is not found
+  // This ensures we catch missing component registrations immediately
   const LayoutComponent = getLayoutComponent(layout.id);
-
-  if (!LayoutComponent) {
-    return (
-      <div
-        className={cn(
-          "flex items-center justify-center bg-white",
-          isStatic ? "" : "rounded-lg",
-          className,
-        )}
-        style={{ aspectRatio: "1280 / 720" }}
-      >
-        <span className="text-sm text-slate-500">Component not found</span>
-      </div>
-    );
-  }
 
   // Code snippet look should not have fixed aspect ratio
   const useFluidLayout = layout.id === "code-snippet";
