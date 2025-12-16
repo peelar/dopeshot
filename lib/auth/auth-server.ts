@@ -40,12 +40,12 @@ export const auth = betterAuth({
 
         try {
           const result = await resend.emails.send({
-            from: "DopeShot <auth@dopeshot.io>",
+            from: "dopeshot <auth@dopeshot.io>",
             to: email,
-            subject: "Sign in to DopeShot",
+            subject: "Sign in to dopeshot",
             html: `
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2>Sign in to DopeShot</h2>
+                <h2>Sign in to dopeshot</h2>
                 <p>Click the button below to sign in to your account:</p>
                 <a href="${url}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
                   Sign In
