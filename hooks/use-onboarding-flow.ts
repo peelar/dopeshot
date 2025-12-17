@@ -5,12 +5,22 @@ import { useSession } from "@/lib/auth/auth-client";
 import { supabaseDb } from "@/lib/supabase-db";
 import { track } from "@/lib/analytics";
 
-export function useOnboardingFlow() {
+type UseOnboardingFlowOptions = {
+  enabled?: boolean;
+};
+
+export function useOnboardingFlow(options?: UseOnboardingFlowOptions) {
+  const { enabled = true } = options || {};
   const { data: session } = useSession();
   const [showModal, setShowModal] = useState(false);
-  const [isChecking, setIsChecking] = useState(true);
+  const [isChecking, setIsChecking] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) {
+      setIsChecking(false);
+      return;
+    }
+
     const MAX_RETRIES = 3;
     let retries = 0;
 
@@ -72,7 +82,7 @@ export function useOnboardingFlow() {
     }
 
     checkOnboardingStatus();
-  }, [session]);
+  }, [enabled, session]);
 
   return {
     showOnboardingModal: showModal,
