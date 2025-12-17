@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
-import { supabaseDb } from "@/lib/supabase-db";
 import { Upload, Check, Sparkles } from "lucide-react";
 import { cn } from "@/utils";
 
@@ -46,41 +45,28 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
     try {
       await handleFileProcess(file, "logo");
 
-      const timestamp = Date.now();
-      const extension = file.name.split(".").pop();
-      const path = `${session.user.id}/logo-${timestamp}.${extension}`;
+      const formData = new FormData();
+      formData.append("file", file, file.name);
 
-      const { error: uploadError } = await supabaseDb.storage
-        .from("brand-logos")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const response = await fetch("/api/brand/upload-logo", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-      if (uploadError) throw uploadError;
+      const payload = await response.json();
 
-      const { error: profileError } = await supabaseDb
-        .from("brand_profiles")
-        .upsert(
-          { user_id: session.user.id, logo_path: path },
-          { onConflict: "user_id" }
-        );
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to upload logo");
+      }
 
-      if (profileError) throw profileError;
-
-      const { error: metadataError } = await supabaseDb
-        .from("user_metadata")
-        .upsert(
-          {
-            user_id: session.user.id,
-            onboarding_progress: ["logo_onboarding_completed"],
-            subscription_tier: "free",
-            subscription_status: "active",
-          },
-          { onConflict: "user_id" }
-        );
-
-      if (metadataError) throw metadataError;
+      if (payload.logoPath || payload.signedUrl) {
+        setBrandSettings((prev) => ({
+          ...prev,
+          logoUrl: payload.signedUrl ?? prev.logoUrl,
+          logoPath: payload.logoPath ?? prev.logoPath,
+        }));
+      }
 
       track("onboarding_logo_uploaded", { file_size_kb: file.size / 1024 });
       track("onboarding_completed", { uploaded_logo: true });
@@ -105,19 +91,16 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
     if (!session?.user) return;
 
     try {
-      const { error } = await supabaseDb
-        .from("user_metadata")
-        .upsert(
-          {
-            user_id: session.user.id,
-            onboarding_progress: ["logo_onboarding_skipped"],
-            subscription_tier: "free",
-            subscription_status: "active",
-          },
-          { onConflict: "user_id" }
-        );
+      const response = await fetch("/api/brand/skip-onboarding", {
+        method: "POST",
+        credentials: "include",
+      });
 
-      if (error) throw error;
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Skip failed");
+      }
 
       track("onboarding_skipped");
       track("onboarding_completed", { uploaded_logo: false });

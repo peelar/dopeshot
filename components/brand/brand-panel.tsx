@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useSession } from "@/lib/auth/auth-client";
-import { supabaseDb } from "@/lib/supabase-db";
 import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
@@ -30,35 +29,21 @@ export function BrandPanel() {
       }
 
       try {
-        const { data, error } = await supabaseDb
-          .from("brand_profiles")
-          .select("logo_path")
-          .eq("user_id", session.user.id)
-          .single();
+        const response = await fetch("/api/brand/profile", {
+          credentials: "include",
+        });
+        const payload = await response.json();
 
-        if (error) {
-          if (process.env.NODE_ENV === "development") {
-            console.warn("Brand profile not available:", error.code);
-          }
-          setIsLoading(false);
-          return;
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Failed to load brand profile");
         }
 
-        if (data?.logo_path) {
-          // Use signed URL for private bucket
-          const { data: signedUrlData, error: urlError } = await supabaseDb.storage
-            .from("brand-logos")
-            .createSignedUrl(data.logo_path, 3600); // Valid for 1 hour
-
-          if (!urlError && signedUrlData?.signedUrl) {
-            // Preserve the persisted useLogoOnScreenshots setting
-            // Note: Auto-apply logic is handled by useBrandLogoAutoApply hook on page mount
-            setBrandSettings((prev) => ({
-              logoUrl: signedUrlData.signedUrl,
-              logoPath: data.logo_path,
-              useLogoOnScreenshots: prev.useLogoOnScreenshots,
-            }));
-          }
+        if (payload?.logoUrl) {
+          setBrandSettings((prev) => ({
+            ...prev,
+            logoUrl: payload.logoUrl,
+            logoPath: payload.profile?.logo_path ?? prev.logoPath,
+          }));
         }
       } catch (error) {
         if (process.env.NODE_ENV === "development") {
@@ -80,39 +65,26 @@ export function BrandPanel() {
     try {
       await handleFileProcess(file, "logo");
 
-      const timestamp = Date.now();
-      const extension = file.name.split(".").pop();
-      const path = `${session.user.id}/logo-${timestamp}.${extension}`;
+      const formData = new FormData();
+      formData.append("file", file, file.name);
 
-      const { error: uploadError } = await supabaseDb.storage
-        .from("brand-logos")
-        .upload(path, file, {
-          cacheControl: "3600",
-          upsert: false,
-        });
+      const response = await fetch("/api/brand/upload-logo", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
 
-      if (uploadError) throw uploadError;
+      const payload = await response.json();
 
-      const { error: profileError } = await supabaseDb
-        .from("brand_profiles")
-        .upsert(
-          { user_id: session.user.id, logo_path: path },
-          { onConflict: "user_id" }
-        );
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Upload failed");
+      }
 
-      if (profileError) throw profileError;
-
-      // Get signed URL for display
-      const { data: signedUrlData, error: urlError } = await supabaseDb.storage
-        .from("brand-logos")
-        .createSignedUrl(path, 3600);
-
-      if (!urlError && signedUrlData?.signedUrl) {
-        // Preserve the persisted useLogoOnScreenshots setting
+      if (payload.logoPath || payload.signedUrl) {
         setBrandSettings((prev) => ({
-          logoUrl: signedUrlData.signedUrl,
-          logoPath: path,
-          useLogoOnScreenshots: prev.useLogoOnScreenshots,
+          ...prev,
+          logoUrl: payload.signedUrl ?? prev.logoUrl,
+          logoPath: payload.logoPath ?? prev.logoPath,
         }));
       }
 
@@ -133,16 +105,18 @@ export function BrandPanel() {
     setErrorMessage(null);
 
     try {
-      await supabaseDb.storage
-        .from("brand-logos")
-        .remove([brandSettings.logoPath]);
+      const response = await fetch("/api/brand/update-profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logo_path: null }),
+        credentials: "include",
+      });
 
-      const { error } = await supabaseDb
-        .from("brand_profiles")
-        .update({ logo_path: null })
-        .eq("user_id", session.user.id);
+      const payload = await response.json();
 
-      if (error) throw error;
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to remove logo");
+      }
 
       setBrandSettings({
         logoUrl: null,

@@ -24,6 +24,13 @@ Make Supabase aware of Better Auth sessions so RLS policies can properly validat
 - Users can only upload to their own folders
 - Maintain security without sacrificing user experience
 
+## Current State
+
+- `components/onboarding/onboarding-modal.tsx` and `components/brand/brand-panel.tsx` still call `supabaseDb` directly for storage uploads, logo metadata, and onboarding progress. They rely on the anonymous key, so Supabase only sees `auth.uid()` as `null`.
+- `BrandPanel` also reads `brand_profiles` at mount to show the current logo, and it uses `supabaseDb.storage.createSignedUrl()` in the client.
+- The client-only `lib/supabase-db.ts` exports the anon key client; the service-role key is only available server-side, so the easiest way to respect RLS is to move writes behind authenticated API routes.
+- Storage uploads to `brand-logos` are unguarded from the client, so any signed-in user can write to any path. We need server-side validation to keep the bucket scoped to the requester.
+
 ## Solution Options
 
 ### Option 1: Server-Side API Routes (Recommended)
@@ -197,6 +204,15 @@ export async function uploadLogo(formData: FormData) {
 4. **Maintainability**: Clear separation between client and server
 5. **Better Auth native**: Works naturally with Better Auth's session model
 
+## Proposed API Contracts
+
+- `POST /api/brand/upload-logo` handles a multipart upload from onboarding or the brand panel, stores the file under `{userId}/logo-<timestamp>`, updates `brand_profiles`, and returns a signed URL for the new logo.
+- `PATCH /api/brand/update-profile` accepts metadata updates (colors, typography, onboarding progress flags) and writes them using the Supabase service role while validating the Better Auth session.
+- `POST /api/brand/skip-onboarding` records the skipped onboarding step in `user_metadata` (mirroring the current supabase upsert in `components/onboarding/onboarding-modal.tsx`).
+- `GET /api/brand/profile` reads `brand_profiles` and `user_metadata` for the current user, constructs signed URLs for logos, and returns the data to hydrate `components/brand/brand-panel.tsx`.
+
+Each route validates the Better Auth session server-side, extracts `session.user.id`, and uses a service-role Supabase client so we can safely re-enable RLS and tighten storage policies.
+
 ### Phase 1: Secure Write Operations
 - Create API routes for:
   - `POST /api/brand/upload-logo` - Upload logo to storage
@@ -239,21 +255,22 @@ export async function uploadLogo(formData: FormData) {
 - [ ] Create `app/api/brand/skip-onboarding/route.ts`
 - [ ] Add `SUPABASE_SERVICE_ROLE_KEY` to `.env.local`
 - [ ] Create `lib/supabase-admin.ts` for service role client
-- [ ] Update `components/onboarding/onboarding-modal.tsx` to call API routes
-- [ ] Update `components/brand/brand-panel.tsx` to call API routes
+- [ ] Update `components/onboarding/onboarding-modal.tsx` to POST to `/api/brand/upload-logo` for file uploads and to `/api/brand/skip-onboarding` for the skip path instead of calling `supabaseDb` directly.
+- [ ] Update `components/brand/brand-panel.tsx` to load the profile via `GET /api/brand/profile` and to upload/remove logos through the new API routes so write operations use the service role client.
 - [ ] Re-enable RLS on `brand_profiles` and `user_metadata`
 - [ ] Test all write operations work with real sessions
 
 ### Phase 2: Storage Security
 - [ ] Move storage uploads to server-side API routes
+- [ ] Ensure `POST /api/brand/upload-logo` writes logos under `{userId}/` and returns signed URLs so the UI can continue displaying them without direct bucket writes.
 - [ ] Re-enable strict storage policies
 - [ ] Test file uploads work correctly
 - [ ] Add file size/type validation server-side
 
 ### Phase 3: Read Operations (Optional)
-- [ ] Evaluate if client-side reads need securing
-- [ ] Add read-only RLS policies if needed
-- [ ] Or create GET API routes for sensitive data
+- [ ] Implement `GET /api/brand/profile` so `BrandPanel` can fetch brand metadata without elevating client permissions.
+- [ ] If any client reads remain, add fine-grained RLS policies that use `auth.uid()` (or custom JWT claims) so only the owner can select their rows.
+- [ ] Consider service-role-backed read routes when signed URLs or cross-table joins are too complex for RLS alone.
 
 ### Phase 4: Cleanup
 - [ ] Remove permissive test policies
