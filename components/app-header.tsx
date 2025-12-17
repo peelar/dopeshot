@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/utils";
 import { Download, ImageUp, Loader2, RefreshCw } from "lucide-react";
+import { track } from "@/lib/analytics";
 
 interface AppHeaderProps {
   hasCustomScreenshot: boolean;
@@ -14,6 +15,7 @@ interface AppHeaderProps {
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
+  onBrandClick: () => void;
 }
 
 export function AppHeader({
@@ -24,6 +26,7 @@ export function AppHeader({
   canExport,
   onExport,
   isExporting,
+  onBrandClick,
 }: AppHeaderProps) {
   const uploadButtonLabel = isProcessingUpload
     ? "Uploading..."
@@ -71,6 +74,17 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => {
+            onBrandClick();
+            track("brand_panel_opened");
+          }}
+          className="text-foreground hover:bg-muted hover:text-foreground"
+        >
+          <span className="hidden md:inline">Brand</span>
+        </Button>
         {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
     </header>

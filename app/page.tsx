@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/app-header";
 import { CoverPreview } from "@/components/cover-preview";
 import { DragOverlay } from "@/components/drag-overlay";
@@ -6,11 +8,21 @@ import { MobileActions } from "@/components/mobile-actions";
 import { PlaygroundWorkspace } from "@/components/playground-workspace";
 import { LayoutSelector } from "@/components/layout-selector";
 import { LayoutConfigPanel } from "@/components/layout-config";
+import { BrandPanel } from "@/components/brand/brand-panel";
+import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
+import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { orientationAtom } from "@/hooks/atoms";
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
+
+// Lazy load OnboardingModal (only load when needed)
+const OnboardingModal = dynamic(
+  () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
+  { ssr: false }
+);
 
 function ExportContainer({ width, height }: { width: number; height: number }) {
   return (
@@ -37,6 +49,11 @@ function ExportContainer({ width, height }: { width: number; height: number }) {
 
 export default function PlaygroundPage() {
   const orientation = useAtomValue(orientationAtom);
+  const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow();
+  const [brandPanelOpen, setBrandPanelOpen] = useState(false);
+
+  // Auto-apply brand logo on mount if toggle is enabled
+  useBrandLogoAutoApply();
 
   const {
     dragAndUpload,
@@ -89,6 +106,7 @@ export default function PlaygroundPage() {
           canExport={canExport}
           onExport={handleExport}
           isExporting={isExporting}
+          onBrandClick={() => setBrandPanelOpen(true)}
         />
 
       {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
@@ -153,6 +171,22 @@ export default function PlaygroundPage() {
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {statusMessage}
       </div>
+
+      {/* Onboarding modal */}
+      <OnboardingModal
+        open={showOnboardingModal}
+        onOpenChange={setShowOnboardingModal}
+      />
+
+      {/* Brand panel */}
+      <Sheet open={brandPanelOpen} onOpenChange={setBrandPanelOpen}>
+        <SheetContent side="right">
+          <SheetHeader>
+            <SheetTitle>Brand</SheetTitle>
+          </SheetHeader>
+          <BrandPanel />
+        </SheetContent>
+      </Sheet>
     </main>
   );
 }

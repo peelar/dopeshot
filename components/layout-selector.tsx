@@ -226,7 +226,7 @@ export function LayoutSelector({ className }: { className?: string }) {
   }, [assetType, currentConfig.layoutId, handleAssetTypeChange]);
 
   return (
-    <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
+    <div className={cn("flex w-full flex-col gap-2 sm:px-4", className)}>
       <div className="flex items-center pt-2 sm:pt-4">
         <Select
           value={assetType}

@@ -98,3 +98,4 @@ SUPABASE_SERVICE_ROLE_KEY=<get-from-dashboard>
 ---
 
 Setup completed on: 2025-12-16
+
