@@ -21,6 +21,9 @@ import {
 } from "@/domain/layout/gradients";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { configAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
@@ -79,7 +82,6 @@ function DebouncedColorInput({
   );
 }
 
-type GradientSource = "screenshot" | "custom" | "preset";
 type CustomColorStop = "start" | "mid" | "end";
 
 interface GradientPickerProps {
@@ -95,6 +97,9 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
   const isCodeSnippet = config.layoutId === "code-snippet";
+
+  // Popover state for customization controls
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   // Generate multi-stop gradients from screenshot colors
   // Code snippets should never use screenshot-derived gradients
@@ -117,13 +122,6 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     return undefined;
   }, [background.customGradient, background.type, background.value]);
 
-  const currentGradientCss = useMemo((): string => {
-    if (resolvedGradient) {
-      return customGradientToCss(resolvedGradient);
-    }
-    return "linear-gradient(to right, #6366f1, #8b5cf6)";
-  }, [resolvedGradient]);
-
   const hasScreenshotGradients = dynamicGradients.length > 0;
 
   const matchesScreenshotGradient = useMemo(() => {
@@ -132,11 +130,6 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       areGradientsEqual(gradient, background.customGradient),
     );
   }, [background.customGradient, dynamicGradients, hasScreenshotGradients]);
-
-  const shouldPreferScreenshot = useMemo(
-    () => isAnalyzingColors || matchesScreenshotGradient,
-    [isAnalyzingColors, matchesScreenshotGradient],
-  );
 
   const currentAngle = useMemo(() => {
     if (!resolvedGradient) return 90;
@@ -149,7 +142,8 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     return 90;
   }, [resolvedGradient]);
 
-  const defaultSource = useMemo<GradientSource>(() => {
+  // Default tab in popover (custom or preset)
+  const defaultPopoverTab = useMemo<"custom" | "preset">(() => {
     const isPresetSelection =
       background.type === "gradient" &&
       background.value &&
@@ -160,58 +154,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       return "preset";
     }
 
-    // Code snippets should never default to screenshot source
-    if (!isCodeSnippet && shouldPreferScreenshot) {
-      return "screenshot";
-    }
-
-    if (background.customGradient) {
-      return "custom";
-    }
-
-    // Code snippets should never default to screenshot source
-    if (!isCodeSnippet && (hasScreenshotGradients || hasScreenshot)) {
-      return "screenshot";
-    }
-
     return "custom";
-  }, [
-    background.customGradient,
-    background.type,
-    background.value,
-    hasScreenshot,
-    hasScreenshotGradients,
-    shouldPreferScreenshot,
-    isCodeSnippet,
-  ]);
+  }, [background.customGradient, background.type, background.value]);
 
-  const [activeSource, setActiveSource] = useState<GradientSource>(() =>
-    hasScreenshot && !isCodeSnippet ? "screenshot" : defaultSource,
-  );
+  const [activePopoverTab, setActivePopoverTab] = useState<"custom" | "preset">(defaultPopoverTab);
   const sourceOverrideRef = useRef(false);
-  const lockManualSource = useCallback(() => {
-    sourceOverrideRef.current = true;
-  }, []);
-  const setActiveSourceWithOverride = useCallback(
-    (source: GradientSource) => {
-      lockManualSource();
-      setActiveSource(source);
-    },
-    [lockManualSource],
-  );
 
+  // Update popover tab when background changes externally
   useEffect(() => {
-    if (sourceOverrideRef.current) {
-      sourceOverrideRef.current = false;
-      return;
-    }
-    if (defaultSource !== activeSource) {
-      setActiveSource(defaultSource);
-    }
-  }, [defaultSource, activeSource]);
+    setActivePopoverTab(defaultPopoverTab);
+  }, [defaultPopoverTab]);
 
+  // Auto-apply first screenshot gradient when available
   useEffect(() => {
-    if (activeSource !== "screenshot") return;
     if (!hasScreenshot) return;
     if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
     if (matchesScreenshotGradient) return;
@@ -220,15 +175,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     const firstGradient = dynamicGradients[0];
     if (!firstGradient) return;
 
-    setActiveSource("screenshot");
     const textColor = getTextColorFromGradient(firstGradient);
     const grainEnabled = background.grainEnabled ?? true;
     onChangeAction(
-      { type: "gradient", value: "custom", customGradient: firstGradient, gradientSource: "screenshot", grainEnabled },
+      {
+        type: "gradient",
+        value: "custom",
+        customGradient: firstGradient,
+        gradientSource: "screenshot",
+        grainEnabled,
+      },
       textColor,
     );
   }, [
-    activeSource,
     background.grainEnabled,
     dynamicGradients,
     hasScreenshot,
@@ -236,17 +195,6 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     matchesScreenshotGradient,
     onChangeAction,
   ]);
-
-  const [fineTuneOpen, setFineTuneOpen] = useState(false);
-  const currentTextColor = useMemo<ColorToken>(() => {
-    if (resolvedGradient) {
-      return getTextColorFromGradient(resolvedGradient);
-    }
-    if (background.type === "gradient" && background.value) {
-      return getGradientById(background.value)?.textColor ?? "slate-900";
-    }
-    return "slate-900";
-  }, [background.type, background.value, resolvedGradient]);
 
   const activePresetId =
     background.type === "gradient" && !background.customGradient ? background.value : undefined;
@@ -259,22 +207,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
         preset_id: gradientId,
         preset_name: gradient.name,
       });
-      setActiveSourceWithOverride("preset");
+      sourceOverrideRef.current = true;
       onChangeAction(
-        { type: "gradient", value: gradientId, customGradient: undefined, gradientSource: "preset" },
+        {
+          type: "gradient",
+          value: gradientId,
+          customGradient: undefined,
+          gradientSource: "preset",
+        },
         gradient.textColor ?? "slate-900",
       );
+      setPopoverOpen(false);
     },
-    [onChangeAction, setActiveSourceWithOverride],
-  );
-
-  const handleCustomGradientSelect = useCallback(
-    (gradient: CustomGradient) => {
-      lockManualSource();
-      const textColor = getTextColorFromGradient(gradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient, gradientSource: "custom" }, textColor);
-    },
-    [lockManualSource, onChangeAction],
+    [onChangeAction],
   );
 
   const handleColorChange = useCallback(
@@ -285,11 +230,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       const colors = getCustomGradientColors(resolvedGradient, colorPalette);
       const nextColors = { ...colors, [colorType]: value };
       const newGradient = buildThreeStopGradient(nextColors, currentAngle, resolvedGradient);
-      lockManualSource();
+      sourceOverrideRef.current = true;
       const textColor = getTextColorFromGradient(newGradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient, gradientSource: "custom" }, textColor);
+      onChangeAction(
+        {
+          type: "gradient",
+          value: "custom",
+          customGradient: newGradient,
+          gradientSource: "custom",
+        },
+        textColor,
+      );
     },
-    [colorPalette, currentAngle, lockManualSource, onChangeAction, resolvedGradient],
+    [colorPalette, currentAngle, onChangeAction, resolvedGradient],
   );
 
   const handleDirectionChange = useCallback(
@@ -299,11 +252,19 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       });
       const colors = getCustomGradientColors(resolvedGradient, colorPalette);
       const newGradient = buildThreeStopGradient(colors, angle, resolvedGradient);
-      lockManualSource();
+      sourceOverrideRef.current = true;
       const textColor = getTextColorFromGradient(newGradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: newGradient, gradientSource: "custom" }, textColor);
+      onChangeAction(
+        {
+          type: "gradient",
+          value: "custom",
+          customGradient: newGradient,
+          gradientSource: "custom",
+        },
+        textColor,
+      );
     },
-    [colorPalette, lockManualSource, onChangeAction, resolvedGradient],
+    [colorPalette, onChangeAction, resolvedGradient],
   );
 
   const handleScreenshotSelect = useCallback(
@@ -311,76 +272,87 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
       track("gradient_source_changed", {
         source: "screenshot",
       });
-      setActiveSourceWithOverride("screenshot");
+      sourceOverrideRef.current = true;
       const textColor = getTextColorFromGradient(gradient);
-      onChangeAction({ type: "gradient", value: "custom", customGradient: gradient, gradientSource: "screenshot" }, textColor);
+      onChangeAction(
+        {
+          type: "gradient",
+          value: "custom",
+          customGradient: gradient,
+          gradientSource: "screenshot",
+        },
+        textColor,
+      );
     },
-    [onChangeAction, setActiveSourceWithOverride],
+    [onChangeAction],
   );
 
-  const screenshotTabDisabled = !hasScreenshotGradients && !isAnalyzingColors && !hasScreenshot;
-
-  const gradientTabs = [
-    ...(!isCodeSnippet ? [{
-      id: "screenshot" as const,
-      label: "From Screenshot",
-      disabled: screenshotTabDisabled,
-    }] : []),
+  // Only custom and preset tabs in popover
+  const popoverTabs = [
     { id: "custom" as const, label: "Custom" },
     { id: "preset" as const, label: "Presets" },
-  ] satisfies { id: GradientSource; label: string; disabled?: boolean }[];
+  ] satisfies { id: "custom" | "preset"; label: string }[];
 
-  const handleTabChange = useCallback(
-    (next: string) => {
-      if (next === "screenshot" || next === "custom" || next === "preset") {
-        track("gradient_source_changed", {
-          from: activeSource,
-          to: next,
-        });
-        setActiveSourceWithOverride(next);
-      }
-    },
-    [activeSource, setActiveSourceWithOverride],
-  );
+  const handlePopoverTabChange = useCallback((next: string) => {
+    if (next === "custom" || next === "preset") {
+      setActivePopoverTab(next);
+    }
+  }, []);
 
   return (
     <div className="space-y-5">
       <div className="rounded-2xl border border-border/60 bg-muted/30">
         <div className="space-y-3 px-3 pb-3 pt-3">
-          <SegmentedControl
-            value={activeSource}
-            options={gradientTabs}
-            onChange={handleTabChange}
-            ariaLabel="Select gradient source"
-            className="text-[11px]"
-            buttonClassName="px-2 py-1 text-[11px]"
-          />
-
-          {activeSource === "screenshot" && (
+          <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
             <ScreenshotGradients
               gradients={dynamicGradients}
               activeGradient={background.customGradient}
               disabled={!hasScreenshotGradients}
               onSelect={handleScreenshotSelect}
               isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
+              popoverTrigger={
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-auto p-0 text-[11px] text-muted-foreground/80 hover:bg-transparent hover:text-muted-foreground"
+                  >
+                    Customize
+                  </Button>
+                </PopoverTrigger>
+              }
             />
-          )}
-          {activeSource === "custom" && (
-            <CustomGradientControls
-              activeGradient={resolvedGradient}
-              colorPalette={colorPalette}
-              angle={currentAngle}
-              onColorChange={handleColorChange}
-              onAngleChange={handleDirectionChange}
-            />
-          )}
-          {activeSource === "preset" && (
-            <PresetGradients
-              gradients={GRADIENTS}
-              selectedPresetId={activePresetId}
-              onSelect={handlePresetSelect}
-            />
-          )}
+            <PopoverContent align="end" className="w-80">
+              <div className="space-y-3">
+                <SegmentedControl
+                  value={activePopoverTab}
+                  options={popoverTabs}
+                  onChange={handlePopoverTabChange}
+                  ariaLabel="Select gradient customization"
+                  className="text-[11px]"
+                  buttonClassName="px-2 py-1 text-[11px]"
+                />
+
+                {activePopoverTab === "custom" && (
+                  <CustomGradientControls
+                    activeGradient={resolvedGradient}
+                    colorPalette={colorPalette}
+                    angle={currentAngle}
+                    onColorChange={handleColorChange}
+                    onAngleChange={handleDirectionChange}
+                  />
+                )}
+                {activePopoverTab === "preset" && (
+                  <PresetGradients
+                    gradients={GRADIENTS}
+                    selectedPresetId={activePresetId}
+                    onSelect={handlePresetSelect}
+                  />
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
     </div>
@@ -393,6 +365,7 @@ interface ScreenshotGradientsProps {
   disabled: boolean;
   onSelect: (gradient: CustomGradient) => void;
   isLoading?: boolean;
+  popoverTrigger?: React.ReactNode;
 }
 
 function ScreenshotGradients({
@@ -401,14 +374,14 @@ function ScreenshotGradients({
   disabled,
   onSelect,
   isLoading,
+  popoverTrigger,
 }: ScreenshotGradientsProps) {
   if (isLoading) {
     return (
-      <div
-        className="rounded-2xl border border-dashed border-border/40 bg-background/50 px-3 text-left text-xs text-muted-foreground"
-        aria-busy="true"
-      >
-        <p className="text-left text-[11px] text-muted-foreground/80">Sampling colors…</p>
+      <div className="grid grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-xl" />
+        ))}
       </div>
     );
   }
@@ -437,7 +410,7 @@ function ScreenshotGradients({
           );
         })}
       </div>
-      <p className="text-[11px] text-muted-foreground/80">Sampled from your screenshot</p>
+      {popoverTrigger && <div className="flex justify-end">{popoverTrigger}</div>}
     </div>
   );
 }
@@ -683,7 +656,7 @@ function buildThreeStopGradient(
   const base = existing && isAdvancedGradient(existing) ? existing : undefined;
   return {
     type: base?.type ?? "linear",
-    angle: base?.type === "linear" ? normalizedAngle : base?.angle ?? normalizedAngle,
+    angle: base?.type === "linear" ? normalizedAngle : (base?.angle ?? normalizedAngle),
     direction: base?.type !== "linear" ? base?.direction : undefined,
     colorSpace: base?.colorSpace ?? "oklch",
     stops: [

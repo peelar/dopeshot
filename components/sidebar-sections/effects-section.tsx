@@ -88,7 +88,7 @@ interface PatternStyleRowProps {
 function PatternStyleRow({ selectedPattern, onSelectPattern, getPatternLabel }: PatternStyleRowProps) {
   return (
     <div className="flex w-full flex-col gap-2.5 rounded-xl border border-border/60 bg-muted/30 px-4 py-3 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]">
-      <span>Pattern</span>
+      <span>Texture</span>
       <div className="grid grid-cols-4 gap-1.5">
         {PATTERN_OPTIONS.map((pattern) => (
           <button
