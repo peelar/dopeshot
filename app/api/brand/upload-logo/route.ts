@@ -10,10 +10,7 @@ export async function POST(request: Request) {
   const userId = session?.session?.user?.id ?? session?.user?.id;
   if (!userId) {
     if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "[brand/upload-logo] unauthorized, cookies:",
-        request.headers.get("cookie"),
-      );
+      console.warn("[brand/upload-logo] unauthorized, cookies:", request.headers.get("cookie"));
     }
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -34,8 +31,7 @@ export async function POST(request: Request) {
   const path = `${userId}/logo-${Date.now()}.${extension}`;
 
   try {
-    const contentType =
-      fileObj.type || (extension === "svg" ? "image/svg+xml" : null);
+    const contentType = fileObj.type || (extension === "svg" ? "image/svg+xml" : null);
 
     const { error: uploadError } = await supabaseAdmin.storage
       .from("brand-logos")
@@ -46,20 +42,14 @@ export async function POST(request: Request) {
       });
 
     if (uploadError) {
-      return NextResponse.json(
-        { error: uploadError.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
     const { error: profileError } = await supabaseAdmin
       .from("brand_profiles")
       .upsert({ user_id: userId, logo_path: path }, { onConflict: "user_id" });
     if (profileError) {
-      return NextResponse.json(
-        { error: profileError.message },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: profileError.message }, { status: 500 });
     }
 
     await updateUserMetadata(userId, {

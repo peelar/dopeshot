@@ -15,7 +15,7 @@ interface AppHeaderProps {
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
-  onBrandClick: () => void;
+  onBrandClick?: () => void;
 }
 
 export function AppHeader({
@@ -74,17 +74,19 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => {
-            onBrandClick();
-            track("brand_panel_opened");
-          }}
-          className="text-foreground hover:bg-muted hover:text-foreground"
-        >
-          <span className="hidden md:inline">Brand</span>
-        </Button>
+        {onBrandClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onBrandClick();
+              track("brand_panel_opened");
+            }}
+            className="text-foreground hover:bg-muted hover:text-foreground"
+          >
+            <span className="hidden md:inline">Brand</span>
+          </Button>
+        ) : null}
         {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
     </header>

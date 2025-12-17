@@ -14,6 +14,8 @@ import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
 import { Upload, Check, Sparkles } from "lucide-react";
 import { cn } from "@/utils";
+import { useAtom } from "jotai";
+import { brandSettingsAtom, type BrandSettings } from "@/hooks/atoms";
 
 interface OnboardingModalProps {
   open: boolean;
@@ -23,6 +25,7 @@ interface OnboardingModalProps {
 export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
   const { data: session } = useSession();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({});
+  const [, setBrandSettings] = useAtom(brandSettingsAtom);
   const [uploadStatus, setUploadStatus] = useState<
     "idle" | "success" | "error"
   >("idle");
@@ -61,7 +64,7 @@ export function OnboardingModal({ open, onOpenChange }: OnboardingModalProps) {
       }
 
       if (payload.logoPath || payload.signedUrl) {
-        setBrandSettings((prev) => ({
+        setBrandSettings((prev: BrandSettings) => ({
           ...prev,
           logoUrl: payload.signedUrl ?? prev.logoUrl,
           logoPath: payload.logoPath ?? prev.logoPath,
