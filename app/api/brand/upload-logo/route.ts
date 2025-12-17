@@ -48,7 +48,7 @@ export async function POST(request: Request) {
     if (uploadError) {
       return NextResponse.json(
         { error: uploadError.message },
-        { status: uploadError.status || 500 },
+        { status: 500 },
       );
     }
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
     if (profileError) {
       return NextResponse.json(
         { error: profileError.message },
-        { status: profileError.status || 500 },
+        { status: 500 },
       );
     }
 
