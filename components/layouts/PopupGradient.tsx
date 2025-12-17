@@ -99,17 +99,14 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     return "right";
   })();
 
-  const titleClassName = cn("font-bold", text.fontSize.titleClass, text.textColorClass);
-  const subtitleClassName = cn(
-    "mt-4 min-h-[1.2rem]",
-    text.fontSize.subtitleClass,
-    text.textColorClass,
-  );
-
   // Hide text on mobile for Peak Left/Right (only show on Peak Center)
   const shouldShowText = !(isMobile && (textVariant === "left" || textVariant === "right"));
   const title = shouldShowText ? text.title : undefined;
   const subtitle = shouldShowText ? text.subtitle : undefined;
+
+  // Adaptive typography classes
+  const titleClassName = cn(text.titleClasses, text.textColorClass);
+  const subtitleClassName = cn(text.subtitleClasses, "mt-4", text.textColorClass);
 
   const screenshotFrameWidth = useMemo(() => {
     if (textVariant === "center") {
@@ -246,19 +243,16 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         {textVariant === "left" && (
           <>
             <div
-              className="absolute left-14 z-10 space-y-4"
+              className={cn("absolute left-14 z-10 space-y-4", text.containerClasses)}
               style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP, bottom: "18%" }}
             >
               {title ? (
-                <h1
-                  className={cn(titleClassName, "text-balance leading-tight")}
-                  style={{ ...text.titleStyle, lineHeight: 1.05 }}
-                >
+                <h1 className={titleClassName} style={text.titleStyle}>
                   {title}
                 </h1>
               ) : null}
               {subtitle ? (
-                <p className={cn(subtitleClassName, "text-balance")} style={text.subtitleStyle}>
+                <p className={subtitleClassName} style={text.subtitleStyle}>
                   {subtitle}
                 </p>
               ) : null}
@@ -273,19 +267,16 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             {renderScreenshot("right")}
 
             <div
-              className="absolute right-14 z-10 text-right"
+              className={cn("absolute right-14 z-10 text-right", text.containerClasses)}
               style={{ ...textColumnStyle, top: SIDE_CONTENT_TOP, bottom: "18%" }}
             >
               {title ? (
-                <h1
-                  className={cn(titleClassName, "text-right text-balance leading-tight")}
-                  style={{ ...text.titleStyle, lineHeight: 1.05 }}
-                >
+                <h1 className={cn(titleClassName, "text-right")} style={text.titleStyle}>
                   {title}
                 </h1>
               ) : null}
               {subtitle ? (
-                <p className={cn(subtitleClassName, "text-right text-balance")} style={text.subtitleStyle}>
+                <p className={cn(subtitleClassName, "text-right")} style={text.subtitleStyle}>
                   {subtitle}
                 </p>
               ) : null}
@@ -296,19 +287,19 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         {textVariant === "center" && (
           <>
             <div
-              className="absolute left-1/2 z-10 w-[calc(100%-96px)] max-w-6xl -translate-x-1/2 space-y-4 px-8 text-center"
+              className={cn(
+                "absolute left-1/2 z-10 w-[calc(100%-96px)] max-w-6xl -translate-x-1/2 space-y-4 px-8 text-center",
+                text.containerClasses,
+              )}
               style={centerTextRegionStyle}
             >
               {title ? (
-                <h1
-                  className={cn(titleClassName, "whitespace-nowrap leading-tight")}
-                  style={{ ...text.titleStyle, lineHeight: 1.05 }}
-                >
+                <h1 className={titleClassName} style={text.titleStyle}>
                   {title}
                 </h1>
               ) : null}
               {subtitle ? (
-                <p className={cn(subtitleClassName, "text-balance")} style={text.subtitleStyle}>
+                <p className={subtitleClassName} style={text.subtitleStyle}>
                   {subtitle}
                 </p>
               ) : null}

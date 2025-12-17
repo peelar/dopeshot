@@ -1,7 +1,8 @@
 import { useMemo, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
-import { getFontCssValue, getFontSizeById } from "@/domain/layout/fonts";
+import { getFontStyleCssValue } from "@/domain/layout/fonts";
+import { getAdaptiveTypography } from "@/domain/layout/adaptive-typography";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import { configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
@@ -12,10 +13,6 @@ import { getBackgroundStyle } from "./background-style";
 import { tokenToTextColorClass } from "./color-utils";
 import { getShadowValue } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
-
-// Font size scale factor for mobile orientation (9:16)
-// Mobile gets smaller font sizes to fit the taller, narrower format
-const MOBILE_FONT_SCALE = 0.75;
 
 export function useLayoutPrimitives() {
   const config = useAtomValue(configAtom);
@@ -29,31 +26,40 @@ export function useLayoutPrimitives() {
 
   const backgroundStyle = useMemo(() => getBackgroundStyle(config, assetMap), [config, assetMap]);
 
-  const fontSize = useMemo(() => getFontSizeById(config.fontSize), [config.fontSize]);
-  const fontFamily = useMemo(() => getFontCssValue(config.fontId), [config.fontId]);
+  // Get font family from font style
+  const fontFamily = useMemo(() => getFontStyleCssValue(config.fontStyle), [config.fontStyle]);
   const textColorClass = useMemo(() => tokenToTextColorClass(config.colors.text), [config.colors.text]);
 
-  // Scale font sizes down for mobile orientation
-  const fontScale = orientation === "mobile" ? MOBILE_FONT_SCALE : 1.0;
+  // Get adaptive typography based on font style and text content
+  const adaptiveTypography = useMemo(() => {
+    const titleText = config.text.title?.trim();
+    const subtitleText = config.text.subtitle?.trim();
+
+    return getAdaptiveTypography(config.fontStyle, fontFamily, titleText, subtitleText);
+  }, [config.fontStyle, fontFamily, config.text.title, config.text.subtitle]);
 
   const text = useMemo(
     () => ({
       title: config.text.title?.trim(),
       subtitle: config.text.subtitle?.trim(),
-      titleStyle: { fontFamily, fontSize: `${fontSize.titleRem * fontScale}rem` },
-      subtitleStyle: { fontFamily, fontSize: `${fontSize.subtitleRem * fontScale}rem` },
+      titleStyle: adaptiveTypography.titleStyle,
+      subtitleStyle: adaptiveTypography.subtitleStyle,
+      containerClasses: adaptiveTypography.containerClasses,
+      titleClasses: adaptiveTypography.titleClasses,
+      subtitleClasses: adaptiveTypography.subtitleClasses,
       fontFamily,
-      fontSize,
       textColorClass,
     }),
     [
-      config.text.subtitle,
       config.text.title,
+      config.text.subtitle,
+      adaptiveTypography.titleStyle,
+      adaptiveTypography.subtitleStyle,
+      adaptiveTypography.containerClasses,
+      adaptiveTypography.titleClasses,
+      adaptiveTypography.subtitleClasses,
       fontFamily,
-      fontSize.subtitleRem,
-      fontSize.titleRem,
       textColorClass,
-      fontScale,
     ],
   );
 

@@ -1,10 +1,98 @@
-import { FontId, FontSize } from "./types";
+import { FontId, FontSize, FontStyle } from "./types";
+import { FONT_STYLE_SCALING_RULES } from "./adaptive-typography";
+
+/**
+ * Font Style Definition
+ * Each style represents a complete typographic system with semantic meaning
+ */
+export interface FontStyleDefinition {
+  id: FontStyle;
+  name: string; // User-facing name (e.g., "Founder", "Billboard")
+  fontName: string; // Actual font family name
+  foundry: string; // Font creator/source
+  cssVariable: string; // CSS variable reference
+  description: string; // Brief description of the style's character
+}
+
+/**
+ * Font Styles for Free Users
+ * Four opinionated typographic systems that adapt automatically
+ */
+export const FONT_STYLES: FontStyleDefinition[] = [
+  {
+    id: "founder",
+    name: "Founder",
+    fontName: "Geist Sans",
+    foundry: "Vercel",
+    cssVariable: "--font-clean",
+    description: "Neutral, modern, default",
+  },
+  {
+    id: "billboard",
+    name: "Billboard",
+    fontName: "Bricolage Grotesque",
+    foundry: "Caroline Hadilaksono",
+    cssVariable: "--font-bold",
+    description: "Bold, expressive, announcement-oriented",
+  },
+  {
+    id: "terminal",
+    name: "Terminal",
+    fontName: "IBM Plex Mono",
+    foundry: "IBM",
+    cssVariable: "--font-developer",
+    description: "Monospace, technical, tool-like",
+  },
+  {
+    id: "editorial",
+    name: "Editorial",
+    fontName: "Playfair Display",
+    foundry: "Claus Eggers Sorensen",
+    cssVariable: "--font-premium",
+    description: "Serif-based, calm, story-driven",
+  },
+];
+
+export const DEFAULT_FONT_STYLE: FontStyle = "founder";
+
+/**
+ * Get font style definition by ID
+ */
+export function getFontStyleById(id: FontStyle): FontStyleDefinition {
+  return FONT_STYLES.find((s) => s.id === id) ?? FONT_STYLES[0];
+}
+
+/**
+ * Get CSS font-family value for a font style
+ */
+export function getFontStyleCssValue(style: FontStyle): string {
+  const fontStyle = getFontStyleById(style);
+  return `var(${fontStyle.cssVariable})`;
+}
+
+/**
+ * Get complete font style configuration including scaling rules
+ */
+export function getFontStyleDefinition(style: FontStyle) {
+  const definition = getFontStyleById(style);
+  const scalingRules = FONT_STYLE_SCALING_RULES[style];
+
+  return {
+    ...definition,
+    scalingRules,
+  };
+}
+
+// ============================================================================
+// LEGACY COMPATIBILITY LAYER
+// Keep old font system for backward compatibility during migration
+// ============================================================================
 
 export interface FontSizeDefinition {
   id: FontSize;
   label: string;
-  titleClass: string; // Tailwind class for title
-  subtitleClass: string; // Tailwind class for subtitle
+  titleClass: string;
+  subtitleClass: string;
   titleRem: number;
   subtitleRem: number;
 }
@@ -55,15 +143,15 @@ export const FONT_SIZES: FontSizeDefinition[] = [
 export const DEFAULT_FONT_SIZE: FontSize = "md";
 
 export function getFontSizeById(id: FontSize): FontSizeDefinition {
-  return FONT_SIZES.find((s) => s.id === id) ?? FONT_SIZES[1]; // Default to md
+  return FONT_SIZES.find((s) => s.id === id) ?? FONT_SIZES[1];
 }
 
 export interface FontDefinition {
   id: FontId;
-  alias: string; // User-facing vibe name
-  fontName: string; // Actual font name
-  foundry: string; // Font creator/source
-  cssVariable: string; // CSS variable name (e.g., "--font-clean")
+  alias: string;
+  fontName: string;
+  foundry: string;
+  cssVariable: string;
 }
 
 export const FONTS: FontDefinition[] = [
@@ -134,4 +222,23 @@ function getFontById(id: FontId): FontDefinition | undefined {
 export function getFontCssValue(id: FontId): string {
   const font = getFontById(id);
   return font ? `var(${font.cssVariable})` : "var(--font-clean)";
+}
+
+/**
+ * Migration helper: Map old FontId to new FontStyle
+ */
+export function migrateFontIdToStyle(fontId: FontId): FontStyle {
+  const mapping: Record<FontId, FontStyle> = {
+    clean: "founder",
+    bold: "billboard",
+    developer: "terminal",
+    premium: "editorial",
+    // Other legacy fonts default to founder
+    professional: "founder",
+    friendly: "founder",
+    edgy: "founder",
+    technical: "terminal",
+  };
+
+  return mapping[fontId] ?? "founder";
 }
