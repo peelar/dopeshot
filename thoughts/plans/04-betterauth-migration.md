@@ -39,9 +39,26 @@ This plan migrates dopeshot from Supabase Auth to BetterAuth while keeping Supab
 - Auth hook: `useSupabaseAuth()` → `useAuth()`
 - Session management: Supabase Auth SDK → BetterAuth
 
+## Current Status
+
+**Completed**
+- `lib/auth/auth-server.ts` now boots BetterAuth with a Postgres `Pool`, bcrypt hashing, the Resend-powered magic-link plugin, and session cookie caching.
+- `lib/auth/auth-client.ts` installs the `magicLinkClient()` plugin so the React client can request passwordless links.
+- `lib/auth/actions.ts`, `lib/auth/provider.tsx`, `lib/auth/types.ts`, and `lib/auth/index.ts` expose the `signInWithEmail`, `signUpWithEmail`, `signOutUser`, `sendMagicLink`, and `useAuth` primitives while keeping the product surface free of BetterAuth imports.
+- `app/layout.tsx` wraps the tree with `AuthProvider`, the auth form uses `useAuth`, and `app/api/auth/[...all]/route.ts` mirrors BetterAuth’s handler.
+- `.env.example` documents the Supabase keys, `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and the optional `RESEND_API_KEY` so both client and server layers can bootstrap cleanly.
+
+## Next Workstreams
+
+1. Add auth-focused tests and a manual verification checklist so future changes to the auth stack are guarded. (See ideas in the original phase 6 testing section.)
+2. Harden Supabase integration (see plan 06) so uploads, brand writes, and metadata updates run through a server-verified session instead of the anon key.
+3. Document the new identity architecture in the README/docs to keep future contributors aligned on the `@/lib/auth` API and the expectation that product code never imports BetterAuth directly.
+
 ---
 
 ## Phase 1: Remove Broken Supabase Auth References
+
+> **Status**: Completed – layout and `components/auth/auth-form.tsx` no longer import the missing `use-supabase-auth` hook, so the app already has a clean build baseline.
 
 ### Goal
 
@@ -147,6 +164,8 @@ export const supabaseDb = createClient(supabaseUrl, supabaseAnonKey, {
 ---
 
 ## Phase 2: Install and Configure BetterAuth
+
+> **Status**: Completed – `lib/auth/auth-server.ts`, `lib/auth/auth-client.ts`, `.env.example`, and `app/api/auth/[...all]/route.ts` now reflect the BetterAuth installation and configuration described below.
 
 ### Goal
 
@@ -310,6 +329,8 @@ export const auth = betterAuth({
 ---
 
 ## Phase 3: Create Identity Abstraction Layer
+
+> **Status**: Completed – `lib/auth/provider.tsx`, `lib/auth/actions.ts`, `lib/auth/types.ts`, and the `lib/auth/index.ts` barrel export now expose a clean product-facing identity API.
 
 ### Goal
 
@@ -547,6 +568,8 @@ export type { User, Session, AuthError, AuthResult, BrandProfile } from "./types
 
 ## Phase 4: Update UI Components
 
+> **Status**: Completed – `app/layout.tsx` consumes `AuthProvider` and `components/auth/auth-form.tsx` now drives both password and magic-link flows via `useAuth` and the actions exported from `@/lib/auth`.
+
 ### Goal
 
 Update all UI components to use the new auth abstraction layer. Remove all direct Supabase Auth references.
@@ -709,6 +732,8 @@ import { supabaseDb } from "@/lib/supabase-db";
 
 ## Phase 5: Database Schema Compatibility
 
+> **Status**: Ongoing – the existing Supabase schema works with BetterAuth, but we still need to confirm whether to rely on JWT sessions or add a `public.sessions` table before fully committing.
+
 ### Goal
 
 Ensure BetterAuth works with the existing Supabase schema. Add any missing tables or columns BetterAuth requires.
@@ -848,6 +873,8 @@ export const auth = betterAuth({
 ---
 
 ## Phase 6: Testing and Verification
+
+> **Status**: Pending – the auth unit/E2E suites and manual checklist from this phase are still ideas to be implemented.
 
 ### Goal
 
@@ -1089,6 +1116,8 @@ Create a manual testing checklist in the docs.
 ---
 
 ## Phase 7: Documentation
+
+> **Status**: Pending – README and docs updates are still on the checklist.
 
 ### Goal
 
