@@ -77,7 +77,7 @@ function ScreenshotDropzone({ asset, onUpload }: ScreenshotDropzoneProps) {
         onClick={handleClick}
         onKeyDown={handleKeyDown}
         className={cn(
-          "group relative flex min-h-[160px] w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/20 p-6 transition-colors hover:border-border/60 hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "group relative flex aspect-video w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-border bg-muted/10 transition-colors hover:border-foreground/30 hover:bg-muted/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         )}
       >
         <input
@@ -89,10 +89,10 @@ function ScreenshotDropzone({ asset, onUpload }: ScreenshotDropzoneProps) {
           aria-hidden="true"
           tabIndex={-1}
         />
-        <UploadCloud className="h-12 w-12 text-muted-foreground" aria-hidden="true" />
-        <div className="flex flex-col items-center gap-1 text-center">
-          <span className="text-sm font-semibold text-foreground">Upload screenshot</span>
-          <span className="text-xs text-muted-foreground">PNG, JPG, SVG up to 10MB</span>
+        <UploadCloud className="h-6 w-6 text-muted-foreground" aria-hidden="true" />
+        <div className="flex flex-col items-center gap-0.5 text-center">
+          <span className="text-xs font-medium text-foreground">Upload screenshot</span>
+          <span className="text-[11px] text-muted-foreground">PNG, JPG, SVG</span>
         </div>
       </div>
     );
@@ -106,7 +106,7 @@ function ScreenshotDropzone({ asset, onUpload }: ScreenshotDropzoneProps) {
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        "group relative w-full cursor-pointer overflow-hidden rounded-2xl border border-border bg-background transition-colors hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group relative w-full cursor-pointer overflow-hidden rounded-lg border border-foreground bg-muted/30 transition-colors hover:border-foreground/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
     >
       <input
@@ -125,9 +125,6 @@ function ScreenshotDropzone({ asset, onUpload }: ScreenshotDropzoneProps) {
           className="h-full w-full object-cover"
           crossOrigin="anonymous"
         />
-        <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all group-hover:bg-black/50 group-hover:opacity-100">
-          <span className="text-sm font-semibold text-white">Click to replace</span>
-        </div>
       </div>
     </div>
   );
