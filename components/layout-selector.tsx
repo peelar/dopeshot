@@ -92,8 +92,7 @@ export function LayoutSelector({ className }: { className?: string }) {
           background: backgroundToUse,
           colors: currentConfig.colors,
           screenshotShadow: currentConfig.screenshotShadow,
-          fontId: currentConfig.fontId,
-          fontSize: currentConfig.fontSize,
+          fontStyle: currentConfig.fontStyle,
           screenshotFrame: currentConfig.screenshotFrame,
           // Preserve code snippet content, but fall back to default if undefined
           code: currentConfig.code ?? defaultConfig.code,
@@ -112,8 +111,7 @@ export function LayoutSelector({ className }: { className?: string }) {
     currentConfig.assets,
     currentConfig.background,
     currentConfig.colors,
-    currentConfig.fontId,
-    currentConfig.fontSize,
+    currentConfig.fontStyle,
     currentConfig.layoutId,
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
@@ -226,7 +224,7 @@ export function LayoutSelector({ className }: { className?: string }) {
   }, [assetType, currentConfig.layoutId, handleAssetTypeChange]);
 
   return (
-    <div className={cn("flex w-full flex-col gap-2 px-2 sm:px-4", className)}>
+    <div className={cn("flex w-full flex-col gap-2 sm:px-4", className)}>
       <div className="flex items-center pt-2 sm:pt-4">
         <Select
           value={assetType}
