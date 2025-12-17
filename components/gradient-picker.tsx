@@ -19,6 +19,7 @@ import {
   generateGradientOptions,
   getContrastTextColor,
 } from "@/domain/layout/gradients";
+import { getColorSourceType } from "@/domain/layout/gradients/color-source";
 import { cn } from "@/utils";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -170,6 +171,27 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     if (!hasScreenshot) return;
     if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
     if (matchesScreenshotGradient) return;
+
+    // Skip auto-apply if user has manually selected a preset or custom gradient
+    // Check legacy string format first (handles "preset", "custom", "screenshot")
+    if (typeof background.gradientSource === "string") {
+      const source = background.gradientSource;
+      if (source === "preset" || source === "custom") {
+        return;
+      }
+    }
+
+    // Check new ColorSourceInfo format
+    const gradientSourceType = getColorSourceType(background.gradientSource);
+    if (
+      gradientSourceType === "preset" ||
+      gradientSourceType === "manual" ||
+      gradientSourceType === "brand"
+    ) {
+      return;
+    }
+
+    // Skip if ref indicates manual override (for backwards compatibility)
     if (sourceOverrideRef.current) return;
 
     const firstGradient = dynamicGradients[0];
@@ -189,6 +211,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     );
   }, [
     background.grainEnabled,
+    background.gradientSource,
     dynamicGradients,
     hasScreenshot,
     hasScreenshotGradients,
