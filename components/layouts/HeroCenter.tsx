@@ -79,20 +79,14 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     const subtitle = text.subtitle;
 
     return (
-      <div className={cn("space-y-4", alignmentClass)}>
+      <div className={cn("space-y-4", alignmentClass, text.containerClasses)}>
         {title ? (
-          <h1
-            className={cn("font-semibold", text.fontSize.titleClass, text.textColorClass)}
-            style={{ ...text.titleStyle, lineHeight: 1.05 }}
-          >
+          <h1 className={cn(text.titleClasses, text.textColorClass)} style={text.titleStyle}>
             {title}
           </h1>
         ) : null}
         {subtitle ? (
-          <p
-            className={cn("opacity-90", text.fontSize.subtitleClass, text.textColorClass)}
-            style={text.subtitleStyle}
-          >
+          <p className={cn(text.subtitleClasses, text.textColorClass)} style={text.subtitleStyle}>
             {subtitle}
           </p>
         ) : null}

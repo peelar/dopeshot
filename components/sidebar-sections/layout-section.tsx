@@ -6,8 +6,8 @@ import { track } from "@/lib/analytics";
 import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
-import { FontSelector } from "@/components/font-selector";
-import type { FontId, FontSize } from "@/domain/layout/types";
+import { FontStyleSelector } from "@/components/font-style-selector";
+import type { FontStyle } from "@/domain/layout/types";
 
 export function LayoutSection() {
   const config = useAtomValue(configAtom);
@@ -38,30 +38,18 @@ export function LayoutSection() {
     [setConfig],
   );
 
-  const handleFontChange = useCallback(
-    (fontId: FontId) => {
-      track("font_changed", {
-        font_id: fontId,
+  const handleFontStyleChange = useCallback(
+    (fontStyle: FontStyle) => {
+      track("font_style_changed", {
+        style_name: fontStyle,
+        previous_style: config.fontStyle,
       });
       setConfig((currentConfig) => ({
         ...currentConfig,
-        fontId,
+        fontStyle,
       }));
     },
-    [setConfig],
-  );
-
-  const handleFontSizeChange = useCallback(
-    (fontSize: FontSize) => {
-      track("font_size_changed", {
-        size: fontSize,
-      });
-      setConfig((currentConfig) => ({
-        ...currentConfig,
-        fontSize,
-      }));
-    },
-    [setConfig],
+    [setConfig, config.fontStyle],
   );
 
   const handleHeadlineBlur = useCallback(() => {
@@ -100,9 +88,6 @@ export function LayoutSection() {
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
-          <span className="text-xs text-muted-foreground">
-            {config.text.title?.length ?? 0}/120 characters
-          </span>
         </div>
       )}
 
@@ -121,20 +106,15 @@ export function LayoutSection() {
             maxLength={240}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
-          <span className="text-xs text-muted-foreground">
-            {config.text.subtitle?.length ?? 0}/240 characters
-          </span>
         </div>
       )}
 
       {showTypographyControls && (
         <div className="flex flex-col gap-2">
-          <Label className="text-xs font-medium text-muted-foreground">Typography</Label>
-          <FontSelector
-            fontId={config.fontId}
-            fontSize={config.fontSize}
-            onFontChangeAction={handleFontChange}
-            onSizeChangeAction={handleFontSizeChange}
+          <Label className="text-xs font-medium text-muted-foreground">Font Style</Label>
+          <FontStyleSelector
+            fontStyle={config.fontStyle}
+            onFontStyleChange={handleFontStyleChange}
           />
         </div>
       )}
