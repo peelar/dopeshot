@@ -260,7 +260,7 @@ function useExportHandler({
       look_name: currentLook?.name ?? "unknown",
       variant: config.variant,
       background_type: config.background?.type ?? "unknown",
-      font_id: config.fontId,
+      font_style: config.fontStyle,
       orientation,
     });
     setIsExporting(true);
@@ -294,7 +294,7 @@ function useExportHandler({
     canvas.height,
     canvas.width,
     config.background?.type,
-    config.fontId,
+    config.fontStyle,
     config.layoutId,
     config.variant,
     currentLook?.name,
