@@ -116,7 +116,13 @@ export type LayoutConfig = {
   };
   code?: {
     content: string;
-    language: string;
-    theme?: string;
+    language: string; // Auto-detected, no UI control
+    theme?: string; // Fixed theme, no UI control
+    layout?: "standard" | "wide" | "focus"; // Visual layout variant
+    size?: "social" | "square" | "tall"; // Output dimensions
+    emphasis?: "auto" | "none" | "highlight" | "dim"; // Code emphasis mode
+    fileName?: string; // Optional auto-detected filename
+    highlightedLines?: number[]; // Lines to highlight (1-indexed)
+    maxLines?: number; // Auto-trim threshold
   };
 };

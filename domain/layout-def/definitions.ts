@@ -325,7 +325,13 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       code: {
         content: '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}',
         language: "javascript",
-        theme: "github-dark",
+        theme: "github-dark", // Single opinionated theme
+        layout: "standard", // standard | wide | focus
+        size: "social", // social | square | tall
+        emphasis: "auto", // auto | none | highlight | dim
+        fileName: undefined, // Auto-detected from code hints
+        highlightedLines: [], // For manual highlight mode
+        maxLines: 50, // Auto-trim after 50 lines
       },
       };
     },
