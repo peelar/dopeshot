@@ -38,20 +38,20 @@ export interface TypographyScalingRules {
 
 export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules> = {
   founder: {
-    titleMinSize: 2.5,
-    titleMaxSize: 5,
-    subtitleMinSize: 1.125,
-    subtitleMaxSize: 1.5,
+    titleMinSize: 2.25,
+    titleMaxSize: 4.5,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.375,
     titleLineHeight: 1.1,
     subtitleLineHeight: 1.4,
     titleMaxLines: 3,
     subtitleMaxLines: 3,
   },
   billboard: {
-    titleMinSize: 3.5,
-    titleMaxSize: 7,
-    subtitleMinSize: 1.25,
-    subtitleMaxSize: 1.75,
+    titleMinSize: 2.25,
+    titleMaxSize: 4.5,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.375,
     titleLineHeight: 0.95,
     subtitleLineHeight: 1.3,
     titleMaxLines: 2,
@@ -59,10 +59,10 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     titleLetterSpacing: -0.02,
   },
   terminal: {
-    titleMinSize: 2,
-    titleMaxSize: 4,
-    subtitleMinSize: 1,
-    subtitleMaxSize: 1.25,
+    titleMinSize: 2.25,
+    titleMaxSize: 4.5,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.375,
     titleLineHeight: 1.2,
     subtitleLineHeight: 1.5,
     titleMaxLines: 4,
@@ -71,10 +71,10 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     subtitleLetterSpacing: -0.01,
   },
   editorial: {
-    titleMinSize: 3,
-    titleMaxSize: 6,
-    subtitleMinSize: 1.125,
-    subtitleMaxSize: 1.625,
+    titleMinSize: 2.25,
+    titleMaxSize: 4.5,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.375,
     titleLineHeight: 1.15,
     subtitleLineHeight: 1.45,
     titleMaxLines: 2,
@@ -155,6 +155,29 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
 }
 
 /**
+ * Calculate adaptive font size based on text length
+ * Smoothly scales from max size (short text) to min size (long text)
+ */
+function calculateAdaptiveFontSize(
+  textLength: number,
+  minSize: number,
+  maxSize: number,
+  shortThreshold: number,
+  longThreshold: number,
+): number {
+  if (textLength <= shortThreshold) {
+    return maxSize;
+  }
+  if (textLength >= longThreshold) {
+    return minSize;
+  }
+  
+  // Linear interpolation between short and long thresholds
+  const progress = (textLength - shortThreshold) / (longThreshold - shortThreshold);
+  return maxSize - progress * (maxSize - minSize);
+}
+
+/**
  * Get inline styles for title with fluid sizing
  */
 export function getTitleStyles(
@@ -163,14 +186,21 @@ export function getTitleStyles(
   textLength?: number,
 ): React.CSSProperties {
   const rules = FONT_STYLE_SCALING_RULES[fontStyle];
+  const length = textLength ?? 0;
 
-  // Calculate responsive font size using clamp
-  // Scales down for longer text, up for shorter text
-  const vwUnit = textLength && textLength > 60 ? "4vw" : textLength && textLength > 30 ? "5vw" : "6vw";
+  // Calculate adaptive size: short text = larger, long text = smaller
+  // Thresholds: 0-40 chars (max size), 40-150 chars (scale), 150+ chars (min size)
+  const targetSize = calculateAdaptiveFontSize(
+    length,
+    rules.titleMinSize,
+    rules.titleMaxSize,
+    40,
+    150,
+  );
 
   return {
     fontFamily,
-    fontSize: `clamp(${rules.titleMinSize}rem, ${vwUnit}, ${rules.titleMaxSize}rem)`,
+    fontSize: `${targetSize}rem`,
     lineHeight: rules.titleLineHeight,
     letterSpacing: rules.titleLetterSpacing ? `${rules.titleLetterSpacing}em` : undefined,
   };
@@ -185,13 +215,21 @@ export function getSubtitleStyles(
   textLength?: number,
 ): React.CSSProperties {
   const rules = FONT_STYLE_SCALING_RULES[fontStyle];
+  const length = textLength ?? 0;
 
-  // Subtitle scales more conservatively
-  const vwUnit = textLength && textLength > 100 ? "1.25vw" : "1.5vw";
+  // Subtitle scales more conservatively than title
+  // Thresholds: 0-60 chars (max size), 60-200 chars (scale), 200+ chars (min size)
+  const targetSize = calculateAdaptiveFontSize(
+    length,
+    rules.subtitleMinSize,
+    rules.subtitleMaxSize,
+    60,
+    200,
+  );
 
   return {
     fontFamily,
-    fontSize: `clamp(${rules.subtitleMinSize}rem, ${vwUnit}, ${rules.subtitleMaxSize}rem)`,
+    fontSize: `${targetSize}rem`,
     lineHeight: rules.subtitleLineHeight,
     letterSpacing: rules.subtitleLetterSpacing ? `${rules.subtitleLetterSpacing}em` : undefined,
   };
