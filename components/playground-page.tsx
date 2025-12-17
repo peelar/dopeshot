@@ -8,11 +8,9 @@ import { DragOverlay } from "@/components/drag-overlay";
 import { MobileActions } from "@/components/mobile-actions";
 import { PlaygroundWorkspace } from "@/components/playground-workspace";
 import { LayoutSelector } from "@/components/layout-selector";
-import { LayoutConfigPanel } from "@/components/layout-config";
-import { BrandPanel } from "@/components/brand/brand-panel";
+import { SidebarTabs } from "@/components/sidebar-tabs";
 import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { orientationAtom } from "@/hooks/atoms";
@@ -54,7 +52,6 @@ type PlaygroundPageProps = {
 export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
-  const [brandPanelOpen, setBrandPanelOpen] = useState(false);
 
   // Auto-apply brand logo on mount if toggle is enabled
   useBrandLogoAutoApply();
@@ -110,9 +107,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
-        onBrandClick={
-          showBrandExperience ? () => setBrandPanelOpen(true) : undefined
-        }
+        onBrandClick={undefined}
       />
 
       {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
@@ -141,7 +136,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
 
         {/* Right: Sidebar - spans full height from below nav */}
         <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-          <LayoutConfigPanel onUploadAsset={handleFileProcess} />
+          <SidebarTabs showBrandExperience={showBrandExperience} onUploadAsset={handleFileProcess} />
         </div>
       </div>
 
@@ -183,17 +178,6 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
           open={showOnboardingModal}
           onOpenChange={setShowOnboardingModal}
         />
-      ) : null}
-
-      {showBrandExperience ? (
-        <Sheet open={brandPanelOpen} onOpenChange={setBrandPanelOpen}>
-          <SheetContent side="right">
-            <SheetHeader>
-              <SheetTitle>Brand</SheetTitle>
-            </SheetHeader>
-            <BrandPanel />
-          </SheetContent>
-        </Sheet>
       ) : null}
     </main>
   );
