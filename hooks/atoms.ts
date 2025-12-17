@@ -56,12 +56,14 @@ export const getDefaultOrientation = (): Orientation => {
 const baseConfigAtom = atom<LayoutConfig>(migrateLayoutConfig(defaultPreset.config));
 
 // Wrap configAtom to ensure migration on reads and writes
+// Support both direct values and update functions
 export const configAtom = atom(
   (get) => {
     const config = get(baseConfigAtom);
     return migrateLayoutConfig(config);
   },
-  (get, set, newConfig: LayoutConfig) => {
+  (get, set, update: LayoutConfig | ((prev: LayoutConfig) => LayoutConfig)) => {
+    const newConfig = typeof update === "function" ? update(get(baseConfigAtom)) : update;
     set(baseConfigAtom, migrateLayoutConfig(newConfig));
   },
 );
