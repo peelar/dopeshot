@@ -12,8 +12,8 @@ import { SidebarTabs } from "@/components/sidebar-tabs";
 import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
-import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom } from "@/hooks/atoms";
+import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import { orientationAtom, type Orientation } from "@/hooks/atoms";
 import { useAtomValue } from "jotai";
 import { cn } from "@/utils";
 
@@ -22,7 +22,19 @@ const OnboardingModal = dynamic(
   { ssr: false }
 );
 
-function ExportContainer({ width, height }: { width: number; height: number }) {
+function ExportContainer({ 
+  width, 
+  height, 
+  orientation 
+}: { 
+  width: number; 
+  height: number;
+  orientation: Orientation;
+}) {
+  // Use preview dimensions as base (matching what user sees)
+  const baseDims = ORIENTATION_DIMENSIONS[orientation];
+  const scale = width / baseDims.width;
+  
   return (
     <div
       id="export-container"
@@ -33,6 +45,7 @@ function ExportContainer({ width, height }: { width: number; height: number }) {
         width: `${width}px`,
         height: `${height}px`,
         zIndex: -100,
+        overflow: "hidden",
         visibility: "visible",
         background: "white",
         WebkitFontSmoothing: "antialiased",
@@ -40,7 +53,16 @@ function ExportContainer({ width, height }: { width: number; height: number }) {
         textRendering: "optimizeLegibility",
       }}
     >
-      <CoverPreview isStatic />
+      <div
+        style={{
+          width: `${baseDims.width}px`,
+          height: `${baseDims.height}px`,
+          transformOrigin: "top left",
+          transform: `scale(${scale})`,
+        }}
+      >
+        <CoverPreview isStatic />
+      </div>
     </div>
   );
 }
@@ -155,6 +177,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         <ExportContainer
           width={EXPORT_ORIENTATION_DIMENSIONS[orientation].width}
           height={EXPORT_ORIENTATION_DIMENSIONS[orientation].height}
+          orientation={orientation}
         />
       ) : null}
 
