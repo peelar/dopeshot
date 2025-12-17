@@ -117,22 +117,31 @@ export function AuthForm() {
 
   if (user) {
     return (
-      <div className="w-full space-y-8" style={{ width: '448px' }}>
+      <div className="mx-auto w-full max-w-md space-y-8 px-4">
         <div className="flex justify-center">
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
-            <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-background text-foreground" aria-hidden="true">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <div
+              className="flex h-6 w-6 items-center justify-center rounded-sm bg-background text-foreground"
+              aria-hidden="true"
+            >
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                xmlns="http://www.w3.org/2000/svg"
+              >
                 <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
               </svg>
             </div>
           </div>
         </div>
         <div className="space-y-3 text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">You're signed in as {user.email}</p>
+          <h1 className="font-bold text-3xl tracking-tight text-foreground">Welcome back</h1>
+          <p className="text-sm text-muted-foreground">You&apos;re signed in as {user.email}</p>
         </div>
 
-        <div className="space-y-6 rounded-2xl border border-border/30 bg-white/40 p-6 backdrop-blur-xl shadow-xl dark:bg-background/60">
+        <div className="space-y-6 rounded-2xl border border-border/30 bg-white/40 p-4 shadow-xl backdrop-blur-xl dark:bg-background/60 sm:p-6">
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
               Member since {new Date(user.createdAt).toLocaleDateString()}
@@ -150,8 +159,8 @@ export function AuthForm() {
             <div
               className={`rounded-lg p-3 text-sm ${
                 status.type === "error"
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                  ? "border border-red-500/20 bg-red-500/10 text-red-400"
+                  : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
               }`}
             >
               {status.message}
@@ -176,25 +185,34 @@ export function AuthForm() {
   };
 
   return (
-    <div className="w-full space-y-8" style={{ width: '448px' }}>
+    <div className="mx-auto w-full max-w-md space-y-8 px-4">
       <div className="flex justify-center">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
-          <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-background text-foreground" aria-hidden="true">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <div
+            className="flex h-6 w-6 items-center justify-center rounded-sm bg-background text-foreground"
+            aria-hidden="true"
+          >
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
               <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
             </svg>
           </div>
         </div>
       </div>
       <div className="space-y-3 text-center">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">{getHeading()}</h1>
+        <h1 className="font-bold text-3xl tracking-tight text-foreground">{getHeading()}</h1>
         <p className="text-sm text-muted-foreground">{getSubheading()}</p>
       </div>
 
-      <div className="space-y-6 rounded-2xl border border-border/30 bg-white/40 p-6 backdrop-blur-xl shadow-xl dark:bg-background/60">
+      <div className="space-y-6 rounded-2xl border border-border/30 bg-white/40 p-6 shadow-xl backdrop-blur-xl dark:bg-background/60">
         {magicLinkSent ? (
           <div className="space-y-5">
-            <p className="text-sm text-center text-muted-foreground">
+            <p className="text-center text-sm text-muted-foreground">
               Click the link in the email to sign in. The link will expire in 15 minutes.
             </p>
             <Button
@@ -211,83 +229,83 @@ export function AuthForm() {
           </div>
         ) : (
           <form className="space-y-5" onSubmit={useMagicLink ? handleMagicLink : handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="auth-email" className="text-sm text-foreground">
-              Email
-            </Label>
-            <Input
-              id="auth-email"
-              type="email"
-              value={form.email}
-              onChange={handleFormChange("email")}
-              autoComplete="email"
-              placeholder="you@example.com"
-              className="h-12 rounded-lg border-border/70 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-muted/50"
-            />
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="auth-email" className="text-sm text-foreground">
+                Email
+              </Label>
+              <Input
+                id="auth-email"
+                type="email"
+                value={form.email}
+                onChange={handleFormChange("email")}
+                autoComplete="email"
+                placeholder="you@example.com"
+                className="h-12 rounded-lg border-border/70 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-muted/50"
+              />
+            </div>
 
-          {!useMagicLink && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="auth-password" className="text-sm text-foreground">
-                  Password
-                </Label>
-                <Input
-                  id="auth-password"
-                  type="password"
-                  value={form.password}
-                  onChange={handleFormChange("password")}
-                  autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-                  placeholder="Min. 8 characters"
-                  className="h-12 rounded-lg border-border/70 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-muted/50"
-                />
-              </div>
-
-              {mode === "sign-up" && (
+            {!useMagicLink && (
+              <>
                 <div className="space-y-2">
-                  <Label htmlFor="auth-password-confirm" className="text-sm text-foreground">
-                    Confirm password
+                  <Label htmlFor="auth-password" className="text-sm text-foreground">
+                    Password
                   </Label>
                   <Input
-                    id="auth-password-confirm"
+                    id="auth-password"
                     type="password"
-                    value={form.confirmPassword}
-                    onChange={handleFormChange("confirmPassword")}
-                    autoComplete="new-password"
-                    placeholder="Repeat password"
+                    value={form.password}
+                    onChange={handleFormChange("password")}
+                    autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+                    placeholder="Min. 8 characters"
                     className="h-12 rounded-lg border-border/70 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-muted/50"
                   />
                 </div>
-              )}
-            </>
-          )}
 
-          <Button
-            type="submit"
-            className="h-12 w-full rounded-lg bg-foreground text-background hover:bg-foreground/90"
-            disabled={isLoading}
-          >
-            {useMagicLink ? "Send magic link" : mode === "sign-in" ? "Sign in" : "Create account"}
-          </Button>
+                {mode === "sign-up" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="auth-password-confirm" className="text-sm text-foreground">
+                      Confirm password
+                    </Label>
+                    <Input
+                      id="auth-password-confirm"
+                      type="password"
+                      value={form.confirmPassword}
+                      onChange={handleFormChange("confirmPassword")}
+                      autoComplete="new-password"
+                      placeholder="Repeat password"
+                      className="h-12 rounded-lg border-border/70 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:border-border focus:bg-muted/50"
+                    />
+                  </div>
+                )}
+              </>
+            )}
 
-          {!useMagicLink && status && (
-            <div
-              className={`rounded-lg p-3 text-sm transition-all ${
-                status.type === "error"
-                  ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                  : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-              }`}
+            <Button
+              type="submit"
+              className="h-12 w-full rounded-lg bg-foreground text-background hover:bg-foreground/90"
+              disabled={isLoading}
             >
-              {status.message}
-            </div>
-          )}
+              {useMagicLink ? "Send magic link" : mode === "sign-in" ? "Sign in" : "Create account"}
+            </Button>
 
-          {useMagicLink && status?.type === "error" && (
-            <div className="rounded-lg p-3 text-sm bg-red-500/10 text-red-400 border border-red-500/20">
-              {status.message}
-            </div>
-          )}
-        </form>
+            {!useMagicLink && status && (
+              <div
+                className={`rounded-lg p-3 text-sm transition-all ${
+                  status.type === "error"
+                    ? "border border-red-500/20 bg-red-500/10 text-red-400"
+                    : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
+                }`}
+              >
+                {status.message}
+              </div>
+            )}
+
+            {useMagicLink && status?.type === "error" && (
+              <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-400">
+                {status.message}
+              </div>
+            )}
+          </form>
         )}
 
         {!magicLinkSent && (
@@ -297,7 +315,9 @@ export function AuthForm() {
                 <div className="w-full border-t border-border/50"></div>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="rounded-full border border-border/50 bg-background px-2 py-0.5 text-muted-foreground/60">or</span>
+                <span className="rounded-full border border-border/50 bg-background px-2 py-0.5 text-muted-foreground/60">
+                  or
+                </span>
               </div>
             </div>
 
@@ -316,11 +336,11 @@ export function AuthForm() {
         <div className="text-center text-sm text-muted-foreground">
           {mode === "sign-in" ? (
             <>
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <button
                 type="button"
                 onClick={() => setMode("sign-up")}
-                className="text-foreground hover:text-foreground/80 transition-colors underline underline-offset-2"
+                className="text-foreground underline underline-offset-2 transition-colors hover:text-foreground/80"
               >
                 Sign up
               </button>
@@ -331,7 +351,7 @@ export function AuthForm() {
               <button
                 type="button"
                 onClick={() => setMode("sign-in")}
-                className="text-foreground hover:text-foreground/80 transition-colors underline underline-offset-2"
+                className="text-foreground underline underline-offset-2 transition-colors hover:text-foreground/80"
               >
                 Sign in
               </button>

@@ -93,3 +93,19 @@ export const lastLayoutByAssetTypeAtom = atomWithStorage<Record<AssetType, strin
     code: "code-snippet",
   },
 );
+
+// Brand settings
+export interface BrandSettings {
+  logoUrl: string | null;
+  logoPath: string | null;
+  useLogoOnScreenshots: boolean;
+}
+
+export const brandSettingsAtom = atomWithStorage<BrandSettings>(
+  "dopeshot:brandSettings",
+  {
+    logoUrl: null,
+    logoPath: null,
+    useLogoOnScreenshots: false,
+  }
+);
