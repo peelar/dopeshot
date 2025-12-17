@@ -18,15 +18,12 @@ export function BrandPanel() {
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
-  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Fetch brand profile in background on mount
   useEffect(() => {
     async function loadBrandProfile() {
-      if (!session?.user) {
-        setIsLoading(false);
-        return;
-      }
+      if (!session?.user) return;
 
       try {
         const response = await fetch("/api/brand/profile", {
@@ -49,8 +46,6 @@ export function BrandPanel() {
         if (process.env.NODE_ENV === "development") {
           console.warn("Brand profile not available:", error);
         }
-      } finally {
-        setIsLoading(false);
       }
     }
 
@@ -174,12 +169,8 @@ export function BrandPanel() {
     }
   };
 
-  if (isLoading) {
-    return <div className="p-4 text-sm text-muted-foreground">Loading...</div>;
-  }
-
   return (
-    <div className="space-y-6 p-4">
+    <div className="h-full w-full space-y-6 overflow-y-auto p-4">
       {/* Logo Section */}
       <div className="space-y-4">
         <h3 className="text-sm font-semibold">Logo</h3>

@@ -403,13 +403,13 @@ function LayoutPreviewCard({
       className={cn(
         "group relative flex flex-col gap-1 rounded-lg border border-transparent p-1.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:gap-2 sm:p-2",
         isSelected
-          ? "border-primary/60 ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
-          : "hover:border-border/60 hover:bg-muted/40",
+          ? "border-primary/30 ring-1 ring-primary/15 ring-offset-1 ring-offset-background"
+          : "hover:border-border/40 hover:bg-muted/20",
       )}
       aria-pressed={isSelected}
       aria-label={`Select ${option.displayName} look`}
     >
-      <div className="relative h-[64px] w-[105px] overflow-hidden rounded bg-background shadow-sm ring-1 ring-border/10 sm:h-[90px] sm:w-[144px]">
+      <div className="relative h-[64px] w-[105px] overflow-hidden rounded bg-background ring-1 ring-border/5 sm:h-[90px] sm:w-[144px]">
         <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
