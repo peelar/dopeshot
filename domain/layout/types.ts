@@ -39,6 +39,10 @@ export type ScreenshotTreatment = {
   fadeEnabled?: boolean;
 };
 
+// Font styles - semantic typographic systems for free users
+export type FontStyle = "founder" | "billboard" | "terminal" | "editorial";
+
+// Legacy types - kept for backward compatibility during migration
 export type FontId =
   | "clean"
   | "professional"
@@ -86,8 +90,10 @@ export type BackgroundConfig = {
 export type LayoutConfig = {
   layoutId: string;
   variant: string; // Layout-specific variant (e.g., "left", "right", "center")
-  fontId: FontId;
-  fontSize: FontSize;
+  fontStyle: FontStyle;
+  // Legacy fields - kept for backward compatibility during migration
+  fontId?: FontId;
+  fontSize?: FontSize;
   text: {
     title: string;
     subtitle?: string;
