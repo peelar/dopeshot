@@ -12,6 +12,14 @@ interface PreviewViewportProps {
   isLoading?: boolean;
   loadingText?: string;
   fluidLayout?: boolean; // For content-based sizing (code snippet)
+  onViewportMetricsChange?: (metrics: {
+    scale: number;
+    containerWidth: number;
+    containerHeight: number;
+    scaledWidth: number;
+    scaledHeight: number;
+    bottomWhitespace: number;
+  }) => void;
 }
 
 const DEFAULT_SURFACE = {
@@ -27,11 +35,30 @@ export function PreviewViewport({
   isLoading = false,
   loadingText = "Loading...",
   fluidLayout = false,
+  onViewportMetricsChange,
 }: PreviewViewportProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scale, setScale] = useState(1);
   const [hasMeasured, setHasMeasured] = useState(false);
   const rafRef = useRef<number | undefined>(undefined);
+
+  const reportMetrics = useCallback(
+    (nextScale: number, containerWidth: number, containerHeight: number) => {
+      const scaledWidth = surfaceWidth * nextScale;
+      const scaledHeight = surfaceHeight * nextScale;
+      const bottomWhitespace = Math.max(0, containerHeight - scaledHeight);
+
+      onViewportMetricsChange?.({
+        scale: nextScale,
+        containerWidth,
+        containerHeight,
+        scaledWidth,
+        scaledHeight,
+        bottomWhitespace,
+      });
+    },
+    [onViewportMetricsChange, surfaceHeight, surfaceWidth]
+  );
 
   // Throttled scale update using requestAnimationFrame
   const updateScale = useCallback(() => {
@@ -42,17 +69,18 @@ export function PreviewViewport({
       if (!containerRef.current) return;
       const containerWidth = containerRef.current.clientWidth;
       const containerHeight = containerRef.current.clientHeight;
-      if (!containerWidth || !containerHeight || !surfaceWidth || !surfaceHeight) return;
+      if (!containerWidth || !surfaceWidth || !surfaceHeight) return;
 
       // Scale to fit both width and height, ensuring entire canvas is visible without scrolling
       const scaleX = containerWidth / surfaceWidth;
-      const scaleY = containerHeight / surfaceHeight;
+      const scaleY = containerHeight ? containerHeight / surfaceHeight : Number.POSITIVE_INFINITY;
       const nextScale = Math.min(scaleX, scaleY, 1);
 
       setScale(nextScale);
       setHasMeasured(true);
+      reportMetrics(nextScale, containerWidth, containerHeight);
     });
-  }, [surfaceWidth, surfaceHeight]);
+  }, [surfaceWidth, surfaceHeight, reportMetrics]);
 
   useLayoutEffect(() => {
     if (fluidLayout) {
@@ -66,13 +94,14 @@ export function PreviewViewport({
     // Initial scale calculation - fit both width and height
     const containerWidth = node.clientWidth;
     const containerHeight = node.clientHeight;
-    if (containerWidth && containerHeight && surfaceWidth && surfaceHeight) {
+    if (containerWidth && surfaceWidth && surfaceHeight) {
       const scaleX = containerWidth / surfaceWidth;
-      const scaleY = containerHeight / surfaceHeight;
+      const scaleY = containerHeight ? containerHeight / surfaceHeight : Number.POSITIVE_INFINITY;
       const nextScale = Math.min(scaleX, scaleY, 1);
       
       setScale(nextScale);
       setHasMeasured(true);
+      reportMetrics(nextScale, containerWidth, containerHeight);
     }
 
     const observer = new ResizeObserver(updateScale);
@@ -82,7 +111,7 @@ export function PreviewViewport({
       observer.disconnect();
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [surfaceWidth, surfaceHeight, updateScale, fluidLayout]);
+  }, [surfaceWidth, surfaceHeight, updateScale, fluidLayout, reportMetrics]);
 
   // Fluid layout: content determines size, no fixed canvas
   if (fluidLayout) {

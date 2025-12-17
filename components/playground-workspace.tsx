@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
@@ -56,9 +57,20 @@ export function PlaygroundWorkspace({
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const [bottomWhitespace, setBottomWhitespace] = useState(0);
 
   // Code snippet uses fluid layout (content-based sizing)
   const useFluidLayout = config.layoutId === "code-snippet";
+
+  const handleViewportMetricsChange = useCallback(
+    (metrics: { bottomWhitespace: number }) => {
+      const nextValue = Math.round(metrics.bottomWhitespace);
+      setBottomWhitespace((previousValue) =>
+        previousValue === nextValue ? previousValue : nextValue
+      );
+    },
+    []
+  );
 
   const handleOrientationChange = (newOrientation: Orientation) => {
     // Check if current layout supports new orientation
@@ -175,6 +187,7 @@ export function PlaygroundWorkspace({
             isLoading={isAnalyzingColors}
             loadingText="Analyzing colors..."
             fluidLayout={useFluidLayout}
+            onViewportMetricsChange={handleViewportMetricsChange}
           >
             <CoverPreview />
           </PreviewViewport>
@@ -188,7 +201,16 @@ export function PlaygroundWorkspace({
         </div>
 
         {!useFluidLayout && (
-          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+          <div
+            className="relative z-10"
+            style={
+              bottomWhitespace
+                ? { transform: `translateY(-${bottomWhitespace}px)` }
+                : undefined
+            }
+          >
+            <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+          </div>
         )}
       </div>
     </div>
