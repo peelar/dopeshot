@@ -1,7 +1,7 @@
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Orientation } from "@/hooks/atoms";
 import { DEFAULT_GRADIENT, GRADIENTS } from "@/domain/layout/gradient-presets";
-import { DEFAULT_FONT_ID, DEFAULT_FONT_SIZE } from "@/domain/layout/fonts";
+import { DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -113,8 +113,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "popup-gradient",
       variant: "right",
-      fontId: DEFAULT_FONT_ID,
-      fontSize: DEFAULT_FONT_SIZE,
+      fontStyle: DEFAULT_FONT_STYLE,
       text: {
         title: "",
         subtitle: "",
@@ -177,8 +176,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "hero-center",
       variant: "left",
-      fontId: DEFAULT_FONT_ID,
-      fontSize: DEFAULT_FONT_SIZE,
+      fontStyle: DEFAULT_FONT_STYLE,
       text: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -240,8 +238,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "adaptive-stage",
       variant: "default",
-      fontId: DEFAULT_FONT_ID,
-      fontSize: DEFAULT_FONT_SIZE,
+      fontStyle: DEFAULT_FONT_STYLE,
       text: {
         title: "",
         subtitle: "",
@@ -303,8 +300,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       return {
         layoutId: "code-snippet",
         variant: "center",
-        fontId: "developer",
-        fontSize: DEFAULT_FONT_SIZE,
+        fontStyle: "terminal",
         text: {
           title: "",
           subtitle: "",
