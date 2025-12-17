@@ -88,9 +88,6 @@ export function LayoutSection() {
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
-          <span className="text-xs text-muted-foreground">
-            {config.text.title?.length ?? 0}/120 characters
-          </span>
         </div>
       )}
 
@@ -109,9 +106,6 @@ export function LayoutSection() {
             maxLength={240}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
-          <span className="text-xs text-muted-foreground">
-            {config.text.subtitle?.length ?? 0}/240 characters
-          </span>
         </div>
       )}
 
