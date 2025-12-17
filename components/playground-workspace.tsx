@@ -114,7 +114,7 @@ export function PlaygroundWorkspace({
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
-      <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+      <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-6 px-2 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex flex-shrink-0 items-center justify-center">
           {/* Tiny icon-only orientation toggle - hidden for code snippets - centered against screenshot */}
           {!useFluidLayout ? (
@@ -168,28 +168,31 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 w-full justify-center">
-          <PreviewViewport
-            surfaceWidth={canvasWidth}
-            surfaceHeight={canvasHeight}
-            isLoading={isAnalyzingColors}
-            loadingText="Analyzing colors..."
-            fluidLayout={useFluidLayout}
-          >
-            <CoverPreview />
-          </PreviewViewport>
-          {showFocusHint ? (
-            <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
-              <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
-                Screenshot-focused variant active
-              </span>
+        <div className="relative flex min-h-0 flex-1 w-full flex-col justify-center">
+          <div className="flex min-h-0 flex-1 w-full justify-center">
+            <PreviewViewport
+              surfaceWidth={canvasWidth}
+              surfaceHeight={canvasHeight}
+              isLoading={isAnalyzingColors}
+              loadingText="Analyzing colors..."
+              fluidLayout={useFluidLayout}
+            >
+              <CoverPreview />
+            </PreviewViewport>
+            {showFocusHint ? (
+              <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
+                <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
+                  Screenshot-focused variant active
+                </span>
+              </div>
+            ) : null}
+          </div>
+          {!useFluidLayout && (
+            <div className="flex flex-shrink-0 items-center justify-center pb-4">
+              <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
             </div>
-          ) : null}
+          )}
         </div>
-
-        {!useFluidLayout && (
-          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
-        )}
       </div>
     </div>
   );

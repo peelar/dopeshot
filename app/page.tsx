@@ -101,7 +101,7 @@ export default function PlaygroundPage() {
 
           <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
 
-          <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
+          <div className="flex min-h-0 flex-1 overflow-hidden px-4 sm:px-8">
             <PlaygroundWorkspace
               isMobile={isMobile}
               shouldShowAspectLock={shouldShowAspectLock}
