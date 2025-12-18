@@ -13,11 +13,14 @@ type LayoutGeometry =
  * This allows the same gradient colors to render differently per layout.
  */
 function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
-  // Spotlight: radial toward screenshot side
+  // Spotlight: radial toward screenshot side, farthest-corner ensures full coverage
   if (layoutId.startsWith("hero-center")) {
     return {
       type: "radial",
-      direction: variant === "right" ? "ellipse at 70% 50%" : "ellipse at 30% 50%",
+      direction:
+        variant === "right"
+          ? "ellipse farthest-corner at 70% 50%"
+          : "ellipse farthest-corner at 30% 50%",
     };
   }
 
@@ -31,9 +34,9 @@ function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
     return { type: "linear", angle: angles[variant ?? "center"] ?? 180 };
   }
 
-  // Backdrop: subtle centered radial
+  // Backdrop: subtle centered radial, farthest-corner ensures full coverage
   if (layoutId === "adaptive-stage") {
-    return { type: "radial", direction: "circle at 50% 50%" };
+    return { type: "radial", direction: "circle farthest-corner at 50% 50%" };
   }
 
   // Code snippet: diagonal linear
