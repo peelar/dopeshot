@@ -10,8 +10,6 @@ import {
 
 type GradientVariation = {
   colorPair?: [string, string];
-  backgroundShift?: number;
-  backgroundSeed?: string;
 };
 
 /**
@@ -114,22 +112,10 @@ function getGradientGeometry(context: GradientContext): {
   };
 }
 
-const BACKGROUND_GRADIENT_COLORS = [
-  "#050816",
-  "#070B1E",
-  "#0B1120",
-  "#0F172A",
-  "#111827",
-  "#13141F",
-  "#111536",
-  "#161A42",
-  "#1A1E3A",
-  "#1F243B",
-];
-
 /**
- * Generate gradient stops with balanced color distribution.
- * Uses two screenshot colors + an ambient background color.
+ * Generate gradient stops from screenshot colors.
+ * Uses 2 stops for clean transitions - 3-color gradients with extreme contrast
+ * (bright → dark → bright) create visual "valleys" that look unnatural.
  * Enforces chromatic separation to prevent muddy gradients.
  */
 function generateGradientStops(
@@ -141,15 +127,6 @@ function generateGradientStops(
 
   // Enforce chromatic separation to prevent muddy gradients
   const { colorA: primary, colorB: secondary } = enforceColorSeparation(rawPrimary, rawSecondary);
-
-  const seed = variation?.backgroundSeed ?? `${primary}-${secondary}-${strategy}`;
-  const background = getBackgroundAccentColor(
-    seed,
-    primary,
-    secondary,
-    strategy,
-    variation?.backgroundShift ?? 0,
-  );
 
   const start = adjustProminentColor(
     strategy === "complementary" || strategy === "triadic" ? secondary : primary,
@@ -164,14 +141,9 @@ function generateGradientStops(
     strategy,
   );
 
-  // Use 4 stops to create balanced color distribution:
-  // - 0-35%: transition from start to background
-  // - 35-65%: hold background color (gives it ~30% visual presence)
-  // - 65-100%: transition from background to end
+  // Simple 2-stop gradient for smooth transition between screenshot colors
   return [
     { color: start, position: 0 },
-    { color: background, position: 35 },
-    { color: background, position: 65 },
     { color: end, position: 100 },
   ];
 }
@@ -182,48 +154,6 @@ function generateGradientStops(
 function getProminentScreenshotColors(palette: EnhancedColorPalette): [string, string] {
   const pool = getPaletteColorPool(palette);
   return [pool[0], pool[1]];
-}
-
-/**
- * Choose a background color from a curated list so it is not tied to the screenshot palette
- */
-function getBackgroundAccentColor(
-  seed: string,
-  primary: string,
-  secondary: string,
-  strategy: string,
-  additionalShift = 0,
-): string {
-  let hash = 0;
-  for (const char of seed) {
-    hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  }
-
-  const strategyOffset: Record<string, number> = {
-    "hero-base": 0,
-    "multi-color": 1,
-    complementary: 2,
-    analogous: 3,
-    triadic: 4,
-  };
-
-  const offset = strategyOffset[strategy] ?? 0;
-  let index = (hash + offset + additionalShift) % BACKGROUND_GRADIENT_COLORS.length;
-  let picked = BACKGROUND_GRADIENT_COLORS[index];
-  let attempts = 0;
-  const lowerPrimary = primary.toLowerCase();
-  const lowerSecondary = secondary.toLowerCase();
-
-  while (
-    (picked.toLowerCase() === lowerPrimary || picked.toLowerCase() === lowerSecondary) &&
-    attempts < BACKGROUND_GRADIENT_COLORS.length
-  ) {
-    attempts += 1;
-    index = (index + 1) % BACKGROUND_GRADIENT_COLORS.length;
-    picked = BACKGROUND_GRADIENT_COLORS[index];
-  }
-
-  return picked;
 }
 
 /**
@@ -336,8 +266,6 @@ export function generateGradientOptions(
   return strategies.map((strategy, index) =>
     generateGradient(palette, context, strategy, {
       colorPair: colorPairs[index],
-      backgroundShift: index,
-      backgroundSeed: `${colorPairs[index][0]}-${colorPairs[index][1]}-${strategy}-${index}`,
     }),
   );
 }
