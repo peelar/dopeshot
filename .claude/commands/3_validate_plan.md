@@ -19,16 +19,26 @@ Verify implementation matches the plan's success criteria and prepare for commit
 
 3. **Run automated verification**:
    - Build: `npm run build` (or equivalent)
-   - Tests: `npm test`
+   - Tests: `npm test` (or `pnpm test:ui && pnpm test:e2e && pnpm test:domain`)
    - Type checking: `npm run typecheck`
    - Linting: `npm run lint`
 
-4. **Code review**:
+4. **Verify test coverage**:
+   - Check that new functionality has appropriate test coverage
+   - Verify test types match feature complexity:
+     - Unit tests for utilities and pure functions
+     - Component tests for UI components
+     - Integration/E2E tests for user workflows
+     - Visual regression tests for layout changes (if applicable)
+   - Ensure edge cases are tested
+   - Run `pnpm test:ui` and `pnpm test:e2e` to confirm all tests pass
+
+5. **Code review**:
    - Check code follows project patterns
    - Verify security considerations
    - Confirm no regressions
 
-5. **Generate validation report**:
+6. **Generate validation report**:
 
 ```markdown
 ## Validation Report: [Feature Name]
@@ -43,6 +53,13 @@ Verify implementation matches the plan's success criteria and prepare for commit
 ✓ All [X] tests pass
 ✓ Type checking clean
 ✓ No linting issues
+
+### Test Coverage Assessment
+✓ Unit tests added for [components/utilities]
+✓ Component tests added for [UI components]
+✓ Integration/E2E tests added for [workflows]
+✓ Edge cases covered: [list edge cases tested]
+⚠️ Missing coverage: [any gaps]
 
 ### Code Review Findings
 

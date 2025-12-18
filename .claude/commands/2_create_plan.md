@@ -24,6 +24,8 @@ When the user describes a feature or change:
      - Code examples where helpful
      - Automated verification commands
      - Manual verification checklist
+     - **Test coverage requirements** (unit, component, integration, or E2E tests)
+   - **Always include a Testing phase** to add appropriate test coverage
    - **Always include a Documentation phase** to update README.md
    - **Always include Analytics Tracking** for user-facing features using `track()` from `@/lib/analytics`
 
@@ -68,7 +70,7 @@ track("event_name", { property: value });
 
 #### Automated Verification
 - [ ] Build passes: `npm run build`
-- [ ] Tests pass: `npm test`
+- [ ] Tests pass: `npm test` (or `pnpm test:ui && pnpm test:e2e`)
 - [ ] Types check: `npm run typecheck`
 
 #### Manual Verification
@@ -76,10 +78,63 @@ track("event_name", { property: value });
 - [ ] [Edge case to check]
 - [ ] Analytics events fire correctly (check browser console or analytics dashboard)
 
+#### Test Coverage
+- [ ] Unit tests added for [utilities/pure functions]
+- [ ] Component tests added for [React components]
+- [ ] Integration/E2E tests added for [user workflows]
+- [ ] Edge cases covered: [list specific edge cases]
+
 ---
 
 ## Phase 2: [Phase Name]
 [Continue pattern...]
+
+---
+
+## Phase N-1: Testing
+
+### Changes Required
+
+#### 1. Add Test Coverage
+**Files to create**:
+- `tests/ui/[feature-name].test.ts` - Unit/component tests (if applicable)
+- `tests/e2e/[feature-name].spec.ts` - Integration/E2E tests (if applicable)
+
+**Test types to include**:
+- **Unit tests** - Pure functions, utilities, calculations
+- **Component tests** - React components with Vitest + React Testing Library
+- **Integration tests** - User workflows with Playwright
+- **Edge case tests** - Boundary conditions, error handling
+
+**Example test structure**:
+```typescript
+import { describe, it, expect } from 'vitest';
+
+describe('[Feature Name]', () => {
+  describe('[Component/Function]', () => {
+    it('handles normal case', () => {
+      // Test implementation
+    });
+
+    it('handles edge case: [description]', () => {
+      // Edge case test
+    });
+  });
+});
+```
+
+### Success Criteria
+
+#### Automated Verification
+- [ ] All tests pass: `pnpm test:ui && pnpm test:e2e`
+- [ ] Test coverage appropriate for feature complexity
+- [ ] No flaky tests (run multiple times to verify)
+
+#### Manual Verification
+- [ ] Tests cover main user workflows
+- [ ] Edge cases documented and tested
+- [ ] Test fixtures created (if needed)
+- [ ] Test names are descriptive and clear
 
 ---
 

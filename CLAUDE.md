@@ -22,6 +22,13 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - After you are done with implementation, verify if the types & tests work via scripts in `package.json`.
 - Whenever you have "a bigger fix" in mind or a refactor, go for it. We are building for tomorrow, not today.
 - **Always add tracking events** for all new user-facing functionalities using `track()` from `@/lib/analytics`. Track user interactions, state changes, and feature usage with descriptive event names and relevant properties (e.g., `track("feature_used", { property: value })`).
+- **Always add test coverage** for new features and functionality. Follow the testing strategy documented in `thoughts/research/009-export-testing-strategy.md`:
+  - **Unit tests** (Vitest) for pure functions and utilities
+  - **Component tests** (Vitest + React Testing Library) for UI components
+  - **Integration tests** (Playwright) for E2E workflows
+  - **Visual regression tests** (Playwright) for layout/UI changes when applicable
+  - **Edge case tests** for boundary conditions and error handling
+  - A feature is not complete until it has appropriate test coverage. Run `pnpm test:ui` and `pnpm test:e2e` to verify tests pass before considering implementation done.
 - # Phase 1: Supabase Foundation - Product Prompt
 
 ## Context

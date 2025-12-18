@@ -61,7 +61,7 @@ function CodeSnippetComponent({ className }: CodeSnippetProps) {
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: "transparent", isolation: "isolate" }}
     >
-      <div className="relative z-10 h-full w-full">
+      <div className="relative z-10 h-full w-full" data-export-element data-element="container">
         <div
           className="flex h-full w-full items-center justify-center"
           style={{ padding: `${stagePadding}px` }}

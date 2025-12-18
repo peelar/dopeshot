@@ -142,6 +142,7 @@ export function PreviewViewport({
       className={cn("flex h-full w-full justify-center", className)}
     >
       <div
+        data-testid="preview-canvas"
         className="relative overflow-hidden rounded-lg shadow-sm"
         style={{
           width: hasMeasured ? surfaceWidth * scale : undefined,
