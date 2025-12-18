@@ -11,16 +11,19 @@ type LayoutGeometry =
 /**
  * Get layout-specific gradient geometry based on layout type and variant.
  * This allows the same gradient colors to render differently per layout.
+ *
+ * Note: We use linear gradients for all layouts because the 3-stop gradient
+ * structure (color → dark → color) doesn't work well with radial gradients
+ * (creates a glow/ring effect instead of smooth coverage).
  */
 function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
-  // Spotlight: radial toward screenshot side, farthest-corner ensures full coverage
+  // Spotlight: diagonal toward screenshot side
   if (layoutId.startsWith("hero-center")) {
+    // Left variant: text on left, screenshot on right → gradient flows left-to-right
+    // Right variant: text on right, screenshot on left → gradient flows right-to-left
     return {
-      type: "radial",
-      direction:
-        variant === "right"
-          ? "ellipse farthest-corner at 70% 50%"
-          : "ellipse farthest-corner at 30% 50%",
+      type: "linear",
+      angle: variant === "right" ? 270 : 90,
     };
   }
 
@@ -34,9 +37,9 @@ function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
     return { type: "linear", angle: angles[variant ?? "center"] ?? 180 };
   }
 
-  // Backdrop: subtle centered radial, farthest-corner ensures full coverage
+  // Backdrop: vertical gradient for centered screenshot
   if (layoutId === "adaptive-stage") {
-    return { type: "radial", direction: "circle farthest-corner at 50% 50%" };
+    return { type: "linear", angle: 180 };
   }
 
   // Code snippet: diagonal linear
