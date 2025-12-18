@@ -1,12 +1,7 @@
 import { AspectCategory } from "../aspect";
 import { AdvancedGradient, GradientStop, GradientType } from "./types";
 import { ColorPalette } from "@/domain/asset/types";
-import {
-  enhanceColorPalette,
-  EnhancedColorPalette,
-  enhanceColor,
-  enforceColorSeparation,
-} from "./colors";
+import { enhanceColorPalette, EnhancedColorPalette, enhanceColor } from "./colors";
 
 type GradientVariation = {
   colorPair?: [string, string];
@@ -128,20 +123,14 @@ const BACKGROUND_GRADIENT_COLORS = [
 ];
 
 /**
- * Generate gradient stops with balanced color distribution.
- * Uses two screenshot colors + an ambient background color.
- * Enforces chromatic separation to prevent muddy gradients.
+ * Generate three color stops: two most prominent screenshot colors + an ambient background color
  */
 function generateGradientStops(
   palette: EnhancedColorPalette,
   strategy: "hero-base" | "multi-color" | "complementary" | "analogous" | "triadic" = "multi-color",
   variation?: GradientVariation,
 ): GradientStop[] {
-  const [rawPrimary, rawSecondary] = variation?.colorPair ?? getProminentScreenshotColors(palette);
-
-  // Enforce chromatic separation to prevent muddy gradients
-  const { colorA: primary, colorB: secondary } = enforceColorSeparation(rawPrimary, rawSecondary);
-
+  const [primary, secondary] = variation?.colorPair ?? getProminentScreenshotColors(palette);
   const seed = variation?.backgroundSeed ?? `${primary}-${secondary}-${strategy}`;
   const background = getBackgroundAccentColor(
     seed,
@@ -164,14 +153,9 @@ function generateGradientStops(
     strategy,
   );
 
-  // Use 4 stops to create balanced color distribution:
-  // - 0-35%: transition from start to background
-  // - 35-65%: hold background color (gives it ~30% visual presence)
-  // - 65-100%: transition from background to end
   return [
     { color: start, position: 0 },
-    { color: background, position: 35 },
-    { color: background, position: 65 },
+    { color: background, position: 50 },
     { color: end, position: 100 },
   ];
 }
