@@ -32,7 +32,7 @@ export type GradientColorSpace = "oklch" | "srgb" | "lab";
  */
 export type AdvancedGradient = {
   type: GradientType;
-  stops: GradientStop[]; // Always three stops (start, background, end)
+  stops: GradientStop[]; // Color stops with positions
   direction?: string; // e.g., "to right", "45deg", "circle at center"
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
   angle?: number; // for linear gradients in degrees (0-360)
