@@ -128,8 +128,9 @@ const BACKGROUND_GRADIENT_COLORS = [
 ];
 
 /**
- * Generate three color stops: two most prominent screenshot colors + an ambient background color
- * Enforces chromatic separation to prevent muddy gradients
+ * Generate gradient stops with balanced color distribution.
+ * Uses two screenshot colors + an ambient background color.
+ * Enforces chromatic separation to prevent muddy gradients.
  */
 function generateGradientStops(
   palette: EnhancedColorPalette,
@@ -163,9 +164,14 @@ function generateGradientStops(
     strategy,
   );
 
+  // Use 4 stops to create balanced color distribution:
+  // - 0-35%: transition from start to background
+  // - 35-65%: hold background color (gives it ~30% visual presence)
+  // - 65-100%: transition from background to end
   return [
     { color: start, position: 0 },
-    { color: background, position: 50 },
+    { color: background, position: 35 },
+    { color: background, position: 65 },
     { color: end, position: 100 },
   ];
 }
