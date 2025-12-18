@@ -10,18 +10,16 @@ export interface GradientPreset {
 }
 
 /**
- * Create a 3-stop preset gradient using the same 3-color structure as screenshot-derived gradients.
+ * Create a 2-stop preset gradient for smooth color transitions.
  */
 function createPresetGradient(
-  colors: { start: string; mid: string; end: string },
+  colors: { start: string; end: string },
   angle = 90,
 ): AdvancedGradient {
-  const middle = colors.mid;
   return {
     type: "linear",
     stops: [
       { color: colors.start, position: 0 },
-      { color: middle, position: 50 },
       { color: colors.end, position: 100 },
     ],
     angle,
@@ -35,7 +33,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Hyper",
     gradient: createPresetGradient({
       start: "#ec4899",
-      mid: "#d946ef",
       end: "#8b5cf6",
     }),
     textColor: "slate-50",
@@ -45,7 +42,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Oceanic",
     gradient: createPresetGradient({
       start: "#2E3192",
-      mid: "#1B73E8",
       end: "#1BFFFF",
     }),
     textColor: "slate-50",
@@ -55,7 +51,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Cotton Candy",
     gradient: createPresetGradient({
       start: "#D4145A",
-      mid: "#FF6B9D",
       end: "#FBB03B",
     }),
     textColor: "slate-900",
@@ -65,7 +60,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Sunset",
     gradient: createPresetGradient({
       start: "#ff7e5f",
-      mid: "#ff9a56",
       end: "#feb47b",
     }),
     textColor: "slate-900",
@@ -75,7 +69,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Northern Lights",
     gradient: createPresetGradient({
       start: "#43cea2",
-      mid: "#38a169",
       end: "#185a9d",
     }),
     textColor: "slate-50",
@@ -85,7 +78,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Midnight",
     gradient: createPresetGradient({
       start: "#232526",
-      mid: "#2d2f31",
       end: "#414345",
     }),
     textColor: "slate-50",
@@ -95,7 +87,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Lush",
     gradient: createPresetGradient({
       start: "#56ab2f",
-      mid: "#7bc043",
       end: "#a8e063",
     }),
     textColor: "slate-900",
@@ -105,7 +96,6 @@ export const GRADIENTS: GradientPreset[] = [
     name: "Frost",
     gradient: createPresetGradient({
       start: "#000428",
-      mid: "#002856",
       end: "#004e92",
     }),
     textColor: "slate-50",
