@@ -65,7 +65,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
       assetMap={assetMap}
       screenshot={screenshot}
     >
-      <div className="relative z-10 h-full w-full">
+      <div className="relative z-10 h-full w-full" data-export-element data-element="container">
         <div
           className="flex h-full w-full items-center justify-center"
           style={{ padding: `${stagePadding}px` }}
@@ -86,6 +86,9 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
               <img
                 src={screenshot.url}
                 alt="Screenshot"
+                data-export-element
+                data-element="screenshot"
+                data-role="screenshot"
                 className="h-full w-full object-cover"
                 style={{
                   borderRadius: frameAppearance.contentRadius,
