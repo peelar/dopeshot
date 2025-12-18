@@ -8,6 +8,14 @@ import { authEnv } from "./env";
 // Initialize Resend client (only if API key is configured)
 const resend = authEnv.resendApiKey ? new Resend(authEnv.resendApiKey) : null;
 
+function toOrigin(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return url;
+  }
+}
+
 export const auth = betterAuth({
   database: new Pool({
     connectionString: authEnv.databaseUrl,
@@ -29,7 +37,7 @@ export const auth = betterAuth({
   },
   secret: authEnv.betterAuthSecret,
   baseURL: authEnv.betterAuthUrl,
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [toOrigin(authEnv.betterAuthUrl)],
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url, token }) => {
