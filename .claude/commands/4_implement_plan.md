@@ -18,6 +18,7 @@ When given a plan file or description:
 3. **For each phase**:
    - Announce which phase you're starting
    - Implement all changes for that phase
+   - **Add appropriate test coverage** for new functionality (unit, component, integration, or E2E tests)
    - Run automated verification commands
    - Report results
    - Update checkboxes in the plan
@@ -30,6 +31,7 @@ When given a plan file or description:
 4. **After completing all changes for a phase**:
    - Summarize what was completed
    - Show verification results
+   - **Verify test coverage** - Run `pnpm test:ui` and `pnpm test:e2e` to ensure new tests pass
    - **If domain code was modified, run `/sync_docs` to update module READMEs**
    - Confirm before proceeding to next phase (if configured)
 
