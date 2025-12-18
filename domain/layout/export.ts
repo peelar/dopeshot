@@ -1,4 +1,6 @@
 import { toPng } from "html-to-image";
+import { EXPORT_ORIENTATION_DIMENSIONS } from "./screenshot-mode";
+import type { Orientation } from "@/hooks/atoms";
 
 /**
  * Waits for the next frame and idle time before proceeding.
@@ -40,6 +42,38 @@ type ExportSizeOptions = {
 };
 
 /**
+ * Calculate the pixel ratio for export, clamped to [1, 3].
+ * Defaults to device pixel ratio or 2 (whichever is higher).
+ * Respects maxImageScale to prevent upscaling beyond natural resolution.
+ */
+export function calculatePixelRatio(options: {
+  desiredPixelRatio?: number;
+  maxImageScale?: number;
+  devicePixelRatio?: number;
+} = {}): number {
+  const {
+    desiredPixelRatio,
+    maxImageScale,
+    devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+  } = options;
+
+  const desired = desiredPixelRatio ?? Math.max(devicePixelRatio, 2);
+  const maxScale = maxImageScale && Number.isFinite(maxImageScale) ? maxImageScale : Infinity;
+
+  return Math.min(
+    Math.max(desired, 1),
+    Math.max(Math.min(3, maxScale), 1)
+  );
+}
+
+/**
+ * Get export dimensions for a given orientation.
+ */
+export function getExportDimensions(orientation: Orientation) {
+  return EXPORT_ORIENTATION_DIMENSIONS[orientation];
+}
+
+/**
  * Exports a DOM element to a PNG file.
  * @param elementId - The ID of the DOM element to export.
  * @param fileName - The name of the file to download.
@@ -65,9 +99,11 @@ export async function exportLayoutAsPng(
     await waitForRender();
 
     // Target a hi-DPI export, but don't upscale screenshots beyond their natural size.
-    const desiredPixelRatio = pixelRatio ?? Math.max(window.devicePixelRatio || 1, 2);
-    const maxScale = maxImageScale && Number.isFinite(maxImageScale) ? maxImageScale : Infinity;
-    const resolvedPixelRatio = Math.min(Math.max(desiredPixelRatio, 1), Math.max(Math.min(3, maxScale), 1));
+    const resolvedPixelRatio = calculatePixelRatio({
+      desiredPixelRatio: pixelRatio,
+      maxImageScale,
+      devicePixelRatio: window.devicePixelRatio,
+    });
 
     // The visible preview is a scaled version of the hidden export surface.
     const dataUrl = await toPng(element, {

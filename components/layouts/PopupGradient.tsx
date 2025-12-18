@@ -149,6 +149,9 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             <img
               src={screenshot.url}
               alt="Screenshot"
+              data-export-element
+              data-element="screenshot"
+              data-role="screenshot"
               className="block h-full w-full object-cover"
               style={{
                 objectPosition: "top",
@@ -190,6 +193,9 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         <img
           src={screenshot.url}
           alt="Screenshot"
+          data-export-element
+          data-element="screenshot"
+          data-role="screenshot"
           className="block h-full w-full object-cover"
           style={{
             objectPosition,
@@ -215,7 +221,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
       assetMap={assetMap}
       screenshot={screenshot}
     >
-      <div className="relative z-10 h-full w-full">
+      <div className="relative z-10 h-full w-full" data-export-element data-element="container">
         <div
           className={cn(
             "absolute top-8 z-10 flex items-center",
