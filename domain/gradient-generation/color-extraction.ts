@@ -336,8 +336,7 @@ function classifyClusters(
       const saturationScore = avgSaturation * saturationWeight;
       const balanceScore = 1 - Math.abs(avgLightness - 0.5);
       const accentScore = saturationScore * 0.7 + balanceScore * 0.3;
-      // Stricter threshold to avoid picking muddy/neutral colors as accents
-      const isAccent = accentScore > 0.5 && avgSaturation > 0.4;
+      const isAccent = accentScore > 0.45 && avgSaturation > 0.35;
 
       return {
         hex,
