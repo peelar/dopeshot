@@ -1,18 +1,99 @@
-import { LayoutConfig } from "@/domain/layout/types";
+import { LayoutConfig, CustomGradient } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
-import { customGradientToCss } from "@/domain/layout/gradients";
+import { customGradientToCss, isAdvancedGradient, isLegacyGradient } from "@/domain/layout/gradients";
 import { getGradientById } from "@/domain/layout/gradient-presets";
 import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
+type LayoutGeometry =
+  | { type: "radial"; direction: string }
+  | { type: "linear"; angle: number };
+
+/**
+ * Get layout-specific gradient geometry based on layout type and variant.
+ * This allows the same gradient colors to render differently per layout.
+ */
+function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
+  // Spotlight: radial toward screenshot side
+  if (layoutId.startsWith("hero-center")) {
+    return {
+      type: "radial",
+      direction: variant === "right" ? "ellipse at 70% 50%" : "ellipse at 30% 50%",
+    };
+  }
+
+  // Peak: linear perpendicular to screenshot edge
+  if (layoutId.startsWith("popup-gradient")) {
+    const angles: Record<string, number> = {
+      left: 90,
+      right: 270,
+      center: 180,
+    };
+    return { type: "linear", angle: angles[variant ?? "center"] ?? 180 };
+  }
+
+  // Backdrop: subtle centered radial
+  if (layoutId === "adaptive-stage") {
+    return { type: "radial", direction: "circle at 50% 50%" };
+  }
+
+  // Code snippet: diagonal linear
+  if (layoutId.startsWith("code-snippet")) {
+    return { type: "linear", angle: 135 };
+  }
+
+  // Default: diagonal linear
+  return { type: "linear", angle: 135 };
+}
+
+/**
+ * Extract gradient stops as a CSS string from a CustomGradient
+ */
+function getGradientStopsString(gradient: CustomGradient): string {
+  if (isAdvancedGradient(gradient)) {
+    return gradient.stops
+      .map((stop) => {
+        if (stop.position !== undefined) {
+          const position = stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
+          return `${stop.color} ${position}`;
+        }
+        return stop.color;
+      })
+      .join(", ");
+  }
+
+  if (isLegacyGradient(gradient)) {
+    return `${gradient.from}, ${gradient.to}`;
+  }
+
+  return "#6366f1, #8b5cf6";
+}
+
+/**
+ * Convert gradient to CSS with layout-specific geometry.
+ * Colors come from the stored gradient; geometry is determined by layout type.
+ */
+function gradientToCssWithLayout(
+  gradient: CustomGradient,
+  layoutId: string,
+  variant?: string
+): string {
+  const stops = getGradientStopsString(gradient);
+  const geometry = getLayoutGeometry(layoutId, variant);
+
+  if (geometry.type === "radial") {
+    return `radial-gradient(${geometry.direction}, ${stops})`;
+  }
+  return `linear-gradient(${geometry.angle}deg, ${stops})`;
+}
+
 export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, Asset>): string {
   if (config.background?.type === "gradient") {
-    if (config.background.customGradient) {
-      return customGradientToCss(config.background.customGradient);
-    }
+    const gradient =
+      config.background.customGradient ?? getGradientById(config.background.value)?.gradient;
 
-    const gradient = getGradientById(config.background.value);
     if (gradient) {
-      return customGradientToCss(gradient.gradient);
+      // Apply layout-specific geometry at render time
+      return gradientToCssWithLayout(gradient, config.layoutId, config.variant);
     }
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);
