@@ -1,7 +1,12 @@
 import { AspectCategory } from "../aspect";
 import { AdvancedGradient, GradientStop, GradientType } from "./types";
 import { ColorPalette } from "@/domain/asset/types";
-import { enhanceColorPalette, EnhancedColorPalette, enhanceColor } from "./colors";
+import {
+  enhanceColorPalette,
+  EnhancedColorPalette,
+  enhanceColor,
+  enforceColorSeparation,
+} from "./colors";
 
 type GradientVariation = {
   colorPair?: [string, string];
@@ -124,13 +129,18 @@ const BACKGROUND_GRADIENT_COLORS = [
 
 /**
  * Generate three color stops: two most prominent screenshot colors + an ambient background color
+ * Enforces chromatic separation to prevent muddy gradients
  */
 function generateGradientStops(
   palette: EnhancedColorPalette,
   strategy: "hero-base" | "multi-color" | "complementary" | "analogous" | "triadic" = "multi-color",
   variation?: GradientVariation,
 ): GradientStop[] {
-  const [primary, secondary] = variation?.colorPair ?? getProminentScreenshotColors(palette);
+  const [rawPrimary, rawSecondary] = variation?.colorPair ?? getProminentScreenshotColors(palette);
+
+  // Enforce chromatic separation to prevent muddy gradients
+  const { colorA: primary, colorB: secondary } = enforceColorSeparation(rawPrimary, rawSecondary);
+
   const seed = variation?.backgroundSeed ?? `${primary}-${secondary}-${strategy}`;
   const background = getBackgroundAccentColor(
     seed,
