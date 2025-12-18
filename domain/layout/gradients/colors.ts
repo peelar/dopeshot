@@ -26,6 +26,47 @@ function oklchToHex(color: Oklch): string {
 }
 
 /**
+ * Enforce minimum chromatic separation between two colors.
+ * If colors are too similar in both hue and luminance, artificially
+ * create contrast by pushing one color darker or lighter.
+ *
+ * This ensures gradients have visible direction rather than appearing muddy.
+ */
+export function enforceColorSeparation(
+  colorA: string,
+  colorB: string,
+  minHueDelta = 30,
+  minLightnessDelta = 0.25
+): { colorA: string; colorB: string } {
+  const oklchA = hexToOklch(colorA);
+  const oklchB = hexToOklch(colorB);
+
+  if (!oklchA || !oklchB) {
+    return { colorA, colorB };
+  }
+
+  // Calculate hue delta (handle wraparound at 360)
+  const hueA = oklchA.h ?? 0;
+  const hueB = oklchB.h ?? 0;
+  const rawHueDelta = Math.abs(hueA - hueB);
+  const hueDelta = Math.min(rawHueDelta, 360 - rawHueDelta);
+
+  const lightnessDelta = Math.abs(oklchA.l - oklchB.l);
+
+  // If both deltas are below threshold, invent contrast
+  if (hueDelta < minHueDelta && lightnessDelta < minLightnessDelta) {
+    // Push colorB darker if colorA is light, lighter if colorA is dark
+    const shift = oklchA.l > 0.5 ? -0.35 : 0.35;
+    return {
+      colorA,
+      colorB: enhanceColor(colorB, { lightnessShift: shift }),
+    };
+  }
+
+  return { colorA, colorB };
+}
+
+/**
  * Enhanced color palette with categorized colors for gradient generation
  */
 export type EnhancedColorPalette = {
@@ -127,6 +168,35 @@ function isDarkPalette(palette: ColorPalette): boolean {
 }
 
 /**
+ * Mix a color with a bias anchor color in OKLCH space.
+ * Used to inject warm/cool tones into neutral palettes.
+ */
+function mixWithBias(hex: string, biasHex: string, ratio: number): string {
+  const oklchBase = hexToOklch(hex);
+  const oklchBias = hexToOklch(biasHex);
+
+  if (!oklchBase || !oklchBias) return hex;
+
+  // Mix lightness and chroma, but shift hue toward bias
+  const l = oklchBase.l * (1 - ratio * 0.5) + oklchBias.l * (ratio * 0.5);
+  const c = Math.max(oklchBase.c ?? 0, (oklchBias.c ?? 0) * ratio * 0.8);
+
+  // Blend hue toward bias color
+  const baseH = oklchBase.h ?? 0;
+  const biasH = oklchBias.h ?? 0;
+  const h = baseH + (biasH - baseH) * ratio;
+
+  const mixed: Oklch = {
+    mode: "oklch",
+    l: Math.max(0.1, Math.min(0.9, l)),
+    c: Math.min(0.35, c),
+    h: ((h % 360) + 360) % 360,
+  };
+
+  return oklchToHex(mixed);
+}
+
+/**
  * Enhance and categorize color palette for gradient generation
  * Transforms raw screenshot colors into a structured palette for creating beautiful gradients
  */
@@ -167,6 +237,16 @@ export function enhanceColorPalette(palette: ColorPalette): EnhancedColorPalette
   if (isNeutral && hero) {
     // Boost saturation of hero color for neutral palettes
     hero = enhanceColor(hero, { saturationBoost: 0.5 });
+  }
+
+  // If truly neutral (very low saturation), inject warm/cool bias
+  // This ensures neutral screenshots don't produce neutral (muddy) gradients
+  if (isNeutral && saturation < 0.08) {
+    const warmAnchor = "#f97316"; // orange
+    const coolAnchor = "#6366f1"; // indigo
+    // Pick based on average lightness - dark palettes get warm, light get cool
+    const biasColor = isDark ? warmAnchor : coolAnchor;
+    hero = mixWithBias(hero ?? base, biasColor, 0.4);
   }
 
   if (isDark) {
