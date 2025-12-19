@@ -1,8 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "debugId": "525a182f-2ba4-173a-1126-b76b02a40d52",
-  "sections": [
-    {"offset": {"line": 4, "column": 0}, "map": {"version":3,"sources":["file:///Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/next%4016.0.7_%40babel%2Bcore%407.28.5_%40opentelemetry%2Bapi%401.9.0_%40playwright%2Btest%401.57.0_react-dom%4019._2jqzn6f7jhus7rqmq4kivis7oe/node_modules/next/router.js"],"sourcesContent":["module.exports = require('./dist/client/router')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO","ignoreList":[0]}},
-    {"offset": {"line": 8, "column": 0}, "map": {"version":3,"sources":["file:///Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/next%4016.0.7_%40babel%2Bcore%407.28.5_%40opentelemetry%2Bapi%401.9.0_%40playwright%2Btest%401.57.0_react-dom%4019._2jqzn6f7jhus7rqmq4kivis7oe/node_modules/next/error.js"],"sourcesContent":["module.exports = require('./dist/pages/_error')\n"],"names":[],"mappings":"AAAA,OAAO,OAAO","ignoreList":[0]}}]
-}
