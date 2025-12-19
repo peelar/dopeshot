@@ -11,7 +11,7 @@ Defines layout configuration models and utilities for the entire visual output s
 - `fonts.ts` - Font family definitions and metadata
 - `gradient-presets.ts` - Pre-defined gradient configurations (sunset, ocean, forest, etc.)
 - `gradient-application.ts` - Logic for applying gradients to different background contexts
-- `patterns.ts` - Background pattern definitions (grain, glow, grid)
+- `patterns.ts` - Background pattern definitions (grain, organic, grid)
 - `recommendations.ts` - Suggests looks based on content type
 - `screenshot-mode.ts` - Screenshot display mode logic, aspect ratio handling, and orientation-based canvas dimensions
 - `export.ts` - Layout export functionality and serialization

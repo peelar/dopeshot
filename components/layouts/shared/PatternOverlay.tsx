@@ -2,7 +2,8 @@ import { memo, useMemo } from "react";
 import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 import type { Asset, ColorPalette } from "@/domain/asset/types";
-import type { LayoutConfig, PatternChoice } from "@/domain/layout/types";
+import type { LayoutConfig } from "@/domain/layout/types";
+import type { PatternIntensity, PatternResolution } from "@/domain/layout/patterns";
 import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
 type RGB = [number, number, number];
@@ -96,7 +97,15 @@ function getPaletteColors(
   return { accent: accentRgb, secondary: secondaryRgb, base: baseRgb, variant };
 }
 
-function GlowOverlay({ config, palette }: { config: LayoutConfig; palette?: ColorPalette }) {
+function OrganicOverlay({
+  config,
+  palette,
+  intensity,
+}: {
+  config: LayoutConfig;
+  palette?: ColorPalette;
+  intensity: PatternIntensity;
+}) {
   const { accent, secondary, base, variant } = getPaletteColors(config, palette);
 
   // Variant adds subtle variation so glows aren't always identical
@@ -104,14 +113,16 @@ function GlowOverlay({ config, palette }: { config: LayoutConfig; palette?: Colo
   const accentBias = variant === 2 ? 0.2 : 0.12;
   const midBias = variant === 0 ? 0.14 : 0.1;
 
+  const intensityAlpha = intensity === "high" ? 1 : intensity === "medium" ? 0.75 : 0.55;
+
   const mixed = mixRgb(accent, secondary, blend);
   const softAccent = mixWithWhite(mixed, accentBias);
   const tintedSecondary = mixWithWhite(secondary, midBias);
   const baseSoft = mixWithWhite(base, 0.22);
 
-  const accentGlow = toRgba(softAccent, 0.9);
-  const midGlow = toRgba(tintedSecondary, 0.72);
-  const softGlow = toRgba(baseSoft, 0.55);
+  const accentGlow = toRgba(softAccent, 0.72 * intensityAlpha);
+  const midGlow = toRgba(tintedSecondary, 0.58 * intensityAlpha);
+  const softGlow = toRgba(baseSoft, 0.44 * intensityAlpha);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
@@ -130,9 +141,18 @@ function GlowOverlay({ config, palette }: { config: LayoutConfig; palette?: Colo
   );
 }
 
-function GridOverlay({ config, palette }: { config: LayoutConfig; palette?: ColorPalette }) {
+function GridOverlay({
+  config,
+  palette,
+  intensity,
+}: {
+  config: LayoutConfig;
+  palette?: ColorPalette;
+  intensity: PatternIntensity;
+}) {
   const { secondary } = getPaletteColors(config, palette);
-  const stroke = toRgba(mixWithWhite(secondary, 0.12), 0.28);
+  const weight = intensity === "high" ? 0.32 : intensity === "medium" ? 0.26 : 0.2;
+  const stroke = toRgba(mixWithWhite(secondary, 0.12), weight);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
@@ -167,24 +187,39 @@ function PatternOverlayComponent({
     (assetMap?.get(config.assets.screenshot || "") as Asset | undefined) ??
     null;
 
-  const resolvedPattern: PatternChoice = useMemo(() => {
-    return resolvePatternChoice(config, screenshot?.colorPalette);
-  }, [config, screenshot?.colorPalette]);
+  const resolvedPattern: PatternResolution = useMemo(() => {
+    return resolvePatternChoice(config, screenshot?.colorPalette, {
+      palette: screenshot?.colorPalette,
+      screenshotMetadata: screenshot?.metadata,
+    });
+  }, [config, screenshot?.colorPalette, screenshot?.metadata]);
 
-  if (resolvedPattern === "none") {
+  if (resolvedPattern.id === "none") {
     return null;
   }
 
-  if (resolvedPattern === "grain") {
-    return <GrainOverlay enabled />;
+  if (resolvedPattern.id === "grain") {
+    return <GrainOverlay enabled intensity={resolvedPattern.intensity} />;
   }
 
-  if (resolvedPattern === "glow") {
-    return <GlowOverlay config={config} palette={screenshot?.colorPalette} />;
+  if (resolvedPattern.id === "organic") {
+    return (
+      <OrganicOverlay
+        config={config}
+        palette={screenshot?.colorPalette}
+        intensity={resolvedPattern.intensity}
+      />
+    );
   }
 
-  if (resolvedPattern === "grid") {
-    return <GridOverlay config={config} palette={screenshot?.colorPalette} />;
+  if (resolvedPattern.id === "grid") {
+    return (
+      <GridOverlay
+        config={config}
+        palette={screenshot?.colorPalette}
+        intensity={resolvedPattern.intensity}
+      />
+    );
   }
 
   return null;

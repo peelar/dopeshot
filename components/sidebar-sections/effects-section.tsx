@@ -31,7 +31,7 @@ const FULL_OUTLINE_CONTROLS = {
   fade: false,
 };
 
-const PATTERN_OPTIONS = ["none", "grain", "glow", "grid"] as const;
+const PATTERN_OPTIONS = ["none", "grain", "organic", "grid"] as const;
 type PatternOption = (typeof PATTERN_OPTIONS)[number];
 
 /**
@@ -42,7 +42,10 @@ function usePatternControls(setConfig: ReturnType<typeof useSetAtom<typeof confi
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const backgroundType = config.background?.type;
   const isImageBackground = backgroundType === "image";
-  const resolvedPattern = resolvePatternChoice(config, screenshotAsset?.colorPalette) as PatternOption;
+  const resolvedPattern = resolvePatternChoice(config, screenshotAsset?.colorPalette, {
+    palette: screenshotAsset?.colorPalette,
+    screenshotMetadata: screenshotAsset?.metadata,
+  }).id as PatternOption;
   const shouldShowStyle = !isImageBackground;
 
   const handlePatternSelect = useCallback(

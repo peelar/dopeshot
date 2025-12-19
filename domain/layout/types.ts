@@ -18,7 +18,7 @@ export type ColorToken =
   | "violet-500";
 
 export type BackgroundType = "gradient" | "image" | "solid";
-export type PatternId = "grain" | "glow" | "grid";
+export type PatternId = "grain" | "organic" | "grid" | "glow"; // "glow" kept as legacy alias
 export type PatternChoice = PatternId | "none";
 export type PatternMode = "auto" | "manual";
 

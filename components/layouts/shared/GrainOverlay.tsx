@@ -1,7 +1,9 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
+import type { PatternIntensity } from "@/domain/layout/patterns";
 
 interface GrainOverlayProps {
   enabled?: boolean;
+  intensity?: PatternIntensity;
   isStatic?: boolean; // kept for API compatibility
 }
 
@@ -51,8 +53,16 @@ function generateNoiseDataUrl(
   return canvas.toDataURL("image/png");
 }
 
-function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
+const intensityLookup: Record<PatternIntensity, { opacity: number; contrast: number; brightness: number }> = {
+  low: { opacity: 0.12, contrast: 140, brightness: 1.02 },
+  medium: { opacity: 0.18, contrast: 170, brightness: 1.05 },
+  high: { opacity: 0.24, contrast: 190, brightness: 1.08 },
+};
+
+function GrainOverlayComponent({ enabled = true, intensity = "medium" }: GrainOverlayProps) {
   const [noise, setNoise] = useState<{ coarseUrl: string; fineUrl: string } | null>(null);
+
+  const tuning = useMemo(() => intensityLookup[intensity], [intensity]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -75,8 +85,8 @@ function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
         style={{
           backgroundImage: `url("${noise.coarseUrl}"), url("${noise.fineUrl}")`,
           backgroundSize: "48px 48px, 24px 24px",
-          opacity: 0.18,
-          filter: "contrast(190%) brightness(1.06)",
+          opacity: tuning.opacity,
+          filter: `contrast(${tuning.contrast}%) brightness(${tuning.brightness})`,
           mixBlendMode: "normal",
           imageRendering: "pixelated",
         }}
