@@ -19,6 +19,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - Keep the Design sidebar for styling; look/variant switching stays in the rail/toggle above the canvas.
 - Be very hesitant about adding something new to the sidebar. It should be as intelligent as possible, with no extra clicks or steps.
 - Actively look for ways to refactor crucial parts of the codebase.
+- Add a Changeset for any user-facing change or code change that should appear in the changelog; use `pnpm changeset` and commit the generated file.
 - After you are done with implementation, verify if the types & tests work via scripts in `package.json`.
 - Whenever you have "a bigger fix" in mind or a refactor, go for it. We are building for tomorrow, not today.
 - **Always add tracking events** for all new user-facing functionalities using `track()` from `@/lib/analytics`. Track user interactions, state changes, and feature usage with descriptive event names and relevant properties (e.g., `track("feature_used", { property: value })`).
