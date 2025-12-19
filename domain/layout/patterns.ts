@@ -15,8 +15,11 @@ export function resolvePatternChoice(
   const patternMode: PatternMode =
     bg?.patternMode ?? (bg?.patternId ? "manual" : ("auto" as PatternMode));
 
+  const rawPatternId = bg?.patternId;
   const normalizedPatternId: PatternChoice | undefined =
-    bg?.patternId === "glow" ? "organic" : bg?.patternId;
+    (rawPatternId as string | undefined) === "glow"
+      ? "organic"
+      : rawPatternId;
 
   // Manual branch
   if (patternMode === "manual") {
