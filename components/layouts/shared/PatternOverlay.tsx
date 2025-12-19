@@ -1,5 +1,6 @@
 import { memo, useMemo } from "react";
 import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
+import { OrganicOverlay } from "@/components/layouts/shared/OrganicOverlay";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 import type { Asset, ColorPalette } from "@/domain/asset/types";
 import type { LayoutConfig, PatternChoice } from "@/domain/layout/types";
@@ -65,14 +66,6 @@ function mixWithWhite(rgb: RGB, factor: number): RGB {
   ];
 }
 
-function mixRgb(a: RGB, b: RGB, factor: number): RGB {
-  return [
-    clamp(Math.round(a[0] * (1 - factor) + b[0] * factor)),
-    clamp(Math.round(a[1] * (1 - factor) + b[1] * factor)),
-    clamp(Math.round(a[2] * (1 - factor) + b[2] * factor)),
-  ];
-}
-
 function toRgba(rgb: RGB, alpha: number): string {
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha})`;
 }
@@ -96,43 +89,10 @@ function getPaletteColors(
   return { accent: accentRgb, secondary: secondaryRgb, base: baseRgb, variant };
 }
 
-function GlowOverlay({ config, palette }: { config: LayoutConfig; palette?: ColorPalette }) {
-  const { accent, secondary, base, variant } = getPaletteColors(config, palette);
-
-  // Variant adds subtle variation so glows aren't always identical
-  const blend = variant === 0 ? 0.35 : variant === 1 ? 0.5 : 0.65;
-  const accentBias = variant === 2 ? 0.2 : 0.12;
-  const midBias = variant === 0 ? 0.14 : 0.1;
-
-  const mixed = mixRgb(accent, secondary, blend);
-  const softAccent = mixWithWhite(mixed, accentBias);
-  const tintedSecondary = mixWithWhite(secondary, midBias);
-  const baseSoft = mixWithWhite(base, 0.22);
-
-  const accentGlow = toRgba(softAccent, 0.9);
-  const midGlow = toRgba(tintedSecondary, 0.72);
-  const softGlow = toRgba(baseSoft, 0.55);
-
-  return (
-    <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `
-            radial-gradient(circle at 50% 100%, ${accentGlow} 0%, transparent 62%),
-            radial-gradient(circle at 48% 98%, ${midGlow} 0%, transparent 78%),
-            radial-gradient(circle at 50% 96%, ${softGlow} 0%, transparent 94%)
-          `,
-          mixBlendMode: "screen",
-        }}
-      />
-    </div>
-  );
-}
-
 function GridOverlay({ config, palette }: { config: LayoutConfig; palette?: ColorPalette }) {
-  const { secondary } = getPaletteColors(config, palette);
-  const stroke = toRgba(mixWithWhite(secondary, 0.12), 0.28);
+  const { base } = getPaletteColors(config, palette);
+  const line = toRgba(mixWithWhite(base, 0.3), 0.12);
+  const highlight = toRgba(mixWithWhite(base, 0.4), 0.06);
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
@@ -140,11 +100,14 @@ function GridOverlay({ config, palette }: { config: LayoutConfig; palette?: Colo
         className="absolute inset-0"
         style={{
           backgroundImage: `
-            linear-gradient(45deg, transparent 49%, ${stroke} 49%, ${stroke} 51%, transparent 51%),
-            linear-gradient(-45deg, transparent 49%, ${stroke} 49%, ${stroke} 51%, transparent 51%)
+            repeating-linear-gradient(0deg, ${line}, ${line} 1px, transparent 1px, transparent 120px),
+            repeating-linear-gradient(90deg, ${line}, ${line} 1px, transparent 1px, transparent 120px),
+            repeating-linear-gradient(0deg, ${highlight}, ${highlight} 1px, transparent 1px, transparent 60px),
+            repeating-linear-gradient(90deg, ${highlight}, ${highlight} 1px, transparent 1px, transparent 60px)
           `,
-          backgroundSize: "40px 40px",
-          mixBlendMode: "soft-light",
+          backgroundSize: "120px 120px, 120px 120px, 60px 60px, 60px 60px",
+          mixBlendMode: "luminosity",
+          opacity: 0.18,
         }}
       />
     </div>
@@ -176,11 +139,11 @@ function PatternOverlayComponent({
   }
 
   if (resolvedPattern === "grain") {
-    return <GrainOverlay enabled />;
+    return <GrainOverlay enabled intensity={0.95} />;
   }
 
-  if (resolvedPattern === "glow") {
-    return <GlowOverlay config={config} palette={screenshot?.colorPalette} />;
+  if (resolvedPattern === "organic") {
+    return <OrganicOverlay enabled intensity={0.92} />;
   }
 
   if (resolvedPattern === "grid") {

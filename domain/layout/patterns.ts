@@ -1,11 +1,11 @@
 import type { ColorPalette } from "@/domain/asset/types";
-import type { LayoutConfig, PatternChoice, PatternId, PatternMode } from "./types";
+import type { LayoutConfig, PatternChoice, PatternMode } from "./types";
 
 /**
  * Resolve the pattern to render given config and optional palette context.
  * - Manual mode: honor patternId (default to grain unless explicitly none or grain disabled).
  * - Auto mode: avoid overlays on background images, prefer grid for solid backgrounds,
- *   glow when palette has an accent/vibrant color, otherwise grain.
+ *   organic luminance texture when a palette accent is available, otherwise grain.
  */
 export function resolvePatternChoice(
   config: LayoutConfig,
@@ -15,9 +15,12 @@ export function resolvePatternChoice(
   const patternMode: PatternMode =
     bg?.patternMode ?? (bg?.patternId ? "manual" : ("auto" as PatternMode));
 
+  const normalizedPatternId: PatternChoice | undefined =
+    bg?.patternId === "glow" ? "organic" : bg?.patternId;
+
   // Manual branch
   if (patternMode === "manual") {
-    if (bg?.patternId) return bg.patternId;
+    if (normalizedPatternId) return normalizedPatternId;
     if (bg?.grainEnabled === false) return "none";
     return "grain";
   }
@@ -26,6 +29,7 @@ export function resolvePatternChoice(
   if (bg?.type === "image") return "none";
   if (bg?.grainEnabled === false) return "none";
   if (bg?.type === "solid") return "grid";
+  if (palette?.accent || palette?.vibrant) return "organic";
 
   // Default: keep grain as the safe, readable texture
   return "grain";

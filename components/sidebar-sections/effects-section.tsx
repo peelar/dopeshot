@@ -31,7 +31,7 @@ const FULL_OUTLINE_CONTROLS = {
   fade: false,
 };
 
-const PATTERN_OPTIONS = ["none", "grain", "glow", "grid"] as const;
+const PATTERN_OPTIONS = ["none", "grain", "organic", "grid"] as const;
 type PatternOption = (typeof PATTERN_OPTIONS)[number];
 
 /**
@@ -64,7 +64,7 @@ function usePatternControls(setConfig: ReturnType<typeof useSetAtom<typeof confi
             ...background,
             patternMode: "manual",
             patternId,
-            grainEnabled: patternId === "grain",
+            grainEnabled: patternId !== "none",
           },
         };
       });

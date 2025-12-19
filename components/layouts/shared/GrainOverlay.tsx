@@ -1,8 +1,13 @@
-import { memo, useEffect, useState } from "react";
+import { memo, useMemo } from "react";
 
 interface GrainOverlayProps {
   enabled?: boolean;
   isStatic?: boolean; // kept for API compatibility
+  /**
+   * Adjusts the overall strength of the grain overlay without exposing a user-facing control.
+   * Values closer to 0 soften the texture, values above 1 make it more pronounced.
+   */
+  intensity?: number;
 }
 
 function generateNoiseDataUrl(
@@ -51,22 +56,26 @@ function generateNoiseDataUrl(
   return canvas.toDataURL("image/png");
 }
 
-function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
-  const [noise, setNoise] = useState<{ coarseUrl: string; fineUrl: string } | null>(null);
-
-  useEffect(() => {
-    if (!enabled) return;
-    const coarse = generateNoiseDataUrl(48, 0.38, 1, 118, 150);
-    const fine = generateNoiseDataUrl(24, 0.24, 2, 126, 130);
-    setNoise({
-      coarseUrl: coarse || "",
-      fineUrl: fine || "",
-    });
-  }, [enabled]);
+function GrainOverlayComponent({ enabled = true, intensity = 1 }: GrainOverlayProps) {
+  const noise = useMemo(() => {
+    if (!enabled) return null;
+    const intensityScale = Math.max(0, intensity);
+    const coarse = generateNoiseDataUrl(48, 0.32 * intensityScale, 1, 118, 150);
+    const fine = generateNoiseDataUrl(24, 0.2 * intensityScale, 2, 126, 130);
+    if (!coarse || !fine) return null;
+    return {
+      coarseUrl: coarse,
+      fineUrl: fine,
+    };
+  }, [enabled, intensity]);
 
   if (!enabled || !noise) {
     return null;
   }
+
+  const clampedIntensity = Math.max(0.35, Math.min(1.65, intensity));
+  const opacity = 0.15 * clampedIntensity;
+  const contrast = 170 + 40 * clampedIntensity;
 
   return (
     <div className="pointer-events-none absolute inset-0 z-[1]" aria-hidden="true">
@@ -75,17 +84,17 @@ function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
         style={{
           backgroundImage: `url("${noise.coarseUrl}"), url("${noise.fineUrl}")`,
           backgroundSize: "48px 48px, 24px 24px",
-          opacity: 0.18,
-          filter: "contrast(190%) brightness(1.06)",
-          mixBlendMode: "normal",
+          opacity,
+          filter: `contrast(${contrast}%) brightness(1.05)`,
+          mixBlendMode: "luminosity",
           imageRendering: "pixelated",
         }}
       />
       <div
         className="absolute inset-0"
         style={{
-          backgroundColor: "rgba(255, 255, 255, 0.06)",
-          mixBlendMode: "normal",
+          backgroundColor: "rgba(255, 255, 255, 0.04)",
+          mixBlendMode: "soft-light",
         }}
       />
     </div>
