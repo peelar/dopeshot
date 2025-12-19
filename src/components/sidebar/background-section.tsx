@@ -184,21 +184,19 @@ export function BackgroundSection({ onUploadAsset }: BackgroundSectionProps) {
           )}
 
           {/* Preset Backgrounds Section */}
-          {presets.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Preset Backgrounds
-                </h4>
-              </div>
-              <PresetBackgroundGrid
-                backgrounds={presets}
-                selectedUrl={currentBackgroundUrl}
-                onSelect={handlePresetSelect}
-                isLoading={isLoadingPresets}
-              />
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Preset Backgrounds
+              </h4>
             </div>
-          )}
+            <PresetBackgroundGrid
+              backgrounds={presets}
+              selectedUrl={currentBackgroundUrl}
+              onSelect={handlePresetSelect}
+              isLoading={isLoadingPresets}
+            />
+          </div>
         </div>
       )}
     </div>
