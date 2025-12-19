@@ -23,6 +23,26 @@ This repo uses [Changesets](https://github.com/changesets/changesets) to track h
 - Just run the version step (no tests): `pnpm changeset:version`
 - Start a new changeset: `pnpm changeset`
 
+## Writing good changesets (human + LLM friendly)
+
+Changesets are both the public changelog and a compact history for assistants/tools, so write them like structured release notes:
+
+- Lead with the user-facing outcome, not the implementation.
+- One change per bullet; keep each bullet short (<= 120 chars).
+- Use consistent prefixes: `Added:`, `Changed:`, `Fixed:`, `Removed:`.
+- Mention important scope: affected feature/area, or a key file/module if it matters.
+- Call out behavior changes, defaults, migrations, or breaking shifts explicitly.
+- Avoid internal-only wording (e.g., “refactor”) unless it changes behavior.
+- If it impacts tests, perf, or DX in a meaningful way, say so.
+
+Example:
+
+```
+- Added: Export presets for mobile (9:16) and desktop (16:9) layouts.
+- Fixed: Gradient generator now preserves contrast for dark screenshots.
+- Changed: Look rail default is now "Peak" for first-time users.
+```
+
 ## CI details
 
 - `.github/workflows/release.yml` watches `main` and `workflow_dispatch`.
