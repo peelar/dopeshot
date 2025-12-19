@@ -4,8 +4,8 @@
 
 For indie hackers who ship fast and post often.
 
-![dopeshot editor](./public/cover.png)
-→ [Try it now](https://dopeshot.co)
+![dopeshot editor](./apps/app/public/cover.png)
+→ [Try it now](https://app.dopeshot.io)
 
 ---
 
@@ -45,6 +45,11 @@ Sized for Twitter and LinkedIn. High-res PNG, no watermark.
 
 ---
 
+## Monorepo apps
+
+- `apps/app` - product app (deploys to `app.dopeshot.io`)
+- `apps/landing` - marketing site (deploys to `dopeshot.io`)
+
 ## The Stack
 
 Built with Next.js, Tailwind, Jotai. MIT licensed.
@@ -53,9 +58,9 @@ Built with Next.js, Tailwind, Jotai. MIT licensed.
 
 Ideas? Bugs? [Open an issue](https://github.com/yourusername/dopeshot/issues).
 
-Want to add a look or typography preset? Check out the [authoring guide](./AUTHORING.md).
+Want to add a look or typography preset? Check out the [authoring guide](./apps/app/AUTHORING.md).
 
-All PRs should include a Changeset (`pnpm changeset`) describing user-facing changes; see [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) for the flow.
+All PRs should include a Changeset (`pnpm changeset`) describing user-facing changes for the app; see [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) for the flow.
 
 ---
 

@@ -1,0 +1,20 @@
+{
+  "pages": {},
+  "app": {
+    "[project]/apps/app/src/app/page": [
+      "static/media/Geist_Variable-s.p.f19e4721.woff2",
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2",
+      "static/media/e3455d3d95db5f62-s.p.d5d29d40.woff2",
+      "static/media/99e609270109b47d-s.p.64b9304e.woff2",
+      "static/media/23b7a97ae3b5c134-s.p.2902b61f.woff2",
+      "static/media/017d9bea37084d9b-s.p.a6d6de71.woff2",
+      "static/media/c9f6ebf08ddd616b-s.p.8e1a882d.woff2",
+      "static/media/74f465119297d0e6-s.p.0267d7bc.woff2",
+      "static/media/638f182e7ded7477-s.p.5461cf5a.woff2",
+      "static/media/dc0c65e819e3bb6c-s.p.c8bc5246.woff2",
+      "static/media/2a65768255d6b625-s.p.d19752fb.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pagesUsingSizeAdjust": false
+}

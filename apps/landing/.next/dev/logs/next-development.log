@@ -1,0 +1,122 @@
+[00:00:04.068] Server  LOG      ✓ Ready in 3.7s
+[00:00:08.831] Server  LOG      ○ Compiling / ...
+[00:00:11.447] Server  ERROR    ⨯ ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+
+
+[00:00:16.197] Browser ERROR   uncaughtError: Error: ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+
+
+[00:00:16.532] Browser ERROR   ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+[00:00:17.624] Browser ERROR   ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+[00:00:43.955] Server  ERROR    ⨯ ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+
+
+[00:00:44.477] Browser ERROR   uncaughtError: Error: ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+
+
+[00:00:44.764] Browser ERROR   ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
+[00:00:44.764] Browser ERROR   ./apps/landing/app/globals.css
+Error evaluating Node.js code
+CssSyntaxError: tailwindcss: /Users/adrianpilarczyk/Code/dopeshot/apps/landing/app/globals.css:1:1: Cannot apply unknown utility class `border-border`
+    [at Input.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/input.js:135:16)]
+    [at Root.error (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/node.js:146:32)]
+    [at Object.Once (/Users/adrianpilarczyk/Code/dopeshot/node_modules/.pnpm/@tailwindcss+postcss@4.1.18/node_modules/@tailwindcss/postcss/dist/index.js:10:6911)]
+    [at async LazyResult.runAsync (turbopack:///[project]/node_modules/.pnpm/postcss@8.5.6/node_modules/postcss/lib/lazy-result.js:293:11)]
+    [at async transform (turbopack:///[turbopack-node]/transforms/postcss.ts:70:34)]
+    [at async run (turbopack:///[turbopack-node]/ipc/evaluate.ts:92:23)]
+
+Import trace:
+  Client Component Browser:
+    ./apps/landing/app/globals.css [Client Component Browser]
+    ./apps/landing/app/layout.tsx [Server Component]
