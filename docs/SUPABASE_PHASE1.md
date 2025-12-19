@@ -1,6 +1,6 @@
 # Supabase Phase 1 (dopeshot)
 
-This document explains how to wire Supabase into dopeshot’s persistence layer, covering project configuration, schema, storage, access controls, triggers, and seeds. The migration under `supabase/migrations/20240401T000000_init.sql` implements the SQL described below.
+This document explains how to wire Supabase into dopeshot’s persistence layer, covering project configuration, schema, storage, access controls, triggers, and seeds. The migration under `apps/app/supabase/migrations/20240401T000000_init.sql` implements the SQL described below.
 
 ## 1. Project setup checklist
 
@@ -11,7 +11,7 @@ This document explains how to wire Supabase into dopeshot’s persistence layer,
    SUPABASE_SERVICE_ROLE_KEY=service-role-key
    ```
 2. **Enable Email/Password auth** under Authentication → Settings → External OAuth Providers → Password, then leave OAuth providers off for now.
-3. **Create the database schema** by running the migration file (`supabase/migrations/20240401T000000_init.sql`) via the Supabase SQL editor or `supabase` CLI.
+3. **Create the database schema** by running the migration file (`apps/app/supabase/migrations/20240401T000000_init.sql`) via the Supabase SQL editor or `supabase` CLI.
 4. **Enable RLS** on the tables (`brand_profiles`, `generated_assets`, `user_metadata`) — the migration already includes `ALTER TABLE ... ENABLE ROW LEVEL SECURITY` and policy creation.
 
 ## 2. Schema overview
@@ -95,7 +95,7 @@ Both triggers are defined and activated in the migration file, so running it is 
 
 ## 6. Seed data & sample assets
 
-Use the seed script at `supabase/seed/phase1_seed.sql`. Steps:
+Use the seed script at `apps/app/supabase/seed/phase1_seed.sql`. Steps:
 
 1. Create a test user via Authentication → Users and copy the UUID.
 2. Replace `{{TEST_USER_ID}}` throughout the seed file with that UUID.
@@ -116,9 +116,9 @@ The script populates palette, typography, metadata, usage counts, and three samp
 
 Auth is now surfaced on its own page rather than in a sidebar sheet:
 
-- `SupabaseAuthProvider` in `app/layout.tsx` keeps the client-side session in sync via `@supabase/supabase-js`.
-- `app/auth/page.tsx` renders `components/auth/auth-form.tsx`, which shows the segmented Sign in / Create account form and a post-login sign-out surface.
-- Verify you’ve set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` (see `.env.example`) so the UI can reach the auth endpoint.
+- `SupabaseAuthProvider` in `apps/app/src/app/layout.tsx` keeps the client-side session in sync via `@supabase/supabase-js`.
+- `apps/app/src/app/auth/page.tsx` renders `apps/app/src/components/auth/auth-form.tsx`, which shows the segmented Sign in / Create account form and a post-login sign-out surface.
+- Verify you’ve set `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` (see `apps/app/.env.example`) so the UI can reach the auth endpoint.
 
 This wiring keeps dopeshot’s persistence and UI aligned for Phase 1, so every new signup immediately provisions a brand profile and metadata row via the triggers.
 

@@ -1,0 +1,50 @@
+{
+  "pages": {
+    "/_app": [
+      "static/chunks/60bb9_next_dist_compiled_c086de31._.js",
+      "static/chunks/60bb9_next_dist_shared_lib_83a2d590._.js",
+      "static/chunks/60bb9_next_dist_client_bf06051b._.js",
+      "static/chunks/60bb9_next_dist_d95703c8._.js",
+      "static/chunks/60bb9_next_app_3a784cae.js",
+      "static/chunks/[next]_entry_page-loader_ts_389b04fa._.js",
+      "static/chunks/01e4c_react-dom_c6220206._.js",
+      "static/chunks/node_modules__pnpm_a1ac3f76._.js",
+      "static/chunks/[root-of-the-server]__9c6c8df3._.js",
+      "static/chunks/apps_landing_pages__app_2da965e7._.js",
+      "static/chunks/turbopack-apps_landing_pages__app_1fc5402b._.js"
+    ],
+    "/_error": [
+      "static/chunks/60bb9_next_dist_compiled_c086de31._.js",
+      "static/chunks/60bb9_next_dist_shared_lib_5bb78eef._.js",
+      "static/chunks/60bb9_next_dist_client_bf06051b._.js",
+      "static/chunks/60bb9_next_dist_500aece1._.js",
+      "static/chunks/60bb9_next_error_85eee48a.js",
+      "static/chunks/[next]_entry_page-loader_ts_f6c9bc83._.js",
+      "static/chunks/01e4c_react-dom_c6220206._.js",
+      "static/chunks/node_modules__pnpm_a1ac3f76._.js",
+      "static/chunks/[root-of-the-server]__a61c0e8d._.js",
+      "static/chunks/apps_landing_pages__error_2da965e7._.js",
+      "static/chunks/turbopack-apps_landing_pages__error_67350a4b._.js"
+    ]
+  },
+  "devFiles": [],
+  "polyfillFiles": [
+    "static/chunks/60bb9_next_dist_build_polyfills_polyfill-nomodule.js"
+  ],
+  "lowPriorityFiles": [
+    "static/development/_ssgManifest.js",
+    "static/development/_buildManifest.js"
+  ],
+  "rootMainFiles": [
+    "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_e6454e98._.js",
+    "static/chunks/60bb9_next_dist_compiled_react-dom_15a8dc50._.js",
+    "static/chunks/60bb9_next_dist_compiled_react-server-dom-turbopack_5d4d82b4._.js",
+    "static/chunks/60bb9_next_dist_compiled_next-devtools_index_d2f82219.js",
+    "static/chunks/60bb9_next_dist_compiled_6b8a5464._.js",
+    "static/chunks/60bb9_next_dist_client_24505d69._.js",
+    "static/chunks/60bb9_next_dist_ea226f74._.js",
+    "static/chunks/69652_@swc_helpers_cjs_679851cc._.js",
+    "static/chunks/apps_landing_a0ff3932._.js",
+    "static/chunks/turbopack-apps_landing_221472cb._.js"
+  ]
+}

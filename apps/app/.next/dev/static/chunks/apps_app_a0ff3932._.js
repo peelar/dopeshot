@@ -1,0 +1,20 @@
+(globalThis.TURBOPACK_CHUNK_LISTS || (globalThis.TURBOPACK_CHUNK_LISTS = [])).push({
+    script: typeof document === "object" ? document.currentScript : undefined,
+    chunks: [
+  "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_d283ff92._.js",
+  "static/chunks/60bb9_next_dist_compiled_react-dom_15a8dc50._.js",
+  "static/chunks/60bb9_next_dist_compiled_react-server-dom-turbopack_5d4d82b4._.js",
+  "static/chunks/60bb9_next_dist_compiled_next-devtools_index_d2f82219.js",
+  "static/chunks/60bb9_next_dist_compiled_a3dd6d1e._.js",
+  "static/chunks/60bb9_next_dist_shared_lib_d69e554f._.js",
+  "static/chunks/60bb9_next_dist_client_30af662c._.js",
+  "static/chunks/60bb9_next_dist_2bf45853._.js",
+  "static/chunks/60bb9_next_router_43f513ec.js",
+  "static/chunks/c1023_@sentry_core_build_esm_fbb2f4a1._.js",
+  "static/chunks/d7d89_@sentry_browser_build_npm_esm_dev_3f16cc97._.js",
+  "static/chunks/5ce28_@sentry-internal_browser-utils_build_esm_8bc83af3._.js",
+  "static/chunks/node_modules__pnpm_961d66e8._.js",
+  "static/chunks/apps_app_6e0766b2._.js"
+],
+    source: "entry"
+});
