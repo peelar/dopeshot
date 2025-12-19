@@ -63,8 +63,10 @@ export function resolvePatternChoice(
   const isTextHeavy = textDensity > 36; // roughly 2-3 full lines of copy
   const hasStructuredContent = Boolean(config.code?.content?.trim()) || Boolean(context?.screenshotMetadata);
 
-  const guardOrganic = (choice: PatternChoice): PatternChoice => {
-    const normalizedChoice = choice === "glow" ? "organic" : choice;
+  const guardOrganic = (choice?: PatternChoice): PatternChoice => {
+    if (!choice) return "grain";
+
+    const normalizedChoice: PatternChoice = choice === "glow" ? "organic" : choice;
     if (normalizedChoice === "organic" && isTextHeavy) return "grain";
     return normalizedChoice;
   };
