@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,8 +9,10 @@ import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
-import { useState } from "react";
 import type { Asset } from "@/domain/asset/types";
+import { useBackgrounds } from "@/hooks/use-backgrounds";
+import { BrandBackgroundGrid } from "@/components/selectors/brand-background-grid";
+import type { BrandBackground } from "@/domain/backgrounds/types";
 
 export function BrandPanel() {
   const { data: session } = useSession();
@@ -19,6 +21,15 @@ export function BrandPanel() {
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [backgroundErrorMessage, setBackgroundErrorMessage] = useState<string | null>(null);
+  const [isUploadingBackground, setIsUploadingBackground] = useState(false);
+
+  const {
+    brandBackgrounds,
+    isLoadingBrand,
+    uploadBrandBackground,
+    deleteBrandBackground,
+  } = useBackgrounds();
 
   // Fetch brand profile in background on mount
   useEffect(() => {
@@ -169,6 +180,77 @@ export function BrandPanel() {
     }
   };
 
+  // Background handlers
+  const handleBackgroundUpload = useCallback(
+    async (file: File) => {
+      if (!session?.user) return;
+
+      setBackgroundErrorMessage(null);
+      setIsUploadingBackground(true);
+
+      try {
+        await uploadBrandBackground(file);
+        track("brand_background_uploaded", { file_size_kb: file.size / 1024 });
+      } catch (error) {
+        console.error("Background upload failed:", error);
+        setBackgroundErrorMessage(
+          error instanceof Error ? error.message : "Failed to upload background"
+        );
+      } finally {
+        setIsUploadingBackground(false);
+      }
+    },
+    [session?.user, uploadBrandBackground]
+  );
+
+  const handleBackgroundSelect = useCallback(
+    (background: BrandBackground) => {
+      // Apply background to canvas
+      const backgroundAsset: Asset = {
+        id: `brand-bg-${background.id}`,
+        projectId: "brand",
+        userId: "brand",
+        url: background.url,
+        name: background.name || "Brand background",
+        kind: "background",
+        createdAt: background.createdAt,
+      };
+
+      setAssets((prev) => [...prev, backgroundAsset]);
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        background: {
+          type: "image",
+          value: backgroundAsset.id,
+        },
+        assets: {
+          ...currentConfig.assets,
+          background: backgroundAsset.id,
+        },
+      }));
+
+      track("brand_background_selected", { background_id: background.id });
+    },
+    [setAssets, setConfig]
+  );
+
+  const handleBackgroundRemove = useCallback(
+    async (id: string) => {
+      setBackgroundErrorMessage(null);
+
+      try {
+        const success = await deleteBrandBackground(id);
+        if (success) {
+          track("brand_background_deleted", { background_id: id });
+        }
+      } catch (error) {
+        console.error("Background deletion failed:", error);
+        setBackgroundErrorMessage("Failed to delete background");
+      }
+    },
+    [deleteBrandBackground]
+  );
+
   return (
     <div className="h-full w-full space-y-6 overflow-y-auto p-4">
       {/* Logo Section */}
@@ -276,6 +358,51 @@ export function BrandPanel() {
             {errorMessage}
           </p>
         )}
+      </div>
+
+      {/* Brand Backgrounds Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Brand Backgrounds</h3>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) =>
+              e.target.files?.[0] && handleBackgroundUpload(e.target.files[0])
+            }
+            className="hidden"
+            id="background-add"
+            aria-label="Add brand background"
+          />
+          <label htmlFor="background-add">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isUploadingBackground || !session?.user}
+              asChild
+            >
+              <span>Add</span>
+            </Button>
+          </label>
+        </div>
+
+        <BrandBackgroundGrid
+          backgrounds={brandBackgrounds}
+          onSelect={handleBackgroundSelect}
+          onRemove={handleBackgroundRemove}
+          isLoading={isLoadingBrand}
+          showRemove={true}
+        />
+
+        {backgroundErrorMessage && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {backgroundErrorMessage}
+          </p>
+        )}
+
+        <p className="text-xs text-muted-foreground">
+          Upload backgrounds to use across your screenshots. They'll also appear in the Design tab.
+        </p>
       </div>
     </div>
   );
