@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "debugId": "c62dcb78-2cdf-6dcd-aea9-2a58614534c9",
-  "sections": [
-    {"offset": {"line": 191, "column": 0}, "map": {"version":3,"sources":["file:///Users/adrianpilarczyk/Code/dopeshot/apps/app/instrumentation.ts"],"sourcesContent":[";globalThis[\"_sentryNextJsVersion\"] = \"16.0.7\";globalThis[\"_sentryRewritesTunnelPath\"] = \"/monitoring\";import * as Sentry from \"@sentry/nextjs\";\n\nexport async function register() {\n  if (process.env.NEXT_RUNTIME === \"nodejs\") {\n    await import(\"./sentry.server.config\");\n  }\n\n  if (process.env.NEXT_RUNTIME === \"edge\") {\n    await import(\"./sentry.edge.config\");\n  }\n}\n\nexport const onRequestError = Sentry.captureRequestError;\n"],"names":[],"mappings":";;;;;;AAAuG;AAAtG,UAAU,CAAC,uBAAuB,GAAG;AAAS,UAAU,CAAC,4BAA4B,GAAG;;AAElF,eAAe;IACpB,wCAA2C;QACzC;IACF;IAEA;;AAGF;AAEO,MAAM,iBAAiB,4YAA0B"}}]
-}
