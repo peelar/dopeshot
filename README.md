@@ -55,6 +55,8 @@ Ideas? Bugs? [Open an issue](https://github.com/yourusername/dopeshot/issues).
 
 Want to add a look or typography preset? Check out the [authoring guide](./AUTHORING.md).
 
+All PRs should include a Changeset (`pnpm changeset`) describing user-facing changes; see [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) for the flow.
+
 ---
 
 Built by indie hackers, for indie hackers. Ship fast, post faster.
