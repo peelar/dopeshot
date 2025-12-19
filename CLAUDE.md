@@ -7,6 +7,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 ## Map
 
 - [Product](docs/product/index.md) - homepage for all the documentation regarding the product
+- [Folder Structure](docs/development/folder-structure.md) - guide to the src/ directory structure and where to put new code
 
 ## Rules
 
