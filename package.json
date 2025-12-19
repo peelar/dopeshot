@@ -8,6 +8,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "changeset": "changeset",
+    "changeset:status": "pnpm changeset status --verbose",
+    "changeset:version": "pnpm changeset version && pnpm install --no-frozen-lockfile",
     "knip": "knip",
     "typecheck": "tsc --noEmit",
     "test:domain": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts",
@@ -16,7 +19,8 @@
     "test:e2e:install": "playwright install --with-deps chromium",
     "test": "pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "test:ci": "pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
-    "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e"
+    "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
+    "release": "pnpm changeset:version && pnpm check"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
@@ -61,6 +65,7 @@
     "tailwind-merge": "^2.5.3"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "@playwright/test": "^1.57.0",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
