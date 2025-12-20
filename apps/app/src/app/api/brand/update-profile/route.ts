@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
+import invariant from "tiny-invariant";
 
-import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getServerSession } from "@/lib/auth/server-session";
+import { verifySession } from "@/lib/auth/session";
+import { getUserDb } from "@/lib/data/dal";
 import { updateUserMetadata } from "@/app/api/brand/utils";
+import {
+  brandColorPaletteSchema,
+  brandTypographySchema,
+} from "@/lib/types/brand";
 
 type UpdateProfileBody = {
   name?: string | null;
@@ -16,52 +21,76 @@ type UpdateProfileBody = {
 };
 
 export async function PATCH(request: Request) {
-  const session = await getServerSession(request);
-  const userId = session?.session?.user?.id ?? session?.user?.id;
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const body: UpdateProfileBody = await request.json().catch(() => ({}));
-
-  const brandUpdates: Partial<{
-    name: string | null;
-    color_palette: string[];
-    typography: Record<string, string>;
-    logo_path: string | null;
-  }> = {};
-  if ("name" in body) {
-    brandUpdates.name = body.name;
-  }
-  if ("color_palette" in body && Array.isArray(body.color_palette)) {
-    brandUpdates.color_palette = body.color_palette;
-  }
-  if ("typography" in body && typeof body.typography === "object") {
-    brandUpdates.typography = body.typography;
-  }
-  if ("logo_path" in body) {
-    brandUpdates.logo_path = body.logo_path;
-  }
-
   try {
-    if (Object.keys(brandUpdates).length) {
-      const { error } = await supabaseAdmin
-        .from("brand_profiles")
-        .upsert({ user_id: userId, ...brandUpdates }, { onConflict: "user_id" });
-      if (error) {
-        return NextResponse.json(
-          { error: error.message },
-          { status: 500 },
-        );
-      }
+    // Verify session
+    const session = await verifySession();
+    if (!session.isAuth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const body: UpdateProfileBody = await request.json().catch(() => ({}));
+
+    // Get user-scoped database
+    const db = await getUserDb();
+    invariant(session.userId, "userId must be defined when isAuth is true");
+    const userId = session.userId;
+
+    // Build brand profile updates with validation
+    const brandUpdates: Partial<{
+      name: string | null;
+      colorPalette: unknown;
+      typography: unknown;
+      logoPath: string | null;
+    }> = {};
+
+    if ("name" in body) {
+      brandUpdates.name = body.name;
+    }
+
+    if ("color_palette" in body && Array.isArray(body.color_palette)) {
+      // Convert array to BrandColorPalette object
+      const [primary, secondary, accent, background, text] = body.color_palette;
+      const colorPalette = {
+        primary: primary ?? "#000000",
+        secondary: secondary ?? "#000000",
+        accent: accent ?? "#000000",
+        background: background ?? "#FFFFFF",
+        text: text ?? "#000000",
+      };
+      // Validate with Zod schema
+      const validated = brandColorPaletteSchema.parse(colorPalette);
+      brandUpdates.colorPalette = validated;
+    }
+
+    if ("typography" in body && typeof body.typography === "object") {
+      // Validate with Zod schema
+      const validated = brandTypographySchema.parse(body.typography);
+      brandUpdates.typography = validated;
+    }
+
+    if ("logo_path" in body) {
+      brandUpdates.logoPath = body.logo_path;
+    }
+
+    // Update brand profile via Prisma
+    if (Object.keys(brandUpdates).length) {
+      await db.brandProfile.upsert({
+        where: { userId },
+        create: {
+          userId,
+          ...brandUpdates,
+        },
+        update: brandUpdates,
+      });
+    }
+
+    // Update user metadata
     const onboardingSteps = [
       ...(Array.isArray(body.onboardingSteps) ? body.onboardingSteps : []),
       ...(body.onboardingStep ? [body.onboardingStep] : []),
     ];
 
-    await updateUserMetadata(userId, {
+    await updateUserMetadata({
       onboardingSteps,
       subscriptionTier: body.subscription_tier,
       subscriptionStatus: body.subscription_status,
@@ -69,7 +98,8 @@ export async function PATCH(request: Request) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to update profile";
+    const message =
+      error instanceof Error ? error.message : "Failed to update profile";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

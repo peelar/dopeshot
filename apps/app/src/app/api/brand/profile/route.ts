@@ -1,39 +1,50 @@
 import { NextResponse } from "next/server";
+import invariant from "tiny-invariant";
 
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getServerSession } from "@/lib/auth/server-session";
+import { verifySession } from "@/lib/auth/session";
+import { getUserDb } from "@/lib/data/dal";
 
-export async function GET(request: Request) {
-  const session = await getServerSession(request);
-  const userId = session?.session?.user?.id ?? session?.user?.id;
-  if (!userId) {
-    if (process.env.NODE_ENV !== "production") {
-      console.warn(
-        "[brand/profile] unauthorized, cookies:",
-        request.headers.get("cookie"),
-      );
-    }
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function GET() {
   try {
-    const { data: profile } = await supabaseAdmin
-      .from("brand_profiles")
-      .select("name, color_palette, typography, logo_path")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Verify session
+    const session = await verifySession();
+    if (!session.isAuth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const { data: metadata } = await supabaseAdmin
-      .from("user_metadata")
-      .select("onboarding_progress, subscription_tier, subscription_status")
-      .eq("user_id", userId)
-      .maybeSingle();
+    // Get user-scoped database
+    const db = await getUserDb();
+    invariant(session.userId, "userId must be defined when isAuth is true");
+    const userId = session.userId;
 
+    // Fetch brand profile and user metadata via Prisma
+    const [profile, metadata] = await Promise.all([
+      db.brandProfile.findUnique({
+        where: { userId },
+        select: {
+          name: true,
+          colorPalette: true,
+          typography: true,
+          logoPath: true,
+        },
+      }),
+      db.userMetadata.findUnique({
+        where: { userId },
+        select: {
+          onboardingProgress: true,
+          subscriptionTier: true,
+          subscriptionStatus: true,
+        },
+      }),
+    ]);
+
+    // Generate signed URL for logo (Supabase Storage unchanged)
     let logoUrl: string | null = null;
-    if (profile?.logo_path) {
+    if (profile?.logoPath) {
       const { data: signedUrlData } = await supabaseAdmin.storage
         .from("brand-logos")
-        .createSignedUrl(profile.logo_path, 3600);
+        .createSignedUrl(profile.logoPath, 3600);
       logoUrl = signedUrlData?.signedUrl ?? null;
     }
 
@@ -43,7 +54,8 @@ export async function GET(request: Request) {
       logoUrl,
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Failed to load profile";
+    const message =
+      error instanceof Error ? error.message : "Failed to load profile";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
