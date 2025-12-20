@@ -5,6 +5,7 @@ import { useAtomValue } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 import {
@@ -23,9 +24,10 @@ import { CodeSection } from "@/components/sidebar/code-section";
 
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  useAccordions?: boolean;
 }
 
-export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({ onUploadAsset, useAccordions = true }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
@@ -64,90 +66,195 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const defaultAccordionValues = showCodeSection
     ? ["code", "background"]
     : ["look", "effects", "background"];
+  const getAccordionIds = (sectionId: string) => {
+    const baseId = `layout-config-${sectionId}`;
+    return {
+      triggerId: `${baseId}-trigger`,
+      contentId: `${baseId}-content`,
+    };
+  };
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      <Accordion
-        type="multiple"
-        defaultValue={defaultAccordionValues}
-        className="w-full"
-      >
-        {showTextSection && (
-          <AccordionItem value="look" className="border-b">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
+      {useAccordions ? (
+        <Accordion
+          type="multiple"
+          defaultValue={defaultAccordionValues}
+          className="w-full"
+        >
+          {showTextSection && (
+            <AccordionItem value="look" className="border-b">
+              <AccordionTrigger
+                id={getAccordionIds("look").triggerId}
+                aria-controls={getAccordionIds("look").contentId}
+                className="px-4 py-3 hover:no-underline"
+              >
+                <div className="flex w-full items-center justify-between pr-4">
+                  <span className="text-sm font-semibold">Text</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent
+                id={getAccordionIds("look").contentId}
+                aria-labelledby={getAccordionIds("look").triggerId}
+                className="px-4 pb-4"
+              >
+                <LayoutSection />
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {showCodeSection && (
+            <div className="border-b">
+              <div className="px-4 py-3">
+                <span className="text-sm font-semibold">Code</span>
+              </div>
+              <div className="px-4 pb-4">
+                <CodeSection />
+              </div>
+            </div>
+          )}
+
+          {!showCodeSection && (
+            <AccordionItem value="effects" className="border-b">
+              <AccordionTrigger
+                id={getAccordionIds("effects").triggerId}
+                aria-controls={getAccordionIds("effects").contentId}
+                className="px-4 py-3 hover:no-underline"
+              >
+                <div className="flex w-full items-center justify-between pr-4">
+                  <span className="text-sm font-semibold">Effects</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent
+                id={getAccordionIds("effects").contentId}
+                aria-labelledby={getAccordionIds("effects").triggerId}
+                className="px-4 pb-4"
+              >
+                <EffectsSection />
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          <AccordionItem value="background" className="border-b">
+            <AccordionTrigger
+              id={getAccordionIds("background").triggerId}
+              aria-controls={getAccordionIds("background").contentId}
+              className="px-4 py-3 hover:no-underline"
+            >
               <div className="flex w-full items-center justify-between pr-4">
+                <span className="text-sm font-semibold">Background</span>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent
+              id={getAccordionIds("background").contentId}
+              aria-labelledby={getAccordionIds("background").triggerId}
+              className="px-4 pb-4"
+            >
+              <BackgroundSection onUploadAsset={onUploadAsset} />
+            </AccordionContent>
+          </AccordionItem>
+
+          {!showCodeSection && (
+            <AccordionItem value="screenshot" className="border-b">
+              <AccordionTrigger
+                id={getAccordionIds("screenshot").triggerId}
+                aria-controls={getAccordionIds("screenshot").contentId}
+                className="px-4 py-3 hover:no-underline"
+              >
+                <div className="flex w-full items-center justify-between pr-4">
+                  <span className="text-sm font-semibold">Screenshot</span>
+                  <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent
+                id={getAccordionIds("screenshot").contentId}
+                aria-labelledby={getAccordionIds("screenshot").triggerId}
+                className="px-4 pb-4"
+              >
+                <ScreenshotSection onUploadAsset={onUploadAsset} />
+              </AccordionContent>
+            </AccordionItem>
+          )}
+
+          {showLogoSection && (
+            <AccordionItem value="logo" className="border-b">
+              <AccordionTrigger
+                id={getAccordionIds("logo").triggerId}
+                aria-controls={getAccordionIds("logo").contentId}
+                className="px-4 py-3 hover:no-underline"
+              >
+                <div className="flex w-full items-center justify-between pr-4">
+                  <span className="text-sm font-semibold">Logo</span>
+                  <span className="text-xs text-muted-foreground">{getLogoStatus()}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent
+                id={getAccordionIds("logo").contentId}
+                aria-labelledby={getAccordionIds("logo").triggerId}
+                className="px-4 pb-4"
+              >
+                <LogoSection onUploadAsset={onUploadAsset} />
+              </AccordionContent>
+            </AccordionItem>
+          )}
+        </Accordion>
+      ) : (
+        <div className="flex flex-col gap-6 pb-6">
+          {showTextSection && (
+            <section className="space-y-3 px-4">
+              <div className="flex w-full items-center justify-between">
                 <span className="text-sm font-semibold">Text</span>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
               <LayoutSection />
-            </AccordionContent>
-          </AccordionItem>
-        )}
+            </section>
+          )}
 
-        {showCodeSection && (
-          <div className="border-b">
-            <div className="px-4 py-3">
-              <span className="text-sm font-semibold">Code</span>
-            </div>
-            <div className="px-4 pb-4">
+          {showCodeSection && (
+            <section className="space-y-3 px-4">
+              <div className="flex w-full items-center justify-between">
+                <span className="text-sm font-semibold">Code</span>
+              </div>
               <CodeSection />
-            </div>
-          </div>
-        )}
+            </section>
+          )}
 
-        {!showCodeSection && (
-          <AccordionItem value="effects" className="border-b">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex w-full items-center justify-between pr-4">
+          {!showCodeSection && (
+            <section className="space-y-3 px-4">
+              <div className="flex w-full items-center justify-between">
                 <span className="text-sm font-semibold">Effects</span>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
               <EffectsSection />
-            </AccordionContent>
-          </AccordionItem>
-        )}
+            </section>
+          )}
 
-        <AccordionItem value="background" className="border-b">
-          <AccordionTrigger className="px-4 py-3 hover:no-underline">
-            <div className="flex w-full items-center justify-between pr-4">
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Background</span>
             </div>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4">
             <BackgroundSection onUploadAsset={onUploadAsset} />
-          </AccordionContent>
-        </AccordionItem>
+          </section>
 
-        {!showCodeSection && (
-          <AccordionItem value="screenshot" className="border-b">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex w-full items-center justify-between pr-4">
+          {!showCodeSection && (
+            <section className="space-y-3 px-4">
+              <div className="flex w-full items-center justify-between">
                 <span className="text-sm font-semibold">Screenshot</span>
                 <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
               <ScreenshotSection onUploadAsset={onUploadAsset} />
-            </AccordionContent>
-          </AccordionItem>
-        )}
+            </section>
+          )}
 
-        {showLogoSection && (
-          <AccordionItem value="logo" className="border-b">
-            <AccordionTrigger className="px-4 py-3 hover:no-underline">
-              <div className="flex w-full items-center justify-between pr-4">
+          {showLogoSection && (
+            <section className="space-y-3 px-4">
+              <div className="flex w-full items-center justify-between">
                 <span className="text-sm font-semibold">Logo</span>
                 <span className="text-xs text-muted-foreground">{getLogoStatus()}</span>
               </div>
-            </AccordionTrigger>
-            <AccordionContent className="px-4 pb-4">
               <LogoSection onUploadAsset={onUploadAsset} />
-            </AccordionContent>
-          </AccordionItem>
-        )}
-      </Accordion>
+            </section>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -196,17 +303,6 @@ export const AssetDropzone = ({
     inputRef.current?.click();
   }, [disabled]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (disabled) return;
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        inputRef.current?.click();
-      }
-    },
-    [disabled],
-  );
-
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
@@ -220,15 +316,15 @@ export const AssetDropzone = ({
     : `${label}. Press Enter to upload`;
 
   return (
-    <div
-      role="button"
-      tabIndex={disabled ? -1 : 0}
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
       aria-label={ariaLabel}
-      aria-disabled={disabled}
+      disabled={disabled}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       className={cn(
-        "group relative w-full rounded-2xl border border-border bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group relative h-auto w-full rounded-2xl border border-border bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted/50",
         variant === "logo"
           ? "flex min-h-[120px] flex-col items-center gap-4 px-4 py-4"
@@ -261,14 +357,16 @@ export const AssetDropzone = ({
               crossOrigin="anonymous"
             />
             {asset && onRemove && (
-              <button
+              <Button
                 type="button"
                 onClick={handleRemove}
                 aria-label="Remove asset"
+                variant="ghost"
+                size="sm"
                 className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 transition-opacity group-hover:opacity-100"
               >
                 <X className="h-4 w-4 text-white" aria-hidden="true" />
-              </button>
+              </Button>
             )}
           </>
         ) : (
@@ -293,11 +391,11 @@ export const AssetDropzone = ({
           {asset ? asset.name : label}
         </span>
         <span
-          className={cn("text-muted-foreground", variant === "logo" ? "text-xs" : "text-[10px]")}
+          className={cn("text-muted-foreground", "text-xs")}
         >
           {asset ? "Click to replace" : "PNG, JPG"}
         </span>
       </div>
-    </div>
+    </Button>
   );
 };

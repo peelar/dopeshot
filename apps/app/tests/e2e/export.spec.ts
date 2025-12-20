@@ -93,6 +93,23 @@ test.describe('Export Functionality', () => {
     expect(hasLoadingText || hasDefaultText).toBe(true);
   });
 
+  test('exports PNG file in mobile orientation', async ({ page }) => {
+    const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
+    await page.setInputFiles('input[type="file"]', fixtureFile);
+
+    await expect(page.locator('[data-testid="preview-canvas"]')).toBeVisible();
+
+    const mobileToggle = page.getByRole('button', { name: /mobile mode \(9:16\)/i });
+    await mobileToggle.click();
+    await expect(mobileToggle).toHaveAttribute('aria-pressed', 'true');
+
+    const downloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: /export.*png/i }).click();
+    const download = await downloadPromise;
+
+    expect(download.suggestedFilename()).toBe('cover-image.png');
+  });
+
   // Note: Analytics tracking test skipped - analytics events are not logged to console
   // and would require mocking the analytics service or checking network requests.
   // The analytics code is covered in use-playground-controller.ts at line 258-265.

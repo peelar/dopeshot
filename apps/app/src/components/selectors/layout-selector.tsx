@@ -21,6 +21,7 @@ import {
   type AssetType,
 } from "@/hooks/atoms";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useMemo } from "react";
@@ -225,14 +226,14 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   return (
     <div className={cn("flex w-full flex-col gap-2 sm:px-4", className)}>
-      <div className="flex items-center pt-2 sm:pt-4">
+      <div className="flex items-center px-4 pt-2 sm:pt-4">
         <Select
           value={assetType}
           onValueChange={(value) => handleAssetTypeChange(value as AssetType)}
         >
           <SelectTrigger
             className={cn(
-              "h-auto w-auto gap-1 border-0 bg-transparent px-0 py-0 shadow-none ring-offset-0 focus:ring-0 focus:ring-offset-0",
+              "h-auto w-auto gap-1 rounded-md border-0 bg-transparent px-2 py-1 shadow-none ring-offset-0 focus:ring-0 focus:ring-offset-0 hover:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent",
             )}
             aria-label="Select asset type"
           >
@@ -397,11 +398,12 @@ function LayoutPreviewCard({
   const orientation = useAtomValue(orientationAtom);
 
   return (
-    <button
+    <Button
       type="button"
       onClick={onSelect}
+      variant="ghost"
       className={cn(
-        "group relative flex flex-col gap-1 rounded-lg border border-transparent p-1.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:gap-2 sm:p-2",
+        "group relative flex h-auto flex-col gap-1 rounded-lg border border-transparent p-1.5 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:gap-2 sm:p-2",
         isSelected
           ? "border-primary/30 ring-1 ring-primary/15 ring-offset-1 ring-offset-background"
           : "hover:border-border/40 hover:bg-muted/20",
@@ -416,12 +418,12 @@ function LayoutPreviewCard({
         <span
           className={cn(
             "text-xs font-medium transition-colors",
-            isSelected ? "text-primary" : "text-muted-foreground group-hover:text-foreground",
+            isSelected ? "text-primary/80" : "text-muted-foreground group-hover:text-foreground",
           )}
         >
           {option.displayName}
         </span>
       </div>
-    </button>
+    </Button>
   );
 }
