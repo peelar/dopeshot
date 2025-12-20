@@ -12,12 +12,10 @@ import { LayoutConfigPanel } from "@/components/config/layout-config";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 import { ImageUp, Palette } from "lucide-react";
 
 interface MobileActionsProps {
@@ -144,8 +142,10 @@ export function MobileActions({
       <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
           <SheetTrigger asChild>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               className={cn(
                 "flex h-12 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0",
                 showUploadButton ? "basis-2/3" : "flex-1",
@@ -153,7 +153,7 @@ export function MobileActions({
             >
               <Palette className="h-5 w-5" aria-hidden="true" />
               <span className="text-sm font-semibold">Design</span>
-            </button>
+            </Button>
           </SheetTrigger>
           <SheetContent
             side="bottom"
@@ -170,7 +170,7 @@ export function MobileActions({
             onPointerMove={handleDragMove}
             onPointerUp={handleDragEnd}
             onPointerCancel={handleDragEnd}
-            className="group h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-5 sm:hidden will-change-transform data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className="group h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-3 sm:hidden will-change-transform data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
             <div className="relative mx-auto flex h-1.5 w-14 items-center justify-center">
               <div
@@ -187,28 +187,24 @@ export function MobileActions({
                 aria-hidden="true"
               />
             </div>
-            <SheetHeader className="mt-4 text-left">
-              <SheetTitle className="text-base font-semibold text-foreground">Design</SheetTitle>
-              <SheetDescription className="text-xs text-muted-foreground">
-                Tune colors, text, and framing.
-              </SheetDescription>
-            </SheetHeader>
-            <div className="mt-4 h-[calc(100%-100px)] overflow-y-auto">
-              <LayoutConfigPanel onUploadAsset={onUploadAsset} />
+            <div className="mt-4 h-[calc(100%-48px)] overflow-y-auto">
+              <LayoutConfigPanel onUploadAsset={onUploadAsset} useAccordions={false} />
             </div>
           </SheetContent>
         </Sheet>
 
         {showUploadButton ? (
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="sm"
             onClick={onUploadClick}
             disabled={isProcessingUpload}
             className="flex h-12 basis-1/3 items-center justify-center gap-2 rounded-md border border-border/60 bg-muted/80 px-4 text-sm font-semibold text-foreground transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0 disabled:opacity-60"
           >
             <ImageUp className={cn("h-4 w-4", isProcessingUpload && "animate-spin")} aria-hidden="true" />
             <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

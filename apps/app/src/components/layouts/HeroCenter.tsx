@@ -207,9 +207,12 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
             )}
           >
             <div
-              className={cn("flex flex-1", variant === "right" ? "justify-end" : "justify-start")}
+              className={cn(
+                "flex min-w-0 flex-1",
+                variant === "right" ? "justify-end" : "justify-start",
+              )}
             >
-              <div className="max-w-md">
+              <div className="w-full max-w-md">
                 {variant === "right" ? renderTextBlock("right") : renderTextBlock("left")}
               </div>
             </div>

@@ -321,13 +321,15 @@ export function AuthForm() {
               </div>
             </div>
 
-            <button
+            <Button
               type="button"
+              variant="link"
+              size="sm"
               onClick={toggleAuthMethod}
-              className="w-full text-center text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
             >
               {useMagicLink ? "Use email & password instead" : "Send me a magic link"}
-            </button>
+            </Button>
           </>
         )}
       </div>
@@ -337,24 +339,28 @@ export function AuthForm() {
           {mode === "sign-in" ? (
             <>
               Don&apos;t have an account?{" "}
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 onClick={() => setMode("sign-up")}
-                className="text-foreground underline underline-offset-2 transition-colors hover:text-foreground/80"
+                className="h-auto p-0 text-foreground underline underline-offset-2 hover:text-foreground/80"
               >
                 Sign up
-              </button>
+              </Button>
             </>
           ) : (
             <>
               Already have an account?{" "}
-              <button
+              <Button
                 type="button"
+                variant="link"
+                size="sm"
                 onClick={() => setMode("sign-in")}
-                className="text-foreground underline underline-offset-2 transition-colors hover:text-foreground/80"
+                className="h-auto p-0 text-foreground underline underline-offset-2 hover:text-foreground/80"
               >
                 Sign in
-              </button>
+              </Button>
             </>
           )}
         </div>

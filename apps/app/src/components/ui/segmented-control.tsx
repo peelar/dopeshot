@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 
 export interface SegmentedOption {
   id: string;
@@ -35,7 +36,7 @@ export function SegmentedControl({
       {options.map((option) => {
         const isActive = value === option.id;
         return (
-          <button
+          <Button
             key={option.id}
             type="button"
             role="tab"
@@ -46,6 +47,8 @@ export function SegmentedControl({
               if (option.disabled) return;
               onChange(option.id);
             }}
+            variant="ghost"
+            size="sm"
             className={cn(
               "flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition",
               isActive
@@ -57,7 +60,7 @@ export function SegmentedControl({
             disabled={option.disabled}
           >
             {option.label}
-          </button>
+          </Button>
         );
       })}
     </div>

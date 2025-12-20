@@ -15,6 +15,9 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { UmamiProvider } from "@/components/providers/umami-provider";
 import { AuthProvider } from "@/lib/auth";
 
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+
+
 // Font definitions with CSS variables
 const geistSans = GeistSans;
 
@@ -127,7 +130,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body
         className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
         style={

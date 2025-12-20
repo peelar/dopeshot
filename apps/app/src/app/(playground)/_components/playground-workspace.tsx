@@ -19,6 +19,7 @@ import {
 } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 
 /**
  * PlaygroundWorkspace
@@ -131,41 +132,47 @@ export function PlaygroundWorkspace({
           {/* Tiny icon-only orientation toggle - hidden for code snippets - centered against screenshot */}
           {!useFluidLayout ? (
             <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
-              <button
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => handleOrientationChange("desktop")}
                 aria-pressed={orientation === "desktop"}
                 aria-label="Desktop mode (16:9)"
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded transition-colors",
+                  "h-7 w-7 rounded transition-colors",
                   orientation === "desktop"
                     ? "bg-foreground text-background shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Monitor className="h-3.5 w-3.5" />
-              </button>
-              <button
+              </Button>
+              <Button
                 type="button"
+                variant="ghost"
+                size="icon-sm"
                 onClick={() => handleOrientationChange("mobile")}
                 aria-pressed={orientation === "mobile"}
                 aria-label="Mobile mode (9:16)"
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded transition-colors",
+                  "h-7 w-7 rounded transition-colors",
                   orientation === "mobile"
                     ? "bg-foreground text-background shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <Smartphone className="h-3.5 w-3.5" />
-              </button>
+              </Button>
             </div>
           ) : null}
 
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={onToggleAspect}
               aria-pressed={isAspectLocked}
               className={cn(
@@ -176,7 +183,7 @@ export function PlaygroundWorkspace({
               )}
             >
               {isAspectLocked ? "Locked · 16:9" : "Lock to 16:9"}
-            </button>
+            </Button>
           ) : null}
         </div>
 
@@ -193,7 +200,7 @@ export function PlaygroundWorkspace({
           </PreviewViewport>
           {showFocusHint ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
-              <span className="rounded-full bg-background/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
+              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
                 Screenshot-focused variant active
               </span>
             </div>
