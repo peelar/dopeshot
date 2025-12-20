@@ -1,9 +1,8 @@
 import { LandingHeader } from "./_components/landing-header";
 import { LandingHero } from "./_components/landing-hero";
 import { LandingExamples } from "./_components/landing-examples";
-import { LandingHowItWorks } from "./_components/landing-how-it-works";
-import { LandingDifferentiators } from "./_components/landing-differentiators";
 import { LandingBrandingTeaser } from "./_components/landing-branding-teaser";
+import { LandingFinalCta } from "./_components/landing-final-cta";
 import { LandingFooter } from "./_components/landing-footer";
 
 export default function LandingPage() {
@@ -13,9 +12,8 @@ export default function LandingPage() {
       <main>
         <LandingHero />
         <LandingExamples />
-        <LandingHowItWorks />
-        <LandingDifferentiators />
         <LandingBrandingTeaser />
+        <LandingFinalCta />
       </main>
       <LandingFooter />
     </div>
