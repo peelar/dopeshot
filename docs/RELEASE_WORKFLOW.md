@@ -5,7 +5,7 @@ This repo uses [Changesets](https://github.com/changesets/changesets) to track h
 ## Daily flow
 
 1. Add a changeset in each PR that should be part of the next release:
-   - `pnpm changeset` → choose the package (just `dopeshot`) and version bump type (usually `patch`).
+   - `pnpm changeset` → choose the package (`dopeshot-app`) and version bump type (usually `patch`).
    - Write a short, user-facing summary. Keep it to one bullet per change.
    - Commit the generated file under `.changeset/`.
 2. Merge PRs as usual. The release workflow will stack all pending changesets on `main`.
@@ -22,6 +22,7 @@ This repo uses [Changesets](https://github.com/changesets/changesets) to track h
 - Bump versions and regenerate changelog locally (mirrors the GitHub Action): `pnpm release`
 - Just run the version step (no tests): `pnpm changeset:version`
 - Start a new changeset: `pnpm changeset`
+- Run app checks directly: `pnpm --filter dopeshot-app check`
 
 ## Writing good changesets (human + LLM friendly)
 
@@ -47,4 +48,4 @@ Example:
 
 - `.github/workflows/release.yml` watches `main` and `workflow_dispatch`.
 - It installs dependencies, runs `changesets/action@v1` to open/update the release PR, and skips publishing via a no-op command.
-- The existing `.github/workflows/test.yml` runs on PRs (including the release PR) to execute lint/typecheck/unit/e2e tests. Merge only when green.
+- The existing `.github/workflows/test.yml` runs on PRs (including the release PR) to execute lint/typecheck/unit/e2e tests for `apps/app`. Merge only when green.

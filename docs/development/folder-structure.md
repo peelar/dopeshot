@@ -2,7 +2,7 @@
 
 ## Overview
 
-dopeshot uses a `src/` directory pattern following Next.js 15 best practices and AI-friendly vertical slice architecture. This structure separates source code from configuration, groups related code by feature, and provides clear conventions for where new code belongs.
+dopeshot uses a monorepo layout with the product app in `apps/app` and a separate landing site in `apps/landing`. The product app follows a `src/` directory pattern aligned with Next.js 15 best practices and AI-friendly vertical slice architecture. This structure separates source code from configuration, groups related code by feature, and provides clear conventions for where new code belongs.
 
 **Last Updated**: December 2025
 **Migration Completed**: December 19, 2025
@@ -22,22 +22,19 @@ dopeshot uses a `src/` directory pattern following Next.js 15 best practices and
 
 ```
 dopeshot/
-├── src/                          # All application source code
-│   ├── app/                      # Next.js App Router (routes & pages)
-│   ├── components/               # React components
-│   ├── domain/                   # Business logic & data models
-│   ├── hooks/                    # Custom React hooks
-│   └── lib/                      # Utilities & services
-├── public/                        # Static assets (images, fonts, etc.)
-├── tests/                         # Test suite
+├── apps/
+│   ├── app/                       # Product app (Next.js)
+│   │   ├── src/                   # Application source code
+│   │   ├── public/                # Static assets
+│   │   ├── tests/                 # Test suite
+│   │   └── supabase/              # Database & auth config
+│   └── landing/                   # Marketing site (Next.js)
 ├── docs/                          # Technical documentation
 ├── thoughts/                      # Claude command outputs
-├── scripts/                       # Build & migration scripts
-├── supabase/                      # Database & auth config
-└── [config files]                 # TypeScript, Next.js, Tailwind, etc.
+└── [workspace config files]       # Turbo, pnpm, CI, etc.
 ```
 
-## src/ Directory Structure
+## apps/app/src Directory Structure
 
 ### 📁 src/app/ - Next.js App Router
 
