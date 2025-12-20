@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -19,6 +19,8 @@ export function BrandPanel() {
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const replaceInputRef = useRef<HTMLInputElement>(null);
+  const addInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch brand profile in background on mount
   useEffect(() => {
@@ -222,18 +224,19 @@ export function BrandPanel() {
                 className="hidden"
                 id="logo-replace"
                 aria-label="Replace logo file"
+                ref={replaceInputRef}
               />
-              <label htmlFor="logo-replace" className="flex-1">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isProcessingUpload}
-                  asChild
-                  className="w-full"
-                >
-                  <span>Replace</span>
-                </Button>
-              </label>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isProcessingUpload}
+                className="w-full"
+                type="button"
+                aria-controls="logo-replace"
+                onClick={() => replaceInputRef.current?.click()}
+              >
+                Replace
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -256,18 +259,19 @@ export function BrandPanel() {
               className="hidden"
               id="logo-add"
               aria-label="Add logo file"
+              ref={addInputRef}
             />
-            <label htmlFor="logo-add">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isProcessingUpload}
-                asChild
-                className="w-full"
-              >
-                <span>Add logo</span>
-              </Button>
-            </label>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isProcessingUpload}
+              className="w-full"
+              type="button"
+              aria-controls="logo-add"
+              onClick={() => addInputRef.current?.click()}
+            >
+              Add logo
+            </Button>
           </>
         )}
 
