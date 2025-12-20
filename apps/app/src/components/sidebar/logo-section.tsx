@@ -72,6 +72,17 @@ export function LogoSection({ onUploadAsset }: LogoSectionProps) {
     uploadInputRef.current?.click();
   }, [onUploadAsset]);
 
+  const handleCardKeyDown = useCallback(
+    (event: React.KeyboardEvent, action?: () => void) => {
+      if (!action) return;
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        action();
+      }
+    },
+    [],
+  );
+
   // Hide section if look doesn't support logos
   if (lookCapabilities?.logo === "hidden") {
     return null;
@@ -96,17 +107,19 @@ export function LogoSection({ onUploadAsset }: LogoSectionProps) {
 
       {/* Brand logo option */}
       {hasBrandLogo && (
-        <Button
+        <div
           className={cn(
             "group relative h-auto overflow-hidden rounded-lg border p-0 transition-all cursor-pointer",
             isUsingBrandLogo
               ? "border-foreground bg-muted/30"
               : "border-border bg-muted/10 hover:border-foreground/30"
           )}
-          variant="ghost"
-          size="sm"
-          type="button"
           onClick={!isUsingBrandLogo ? handleUseBrandLogo : undefined}
+          onKeyDown={(event) =>
+            handleCardKeyDown(event, !isUsingBrandLogo ? handleUseBrandLogo : undefined)
+          }
+          role="button"
+          tabIndex={0}
         >
           <div
             className="relative h-16 bg-[length:12px_12px] bg-[position:0_0,0_6px,6px_-6px,-6px_0px]"
@@ -142,17 +155,17 @@ export function LogoSection({ onUploadAsset }: LogoSectionProps) {
               <X className="h-2.5 w-2.5 text-foreground" />
             </Button>
           )}
-        </Button>
+        </div>
       )}
 
       {/* Custom logo - either uploaded or upload area */}
       {hasCustomLogo ? (
-        <Button
+        <div
           className="group relative h-auto overflow-hidden rounded-lg border border-foreground bg-muted/30 p-0 cursor-pointer transition-colors hover:border-foreground/80"
-          variant="ghost"
-          size="sm"
-          type="button"
           onClick={handleUploadClick}
+          onKeyDown={(event) => handleCardKeyDown(event, handleUploadClick)}
+          role="button"
+          tabIndex={0}
         >
           <div
             className="relative h-16 bg-[length:12px_12px] bg-[position:0_0,0_6px,6px_-6px,-6px_0px]"
@@ -187,7 +200,7 @@ export function LogoSection({ onUploadAsset }: LogoSectionProps) {
           >
             <X className="h-2.5 w-2.5 text-foreground" />
           </Button>
-        </Button>
+        </div>
       ) : (
         !isUsingBrandLogo && (
           <Button
