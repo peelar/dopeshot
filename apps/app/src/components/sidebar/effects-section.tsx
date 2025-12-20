@@ -14,6 +14,7 @@ import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { cn } from "@/lib/utils/cn";
+import { Button } from "@/components/ui/button";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 import { resolvePatternChoice } from "@/domain/layout/patterns";
 
@@ -91,10 +92,12 @@ function PatternStyleRow({ selectedPattern, onSelectPattern, getPatternLabel }: 
       <span>Texture</span>
       <div className="grid grid-cols-4 gap-1.5">
         {PATTERN_OPTIONS.map((pattern) => (
-          <button
+          <Button
             key={pattern}
             type="button"
             onClick={() => onSelectPattern(pattern)}
+            variant="ghost"
+            size="sm"
             className={cn(
               "rounded-md px-2.5 py-1.5 text-xs font-medium transition-all duration-200",
               selectedPattern === pattern
@@ -103,7 +106,7 @@ function PatternStyleRow({ selectedPattern, onSelectPattern, getPatternLabel }: 
             )}
           >
             {getPatternLabel(pattern)}
-          </button>
+          </Button>
         ))}
       </div>
     </div>
@@ -369,11 +372,13 @@ function EffectToggleControl({
   );
 
   return (
-    <button
+    <Button
       type="button"
       role="switch"
       aria-checked={checked}
       onClick={onToggle}
+      variant="ghost"
+      size="sm"
       className="group flex h-12 w-full cursor-pointer items-center justify-between rounded-xl border border-border/60 bg-muted/30 px-4 text-left text-sm font-medium text-foreground transition-all duration-200 hover:border-border hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/90 dark:hover:border-white/30 dark:hover:bg-white/[0.06]"
     >
       <span>{label}</span>
@@ -383,7 +388,7 @@ function EffectToggleControl({
           {themeVisuals.knobOverlay}
         </span>
       </span>
-    </button>
+    </Button>
   );
 }
 

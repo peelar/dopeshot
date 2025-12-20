@@ -41,7 +41,7 @@ export function AppHeader({
   const UploadIcon = isProcessingUpload ? Loader2 : hasCustomScreenshot ? RefreshCw : ImageUp;
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6">
+    <header className="relative sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-primary/30 after:via-primary/10 after:to-transparent after:opacity-40 sm:px-6">
       <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
         <Logo />
       </a>
@@ -64,7 +64,8 @@ export function AppHeader({
         {canExport ? (
           <Button
             size="sm"
-            className="flex cursor-pointer items-center gap-2 bg-foreground text-background shadow-none hover:bg-foreground focus-visible:ring-foreground/40 disabled:cursor-not-allowed disabled:bg-foreground/70"
+            variant="default"
+            className="flex items-center gap-2 shadow-none"
             onClick={onExport}
             disabled={isExporting}
             aria-busy={isExporting}

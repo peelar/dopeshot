@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { Minus, Plus } from "lucide-react";
 
 interface FontSelectorProps {
@@ -47,8 +48,8 @@ export function FontSelector({
         <div className="flex-[3]">
           <Select value={fontId} onValueChange={(v) => onFontChangeAction(v as FontId)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select font">
-                {currentFont?.alias}
+              <SelectValue className={currentFont ? undefined : "text-muted-foreground"}>
+                {currentFont?.alias ?? "Select font"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
@@ -72,25 +73,29 @@ export function FontSelector({
         {/* Size Controls - 1/4 width */}
         <div className="flex flex-1 items-center">
           <div className="flex h-9 w-full items-center rounded-md border border-border">
-            <button
+            <Button
               type="button"
               onClick={handleSizeDecrease}
               disabled={currentSizeIndex === 0}
               aria-label="Decrease font size"
-              className="flex h-full w-7 items-center justify-center rounded-l-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
+              variant="ghost"
+              size="icon-xs"
+              className="h-full w-7 rounded-l-md text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
             >
               <Minus className="h-3 w-3" />
-            </button>
+            </Button>
             <span className="flex-1 text-center text-xs font-medium">{currentSize.label}</span>
-            <button
+            <Button
               type="button"
               onClick={handleSizeIncrease}
               disabled={currentSizeIndex === FONT_SIZES.length - 1}
               aria-label="Increase font size"
-              className="flex h-full w-7 items-center justify-center rounded-r-md text-muted-foreground transition-colors hover:text-foreground hover:bg-foreground/10 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
+              variant="ghost"
+              size="icon-xs"
+              className="h-full w-7 rounded-r-md text-muted-foreground hover:bg-foreground/10 hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:opacity-30"
             >
               <Plus className="h-3 w-3" />
-            </button>
+            </Button>
           </div>
         </div>
       </div>
