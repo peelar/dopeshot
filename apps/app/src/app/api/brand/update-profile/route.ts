@@ -28,12 +28,13 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    invariant(session.userId, "userId must be defined when isAuth is true");
+    const userId = session.userId;
+
     const body: UpdateProfileBody = await request.json().catch(() => ({}));
 
     // Get user-scoped database
-    const db = await getUserDb();
-    invariant(session.userId, "userId must be defined when isAuth is true");
-    const userId = session.userId;
+    const db = await getUserDb(userId);
 
     // Build brand profile updates with validation
     const brandUpdates: Partial<{

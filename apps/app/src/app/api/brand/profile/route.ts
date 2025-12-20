@@ -13,10 +13,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Get user-scoped database
-    const db = await getUserDb();
     invariant(session.userId, "userId must be defined when isAuth is true");
     const userId = session.userId;
+
+    // Get user-scoped database
+    const db = await getUserDb(userId);
 
     // Fetch brand profile and user metadata via Prisma
     const [profile, metadata] = await Promise.all([

@@ -5,13 +5,14 @@ export async function updateUserMetadata(options: {
   subscriptionTier?: string;
   subscriptionStatus?: string;
 }) {
-  const db = await getUserDb();
   const { verifySession: getSession } = await import("@/lib/auth/session");
   const session = await getSession();
 
   if (!session.isAuth || !session.userId) {
     throw new Error("Unauthorized");
   }
+
+  const db = await getUserDb(session.userId);
 
   // Fetch current metadata
   const current = await db.userMetadata.findUnique({

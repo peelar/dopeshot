@@ -52,7 +52,7 @@ export async function POST(request: Request) {
     }
 
     // Get user-scoped database
-    const db = await getUserDb();
+    const db = await getUserDb(session.userId);
 
     // Update brand profile with logo path via Prisma
     await db.brandProfile.upsert({
