@@ -48,8 +48,8 @@ export function FontSelector({
         <div className="flex-[3]">
           <Select value={fontId} onValueChange={(v) => onFontChangeAction(v as FontId)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select font">
-                {currentFont?.alias}
+              <SelectValue className={currentFont ? undefined : "text-muted-foreground"}>
+                {currentFont?.alias ?? "Select font"}
               </SelectValue>
             </SelectTrigger>
             <SelectContent>
