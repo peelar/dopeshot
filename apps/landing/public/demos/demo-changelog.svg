@@ -1,0 +1,35 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1920" height="1080" fill="oklch(0.145 0 0)"/>
+  <rect width="1920" height="1080" fill="url(#gradient2)" opacity="0.2"/>
+
+  <defs>
+    <linearGradient id="gradient2" x1="960" y1="0" x2="960" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="oklch(0.65 0.22 41.12)"/>
+      <stop offset="100%" stop-color="oklch(0.145 0 0)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Center content -->
+  <rect x="560" y="280" width="800" height="520" rx="20" fill="oklch(0.205 0 0)" opacity="0.6"/>
+
+  <!-- Badge -->
+  <rect x="820" y="320" width="280" height="48" rx="24" fill="oklch(0.65 0.22 41.12)" opacity="0.2" stroke="oklch(0.65 0.22 41.12)" stroke-width="2"/>
+  <text x="960" y="350" font-family="Arial, sans-serif" font-size="20" fill="oklch(0.65 0.22 41.12)" text-anchor="middle" font-weight="bold">NEW FEATURE</text>
+
+  <!-- Title -->
+  <text x="960" y="460" font-family="Arial, sans-serif" font-size="64" fill="oklch(0.985 0 0)" text-anchor="middle" font-weight="bold">v2.0 Release</text>
+
+  <!-- Subtitle -->
+  <text x="960" y="520" font-family="Arial, sans-serif" font-size="28" fill="oklch(0.639 0 0)" text-anchor="middle">Changelog Announcement</text>
+
+  <!-- Feature list -->
+  <circle cx="680" cy="600" r="8" fill="oklch(0.65 0.22 41.12)"/>
+  <rect x="710" y="590" width="380" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.3"/>
+
+  <circle cx="680" cy="650" r="8" fill="oklch(0.65 0.22 41.12)"/>
+  <rect x="710" y="640" width="320" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.3"/>
+
+  <circle cx="680" cy="700" r="8" fill="oklch(0.65 0.22 41.12)"/>
+  <rect x="710" y="690" width="420" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.3"/>
+</svg>
