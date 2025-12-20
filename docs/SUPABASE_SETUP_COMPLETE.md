@@ -10,7 +10,7 @@
 
 ## Environment Variables
 
-Add these to your `.env.local` file:
+Add these to your `apps/app/.env.local` file:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=https://xgvseaushfumwnvkhdyx.supabase.co
@@ -56,7 +56,7 @@ SUPABASE_SERVICE_ROLE_KEY=<get-from-dashboard>
 
 ## Next Steps
 
-1. **Add Service Role Key:** Get the service role key from the dashboard and add it to `.env.local`
+1. **Add Service Role Key:** Get the service role key from the dashboard and add it to `apps/app/.env.local`
 
 2. **Test Authentication:** 
    - Create a test user via the Supabase Dashboard (Authentication → Users)
@@ -69,7 +69,7 @@ SUPABASE_SERVICE_ROLE_KEY=<get-from-dashboard>
    - Test uploading a generated asset to `generated-assets` bucket
 
 4. **Seed Data (Optional):**
-   - See `supabase/seed/phase1_seed.sql` for sample data
+   - See `apps/app/supabase/seed/phase1_seed.sql` for sample data
    - Create a test user first, then replace `{{TEST_USER_ID}}` in the seed file
    - Upload sample logo and assets to storage buckets
    - Run the seed SQL in the Supabase SQL editor
@@ -98,5 +98,4 @@ SUPABASE_SERVICE_ROLE_KEY=<get-from-dashboard>
 ---
 
 Setup completed on: 2025-12-16
-
 

@@ -1,4 +1,4 @@
-const productionHostnames = ["dopeshot.io", "www.dopeshot.io"];
+const productionHostnames = ["app.dopeshot.io", "dopeshot.io", "www.dopeshot.io"];
 
 const normalizeHostname = (hostname?: string) => {
   if (!hostname) return undefined;

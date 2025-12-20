@@ -77,7 +77,7 @@ const fontVariables = [
   playfairDisplay.variable,
 ].join(" ");
 
-const siteUrl = "https://dopeshot.vercel.app";
+const siteUrl = "https://app.dopeshot.io";
 const previewImage = "/cover.png";
 
 export const metadata: Metadata = {
