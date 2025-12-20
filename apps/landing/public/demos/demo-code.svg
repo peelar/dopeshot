@@ -1,0 +1,26 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark background -->
+  <rect width="1920" height="1080" fill="oklch(0.145 0 0)"/>
+
+  <!-- Code editor mockup -->
+  <rect x="320" y="180" width="1280" height="720" rx="16" fill="oklch(0.205 0 0)"/>
+
+  <!-- Editor header -->
+  <rect x="320" y="180" width="1280" height="48" rx="16" fill="oklch(0.269 0 0)"/>
+  <circle cx="360" cy="204" r="8" fill="oklch(0.58 0.22 27)"/>
+  <circle cx="392" cy="204" r="8" fill="oklch(0.65 0.22 41.12)"/>
+  <circle cx="424" cy="204" r="8" fill="oklch(0.705 0.213 47.604)"/>
+
+  <!-- Code lines -->
+  <rect x="380" y="260" width="480" height="24" rx="4" fill="oklch(0.65 0.22 41.12)" opacity="0.3"/>
+  <rect x="380" y="300" width="640" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.2"/>
+  <rect x="420" y="340" width="560" height="24" rx="4" fill="oklch(0.705 0.213 47.604)" opacity="0.3"/>
+  <rect x="420" y="380" width="720" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.2"/>
+  <rect x="380" y="420" width="400" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.2"/>
+  <rect x="420" y="460" width="680" height="24" rx="4" fill="oklch(0.65 0.22 41.12)" opacity="0.3"/>
+  <rect x="420" y="500" width="520" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.2"/>
+  <rect x="380" y="540" width="600" height="24" rx="4" fill="oklch(0.639 0 0)" opacity="0.2"/>
+
+  <!-- Placeholder text -->
+  <text x="960" y="780" font-family="monospace" font-size="28" fill="oklch(0.639 0 0)" text-anchor="middle">Code Snippet</text>
+</svg>

@@ -1,0 +1,29 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background gradient -->
+  <rect width="1920" height="1080" fill="oklch(0.145 0 0)"/>
+  <rect width="1920" height="1080" fill="url(#gradient1)" opacity="0.3"/>
+
+  <defs>
+    <linearGradient id="gradient1" x1="0" y1="0" x2="1920" y2="1080" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="oklch(0.65 0.22 41.12)"/>
+      <stop offset="100%" stop-color="oklch(0.705 0.213 47.604)"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Content container -->
+  <rect x="160" y="120" width="1600" height="840" rx="24" fill="oklch(0.205 0 0)" opacity="0.5"/>
+
+  <!-- Title area -->
+  <rect x="240" y="200" width="600" height="60" rx="12" fill="oklch(0.985 0 0)" opacity="0.9"/>
+  <rect x="240" y="280" width="400" height="32" rx="8" fill="oklch(0.639 0 0)" opacity="0.5"/>
+
+  <!-- Product screenshot mockup -->
+  <rect x="960" y="200" width="720" height="680" rx="16" fill="oklch(0.269 0 0)" opacity="0.3" stroke="oklch(0.65 0.22 41.12)" stroke-width="2"/>
+
+  <!-- Placeholder text -->
+  <text x="960" y="540" font-family="Arial, sans-serif" font-size="32" fill="oklch(0.639 0 0)" text-anchor="middle">Product Screenshot</text>
+
+  <!-- Decorative elements -->
+  <circle cx="300" cy="600" r="120" fill="oklch(0.65 0.22 41.12)" opacity="0.1"/>
+  <circle cx="700" cy="750" r="80" fill="oklch(0.705 0.213 47.604)" opacity="0.1"/>
+</svg>
