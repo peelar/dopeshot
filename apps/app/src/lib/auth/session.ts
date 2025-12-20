@@ -1,10 +1,10 @@
 import "server-only";
-import { cache } from "react";
 import { cookies } from "next/headers";
 import { auth } from "./auth-server";
 
-// Memoized session verification (per-request cache)
-export const verifySession = cache(async () => {
+// SECURITY: No caching - authentication must be verified per-request
+// Caching would share first user's session with all subsequent requests
+export async function verifySession() {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get("better-auth.session_token");
 
@@ -31,4 +31,4 @@ export const verifySession = cache(async () => {
   } catch {
     return { isAuth: false, userId: null };
   }
-});
+}
