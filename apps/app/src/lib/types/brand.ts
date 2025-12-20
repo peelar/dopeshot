@@ -25,7 +25,7 @@ export const brandTypographySchema = z.object({
 export const assetSettingsSchema = z.object({
   layout: z.string(),
   orientation: z.enum(["landscape", "portrait", "square"]),
-  styleToggles: z.record(z.boolean()),
+  styleToggles: z.record(z.string(), z.boolean()),
   textOverlay: z.string().optional(),
 });
 
@@ -46,7 +46,7 @@ export const onboardingProgressSchema = z.object({
 });
 
 // Feature Flags Schema
-export const featureFlagsSchema = z.record(z.boolean());
+export const featureFlagsSchema = z.record(z.string(), z.boolean());
 
 // Text Overlays Schema
 export const textOverlaysSchema = z.array(
@@ -63,7 +63,7 @@ export const textOverlaysSchema = z.array(
         color: z.string().optional(),
       })
       .optional(),
-  })
+  }),
 );
 
 // TypeScript types exported from Zod schemas
