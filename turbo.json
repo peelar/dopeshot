@@ -6,7 +6,8 @@
     "DATABASE_URL",
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
-    "RESEND_API_KEY"
+    "RESEND_API_KEY",
+    "SENTRY_AUTH_TOKEN"
   ],
   "tasks": {
     "dev": {
