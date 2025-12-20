@@ -68,7 +68,7 @@ function DebouncedColorInput({
   return (
     <label
       htmlFor={id}
-      className="flex flex-1 flex-col items-center gap-3 rounded-2xl bg-background/70 p-3 text-center text-[11px] font-semibold uppercase tracking-[0.3em] text-muted-foreground shadow-sm transition focus-within:bg-muted/30 hover:bg-muted/20 hover:shadow"
+      className="flex flex-1 flex-col items-center gap-3 rounded-2xl bg-background/70 p-3 text-center text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground shadow-sm transition focus-within:bg-muted/30 hover:bg-muted/20 hover:shadow"
     >
       {label}
       <input
@@ -339,7 +339,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-auto p-0 text-[11px] text-muted-foreground/80 hover:bg-transparent hover:text-muted-foreground"
+                    className="h-auto p-0 text-xs text-muted-foreground/80 hover:bg-transparent hover:text-muted-foreground"
                   >
                     Customize
                   </Button>
@@ -353,8 +353,8 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
                   options={popoverTabs}
                   onChange={handlePopoverTabChange}
                   ariaLabel="Select gradient customization"
-                  className="text-[11px]"
-                  buttonClassName="px-2 py-1 text-[11px]"
+                  className="text-xs"
+                  buttonClassName="px-2 py-1 text-xs"
                 />
 
                 {activePopoverTab === "custom" && (
@@ -522,13 +522,15 @@ interface GradientSwatchProps {
 
 function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientSwatchProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="ghost"
+      size="sm"
       aria-pressed={selected}
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        "group relative flex h-12 w-full items-center overflow-hidden rounded-xl text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
+        "group relative flex h-12 w-full items-center overflow-hidden rounded-xl p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
         selected
           ? "shadow-sm ring-2 ring-foreground/50 ring-offset-1 ring-offset-background"
           : "ring-1 ring-white/15",
@@ -536,7 +538,7 @@ function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientS
       style={{ background: gradientCss }}
     >
       <span className="sr-only">Gradient swatch</span>
-    </button>
+    </Button>
   );
 }
 
@@ -563,7 +565,7 @@ function GradientAngleControl({ angle, onChange }: GradientAngleControlProps) {
     <div className="space-y-2 text-xs text-muted-foreground">
       <div className="flex items-center justify-between uppercase tracking-[0.3em]">
         <span>Angle</span>
-        <span className="text-[13px] font-semibold text-foreground">{normalized}°</span>
+        <span className="text-sm font-semibold text-foreground">{normalized}°</span>
       </div>
       <div className="flex items-center gap-3">
         <input

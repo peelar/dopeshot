@@ -20,9 +20,17 @@ export function FontStyleSelector({ fontStyle, onFontStyleChange }: FontStyleSel
 
   return (
     <div className="w-full">
-      <Select value={fontStyle} onValueChange={(v: string) => onFontStyleChange(v as FontStyle)}>
+      <Select
+        value={fontStyle}
+        onValueChange={(value) => {
+          if (!value) return;
+          onFontStyleChange(value as FontStyle);
+        }}
+      >
         <SelectTrigger>
-          <SelectValue placeholder="Select font style">{currentStyle?.name}</SelectValue>
+          <SelectValue className={currentStyle ? undefined : "text-muted-foreground"}>
+            {currentStyle?.name ?? "Select font style"}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {FONT_STYLES.map((style) => (
