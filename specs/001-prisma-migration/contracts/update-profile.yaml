@@ -1,0 +1,159 @@
+openapi: 3.1.0
+info:
+  title: Update Brand Profile API
+  description: Update user's brand profile and/or user metadata
+  version: 1.0.0
+
+paths:
+  /api/brand/update-profile:
+    patch:
+      summary: Update brand profile or metadata
+      description: |
+        Updates the authenticated user's brand profile and/or user metadata.
+        All fields are optional - only provided fields will be updated.
+        Supports upserting (creating if doesn't exist, updating if exists).
+      operationId: updateBrandProfile
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                # Brand Profile fields
+                name:
+                  type: string
+                  nullable: true
+                  description: Brand name
+                  example: "My Startup"
+                color_palette:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of 5 hex color codes
+                  example: ["#3B82F6", "#10B981", "#F59E0B", "#FFFFFF", "#1F2937"]
+                typography:
+                  type: object
+                  description: Typography settings
+                  properties:
+                    headingFont:
+                      type: string
+                    bodyFont:
+                      type: string
+                    fontWeights:
+                      type: object
+                      properties:
+                        heading:
+                          type: number
+                        body:
+                          type: number
+                  example:
+                    headingFont: "Inter"
+                    bodyFont: "Inter"
+                    fontWeights:
+                      heading: 700
+                      body: 400
+                logo_path:
+                  type: string
+                  nullable: true
+                  description: Path to logo in storage (set by upload-logo endpoint)
+                  example: "user-id/logo-1234567890.png"
+
+                # User Metadata fields
+                onboardingStep:
+                  type: string
+                  description: Single onboarding step to mark as completed
+                  example: "logo_uploaded"
+                onboardingSteps:
+                  type: array
+                  items:
+                    type: string
+                  description: Array of onboarding steps to mark as completed
+                  example: ["profile_created", "logo_uploaded"]
+                subscription_tier:
+                  type: string
+                  enum: [free, paid]
+                  description: Update subscription tier
+                  example: "paid"
+                subscription_status:
+                  type: string
+                  enum: [active, cancelled, past_due]
+                  description: Update subscription status
+                  example: "active"
+
+            examples:
+              updateColors:
+                summary: Update brand colors
+                value:
+                  color_palette: ["#3B82F6", "#10B981", "#F59E0B", "#FFFFFF", "#1F2937"]
+
+              updateTypography:
+                summary: Update typography
+                value:
+                  typography:
+                    headingFont: "Inter"
+                    bodyFont: "Inter"
+
+              markOnboardingComplete:
+                summary: Mark onboarding step complete
+                value:
+                  onboardingStep: "brand_colors_selected"
+
+              fullProfileUpdate:
+                summary: Update multiple fields
+                value:
+                  name: "My Startup"
+                  color_palette: ["#3B82F6", "#10B981", "#F59E0B", "#FFFFFF", "#1F2937"]
+                  typography:
+                    headingFont: "Inter"
+                    bodyFont: "Inter"
+                  onboardingSteps: ["profile_created", "logo_uploaded", "colors_selected"]
+
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Unauthorized"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session cookie set by better-auth

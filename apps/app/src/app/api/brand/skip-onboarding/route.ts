@@ -1,19 +1,20 @@
 import { NextResponse } from "next/server";
 
-import { getServerSession } from "@/lib/auth/server-session";
+import { verifySession } from "@/lib/auth/session";
 import { updateUserMetadata } from "@/app/api/brand/utils";
 
-export async function POST(request: Request) {
-  const session = await getServerSession(request);
-  const userId = session?.session?.user?.id ?? session?.user?.id;
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export async function POST() {
   try {
-    await updateUserMetadata(userId, {
+    // Verify session
+    const session = await verifySession();
+    if (!session.isAuth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    await updateUserMetadata({
       onboardingSteps: ["logo_onboarding_skipped"],
     });
+
     return NextResponse.json({ success: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Update failed";

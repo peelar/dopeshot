@@ -1,52 +1,79 @@
-import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getUserDb } from "@/lib/data/dal";
 
-export async function updateUserMetadata(
-  userId: string,
-  options: {
-    onboardingSteps?: string[];
-    subscriptionTier?: string;
-    subscriptionStatus?: string;
-  },
-) {
-  const { data } = await supabaseAdmin
-    .from("user_metadata")
-    .select("onboarding_progress")
-    .eq("user_id", userId)
-    .maybeSingle();
+export async function updateUserMetadata(options: {
+  onboardingSteps?: string[];
+  subscriptionTier?: string;
+  subscriptionStatus?: string;
+}) {
+  const db = await getUserDb();
+  const { verifySession: getSession } = await import("@/lib/auth/session");
+  const session = await getSession();
 
-  const currentProgress = Array.isArray(data?.onboarding_progress)
-    ? data!.onboarding_progress
-    : [];
+  if (!session.isAuth || !session.userId) {
+    throw new Error("Unauthorized");
+  }
+
+  // Fetch current metadata
+  const current = await db.userMetadata.findUnique({
+    where: { userId: session.userId },
+    select: { onboardingProgress: true },
+  });
+
+  // Build cumulative onboarding progress
+  const currentProgress =
+    current?.onboardingProgress &&
+    typeof current.onboardingProgress === "object" &&
+    "completedSteps" in current.onboardingProgress &&
+    Array.isArray((current.onboardingProgress as { completedSteps: unknown })
+      .completedSteps) &&
+    ((current.onboardingProgress as { completedSteps: unknown[] })
+      .completedSteps as unknown[]).every(
+      (step): step is string => typeof step === "string"
+    )
+      ? ((current.onboardingProgress as { completedSteps: string[] })
+          .completedSteps as string[])
+      : [];
+
   const progressSet = new Set(currentProgress);
   (options.onboardingSteps ?? []).forEach((step) => progressSet.add(step));
 
-  const updates: {
-    user_id: string;
-    onboarding_progress?: string[];
-    subscription_tier?: string;
-    subscription_status?: string;
-  } = {
-    user_id: userId,
-  };
+  // Build update data
+  const updateData: {
+    onboardingProgress?: { completedSteps: string[] };
+    subscriptionTier?: string;
+    subscriptionStatus?: string;
+  } = {};
 
   if (options.onboardingSteps?.length) {
-    updates.onboarding_progress = Array.from(progressSet);
+    updateData.onboardingProgress = {
+      completedSteps: Array.from(progressSet),
+    };
   }
   if (typeof options.subscriptionTier !== "undefined") {
-    updates.subscription_tier = options.subscriptionTier;
+    updateData.subscriptionTier = options.subscriptionTier;
   }
   if (typeof options.subscriptionStatus !== "undefined") {
-    updates.subscription_status = options.subscriptionStatus;
+    updateData.subscriptionStatus = options.subscriptionStatus;
   }
 
-  if (Object.keys(updates).length > 1) {
-    await supabaseAdmin.from("user_metadata").upsert(updates, {
-      onConflict: "user_id",
+  if (Object.keys(updateData).length) {
+    await db.userMetadata.upsert({
+      where: { userId: session.userId },
+      create: {
+        userId: session.userId,
+        subscriptionTier: "free",
+        subscriptionStatus: "active",
+        exportsThisMonth: 0,
+        ...updateData,
+      },
+      update: updateData,
     });
   }
 
   return {
-    onboarding_progress: updates.onboarding_progress ?? currentProgress,
+    onboarding_progress: updateData.onboardingProgress ?? {
+      completedSteps: currentProgress,
+    },
   };
 }
 
