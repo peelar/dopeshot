@@ -76,7 +76,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
 
   // Auto-apply brand logo on mount if toggle is enabled
-  useBrandLogoAutoApply();
+  useBrandLogoAutoApply({ enabled: showBrandExperience });
 
   const {
     dragAndUpload,
