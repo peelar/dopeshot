@@ -1,6 +1,5 @@
 import { defineConfig } from "prisma/config";
 import { config } from "dotenv";
-import invariant from "tiny-invariant";
 import { existsSync } from "fs";
 
 // Load environment variables from .env.local (development) if it exists
@@ -9,10 +8,10 @@ if (existsSync(".env.local")) {
   config({ path: ".env.local" });
 }
 
-invariant(process.env.DATABASE_URL, "DATABASE_URL must be defined");
-
 export default defineConfig({
   datasource: {
+    // DATABASE_URL can be undefined during `prisma generate` in CI
+    // It will be validated at runtime when the Prisma client connects
     url: process.env.DATABASE_URL,
   },
 });
