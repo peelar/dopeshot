@@ -7,7 +7,6 @@
 - 3a49e81: Generate distinctive gradients for monochromatic palettes using color theory harmonies
 
   When a screenshot has limited colors (e.g., orange + white), gradient generation now creates 4 visually distinct options instead of 4 similar variations:
-
   - Gradient 1: Lightness variation (original color)
   - Gradient 2: Complementary (180° hue rotation)
   - Gradient 3: Triadic (120° hue rotation)
