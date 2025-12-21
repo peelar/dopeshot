@@ -13,6 +13,7 @@ export async function POST() {
 
     await updateUserMetadata({
       onboardingSteps: ["logo_onboarding_skipped"],
+      session,
     });
 
     return NextResponse.json({ success: true });

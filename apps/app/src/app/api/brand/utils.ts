@@ -1,12 +1,22 @@
 import { getUserDb } from "@/lib/data/dal";
 
+type SessionInfo = {
+  isAuth: boolean;
+  userId: string | null;
+};
+
 export async function updateUserMetadata(options: {
   onboardingSteps?: string[];
   subscriptionTier?: string;
   subscriptionStatus?: string;
+  session?: SessionInfo;
 }) {
-  const { verifySession: getSession } = await import("@/lib/auth/session");
-  const session = await getSession();
+  const session =
+    options.session ??
+    (await (async () => {
+      const { verifySession: getSession } = await import("@/lib/auth/session");
+      return getSession();
+    })());
 
   if (!session.isAuth || !session.userId) {
     throw new Error("Unauthorized");

@@ -95,6 +95,7 @@ export async function PATCH(request: Request) {
       onboardingSteps,
       subscriptionTier: body.subscription_tier,
       subscriptionStatus: body.subscription_status,
+      session,
     });
 
     return NextResponse.json({ success: true });
