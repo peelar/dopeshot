@@ -6,6 +6,8 @@ import {
   EnhancedColorPalette,
   enhanceColor,
   enforceColorSeparation,
+  generateHarmonyColor,
+  isPoolMonochromatic,
 } from "./colors";
 
 type GradientVariation = {
@@ -222,10 +224,67 @@ function getPaletteColorPool(palette: EnhancedColorPalette): string[] {
   return unique;
 }
 
+/**
+ * Build color pairs for gradient generation.
+ * When the palette is monochromatic (limited color variety), uses color theory
+ * harmonies to generate visually distinct gradient options.
+ */
 function buildColorPairs(palette: EnhancedColorPalette, count: number): [string, string][] {
   const pool = getPaletteColorPool(palette);
   const pairs: [string, string][] = [];
 
+  // Detect if the palette is effectively monochromatic
+  const isMonochromatic = isPoolMonochromatic(pool);
+
+  if (isMonochromatic && pool.length > 0) {
+    // Use the hero color (most prominent/saturated) as the base
+    const baseColor = palette.hero ?? pool[0];
+
+    // Generate 4 distinct gradient pairs using color theory harmonies
+    // Each pair uses a different harmony rule for maximum visual variety
+    for (let i = 0; i < count; i++) {
+      switch (i) {
+        case 0:
+          // Pair 0: Original color with slight lightness variation
+          pairs.push([
+            baseColor,
+            enhanceColor(baseColor, { lightnessShift: -0.25 }),
+          ]);
+          break;
+        case 1:
+          // Pair 1: Complementary (180° hue rotation) - opposite on color wheel
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "complementary"),
+          ]);
+          break;
+        case 2:
+          // Pair 2: Triadic (120° hue rotation) - vibrant contrast
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "triadic", 0),
+          ]);
+          break;
+        case 3:
+          // Pair 3: Split-complementary (150° hue rotation) - sophisticated contrast
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "split-complementary", 0),
+          ]);
+          break;
+        default:
+          // Fallback for additional pairs: use triadic variant
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "triadic", 1),
+          ]);
+      }
+    }
+
+    return pairs;
+  }
+
+  // Non-monochromatic: use existing pool rotation logic
   for (let i = 0; i < count; i++) {
     const start = pool[i % pool.length];
     const end = pool[(i + 1) % pool.length];

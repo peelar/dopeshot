@@ -10,7 +10,7 @@
     "lint": "eslint",
     "knip": "knip",
     "typecheck": "tsc --noEmit",
-    "test:domain": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts",
+    "test:domain": "tsx tests/color-extraction.test.ts && tsx tests/gradient-generation.test.ts && tsx tests/monochromatic-gradients.test.ts",
     "test:ui": "vitest run",
     "test:e2e": "playwright test",
     "test:e2e:install": "playwright install --with-deps chromium",

@@ -26,6 +26,114 @@ function oklchToHex(color: Oklch): string {
 }
 
 /**
+ * Color harmony types for generating complementary colors
+ */
+export type ColorHarmony = "complementary" | "analogous" | "triadic" | "split-complementary";
+
+/**
+ * Generate a harmonious color from a base color using hue rotation.
+ * Uses color theory principles to create visually pleasing color combinations.
+ *
+ * @param baseHex - The base color in hex format
+ * @param harmony - The type of color harmony to apply
+ * @param variant - For harmonies with multiple options (0 or 1)
+ * @returns A new hex color based on the harmony rule
+ */
+export function generateHarmonyColor(
+  baseHex: string,
+  harmony: ColorHarmony,
+  variant: number = 0,
+): string {
+  const oklch = hexToOklch(baseHex);
+  if (!oklch) return baseHex;
+
+  const baseHue = oklch.h ?? 0;
+  let newHue: number;
+
+  switch (harmony) {
+    case "complementary":
+      // 180° rotation - opposite on the color wheel
+      newHue = baseHue + 180;
+      break;
+    case "analogous":
+      // ±30° rotation - adjacent colors
+      newHue = baseHue + (variant === 0 ? 30 : -30);
+      break;
+    case "triadic":
+      // 120° or 240° rotation - three evenly spaced colors
+      newHue = baseHue + (variant === 0 ? 120 : 240);
+      break;
+    case "split-complementary":
+      // 150° or 210° rotation - either side of the complement
+      newHue = baseHue + (variant === 0 ? 150 : 210);
+      break;
+    default:
+      newHue = baseHue;
+  }
+
+  // Normalize hue to 0-360 range
+  newHue = ((newHue % 360) + 360) % 360;
+
+  // Maintain similar chroma and lightness, but ensure vibrant result
+  const newColor: Oklch = {
+    mode: "oklch",
+    l: Math.max(0.35, Math.min(0.75, oklch.l)), // Keep lightness in pleasing range
+    c: Math.max(0.12, oklch.c ?? 0.15), // Ensure minimum saturation for vibrant result
+    h: newHue,
+  };
+
+  return oklchToHex(newColor);
+}
+
+/**
+ * Check if two colors have similar hues (within threshold)
+ */
+export function areHuesSimilar(hexA: string, hexB: string, threshold: number = 40): boolean {
+  const oklchA = hexToOklch(hexA);
+  const oklchB = hexToOklch(hexB);
+
+  if (!oklchA || !oklchB) return false;
+
+  const hueA = oklchA.h ?? 0;
+  const hueB = oklchB.h ?? 0;
+
+  // Handle wraparound at 360°
+  const rawDelta = Math.abs(hueA - hueB);
+  const hueDelta = Math.min(rawDelta, 360 - rawDelta);
+
+  return hueDelta < threshold;
+}
+
+/**
+ * Check if a color pool is effectively monochromatic.
+ * Returns true if all saturated colors have similar hues.
+ * Low-saturation colors (whites, grays, blacks) are ignored since they have no meaningful hue.
+ */
+export function isPoolMonochromatic(pool: string[], threshold: number = 40): boolean {
+  if (pool.length <= 1) return true;
+
+  // Filter to only colors with meaningful saturation
+  const saturatedColors = pool.filter((hex) => {
+    const oklch = hexToOklch(hex);
+    if (!oklch) return false;
+    // Ignore colors with very low chroma (grays, whites, blacks)
+    return (oklch.c ?? 0) > 0.04;
+  });
+
+  // If no saturated colors or only one, consider it monochromatic
+  if (saturatedColors.length <= 1) return true;
+
+  const firstColor = saturatedColors[0];
+  for (let i = 1; i < saturatedColors.length; i++) {
+    if (!areHuesSimilar(firstColor, saturatedColors[i], threshold)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
  * Enforce minimum chromatic separation between two colors.
  * If colors are too similar in both hue and luminance, artificially
  * create contrast by pushing one color darker or lighter.
