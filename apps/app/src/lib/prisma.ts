@@ -10,8 +10,18 @@ const globalForPrisma = globalThis as unknown as {
   pool: Pool | undefined;
 };
 
+const poolOptions = {
+  connectionString: process.env.DATABASE_URL,
+  max: Number.parseInt(process.env.PG_POOL_MAX ?? "10", 10),
+  idleTimeoutMillis: Number.parseInt(process.env.PG_POOL_IDLE_TIMEOUT_MS ?? "10000", 10),
+  connectionTimeoutMillis: Number.parseInt(
+    process.env.PG_POOL_CONNECTION_TIMEOUT_MS ?? "10000",
+    10,
+  ),
+};
+
 // Create PostgreSQL connection pool
-const pool = globalForPrisma.pool ?? new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = globalForPrisma.pool ?? new Pool(poolOptions);
 const adapter = new PrismaPg(pool);
 
 export const prisma =
