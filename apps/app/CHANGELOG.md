@@ -4,6 +4,15 @@
 
 ### Minor Changes
 
+- 3a49e81: Generate distinctive gradients for monochromatic palettes using color theory harmonies
+
+  When a screenshot has limited colors (e.g., orange + white), gradient generation now creates 4 visually distinct options instead of 4 similar variations:
+
+  - Gradient 1: Lightness variation (original color)
+  - Gradient 2: Complementary (180° hue rotation)
+  - Gradient 3: Triadic (120° hue rotation)
+  - Gradient 4: Split-complementary (150° hue rotation)
+
 - 03b7d46: Migrate database layer from Supabase client to Prisma ORM
   - Added Prisma ORM with external tables support for better-auth integration
   - Created type-safe database schema with JSON field validation using Zod
