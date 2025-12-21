@@ -69,6 +69,7 @@ export async function POST(request: Request) {
     // Update user metadata with onboarding progress
     await updateUserMetadata({
       onboardingSteps: ["logo_onboarding_completed"],
+      session,
     });
 
     // Generate signed URL (Supabase Storage unchanged)

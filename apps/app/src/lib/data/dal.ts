@@ -3,90 +3,96 @@ import { Prisma } from "@prisma/client";
 import { cache } from "react";
 import "server-only";
 
+type ScopedArgs = {
+  where?: Record<string, unknown>;
+  data?: Record<string, unknown> | Array<Record<string, unknown>>;
+  create?: Record<string, unknown>;
+  update?: Record<string, unknown>;
+};
+
+const ALLOWED_MODELS = new Set(["BrandProfile", "UserMetadata", "GeneratedAsset"]);
+const GENERATED_ASSET_UNSAFE_OPS = new Set([
+  "findUnique",
+  "findUniqueOrThrow",
+  "update",
+  "delete",
+  "upsert",
+]);
+
+const ensureWhereUserId = (args: ScopedArgs, userId: string) => {
+  args.where = { ...(args.where ?? {}), userId };
+};
+
+const ensureDataUserId = (args: ScopedArgs, userId: string) => {
+  if (!args.data) return;
+
+  if (Array.isArray(args.data)) {
+    args.data = args.data.map((item) => ({ ...item, userId }));
+    return;
+  }
+
+  const { user: _user, ...rest } = args.data;
+  args.data = { ...rest, userId };
+};
+
+const ensureUpsertUserId = (args: ScopedArgs, userId: string) => {
+  if (args.create) {
+    const { user: _user, ...rest } = args.create;
+    args.create = { ...rest, userId };
+  }
+
+  if (args.update) {
+    const { user: _user, ...rest } = args.update;
+    args.update = { ...rest, userId };
+  }
+};
+
 // Get user-scoped Prisma client
 // IMPORTANT: userId argument creates cache key - different users get different cached clients
 export const getUserDb = cache(async (userId: string) => {
-  // Return extended client with user context and authorization
   return prisma.$extends(
     Prisma.defineExtension({
       query: {
-        brandProfile: {
-          async findMany({ args, query }) {
-            // Auto-inject user_id filter
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async findUnique({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async findFirst({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async update({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async upsert({ args, query }) {
-            // For upsert, ensure both where and create use userId
-            args.where = { ...args.where, userId };
-            // Use unchecked input to avoid user relation conflicts
-            const createData = args.create as Record<string, unknown>;
-            const { user: _user, ...rest } = createData;
-            args.create = { ...rest, userId } as typeof args.create;
-            return query(args);
-          },
-          async delete({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-        },
-        generatedAsset: {
-          async findMany({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async findUnique({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async findFirst({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async create({ args, query }) {
-            // Use unchecked input to avoid user relation conflicts
-            const createData = args.data as Record<string, unknown>;
-            const { user: _user, ...rest } = createData;
-            args.data = { ...rest, userId } as typeof args.data;
-            return query(args);
-          },
-          async delete({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-        },
-        userMetadata: {
-          async findUnique({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async findFirst({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async update({ args, query }) {
-            args.where = { ...args.where, userId };
-            return query(args);
-          },
-          async upsert({ args, query }) {
-            args.where = { ...args.where, userId };
-            // Use unchecked input to avoid user relation conflicts
-            const createData = args.create as Record<string, unknown>;
-            const { user: _user, ...rest } = createData;
-            args.create = { ...rest, userId } as typeof args.create;
-            return query(args);
+        $allModels: {
+          async $allOperations({ model, operation, args, query }) {
+            if (!ALLOWED_MODELS.has(model)) {
+              throw new Error(
+                `Unsafe data access: ${model}.${operation} is not permitted via getUserDb()`,
+              );
+            }
+
+            if (model === "GeneratedAsset" && GENERATED_ASSET_UNSAFE_OPS.has(operation)) {
+              throw new Error(
+                `Unsafe data access: ${model}.${operation} must be scoped with findFirst/findMany or updateMany/deleteMany`,
+              );
+            }
+
+            const scopedArgs = args as ScopedArgs;
+
+            if (operation === "create" || operation === "createMany") {
+              ensureDataUserId(scopedArgs, userId);
+              return query(scopedArgs);
+            }
+
+            if (operation === "upsert") {
+              ensureWhereUserId(scopedArgs, userId);
+              ensureUpsertUserId(scopedArgs, userId);
+              return query(scopedArgs);
+            }
+
+            if (operation === "update" || operation === "updateMany") {
+              ensureWhereUserId(scopedArgs, userId);
+              ensureUpsertUserId(scopedArgs, userId);
+              return query(scopedArgs);
+            }
+
+            if (operation === "delete" || operation === "deleteMany") {
+              ensureWhereUserId(scopedArgs, userId);
+              return query(scopedArgs);
+            }
+
+            ensureWhereUserId(scopedArgs, userId);
+            return query(scopedArgs);
           },
         },
       },

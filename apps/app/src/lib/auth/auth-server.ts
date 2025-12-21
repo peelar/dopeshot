@@ -47,21 +47,26 @@ export const auth = betterAuth({
         },
         after: async (user) => {
           // Create related records after user creation
-          await prisma.brandProfile.create({
-            data: {
-              userId: user.id,
-              // Empty profile - filled during onboarding
-            },
-          });
-
-          await prisma.userMetadata.create({
-            data: {
-              userId: user.id,
-              subscriptionTier: "free",
-              subscriptionStatus: "active",
-              exportsThisMonth: 0,
-            },
-          });
+          await prisma.$transaction([
+            prisma.brandProfile.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                // Empty profile - filled during onboarding
+              },
+              update: {},
+            }),
+            prisma.userMetadata.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                subscriptionTier: "free",
+                subscriptionStatus: "active",
+                exportsThisMonth: 0,
+              },
+              update: {},
+            }),
+          ]);
         },
       },
     },
