@@ -168,3 +168,10 @@ After Phase 1, dopeshot can:
 ---
 
 **Ready to implement?** This prompt gives you everything needed to set up Supabase persistence correctly the first time.. use supabase mcp
+
+## Active Technologies
+- TypeScript 5.x, Next.js 16.0.7, React 19.2.1 + Prisma ORM, @supabase/supabase-js (storage only), better-auth, Jotai (001-prisma-migration)
+- Supabase Postgres (via Prisma), Supabase Storage (direct SDK for files) (001-prisma-migration)
+
+## Recent Changes
+- 001-prisma-migration: Added TypeScript 5.x, Next.js 16.0.7, React 19.2.1 + Prisma ORM, @supabase/supabase-js (storage only), better-auth, Jotai
