@@ -66,6 +66,22 @@ All PRs should include a Changeset (`pnpm changeset`) describing user-facing cha
 
 Built by indie hackers, for indie hackers. Ship fast, post faster.
 
+## Database Migrations
+
+Local migrations run against staging only. Production migrations are CI/CD-only.
+
+- Local dev uses `DIRECT_URL` pointing at the staging direct connection.
+- Generate/apply migrations with `prisma migrate dev`.
+- CI/CD runs `prisma migrate deploy` for staging and production.
+- Never run `prisma db push` or `prisma migrate reset` against production.
+
+```sh
+pnpm --filter dopeshot-app db:migrate:dev --name <change>
+pnpm --filter dopeshot-app db:migrate:deploy
+```
+
+CI expects `STAGING_DIRECT_URL` and `PROD_DIRECT_URL` secrets for migration jobs.
+
 ## Supabase Foundation
 
 Phase 1 persistence requirements for Supabase (schema, buckets, RLS, and seeds) live in `docs/SUPABASE_PHASE1.md`.

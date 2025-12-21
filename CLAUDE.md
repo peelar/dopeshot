@@ -15,6 +15,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - When building UI components, use shadcn/ui CLI for primitives. Style them with Tailwind.
 - Avoid new catch-all `utils.ts`; collocate helpers or use domain-specific modules.
 - Use pnpm.
+- Database migrations: local uses staging `DIRECT_URL` only; production uses CI/CD with `prisma migrate deploy` only; never run `prisma db push` or `prisma migrate reset` against production.
 - Propose using `knip` to clean up after building a bigger feature.
 - Use Jotai for state management, especially for global state. Prefer atoms over prop drilling and callback chains.
 - Keep the Design sidebar for styling; look/variant switching stays in the rail/toggle above the canvas.

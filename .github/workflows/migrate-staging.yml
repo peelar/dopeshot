@@ -1,4 +1,4 @@
-name: Deploy Production (Vercel)
+name: Migrate Staging
 
 on:
   push:
@@ -6,9 +6,8 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy:
+  migrate:
     runs-on: ubuntu-latest
-    if: "${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'chore: release') }}"
     steps:
       - uses: actions/checkout@v4
 
@@ -44,22 +43,12 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Apply production migrations
+      - name: Apply staging migrations
         env:
-          DIRECT_URL: ${{ secrets.PROD_DIRECT_URL }}
+          DIRECT_URL: ${{ secrets.STAGING_DIRECT_URL }}
         run: |
           if [ -z "$DIRECT_URL" ]; then
-            echo "PROD_DIRECT_URL secret is not set" >&2
+            echo "STAGING_DIRECT_URL secret is not set" >&2
             exit 1
           fi
           pnpm --filter dopeshot-app db:migrate:deploy
-
-      - name: Trigger Vercel production deploy
-        env:
-          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
-        run: |
-          if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
-            echo "VERCEL_DEPLOY_HOOK secret is not set" >&2
-            exit 1
-          fi
-          curl -X POST "$VERCEL_DEPLOY_HOOK"

@@ -1,2 +1,6 @@
 [projects."/Users/adrianpilarczyk/Code/dopeshot"]
 trust_level = "trusted"
+
+[features]
+unified_exec = true
+shell_snapshot = true
