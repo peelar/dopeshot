@@ -12,6 +12,9 @@ export default defineConfig({
   datasource: {
     // DATABASE_URL can be undefined during `prisma generate` in CI
     // It will be validated at runtime when the Prisma client connects
-    url: process.env.DATABASE_URL,
+    url: process.env.DIRECT_URL,
+    // DIRECT_URL is required for migrations when using connection pooling (pgbouncer)
+    // Migrations need direct connection (port 5432), not pooled (port 6543)
+    // directUrl: process.env.DIRECT_URL,
   },
 });

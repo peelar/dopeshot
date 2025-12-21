@@ -10,7 +10,12 @@ type ScopedArgs = {
   update?: Record<string, unknown>;
 };
 
-const ALLOWED_MODELS = new Set(["BrandProfile", "UserMetadata", "GeneratedAsset"]);
+const ALLOWED_MODELS = new Set([
+  "BrandProfile",
+  "UserMetadata",
+  "GeneratedAsset",
+  "BackgroundAsset",
+]);
 const GENERATED_ASSET_UNSAFE_OPS = new Set([
   "findUnique",
   "findUniqueOrThrow",
@@ -123,3 +128,49 @@ export const getGeneratedAssets = async (userId: string, limit = 50) => {
     take: limit,
   });
 };
+
+// Background asset management functions
+export const getUserBackgrounds = async (userId: string) => {
+  const db = await getUserDb(userId);
+  return db.backgroundAsset.findMany({
+    orderBy: { createdAt: "desc" },
+  });
+};
+
+export const createBackgroundAsset = async (
+  userId: string,
+  data: {
+    name: string;
+    imagePath: string;
+    fileSize: number;
+    dimensions?: { width: number; height: number };
+  }
+) => {
+  const db = await getUserDb(userId);
+  // Note: getUserDb automatically adds userId via the extension
+  return db.backgroundAsset.create({
+    data: {
+      name: data.name,
+      imagePath: data.imagePath,
+      fileSize: data.fileSize,
+      dimensions: data.dimensions,
+    } as any, // Type assertion needed due to getUserDb extension auto-adding userId
+  });
+};
+
+export const deleteBackgroundAsset = async (userId: string, backgroundId: string) => {
+  const db = await getUserDb(userId);
+  return db.backgroundAsset.deleteMany({
+    where: {
+      id: backgroundId,
+      // userId is automatically scoped by getUserDb
+    },
+  });
+};
+
+export const getCuratedBackgrounds = cache(async () => {
+  return prisma.curatedBackground.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+  });
+});

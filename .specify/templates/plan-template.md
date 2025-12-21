@@ -31,18 +31,7 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-Verify compliance with `.specify/memory/constitution.md`:
-
-- [ ] **Test Coverage (Principle I):** Test strategy defined (unit, component, integration, visual regression)
-- [ ] **User Experience (Principle II):** UI follows shadcn/ui + Tailwind, uses Jotai for state, minimizes cognitive load
-- [ ] **Code Quality (Principle III):** No over-engineering, no premature abstractions, collocated helpers
-- [ ] **Observability (Principle IV):** Analytics tracking planned for user-facing features
-- [ ] **Performance (Principle V):** Performance targets defined (<100ms preview updates, <3s exports, Lighthouse >90)
-
-**Complexity Justification Required If:**
-- Adding abstractions (patterns, utilities, frameworks) beyond minimum needed
-- Introducing new dependencies not directly solving user problem
-- Creating generalized solutions for single use case
+[Gates determined based on constitution file]
 
 ## Project Structure
 

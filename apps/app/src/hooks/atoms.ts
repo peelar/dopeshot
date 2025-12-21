@@ -4,6 +4,7 @@ import { LayoutConfig, BackgroundConfig, FontId } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getDefaultDemoPreset } from "@/domain/demo/presets";
 import { migrateFontIdToStyle, DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
+import type { BackgroundAsset, CuratedBackground } from "@/domain/background/types";
 
 // Keep ID here to avoid circular dependencies
 export const PLACEHOLDER_ASSET_ID = "placeholder-screenshot";
@@ -109,3 +110,15 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
     useLogoOnScreenshots: false,
   }
 );
+
+// Background management atoms
+export const userBackgroundsAtom = atom<BackgroundAsset[]>([]);
+
+export const curatedBackgroundsAtom = atom<CuratedBackground[]>([]);
+
+// Derived atom: all available backgrounds for selector
+export const availableBackgroundsAtom = atom((get) => {
+  const userBgs = get(userBackgroundsAtom);
+  const curatedBgs = get(curatedBackgroundsAtom);
+  return { user: userBgs, curated: curatedBgs };
+});

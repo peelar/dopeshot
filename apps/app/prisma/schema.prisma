@@ -14,18 +14,19 @@ datasource db {
 
 // Better-auth tables
 model User {
-  id             String    @id @default(uuid())
-  email          String?   @unique
-  emailVerified  Boolean   @default(false) @map("email_verified")
-  name           String?
-  createdAt      DateTime  @default(now()) @map("created_at")
-  updatedAt      DateTime  @updatedAt @map("updated_at")
+  id            String   @id @default(uuid())
+  email         String?  @unique
+  emailVerified Boolean  @default(false) @map("email_verified")
+  name          String?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
 
-  sessions        Session[]
-  accounts        Account[]
-  brandProfile    BrandProfile?
-  userMetadata    UserMetadata?
-  generatedAssets GeneratedAsset[]
+  sessions         Session[]
+  accounts         Account[]
+  brandProfile     BrandProfile?
+  userMetadata     UserMetadata?
+  generatedAssets  GeneratedAsset[]
+  backgroundAssets BackgroundAsset[]
 
   @@map("user")
   @@schema("public")
@@ -49,19 +50,19 @@ model Session {
 }
 
 model Account {
-  id                      String    @id @default(uuid())
-  userId                  String    @map("user_id")
-  accountId               String    @map("account_id")
-  providerId              String    @map("provider_id")
-  accessToken             String?   @map("access_token")
-  refreshToken            String?   @map("refresh_token")
-  idToken                 String?   @map("id_token")
-  accessTokenExpiresAt    DateTime? @map("access_token_expires_at")
-  refreshTokenExpiresAt   DateTime? @map("refresh_token_expires_at")
-  scope                   String?
-  password                String?
-  createdAt               DateTime  @default(now()) @map("created_at")
-  updatedAt               DateTime  @updatedAt @map("updated_at")
+  id                    String    @id @default(uuid())
+  userId                String    @map("user_id")
+  accountId             String    @map("account_id")
+  providerId            String    @map("provider_id")
+  accessToken           String?   @map("access_token")
+  refreshToken          String?   @map("refresh_token")
+  idToken               String?   @map("id_token")
+  accessTokenExpiresAt  DateTime? @map("access_token_expires_at")
+  refreshTokenExpiresAt DateTime? @map("refresh_token_expires_at")
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @map("created_at")
+  updatedAt             DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -105,11 +106,11 @@ model BrandProfile {
 }
 
 model UserMetadata {
-  id                 String  @id @default(cuid())
-  userId             String  @unique @map("user_id")
-  subscriptionTier   String  @default("free") @map("subscription_tier")
-  subscriptionStatus String  @default("active") @map("subscription_status")
-  exportsThisMonth   Int     @default(0) @map("exports_this_month")
+  id                 String @id @default(cuid())
+  userId             String @unique @map("user_id")
+  subscriptionTier   String @default("free") @map("subscription_tier")
+  subscriptionStatus String @default("active") @map("subscription_status")
+  exportsThisMonth   Int    @default(0) @map("exports_this_month")
 
   /// [OnboardingProgress]
   onboardingProgress Json? @map("onboarding_progress")
@@ -127,9 +128,9 @@ model UserMetadata {
 }
 
 model GeneratedAsset {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  imagePath String   @map("image_path")
+  id        String  @id @default(cuid())
+  userId    String  @map("user_id")
+  imagePath String  @map("image_path")
   layout    String?
   style     String?
 
@@ -148,5 +149,38 @@ model GeneratedAsset {
 
   @@index([userId, createdAt])
   @@map("generated_assets")
+  @@schema("public")
+}
+
+model BackgroundAsset {
+  id        String @id @default(cuid())
+  userId    String @map("user_id")
+  name      String
+  imagePath String @map("image_path")
+  fileSize  Int    @map("file_size")
+
+  /// [BackgroundDimensions]
+  dimensions Json?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId, createdAt])
+  @@map("background_assets")
+  @@schema("public")
+}
+
+model CuratedBackground {
+  id        String   @id @default(cuid())
+  name      String
+  imagePath String   @map("image_path")
+  tags      String[]
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([isActive])
+  @@map("curated_backgrounds")
   @@schema("public")
 }

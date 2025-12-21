@@ -1,0 +1,401 @@
+openapi: 3.0.3
+info:
+  title: Background Management API
+  description: API for persistent background upload, retrieval, and management
+  version: 1.0.0
+  contact:
+    name: dopeshot Team
+
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://dopeshot.com/api
+    description: Production server
+
+paths:
+  /background/upload:
+    post:
+      summary: Upload a new background image
+      description: |
+        Uploads a custom background image for authenticated users.
+        - Validates file type (PNG, JPG, WEBP, SVG)
+        - Enforces 5MB file size limit
+        - Enforces unique filenames per user
+        - Stores in Supabase Storage (user-backgrounds bucket)
+        - Creates database record with metadata
+      tags:
+        - Background Management
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Background image file (PNG, JPG, WEBP, or SVG)
+      responses:
+        '200':
+          description: Background uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  background:
+                    $ref: '#/components/schemas/BackgroundAsset'
+                  signedUrl:
+                    type: string
+                    format: uri
+                    description: Temporary signed URL (1 hour expiry)
+                    example: https://xxx.supabase.co/storage/v1/object/sign/...
+              examples:
+                success:
+                  value:
+                    success: true
+                    background:
+                      id: clx123abc
+                      userId: user-456
+                      name: sunset-gradient.png
+                      imagePath: user-456/backgrounds/sunset-gradient.png
+                      fileSize: 2048576
+                      dimensions:
+                        width: 1920
+                        height: 1080
+                      createdAt: '2025-12-21T10:30:00Z'
+                    signedUrl: https://xxx.supabase.co/storage/v1/object/sign/user-backgrounds/user-456/backgrounds/sunset-gradient.png?token=...
+        '400':
+          description: Invalid request (bad file type, size, or missing file)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalidFileType:
+                  value:
+                    error: Invalid file type. Supported: PNG, JPG, WEBP, SVG
+                fileTooLarge:
+                  value:
+                    error: File size exceeds 5MB limit
+                noFile:
+                  value:
+                    error: No file provided
+        '401':
+          description: Unauthorized (not logged in)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    error: Unauthorized. Please log in.
+        '409':
+          description: Conflict (duplicate filename)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                duplicate:
+                  value:
+                    error: A background named "sunset-gradient.png" already exists. Please rename and try again.
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /background/list:
+    get:
+      summary: Get all available backgrounds
+      description: |
+        Returns user's uploaded backgrounds and curated backgrounds.
+        - For authenticated users: returns their uploads + curated collection
+        - For anonymous users: returns only curated collection
+        - Includes signed URLs (1 hour expiry) for user backgrounds
+        - Includes public URLs for curated backgrounds
+      tags:
+        - Background Management
+      security:
+        - sessionAuth: []
+        - {}  # Allow anonymous access
+      responses:
+        '200':
+          description: Backgrounds retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BackgroundListResponse'
+              examples:
+                authenticated:
+                  value:
+                    user:
+                      - id: clx123abc
+                        userId: user-456
+                        name: sunset-gradient.png
+                        imagePath: user-456/backgrounds/sunset-gradient.png
+                        fileSize: 2048576
+                        dimensions:
+                          width: 1920
+                          height: 1080
+                        createdAt: '2025-12-21T10:30:00Z'
+                        signedUrl: https://xxx.supabase.co/storage/v1/object/sign/...
+                    curated:
+                      - id: clx789def
+                        name: Abstract Waves
+                        imagePath: bg-gradient-01.png
+                        tags: [gradient, colorful]
+                        isActive: true
+                        createdAt: '2025-12-20T00:00:00Z'
+                        publicUrl: https://xxx.supabase.co/storage/v1/object/public/curated-backgrounds/bg-gradient-01.png
+                anonymous:
+                  value:
+                    user: []
+                    curated:
+                      - id: clx789def
+                        name: Abstract Waves
+                        imagePath: bg-gradient-01.png
+                        tags: [gradient, colorful]
+                        isActive: true
+                        createdAt: '2025-12-20T00:00:00Z'
+                        publicUrl: https://xxx.supabase.co/storage/v1/object/public/curated-backgrounds/bg-gradient-01.png
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /background/delete:
+    delete:
+      summary: Delete a user's background
+      description: |
+        Deletes a background image owned by the authenticated user.
+        - Verifies ownership (userId must match)
+        - Removes file from Supabase Storage
+        - Removes database record
+        - Returns deleted background info for confirmation
+      tags:
+        - Background Management
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - backgroundId
+              properties:
+                backgroundId:
+                  type: string
+                  description: ID of the background to delete
+                  example: clx123abc
+      responses:
+        '200':
+          description: Background deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  deleted:
+                    $ref: '#/components/schemas/BackgroundAsset'
+              examples:
+                success:
+                  value:
+                    success: true
+                    deleted:
+                      id: clx123abc
+                      userId: user-456
+                      name: sunset-gradient.png
+                      imagePath: user-456/backgrounds/sunset-gradient.png
+                      fileSize: 2048576
+                      createdAt: '2025-12-21T10:30:00Z'
+        '400':
+          description: Bad request (missing backgroundId)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingId:
+                  value:
+                    error: backgroundId is required
+        '401':
+          description: Unauthorized (not logged in)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Background not found or not owned by user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  value:
+                    error: Background not found
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+      description: Session token from better-auth
+
+  schemas:
+    BackgroundAsset:
+      type: object
+      description: User-uploaded background image metadata
+      required:
+        - id
+        - userId
+        - name
+        - imagePath
+        - fileSize
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique background ID (CUID)
+          example: clx123abc
+        userId:
+          type: string
+          description: Owner's user ID
+          example: user-456
+        name:
+          type: string
+          description: Sanitized filename
+          example: sunset-gradient.png
+        imagePath:
+          type: string
+          description: Supabase Storage path
+          example: user-456/backgrounds/sunset-gradient.png
+        fileSize:
+          type: integer
+          description: File size in bytes
+          example: 2048576
+          minimum: 1
+          maximum: 5242880
+        dimensions:
+          type: object
+          description: Optional image dimensions
+          properties:
+            width:
+              type: integer
+              example: 1920
+            height:
+              type: integer
+              example: 1080
+        createdAt:
+          type: string
+          format: date-time
+          description: Upload timestamp (ISO 8601)
+          example: '2025-12-21T10:30:00Z'
+        signedUrl:
+          type: string
+          format: uri
+          description: Temporary signed URL (1 hour expiry, added on fetch)
+          example: https://xxx.supabase.co/storage/v1/object/sign/...
+
+    CuratedBackground:
+      type: object
+      description: Pre-designed background available to all users
+      required:
+        - id
+        - name
+        - imagePath
+        - tags
+        - isActive
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique background ID (CUID)
+          example: clx789def
+        name:
+          type: string
+          description: Display name
+          example: Abstract Waves
+        imagePath:
+          type: string
+          description: Supabase Storage path (public bucket)
+          example: bg-gradient-01.png
+        tags:
+          type: array
+          items:
+            type: string
+          description: Categorization tags
+          example: [gradient, colorful]
+        isActive:
+          type: boolean
+          description: Whether background is visible to users
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp (ISO 8601)
+          example: '2025-12-20T00:00:00Z'
+        publicUrl:
+          type: string
+          format: uri
+          description: Public CDN URL (added on fetch)
+          example: https://xxx.supabase.co/storage/v1/object/public/curated-backgrounds/bg-gradient-01.png
+
+    BackgroundListResponse:
+      type: object
+      description: Combined list of user and curated backgrounds
+      required:
+        - user
+        - curated
+      properties:
+        user:
+          type: array
+          items:
+            $ref: '#/components/schemas/BackgroundAsset'
+          description: User's uploaded backgrounds (empty for anonymous)
+        curated:
+          type: array
+          items:
+            $ref: '#/components/schemas/CuratedBackground'
+          description: Curated backgrounds (available to all)
+
+    Error:
+      type: object
+      description: Error response
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+          example: Invalid file type. Supported: PNG, JPG, WEBP, SVG
+
+tags:
+  - name: Background Management
+    description: Endpoints for uploading, listing, and deleting backgrounds

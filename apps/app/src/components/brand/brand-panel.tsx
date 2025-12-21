@@ -4,13 +4,16 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { useBackgroundUpload } from "@/hooks/use-background-upload";
 import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
-import { useAtom, useSetAtom } from "jotai";
-import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { brandSettingsAtom, configAtom, assetsAtom, userBackgroundsAtom } from "@/hooks/atoms";
 import { useState } from "react";
 import type { Asset } from "@/domain/asset/types";
+import { AssetDropzone } from "@/components/config/layout-config";
 
 export function BrandPanel() {
   const { data: session } = useSession();
@@ -18,9 +21,16 @@ export function BrandPanel() {
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
+  const userBackgrounds = useAtomValue(userBackgroundsAtom);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
+  const {
+    upload: uploadBackground,
+    status: backgroundUploadStatus,
+    error: backgroundUploadError,
+    progress: backgroundUploadProgress,
+  } = useBackgroundUpload();
 
   // Fetch brand profile in background on mount
   useEffect(() => {
@@ -171,6 +181,15 @@ export function BrandPanel() {
     }
   };
 
+  const handleBackgroundUpload = async (file: File) => {
+    await uploadBackground(file);
+
+    track("background_uploaded", {
+      file_size_kb: Math.round(file.size / 1024),
+      file_type: file.type,
+    });
+  };
+
   return (
     <div className="h-full w-full space-y-6 overflow-y-auto p-4">
       {/* Logo Section */}
@@ -281,6 +300,65 @@ export function BrandPanel() {
           </p>
         )}
       </div>
+
+      {session?.user && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold">Backgrounds</h3>
+            {userBackgrounds.length > 0 && (
+              <Badge variant="secondary" data-testid="background-count">
+                {userBackgrounds.length}
+              </Badge>
+            )}
+          </div>
+          <div className="flex flex-col gap-2" data-testid="background-upload-section">
+            <Label className="text-sm font-medium">Upload background</Label>
+            <div data-testid="background-upload-dropzone">
+              <AssetDropzone
+                label="Upload background"
+                variant="default"
+                onUpload={handleBackgroundUpload}
+                disabled={backgroundUploadStatus === "uploading"}
+                asset={
+                  userBackgrounds[0]?.signedUrl
+                    ? {
+                        id: userBackgrounds[0].id,
+                        projectId: "backgrounds",
+                        userId: session.user.id,
+                        name: userBackgrounds[0].name,
+                        url: userBackgrounds[0].signedUrl,
+                        kind: "background",
+                        createdAt: userBackgrounds[0].createdAt,
+                      }
+                    : undefined
+                }
+              />
+            </div>
+            {backgroundUploadStatus === "uploading" && (
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-muted-foreground">Uploading...</p>
+                <div className="h-2 w-full rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full bg-primary transition-[width]"
+                    style={{ width: `${backgroundUploadProgress ?? 0}%` }}
+                    aria-hidden="true"
+                  />
+                </div>
+              </div>
+            )}
+            {backgroundUploadStatus === "success" && (
+              <p className="text-sm text-green-600" data-testid="upload-success-message">
+                Upload successful!
+              </p>
+            )}
+            {backgroundUploadError && (
+              <p className="text-sm text-destructive" data-testid="upload-error-message">
+                {backgroundUploadError}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

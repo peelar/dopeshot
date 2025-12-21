@@ -1,0 +1,2 @@
+prefix_rule(pattern=["npx", "tsx", "prisma/seed-curated-backgrounds.ts"], decision="allow")
+prefix_rule(pattern=["npx", "prisma", "migrate", "dev", "--name", "add-background-models"], decision="allow")
