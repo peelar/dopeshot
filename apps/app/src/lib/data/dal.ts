@@ -102,24 +102,24 @@ export const getUserDb = cache(async (userId: string) => {
 
 // Specific data access functions with caching
 // Cache key includes userId to prevent cross-user data leakage
-export const getBrandProfile = cache(async (userId: string) => {
+export const getBrandProfile = async (userId: string) => {
   const db = await getUserDb(userId);
   return db.brandProfile.findUnique({
     where: { userId },
   });
-});
+};
 
-export const getUserMetadata = cache(async (userId: string) => {
+export const getUserMetadata = async (userId: string) => {
   const db = await getUserDb(userId);
   return db.userMetadata.findUnique({
     where: { userId },
   });
-});
+};
 
-export const getGeneratedAssets = cache(async (userId: string, limit = 50) => {
+export const getGeneratedAssets = async (userId: string, limit = 50) => {
   const db = await getUserDb(userId);
   return db.generatedAsset.findMany({
     orderBy: { createdAt: "desc" },
     take: limit,
   });
-});
+};
