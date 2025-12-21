@@ -11,7 +11,7 @@ import type { Asset } from "@/domain/asset/types";
  * Automatically loads and applies brand logo on mount if toggle is enabled.
  * This ensures the logo appears on screenshots immediately, not just when Brand panel opens.
  */
-export function useBrandLogoAutoApply() {
+export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled: true }) {
   const { data: session } = useSession();
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
   const config = useAtomValue(configAtom);
@@ -20,8 +20,8 @@ export function useBrandLogoAutoApply() {
   const hasApplied = useRef(false);
 
   useEffect(() => {
-    // Only run once, and only if toggle is on and logo not already applied
-    if (hasApplied.current || !brandSettings.useLogoOnScreenshots || config.assets?.logo || !session?.user) {
+    // Only run once, and only if feature is enabled, toggle is on, and logo not already applied
+    if (!options.enabled || hasApplied.current || !brandSettings.useLogoOnScreenshots || config.assets?.logo || !session?.user) {
       return;
     }
 

@@ -1,0 +1,192 @@
+openapi: 3.1.0
+info:
+  title: Brand Profile API
+  description: Fetch user's brand profile, metadata, and logo signed URL
+  version: 1.0.0
+
+paths:
+  /api/brand/profile:
+    get:
+      summary: Get brand profile
+      description: Retrieves the authenticated user's brand profile, user metadata, and generates a signed URL for their logo if present
+      operationId: getBrandProfile
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Brand profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  profile:
+                    $ref: '#/components/schemas/BrandProfile'
+                  metadata:
+                    $ref: '#/components/schemas/UserMetadata'
+                  logoUrl:
+                    type: string
+                    nullable: true
+                    description: Signed URL for the user's logo (valid for 1 hour)
+                    example: "https://storage.supabase.co/object/sign/brand-logos/user-id/logo.png?token=..."
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    BrandProfile:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+          description: Brand profile ID (cuid)
+          example: "clh1234567890abcdef"
+        userId:
+          type: string
+          description: User ID (UUID)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          nullable: true
+          description: Optional brand name
+          example: "My Startup"
+        colorPalette:
+          type: object
+          nullable: true
+          description: Brand color palette
+          properties:
+            primary:
+              type: string
+              example: "#3B82F6"
+            secondary:
+              type: string
+              example: "#10B981"
+            accent:
+              type: string
+              example: "#F59E0B"
+            background:
+              type: string
+              example: "#FFFFFF"
+            text:
+              type: string
+              example: "#1F2937"
+        typography:
+          type: object
+          nullable: true
+          description: Brand typography settings
+          properties:
+            headingFont:
+              type: string
+              example: "Inter"
+            bodyFont:
+              type: string
+              example: "Inter"
+            fontWeights:
+              type: object
+              nullable: true
+              properties:
+                heading:
+                  type: number
+                  example: 700
+                body:
+                  type: number
+                  example: 400
+        logoPath:
+          type: string
+          nullable: true
+          description: Path to logo in Supabase Storage
+          example: "user-id/logo-1234567890.png"
+        createdAt:
+          type: string
+          format: date-time
+          description: Profile creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Profile last updated timestamp
+
+    UserMetadata:
+      type: object
+      nullable: true
+      properties:
+        id:
+          type: string
+          description: Metadata ID (cuid)
+          example: "clh9876543210zyxwvu"
+        userId:
+          type: string
+          description: User ID (UUID)
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        subscriptionTier:
+          type: string
+          enum: [free, paid]
+          description: User's subscription tier
+          example: "free"
+        subscriptionStatus:
+          type: string
+          enum: [active, cancelled, past_due]
+          description: Subscription status
+          example: "active"
+        onboardingProgress:
+          type: object
+          nullable: true
+          description: Onboarding progress tracking
+          properties:
+            completedSteps:
+              type: array
+              items:
+                type: string
+              example: ["profile_created", "logo_uploaded"]
+            currentStep:
+              type: string
+              nullable: true
+              example: "brand_colors"
+        featureFlags:
+          type: object
+          nullable: true
+          description: Feature flags for this user
+          additionalProperties:
+            type: boolean
+          example:
+            betaFeatures: true
+            advancedExports: false
+        exportsThisMonth:
+          type: integer
+          description: Number of exports this month (for free tier limits)
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          description: Metadata creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Metadata last updated timestamp
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Unauthorized"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session cookie set by better-auth

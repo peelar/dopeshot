@@ -1,16 +1,17 @@
 import { betterAuth } from "better-auth";
-import { Pool } from "pg";
+import { prismaAdapter } from "better-auth/adapters/prisma";
 import bcrypt from "bcryptjs";
 import { magicLink } from "better-auth/plugins";
 import { Resend } from "resend";
 import { authEnv } from "./env";
+import { prisma } from "@/lib/prisma";
 
 // Initialize Resend client (only if API key is configured)
 const resend = authEnv.resendApiKey ? new Resend(authEnv.resendApiKey) : null;
 
 export const auth = betterAuth({
-  database: new Pool({
-    connectionString: authEnv.databaseUrl,
+  database: prismaAdapter(prisma, {
+    provider: "postgresql",
   }),
   emailAndPassword: {
     enabled: true,
@@ -30,6 +31,47 @@ export const auth = betterAuth({
   secret: authEnv.betterAuthSecret,
   baseURL: authEnv.betterAuthUrl,
   trustedOrigins: ["http://localhost:3000"],
+
+  // Auto-create related records on user signup
+  databaseHooks: {
+    user: {
+      create: {
+        before: async (user) => {
+          // Normalize email before creation
+          return {
+            data: {
+              ...user,
+              email: user?.email?.toLowerCase(),
+            },
+          };
+        },
+        after: async (user) => {
+          // Create related records after user creation
+          await prisma.$transaction([
+            prisma.brandProfile.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                // Empty profile - filled during onboarding
+              },
+              update: {},
+            }),
+            prisma.userMetadata.upsert({
+              where: { userId: user.id },
+              create: {
+                userId: user.id,
+                subscriptionTier: "free",
+                subscriptionStatus: "active",
+                exportsThisMonth: 0,
+              },
+              update: {},
+            }),
+          ]);
+        },
+      },
+    },
+  },
+
   plugins: [
     magicLink({
       sendMagicLink: async ({ email, url, token }) => {

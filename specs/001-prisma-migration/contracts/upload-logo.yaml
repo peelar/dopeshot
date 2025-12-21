@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: Upload Logo API
+  description: Upload brand logo to Supabase Storage and update brand profile
+  version: 1.0.0
+
+paths:
+  /api/brand/upload-logo:
+    post:
+      summary: Upload brand logo
+      description: |
+        Uploads a logo file to Supabase Storage (brand-logos bucket), updates the brand profile with the logo path, and marks the logo onboarding step as completed.
+
+        **Process:**
+        1. Upload file to Supabase Storage at path: `{userId}/logo-{timestamp}.{extension}`
+        2. Update brand_profile with logo_path via Prisma
+        3. Mark "logo_onboarding_completed" in user_metadata
+        4. Generate and return signed URL (valid 1 hour)
+
+      operationId: uploadLogo
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Logo file (PNG, JPG, or SVG)
+            encoding:
+              file:
+                contentType: image/png, image/jpeg, image/svg+xml
+
+      responses:
+        '200':
+          description: Logo uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - logoPath
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  logoPath:
+                    type: string
+                    description: Path to logo in Supabase Storage
+                    example: "550e8400-e29b-41d4-a716-446655440000/logo-1702123456789.png"
+                  signedUrl:
+                    type: string
+                    nullable: true
+                    description: Signed URL for accessing the logo (valid 1 hour)
+                    example: "https://storage.supabase.co/object/sign/brand-logos/550e8400-e29b-41d4-a716-446655440000/logo-1702123456789.png?token=..."
+
+        '400':
+          description: Bad request - missing or invalid file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                missingFile:
+                  summary: File not provided
+                  value:
+                    error: "File is required"
+                invalidFormData:
+                  summary: Invalid form data
+                  value:
+                    error: "Missing form data"
+
+        '401':
+          description: Unauthorized - user not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                unauthorized:
+                  value:
+                    error: "Unauthorized"
+
+        '500':
+          description: Internal server error (upload or database failure)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                uploadFailed:
+                  summary: Storage upload failed
+                  value:
+                    error: "Failed to upload logo to storage"
+                databaseFailed:
+                  summary: Database update failed
+                  value:
+                    error: "Failed to update brand profile"
+
+components:
+  schemas:
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Unauthorized"
+
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: session
+      description: Session cookie set by better-auth
+
+x-implementation-notes:
+  storage:
+    bucket: "brand-logos"
+    path_format: "{userId}/logo-{timestamp}.{extension}"
+    max_file_size: "5MB"
+    accepted_formats:
+      - image/png
+      - image/jpeg
+      - image/svg+xml
+    permissions: "Private bucket, only owner can read/write"
+
+  database:
+    upsert_operation: true
+    conflict_resolution: "user_id"
+    fields_updated:
+      - logo_path
+    metadata_updates:
+      - onboarding_progress: ["logo_onboarding_completed"]
+
+  signed_url:
+    expiration: 3600 # 1 hour in seconds
+    method: "supabaseAdmin.storage.from('brand-logos').createSignedUrl()"
