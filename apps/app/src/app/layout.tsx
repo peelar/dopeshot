@@ -10,9 +10,9 @@ import {
   Chakra_Petch,
   Playfair_Display,
 } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { AuthProvider } from "@/lib/auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -142,12 +142,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <AnalyticsProvider>
-            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-              {children}
-            </ThemeProvider>
-          </AnalyticsProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            {children}
+          </ThemeProvider>
         </AuthProvider>
+        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
       </body>
     </html>
   );

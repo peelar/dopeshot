@@ -99,7 +99,7 @@ src/components/
 ├── providers/                 # App-wide providers
 │   ├── theme-provider.tsx
 │   ├── theme-toggle.tsx
-│   └── analytics-provider.tsx
+│   └── analytics-provider.tsx (removed in favor of inline Simple Analytics script)
 ├── layouts/                   # Screenshot layout components
 │   ├── AdaptiveScreenshot.tsx
 │   ├── CodeSnippet.tsx
