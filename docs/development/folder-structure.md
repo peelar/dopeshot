@@ -99,7 +99,7 @@ src/components/
 ├── providers/                 # App-wide providers
 │   ├── theme-provider.tsx
 │   ├── theme-toggle.tsx
-│   └── umami-provider.tsx
+│   └── analytics-provider.tsx
 ├── layouts/                   # Screenshot layout components
 │   ├── AdaptiveScreenshot.tsx
 │   ├── CodeSnippet.tsx
