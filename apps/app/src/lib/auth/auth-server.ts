@@ -30,7 +30,7 @@ export const auth = betterAuth({
   },
   secret: authEnv.betterAuthSecret,
   baseURL: authEnv.betterAuthUrl,
-  trustedOrigins: ["http://localhost:3000"],
+  trustedOrigins: [authEnv.betterAuthUrl],
 
   // Auto-create related records on user signup
   databaseHooks: {
