@@ -29,9 +29,8 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
 
   return (
     <>
+      {children}
       <Script
-        async
-        defer
         src={scriptUrl}
         strategy="afterInteractive"
         onLoad={() => {
@@ -49,7 +48,6 @@ export function AnalyticsProvider({ children }: AnalyticsProviderProps) {
           }
         }}
       />
-      {children}
     </>
   );
 }
