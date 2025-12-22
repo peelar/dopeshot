@@ -1,0 +1,144 @@
+openapi: 3.0.3
+info:
+  title: Persistent Backgrounds API
+  version: 1.0.0
+servers:
+  - url: /api
+paths:
+  /backgrounds/presets:
+    get:
+      summary: List curated preset backgrounds
+      responses:
+        "200":
+          description: Preset backgrounds list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PresetBackgroundList"
+  /backgrounds/personal:
+    get:
+      summary: List personal backgrounds for the current user
+      responses:
+        "200":
+          description: Personal background list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonalBackgroundList"
+    post:
+      summary: Upload a personal background
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                name:
+                  type: string
+      responses:
+        "201":
+          description: Upload complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PersonalBackground"
+        "400":
+          description: Invalid upload
+  /backgrounds/personal/{backgroundId}:
+    delete:
+      summary: Remove a personal background
+      parameters:
+        - name: backgroundId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Not found
+  /backgrounds/selection:
+    put:
+      summary: Persist the current background selection
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BackgroundSelectionUpdate"
+      responses:
+        "200":
+          description: Selection saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BackgroundSelection"
+components:
+  schemas:
+    PresetBackground:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        previewUrl:
+          type: string
+        sortOrder:
+          type: integer
+    PresetBackgroundList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PresetBackground"
+    PersonalBackground:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        previewUrl:
+          type: string
+        fileSizeKb:
+          type: integer
+        widthPx:
+          type: integer
+        heightPx:
+          type: integer
+        fileFormat:
+          type: string
+    PersonalBackgroundList:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PersonalBackground"
+    BackgroundSelectionUpdate:
+      type: object
+      required:
+        - backgroundType
+        - backgroundId
+      properties:
+        backgroundType:
+          type: string
+          enum: [preset, personal]
+        backgroundId:
+          type: string
+    BackgroundSelection:
+      type: object
+      properties:
+        backgroundType:
+          type: string
+        backgroundId:
+          type: string

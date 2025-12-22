@@ -10,7 +10,13 @@ type ScopedArgs = {
   update?: Record<string, unknown>;
 };
 
-const ALLOWED_MODELS = new Set(["BrandProfile", "UserMetadata", "GeneratedAsset"]);
+const ALLOWED_MODELS = new Set([
+  "BrandProfile",
+  "UserMetadata",
+  "GeneratedAsset",
+  "PersonalBackground",
+  "BackgroundSelection",
+]);
 const GENERATED_ASSET_UNSAFE_OPS = new Set([
   "findUnique",
   "findUniqueOrThrow",
