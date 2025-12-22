@@ -5,6 +5,7 @@ node_modules
 .pnp
 .pnp.js
 .pnpm-store
+dist/
 
 # testing
 coverage/
@@ -22,6 +23,7 @@ build
 !.cursor/mcp.json
 
 # logs / cache
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -48,3 +50,4 @@ yarn-error.log*
 .turbo
 test-results/
 playwright-report/
+.codex/

@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { UploadCloud, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,18 +10,26 @@ import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
-import { useState } from "react";
 import type { Asset } from "@/domain/asset/types";
+import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
+import {
+  deletePersonalBackground,
+  listPersonalBackgrounds,
+} from "@/domain/backgrounds/background-service";
 
 export function BrandPanel() {
   const { data: session } = useSession();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({});
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
+  const [brandBackgrounds, setBrandBackgrounds] = useAtom(personalBackgroundsAtom);
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [backgroundError, setBackgroundError] = useState<string | null>(null);
+  const [isLoadingBackgrounds, setIsLoadingBackgrounds] = useState(false);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
+  const backgroundInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch brand profile in background on mount
   useEffect(() => {
@@ -171,6 +180,61 @@ export function BrandPanel() {
     }
   };
 
+  const refreshBrandBackgrounds = useCallback(async () => {
+    if (!session?.user) {
+      setBrandBackgrounds([]);
+      return;
+    }
+
+    setIsLoadingBackgrounds(true);
+    setBackgroundError(null);
+    try {
+      const response = await listPersonalBackgrounds();
+      setBrandBackgrounds(response.items);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load brand backgrounds.";
+      setBackgroundError(message);
+    } finally {
+      setIsLoadingBackgrounds(false);
+    }
+  }, [session?.user, setBrandBackgrounds]);
+
+  useEffect(() => {
+    void refreshBrandBackgrounds();
+  }, [refreshBrandBackgrounds]);
+
+  const handleBrandBackgroundUpload = useCallback(
+    async (file?: File) => {
+      if (!file) return;
+      setBackgroundError(null);
+      try {
+        await handleFileProcess(file, "background");
+        await refreshBrandBackgrounds();
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to upload background.";
+        setBackgroundError(message);
+      }
+    },
+    [handleFileProcess, refreshBrandBackgrounds],
+  );
+
+  const handleBrandBackgroundDelete = useCallback(
+    async (backgroundId: string) => {
+      setBackgroundError(null);
+      try {
+        await deletePersonalBackground(backgroundId);
+        setBrandBackgrounds((prev) => prev.filter((item) => item.id !== backgroundId));
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : "Failed to remove background.";
+        setBackgroundError(message);
+      }
+    },
+    [setBrandBackgrounds],
+  );
+
   return (
     <div className="h-full w-full space-y-6 overflow-y-auto p-4">
       {/* Logo Section */}
@@ -278,6 +342,100 @@ export function BrandPanel() {
         {errorMessage && (
           <p className="text-sm text-red-600 dark:text-red-400">
             {errorMessage}
+          </p>
+        )}
+      </div>
+
+      {/* Brand Backgrounds Section */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold">Brand backgrounds</h3>
+          {!session?.user ? (
+            <span className="text-[11px] text-muted-foreground/80">
+              Log in to upload your backgrounds.
+            </span>
+          ) : null}
+          <div>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                if (file) {
+                  void handleBrandBackgroundUpload(file);
+                }
+                if (event.target) {
+                  event.target.value = "";
+                }
+              }}
+              className="hidden"
+              ref={backgroundInputRef}
+              aria-label="Add brand background"
+            />
+            <Button
+              variant="outline"
+              size="xs"
+              disabled={isProcessingUpload || !session?.user}
+              className="gap-1.5"
+              type="button"
+              onClick={() => backgroundInputRef.current?.click()}
+            >
+              <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
+              Add
+            </Button>
+          </div>
+        </div>
+
+        {isLoadingBackgrounds ? (
+          <div className="text-xs text-muted-foreground">Loading brand backgrounds...</div>
+        ) : brandBackgrounds.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border/70 bg-muted/20 px-3 py-4 text-xs text-muted-foreground">
+            Upload a background to start your brand library.
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            {brandBackgrounds.map((background) => (
+              <div
+                key={background.id}
+                className="group relative overflow-hidden rounded-lg border border-border bg-muted/10"
+              >
+                <div className="relative h-16 bg-muted/40">
+                  {background.previewUrl ? (
+                    <img
+                      src={background.previewUrl}
+                      alt={background.name ?? "Brand background"}
+                      className="h-full w-full object-cover"
+                      crossOrigin="anonymous"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+                      No preview
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                  <span className="truncate text-xs font-medium text-foreground">
+                    {background.name ?? "Untitled"}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    className="h-6 w-6 rounded-full bg-background/80 p-0 opacity-0 transition-opacity hover:bg-background group-hover:opacity-100"
+                    onClick={() => void handleBrandBackgroundDelete(background.id)}
+                    aria-label="Remove background"
+                  >
+                    <X className="h-3 w-3 text-foreground" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {backgroundError && (
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {backgroundError}
           </p>
         )}
       </div>
