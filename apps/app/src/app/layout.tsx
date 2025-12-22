@@ -12,7 +12,7 @@ import {
 } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { UmamiProvider } from "@/components/providers/umami-provider";
+import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { AuthProvider } from "@/lib/auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -142,11 +142,11 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <UmamiProvider>
+          <AnalyticsProvider>
             <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
               {children}
             </ThemeProvider>
-          </UmamiProvider>
+          </AnalyticsProvider>
         </AuthProvider>
       </body>
     </html>

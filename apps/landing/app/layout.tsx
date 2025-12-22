@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
-import { UmamiProvider } from "@/components/providers/umami-provider";
+import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import "./globals.css";
 
 const landingSans = Bricolage_Grotesque({
@@ -61,7 +61,7 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
       <body
         className={`${landingSans.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
-        <UmamiProvider>{children}</UmamiProvider>
+        <AnalyticsProvider>{children}</AnalyticsProvider>
       </body>
     </html>
   );
