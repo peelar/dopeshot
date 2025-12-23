@@ -1,12 +1,20 @@
 import type { Metadata } from "next";
 import { Bricolage_Grotesque } from "next/font/google";
-import { AnalyticsProvider } from "@/components/providers/analytics-provider";
+import Script from "next/script";
 import "./globals.css";
 
 const landingSans = Bricolage_Grotesque({
   subsets: ["latin"],
   variable: "--font-sans",
 });
+
+const simpleAnalyticsScriptUrl =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
+  "https://scripts.simpleanalyticscdn.com/latest.js";
+const isSimpleAnalyticsEnabled =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
+const shouldLoadAnalytics =
+  isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
 
 const siteUrl = "https://dopeshot.io";
 const previewImage = "/cover.png";
@@ -61,7 +69,15 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
       <body
         className={`${landingSans.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
-        <AnalyticsProvider>{children}</AnalyticsProvider>
+        {children}
+        {shouldLoadAnalytics ? (
+          <Script
+            async
+            defer
+            src={simpleAnalyticsScriptUrl}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
     </html>
   );

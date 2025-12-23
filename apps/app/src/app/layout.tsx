@@ -10,12 +10,20 @@ import {
   Chakra_Petch,
   Playfair_Display,
 } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { AnalyticsProvider } from "@/components/providers/analytics-provider";
 import { AuthProvider } from "@/lib/auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+
+const simpleAnalyticsScriptUrl =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
+  "https://scripts.simpleanalyticscdn.com/latest.js";
+const isSimpleAnalyticsEnabled =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
+const shouldLoadAnalytics =
+  isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
 
 
 // Font definitions with CSS variables
@@ -142,12 +150,18 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         <AuthProvider>
-          <AnalyticsProvider>
-            <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
-              {children}
-            </ThemeProvider>
-          </AnalyticsProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false}>
+            {children}
+          </ThemeProvider>
         </AuthProvider>
+        {shouldLoadAnalytics ? (
+          <Script
+            async
+            defer
+            src={simpleAnalyticsScriptUrl}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
     </html>
   );
