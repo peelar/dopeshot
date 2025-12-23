@@ -15,16 +15,13 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/lib/auth";
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 const simpleAnalyticsScriptUrl =
   process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
   "https://scripts.simpleanalyticscdn.com/latest.js";
-const isSimpleAnalyticsEnabled =
-  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
-const shouldLoadAnalytics =
-  isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
-
+const isSimpleAnalyticsEnabled = process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
+const shouldLoadAnalytics = isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -107,7 +104,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "dopeshot",
     description:
-      "Your product is dope, your screenshots should be too. Transform product screenshots into Twitter-ready graphics in 10 seconds. Free, no login required.",
+      "Your product is dope, your screenshots should be too. Transform product screenshots into polished marketing assets in seconds.",
     url: siteUrl,
     type: "website",
     siteName: "dopeshot",
@@ -124,7 +121,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "dopeshot",
     description:
-      "Your product is dope, your screenshots should be too. Drop a screenshot, get a Twitter-ready graphic in 10 seconds.",
+      "Your product is dope, your screenshots should be too. Transform product screenshots into polished marketing assets in seconds.",
     images: [previewImage],
   },
   icons: {
@@ -140,7 +137,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className={inter.variable}>
       <body
-        className={`${fontVariables} min-h-screen bg-background font-sans tracking-tight antialiased`}
+        className={`${fontVariables} bg-background min-h-screen font-sans tracking-tight antialiased`}
         style={
           {
             "--font-clean": "var(--font-geist-sans)",
@@ -155,12 +152,7 @@ export default function RootLayout({
           </ThemeProvider>
         </AuthProvider>
         {shouldLoadAnalytics ? (
-          <Script
-            async
-            defer
-            src={simpleAnalyticsScriptUrl}
-            strategy="afterInteractive"
-          />
+          <Script async defer src={simpleAnalyticsScriptUrl} strategy="afterInteractive" />
         ) : null}
       </body>
     </html>
