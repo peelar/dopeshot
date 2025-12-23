@@ -3,6 +3,7 @@ import { useSetAtom, useAtom, useAtomValue } from "jotai";
 import { track } from "@/lib/analytics";
 import { Asset } from "@/domain/asset/types";
 import { processFileUpload } from "@/domain/asset/upload-orchestrator";
+import { analyzeImageTextContrast } from "@/domain/asset/image-text-contrast";
 import { applyLayoutRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
 import { saveBackgroundSelection } from "@/domain/backgrounds/background-service";
@@ -135,9 +136,9 @@ export function useFileUpload({
             newConfig.background = {
               type: "image",
               value: asset.id,
-              grainEnabled: false,
+              grainEnabled: true,
               patternMode: "manual",
-              patternId: "none",
+              patternId: "grain",
             };
           }
 
@@ -169,6 +170,36 @@ export function useFileUpload({
 
           return nextConfig;
         });
+
+        if (kind === "background") {
+          const { palette, textColor } = await analyzeImageTextContrast(asset.url);
+          if (palette) {
+            setAssets((prev) =>
+              prev.map((existing) =>
+                existing.id === asset.id ? { ...existing, colorPalette: palette } : existing,
+              ),
+            );
+          }
+
+          if (textColor) {
+            setConfig((currentConfig) => {
+              if (
+                currentConfig.background?.type !== "image" ||
+                currentConfig.background.value !== asset.id
+              ) {
+                return currentConfig;
+              }
+
+              return {
+                ...currentConfig,
+                colors: {
+                  ...currentConfig.colors,
+                  text: textColor,
+                },
+              };
+            });
+          }
+        }
 
         if (kind === "screenshot" && onScreenshotUploaded && aspectCategory) {
           await onScreenshotUploaded(asset, aspectCategory);

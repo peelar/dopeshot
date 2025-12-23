@@ -1,4 +1,5 @@
 import { ColorToken } from "../types";
+import { ColorPalette } from "../../asset/types";
 import { CustomGradient, isLegacyGradient, isAdvancedGradient, GradientColorSpace } from "./types";
 
 function isColorSpaceSupported(_space?: GradientColorSpace): boolean {
@@ -84,6 +85,18 @@ export function getContrastTextColor(backgroundColor: string | string[]): ColorT
     return "slate-50";
   }
   return "slate-900";
+}
+
+export function getContrastTextColorFromPalette(palette: ColorPalette): ColorToken {
+  const colors = [palette.dominant, palette.accent, palette.vibrant, palette.muted].filter(
+    Boolean,
+  ) as string[];
+
+  if (colors.length === 0) {
+    return "slate-900";
+  }
+
+  return getContrastTextColor(colors);
 }
 
 /**

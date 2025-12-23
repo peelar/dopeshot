@@ -1,20 +1,14 @@
 "use client";
 
-import { useRef, type ChangeEvent, useEffect, useCallback } from "react";
-import { useAtomValue } from "jotai";
+import { useRef, type ChangeEvent, useCallback } from "react";
+import { useAtomValue, useAtom, useSetAtom } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { configAtom, orientationAtom } from "@/hooks/atoms";
+import { Switch } from "@/components/ui/switch";
+import { assetsAtom, brandSettingsAtom, configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { useSidebarState } from "@/hooks/use-sidebar-state";
 import { ScreenshotSection } from "@/components/sidebar/screenshot-section";
 import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
@@ -24,17 +18,20 @@ import { CodeSection } from "@/components/sidebar/code-section";
 
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
-  useAccordions?: boolean;
 }
 
-export const LayoutConfigPanel = ({ onUploadAsset, useAccordions = true }: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const orientation = useAtomValue(orientationAtom);
+  const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
+  const setAssets = useSetAtom(assetsAtom);
+  const setConfig = useSetAtom(configAtom);
 
-  const { expandedSection, expandSection } = useSidebarState();
+  const screenshotInputRef = useRef<HTMLInputElement | null>(null);
+  const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const showCodeSection = config.layoutId === "code-snippet";
@@ -46,215 +43,212 @@ export const LayoutConfigPanel = ({ onUploadAsset, useAccordions = true }: Layou
   const hasSubtitleSupport = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
   const showTextSection = !showCodeSection && (hasHeadlineSupport || hasSubtitleSupport);
 
-  // Initialize default expansion based on state
-  useEffect(() => {
-    if (!screenshotAsset && !expandedSection) {
-      expandSection("screenshot");
-    }
-  }, [screenshotAsset, expandedSection, expandSection]);
+  const handleHeaderFileChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>, kind: "screenshot" | "logo") => {
+      const file = event.target.files?.[0];
+      if (file && onUploadAsset) {
+        onUploadAsset(file, kind);
+      }
+      if (event.target) {
+        event.target.value = "";
+      }
+    },
+    [onUploadAsset],
+  );
 
-  const getScreenshotStatus = () => {
-    if (!screenshotAsset) return "No screenshot";
-    return screenshotAsset.name;
-  };
+  const handleHeaderUploadClick = useCallback(
+    (event: React.MouseEvent, kind: "screenshot" | "logo") => {
+      event.stopPropagation();
+      if (!onUploadAsset) return;
+      if (kind === "screenshot") {
+        screenshotInputRef.current?.click();
+        return;
+      }
+      logoInputRef.current?.click();
+    },
+    [onUploadAsset],
+  );
 
-  const getLogoStatus = () => {
-    if (logoAsset) return "Uploaded";
-    return "Optional";
-  };
+  const handleBrandLogoToggle = useCallback(
+    (checked: boolean) => {
+      setBrandSettings((prev) => ({
+        ...prev,
+        useLogoOnScreenshots: checked,
+      }));
 
-  const defaultAccordionValues = showCodeSection
-    ? ["code", "background"]
-    : ["look", "effects", "background"];
-  const getAccordionIds = (sectionId: string) => {
-    const baseId = `layout-config-${sectionId}`;
-    return {
-      triggerId: `${baseId}-trigger`,
-      contentId: `${baseId}-content`,
-    };
-  };
+      if (checked && brandSettings.logoUrl && brandSettings.logoPath) {
+        const brandLogoAsset: Asset = {
+          id: `brand-logo-${Date.now()}`,
+          projectId: "brand",
+          userId: "brand",
+          url: brandSettings.logoUrl,
+          name: brandSettings.logoPath.split("/").pop() || "brand-logo",
+          kind: "logo",
+          createdAt: new Date().toISOString(),
+        };
+
+        setAssets((prev) => [...prev, brandLogoAsset]);
+        setConfig((currentConfig) => ({
+          ...currentConfig,
+          assets: {
+            ...currentConfig.assets,
+            logo: brandLogoAsset.id,
+          },
+        }));
+      } else if (!checked) {
+        setConfig((currentConfig) => ({
+          ...currentConfig,
+          assets: {
+            ...currentConfig.assets,
+            logo: undefined,
+          },
+        }));
+      }
+    },
+    [brandSettings, setAssets, setBrandSettings, setConfig],
+  );
+
+  const brandLogoAvailable = Boolean(brandSettings.logoUrl && brandSettings.logoPath);
+  const isUsingBrandLogo = logoAsset?.url === brandSettings.logoUrl;
+  const hasCustomLogo = Boolean(logoAsset && !isUsingBrandLogo);
+  const showBrandToggle = brandLogoAvailable && !hasCustomLogo;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
-      {useAccordions ? (
-        <Accordion
-          type="multiple"
-          defaultValue={defaultAccordionValues}
-          className="w-full"
-        >
-          {showTextSection && (
-            <AccordionItem value="look" className="border-b">
-              <AccordionTrigger
-                id={getAccordionIds("look").triggerId}
-                aria-controls={getAccordionIds("look").contentId}
-                className="px-4 py-3 hover:no-underline"
-              >
-                <div className="flex w-full items-center justify-between pr-4">
-                  <span className="text-sm font-semibold">Text</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent
-                id={getAccordionIds("look").contentId}
-                aria-labelledby={getAccordionIds("look").triggerId}
-                className="px-4 pb-4"
-              >
-                <LayoutSection />
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
-          {showCodeSection && (
-            <div className="border-b">
-              <div className="px-4 py-3">
-                <span className="text-sm font-semibold">Code</span>
-              </div>
-              <div className="px-4 pb-4">
-                <CodeSection />
-              </div>
-            </div>
-          )}
-
-          {!showCodeSection && (
-            <AccordionItem value="effects" className="border-b">
-              <AccordionTrigger
-                id={getAccordionIds("effects").triggerId}
-                aria-controls={getAccordionIds("effects").contentId}
-                className="px-4 py-3 hover:no-underline"
-              >
-                <div className="flex w-full items-center justify-between pr-4">
-                  <span className="text-sm font-semibold">Effects</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent
-                id={getAccordionIds("effects").contentId}
-                aria-labelledby={getAccordionIds("effects").triggerId}
-                className="px-4 pb-4"
-              >
-                <EffectsSection />
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
-          <AccordionItem value="background" className="border-b">
-            <AccordionTrigger
-              id={getAccordionIds("background").triggerId}
-              aria-controls={getAccordionIds("background").contentId}
-              className="px-4 py-3 hover:no-underline"
-            >
-              <div className="flex w-full items-center justify-between pr-4">
-                <span className="text-sm font-semibold">Background</span>
-              </div>
-            </AccordionTrigger>
-            <AccordionContent
-              id={getAccordionIds("background").contentId}
-              aria-labelledby={getAccordionIds("background").triggerId}
-              className="px-4 pb-4"
-            >
-              <BackgroundSection onUploadAsset={onUploadAsset} />
-            </AccordionContent>
-          </AccordionItem>
-
-          {!showCodeSection && (
-            <AccordionItem value="screenshot" className="border-b">
-              <AccordionTrigger
-                id={getAccordionIds("screenshot").triggerId}
-                aria-controls={getAccordionIds("screenshot").contentId}
-                className="px-4 py-3 hover:no-underline"
-              >
-                <div className="flex w-full items-center justify-between pr-4">
-                  <span className="text-sm font-semibold">Screenshot</span>
-                  <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent
-                id={getAccordionIds("screenshot").contentId}
-                aria-labelledby={getAccordionIds("screenshot").triggerId}
-                className="px-4 pb-4"
-              >
-                <ScreenshotSection onUploadAsset={onUploadAsset} />
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
-          {showLogoSection && (
-            <AccordionItem value="logo" className="border-b">
-              <AccordionTrigger
-                id={getAccordionIds("logo").triggerId}
-                aria-controls={getAccordionIds("logo").contentId}
-                className="px-4 py-3 hover:no-underline"
-              >
-                <div className="flex w-full items-center justify-between pr-4">
-                  <span className="text-sm font-semibold">Logo</span>
-                  <span className="text-xs text-muted-foreground">{getLogoStatus()}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent
-                id={getAccordionIds("logo").contentId}
-                aria-labelledby={getAccordionIds("logo").triggerId}
-                className="px-4 pb-4"
-              >
-                <LogoSection onUploadAsset={onUploadAsset} />
-              </AccordionContent>
-            </AccordionItem>
-          )}
-        </Accordion>
-      ) : (
-        <div className="flex flex-col gap-6 pb-6">
-          {showTextSection && (
-            <section className="space-y-3 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-semibold">Text</span>
-              </div>
-              <LayoutSection />
-            </section>
-          )}
-
-          {showCodeSection && (
-            <section className="space-y-3 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-semibold">Code</span>
-              </div>
-              <CodeSection />
-            </section>
-          )}
-
-          {!showCodeSection && (
-            <section className="space-y-3 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-semibold">Effects</span>
-              </div>
-              <EffectsSection />
-            </section>
-          )}
-
+      <div className="flex flex-col gap-6 pb-6 pt-6">
+        {showTextSection && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Background</span>
+              <span className="text-sm font-semibold">Text</span>
             </div>
-            <BackgroundSection onUploadAsset={onUploadAsset} />
+            <LayoutSection />
           </section>
+        )}
 
-          {!showCodeSection && (
-            <section className="space-y-3 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-semibold">Screenshot</span>
-                <span className="text-xs text-muted-foreground">{getScreenshotStatus()}</span>
-              </div>
-              <ScreenshotSection onUploadAsset={onUploadAsset} />
-            </section>
-          )}
+        {showCodeSection && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Code</span>
+            </div>
+            <CodeSection />
+          </section>
+        )}
 
-          {showLogoSection && (
-            <section className="space-y-3 px-4">
-              <div className="flex w-full items-center justify-between">
-                <span className="text-sm font-semibold">Logo</span>
-                <span className="text-xs text-muted-foreground">{getLogoStatus()}</span>
+        {!showCodeSection && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Effects</span>
+            </div>
+            <EffectsSection />
+          </section>
+        )}
+
+        <section className="space-y-3 px-4">
+          <div className="flex w-full items-center justify-between">
+            <span className="text-sm font-semibold">Background</span>
+          </div>
+          <BackgroundSection />
+        </section>
+
+        {!showCodeSection && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Screenshot</span>
+              <div className="flex items-center">
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={screenshotInputRef}
+                  accept="image/*"
+                  onChange={(event) => handleHeaderFileChange(event, "screenshot")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  disabled={!onUploadAsset}
+                  onClick={(event) => handleHeaderUploadClick(event, "screenshot")}
+                  className={cn(
+                    "h-6 px-2 text-xs",
+                    screenshotAsset
+                      ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {screenshotAsset ? (
+                    <span className="max-w-[12rem] truncate" title={screenshotAsset.name}>
+                      {screenshotAsset.name}
+                    </span>
+                  ) : (
+                    <span className="max-w-[12rem] truncate" title="Choose file">
+                      Choose file...
+                    </span>
+                  )}
+                </Button>
               </div>
-              <LogoSection onUploadAsset={onUploadAsset} />
-            </section>
-          )}
-        </div>
-      )}
+            </div>
+            <ScreenshotSection onUploadAsset={onUploadAsset} />
+          </section>
+        )}
+
+        {showLogoSection && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Logo</span>
+              <div className="flex items-center gap-2">
+                {showBrandToggle ? (
+                  <>
+                    <span className="text-xs text-muted-foreground">Brand logo</span>
+                    <Switch
+                      checked={brandSettings.useLogoOnScreenshots}
+                      onCheckedChange={handleBrandLogoToggle}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <input
+                      type="file"
+                      className="hidden"
+                      ref={logoInputRef}
+                      accept="image/*"
+                      onChange={(event) => handleHeaderFileChange(event, "logo")}
+                      aria-hidden="true"
+                      tabIndex={-1}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      disabled={!onUploadAsset}
+                      onClick={(event) => handleHeaderUploadClick(event, "logo")}
+                      className={cn(
+                        "h-6 gap-1.5 px-2 text-xs",
+                        logoAsset
+                          ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                          : "text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
+                      {logoAsset ? (
+                        <span className="max-w-[12rem] truncate" title={logoAsset.name}>
+                          {logoAsset.name}
+                        </span>
+                      ) : (
+                        <span className="max-w-[12rem] truncate" title="Choose file">
+                          Choose file...
+                        </span>
+                      )}
+                    </Button>
+                  </>
+                )}
+              </div>
+            </div>
+            <LogoSection onUploadAsset={onUploadAsset} />
+          </section>
+        )}
+      </div>
     </div>
   );
 };
@@ -324,7 +318,7 @@ export const AssetDropzone = ({
       disabled={disabled}
       onClick={handleClick}
       className={cn(
-        "group relative h-auto w-full rounded-2xl border border-border bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+        "group relative h-auto w-full rounded-lg border border-border bg-muted/30 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer hover:bg-muted/50",
         variant === "logo"
           ? "flex min-h-[120px] flex-col items-center gap-4 px-4 py-4"
@@ -344,7 +338,7 @@ export const AssetDropzone = ({
 
       <div
         className={cn(
-          "relative flex items-center justify-center overflow-hidden rounded border border-border bg-background",
+          "relative flex items-center justify-center overflow-hidden rounded-lg border border-border bg-background",
           variant === "logo" ? "h-16 w-16" : "h-10 w-14",
         )}
       >

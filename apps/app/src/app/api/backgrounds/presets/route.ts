@@ -43,7 +43,14 @@ export async function GET() {
       missingPreview: items.filter((item) => !item.previewUrl).map((item) => item.id),
     });
 
-    return NextResponse.json({ items, userTier: null });
+    return NextResponse.json(
+      { items, userTier: null },
+      {
+        headers: {
+          "Cache-Control": "public, max-age=300, s-maxage=300, stale-while-revalidate=60",
+        },
+      },
+    );
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load presets";
     consola.error("[backgrounds.presets] Failed to load presets", error);
