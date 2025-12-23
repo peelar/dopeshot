@@ -5,7 +5,7 @@ import type { LayoutConfig, PatternChoice, PatternId, PatternMode } from "./type
  * Resolve the pattern to render given config and optional palette context.
  * - Manual mode: honor patternId (default to grain unless explicitly none or grain disabled).
  * - Auto mode: avoid overlays on background images, prefer grid for solid backgrounds,
- *   glow when palette has an accent/vibrant color, otherwise grain.
+ *   otherwise grain.
  */
 export function resolvePatternChoice(
   config: LayoutConfig,

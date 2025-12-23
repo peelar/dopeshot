@@ -61,6 +61,7 @@ export function LayoutSelector({ className }: { className?: string }) {
   // BUT reset gradient when switching to non-screenshot layouts
   const previewConfigs = useMemo(() => {
     const currentLayoutSupportsScreenshots = supportsScreenshots(currentConfig.layoutId);
+    const hasImageBackground = currentConfig.background?.type === "image";
 
     // Check if we have a stored screenshot gradient (persists across layout switches)
     const hasScreenshotGradient = screenshotGradient !== null;
@@ -73,7 +74,10 @@ export function LayoutSelector({ className }: { className?: string }) {
       // 2. If both looks have same screenshot support → preserve current background
       // 3. Otherwise → use default background
       let backgroundToUse;
-      if (targetLayoutSupportsScreenshots && hasScreenshotGradient) {
+      if (hasImageBackground) {
+        // Always preserve user-selected image backgrounds across layouts
+        backgroundToUse = currentConfig.background;
+      } else if (targetLayoutSupportsScreenshots && hasScreenshotGradient) {
         // Always use stored screenshot gradient for screenshot-capable looks
         backgroundToUse = screenshotGradient;
       } else if (currentLayoutSupportsScreenshots === targetLayoutSupportsScreenshots) {

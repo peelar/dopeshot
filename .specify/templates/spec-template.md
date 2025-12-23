@@ -80,28 +80,15 @@
 <!--
   ACTION REQUIRED: The content in this section represents placeholders.
   Fill them out with the right functional requirements.
-
-  IMPORTANT: Align with constitution principles:
-  - Test Coverage (Principle I): Include testability requirements
-  - User Experience (Principle II): Define UX/interaction requirements
-  - Observability (Principle IV): Specify tracking requirements
-  - Performance (Principle V): Set performance thresholds
 -->
 
 ### Functional Requirements
 
 - **FR-001**: System MUST [specific capability, e.g., "allow users to create accounts"]
-- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]
+- **FR-002**: System MUST [specific capability, e.g., "validate email addresses"]  
 - **FR-003**: Users MUST be able to [key interaction, e.g., "reset their password"]
 - **FR-004**: System MUST [data requirement, e.g., "persist user preferences"]
 - **FR-005**: System MUST [behavior, e.g., "log all security events"]
-
-### Non-Functional Requirements (Constitution Compliance)
-
-- **NFR-001**: Feature MUST include test coverage (unit, component, integration) per Principle I
-- **NFR-002**: User interactions MUST feel instant (<100ms perceived latency) per Principle V
-- **NFR-003**: Feature MUST track usage with analytics events per Principle IV
-- **NFR-004**: Code MUST follow simplicity guidelines (no over-engineering) per Principle III
 
 *Example of marking unclear requirements:*
 
@@ -112,6 +99,16 @@
 
 - **[Entity 1]**: [What it represents, key attributes without implementation]
 - **[Entity 2]**: [What it represents, relationships to other entities]
+
+## Instrumentation *(mandatory)*
+
+<!--
+  ACTION REQUIRED: Define the tracking events that MUST be emitted for this
+  feature using track() from @/lib/analytics. Include event names and properties.
+-->
+
+- **Event**: [event_name] — [When it fires and why it matters]
+  **Properties**: [key:value pairs captured]
 
 ## Success Criteria *(mandatory)*
 

@@ -26,6 +26,15 @@ export default defineConfig({
       NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'test-anon-key',
       NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED:
         process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED || 'false',
+      DATABASE_URL:
+        process.env.DATABASE_URL ||
+        'postgresql://playwright:playwright@localhost:5432/postgres?pgbouncer=true',
+      DIRECT_URL:
+        process.env.DIRECT_URL ||
+        'postgresql://playwright:playwright@localhost:5432/postgres',
+      BETTER_AUTH_SECRET:
+        process.env.BETTER_AUTH_SECRET || 'playwright-default-secret-0123456789abcd',
+      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || 'http://127.0.0.1:3000',
     },
   },
 });

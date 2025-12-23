@@ -26,6 +26,8 @@ model User {
   brandProfile    BrandProfile?
   userMetadata    UserMetadata?
   generatedAssets GeneratedAsset[]
+  personalBackgrounds PersonalBackground[]
+  backgroundSelection BackgroundSelection?
 
   @@map("user")
   @@schema("public")
@@ -148,5 +150,53 @@ model GeneratedAsset {
 
   @@index([userId, createdAt])
   @@map("generated_assets")
+  @@schema("public")
+}
+
+model PresetBackground {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  storagePath String   @map("storage_path")
+  previewUrl  String   @map("preview_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  sortOrder   Int      @default(0) @map("sort_order")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("preset_backgrounds")
+  @@schema("public")
+}
+
+model PersonalBackground {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  name       String?
+  storagePath String  @map("storage_path")
+  previewUrl String   @map("preview_url")
+  fileSizeKb Int      @map("file_size_kb")
+  widthPx    Int      @map("width_px")
+  heightPx   Int      @map("height_px")
+  fileFormat String   @map("file_format")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("personal_backgrounds")
+  @@schema("public")
+}
+
+model BackgroundSelection {
+  id             String   @id @default(cuid())
+  userId         String   @unique @map("user_id")
+  backgroundType String   @map("background_type")
+  backgroundId   String   @map("background_id")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("background_selections")
   @@schema("public")
 }

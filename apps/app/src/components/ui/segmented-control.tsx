@@ -50,9 +50,9 @@ export function SegmentedControl({
             variant="ghost"
             size="sm"
             className={cn(
-              "flex-1 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-semibold transition",
+              "flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition",
               isActive
-                ? "bg-foreground text-background shadow-sm"
+                ? "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background dark:hover:bg-foreground dark:hover:text-background"
                 : "text-muted-foreground hover:text-foreground",
               option.disabled && "cursor-not-allowed opacity-40",
               buttonClassName,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -9,7 +9,6 @@ import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
-import { useState } from "react";
 import type { Asset } from "@/domain/asset/types";
 
 export function BrandPanel() {
@@ -37,11 +36,14 @@ export function BrandPanel() {
           throw new Error(payload?.error ?? "Failed to load brand profile");
         }
 
-        if (payload?.logoUrl) {
+        if (payload?.logoUrl || payload?.profile?.logoPath || payload?.profile?.logo_path) {
           setBrandSettings((prev) => ({
             ...prev,
-            logoUrl: payload.logoUrl,
-            logoPath: payload.profile?.logo_path ?? prev.logoPath,
+            logoUrl: payload.logoUrl ?? prev.logoUrl,
+            logoPath:
+              payload.profile?.logoPath ??
+              payload.profile?.logo_path ??
+              prev.logoPath,
           }));
         }
       } catch (error) {
@@ -55,8 +57,6 @@ export function BrandPanel() {
   }, [session?.user?.id, setBrandSettings]);
 
   const handleUpload = async (file: File) => {
-    if (!session?.user) return;
-
     setErrorMessage(null);
 
     try {
@@ -133,10 +133,10 @@ export function BrandPanel() {
   };
 
   const handleToggleUse = (checked: boolean) => {
-    setBrandSettings({
-      ...brandSettings,
+    setBrandSettings((prev) => ({
+      ...prev,
       useLogoOnScreenshots: checked,
-    });
+    }));
     track("brand_logo_toggle", { enabled: checked });
 
     // When toggled ON, immediately apply logo to current screenshot
@@ -281,6 +281,7 @@ export function BrandPanel() {
           </p>
         )}
       </div>
+
     </div>
   );
 }

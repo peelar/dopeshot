@@ -1,6 +1,7 @@
 import { Asset } from "./types";
 import { getImageMetadataFromDataUrl } from "./get-image-metadata";
 import { getAspectCategory, AspectCategory } from "@/domain/layout/aspect";
+import { uploadPersonalBackground } from "@/domain/backgrounds/background-service";
 
 export interface UploadResult {
   asset: Asset;
@@ -29,22 +30,38 @@ export async function processFileUpload(
 
       let assetMetadata = undefined;
       let aspectCategory: AspectCategory | undefined;
+      let backgroundRecord: Awaited<ReturnType<typeof uploadPersonalBackground>> | null = null;
 
-      if (kind === "screenshot") {
+      if (kind === "screenshot" || kind === "background") {
         const metadata = await getImageMetadataFromDataUrl(dataUrl);
         if (metadata) {
-          aspectCategory = getAspectCategory(metadata.aspectRatio);
-          assetMetadata = { ...metadata, orientation: aspectCategory };
+          const orientation = getAspectCategory(metadata.aspectRatio);
+          if (kind === "screenshot") {
+            aspectCategory = orientation;
+          }
+          assetMetadata = { ...metadata, orientation };
         }
       }
 
-      const assetId = Math.random().toString(36).substring(7);
+      if (kind === "background") {
+        const extension = file.name.split(".").pop()?.toLowerCase();
+        const fileFormat = extension || file.type.split("/").pop() || "png";
+        backgroundRecord = await uploadPersonalBackground({
+          file,
+          name: file.name,
+          widthPx: assetMetadata?.width,
+          heightPx: assetMetadata?.height,
+          fileFormat,
+        });
+      }
+
+      const assetId = backgroundRecord?.id ?? Math.random().toString(36).substring(7);
       const asset: Asset = {
         id: assetId,
         projectId: "playground",
         userId: "playground-user",
-        name: file.name,
-        url: dataUrl,
+        name: backgroundRecord?.name ?? file.name,
+        url: backgroundRecord?.previewUrl ?? dataUrl,
         kind: kind === "background" ? "background" : kind === "logo" ? "logo" : "screenshot",
         createdAt: new Date().toISOString(),
         metadata: assetMetadata,
@@ -64,9 +81,6 @@ export async function processFileUpload(
     reader.readAsDataURL(file);
   });
 }
-
-
-
 
 
 

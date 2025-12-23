@@ -28,4 +28,9 @@ export type { GradientContext } from "./generator";
 export { generateGradientOptions } from "./generator";
 
 // Utilities
-export { getContrastTextColor, customGradientToCss, directionStringToDegrees } from "./utils";
+export {
+  getContrastTextColor,
+  getContrastTextColorFromPalette,
+  customGradientToCss,
+  directionStringToDegrees,
+} from "./utils";
