@@ -35,10 +35,11 @@ export async function processFileUpload(
       if (kind === "screenshot" || kind === "background") {
         const metadata = await getImageMetadataFromDataUrl(dataUrl);
         if (metadata) {
+          const orientation = getAspectCategory(metadata.aspectRatio);
           if (kind === "screenshot") {
-            aspectCategory = getAspectCategory(metadata.aspectRatio);
+            aspectCategory = orientation;
           }
-          assetMetadata = { ...metadata, orientation: aspectCategory };
+          assetMetadata = { ...metadata, orientation };
         }
       }
 
@@ -80,7 +81,6 @@ export async function processFileUpload(
     reader.readAsDataURL(file);
   });
 }
-
 
 
 

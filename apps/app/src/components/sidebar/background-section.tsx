@@ -98,7 +98,8 @@ export function BackgroundSection() {
 
   const applyBackgroundAsset = useCallback(
     (background: BackgroundItem, backgroundType: BackgroundType) => {
-      if (!background.previewUrl) {
+      const previewUrl = background.previewUrl;
+      if (!previewUrl) {
         setStatusMessage("Background preview is unavailable.");
         return;
       }
@@ -114,7 +115,7 @@ export function BackgroundSection() {
             projectId: backgroundType,
             userId: session?.user?.id ?? "backgrounds",
             name: background.name ?? "Background",
-            url: background.previewUrl,
+            url: previewUrl,
             kind: "background",
             createdAt: new Date().toISOString(),
           },

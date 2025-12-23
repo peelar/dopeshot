@@ -1,17 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { getUserDb } from "@/lib/data/dal";
 import { getBackgroundAuthContext, supabaseAdmin } from "@/lib/supabase-admin";
 import { PERSONAL_BACKGROUND_BUCKET } from "@/domain/backgrounds/constants";
 
 type Params = {
-  params: {
+  params: Promise<{
     backgroundId: string;
-  };
+  }>;
 };
 
-export async function DELETE(_request: Request, { params }: Params) {
+export async function DELETE(_request: NextRequest, { params }: Params) {
   try {
+    const { backgroundId } = await params;
     const auth = await getBackgroundAuthContext();
     if (!auth.isAuth || !auth.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -19,7 +20,7 @@ export async function DELETE(_request: Request, { params }: Params) {
 
     const db = await getUserDb(auth.userId);
     const background = await db.personalBackground.findFirst({
-      where: { id: params.backgroundId },
+      where: { id: backgroundId },
       select: { id: true, storagePath: true },
     });
 
