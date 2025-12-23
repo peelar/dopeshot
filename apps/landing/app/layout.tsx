@@ -8,6 +8,14 @@ const landingSans = Bricolage_Grotesque({
   variable: "--font-sans",
 });
 
+const simpleAnalyticsScriptUrl =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
+  "https://scripts.simpleanalyticscdn.com/latest.js";
+const isSimpleAnalyticsEnabled =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
+const shouldLoadAnalytics =
+  isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
+
 const siteUrl = "https://dopeshot.io";
 const previewImage = "/cover.png";
 
@@ -62,7 +70,14 @@ export default function LandingLayout({ children }: { children: React.ReactNode 
         className={`${landingSans.variable} min-h-screen bg-background font-sans text-foreground antialiased`}
       >
         {children}
-        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
+        {shouldLoadAnalytics ? (
+          <Script
+            async
+            defer
+            src={simpleAnalyticsScriptUrl}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
     </html>
   );

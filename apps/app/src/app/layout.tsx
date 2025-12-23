@@ -17,6 +17,14 @@ import { AuthProvider } from "@/lib/auth";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
+const simpleAnalyticsScriptUrl =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
+  "https://scripts.simpleanalyticscdn.com/latest.js";
+const isSimpleAnalyticsEnabled =
+  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
+const shouldLoadAnalytics =
+  isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
+
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -146,7 +154,14 @@ export default function RootLayout({
             {children}
           </ThemeProvider>
         </AuthProvider>
-        <Script src="https://scripts.simpleanalyticscdn.com/latest.js" />
+        {shouldLoadAnalytics ? (
+          <Script
+            async
+            defer
+            src={simpleAnalyticsScriptUrl}
+            strategy="afterInteractive"
+          />
+        ) : null}
       </body>
     </html>
   );
