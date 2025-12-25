@@ -217,7 +217,7 @@ export function PlaygroundWorkspace({
                   : undefined
               }
             >
-              <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+              <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
             </div>
           )}
       </div>
