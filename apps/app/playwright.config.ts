@@ -35,6 +35,7 @@ export default defineConfig({
       BETTER_AUTH_SECRET:
         process.env.BETTER_AUTH_SECRET || 'playwright-default-secret-0123456789abcd',
       BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || 'http://127.0.0.1:3000',
+      SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key',
     },
   },
 });
