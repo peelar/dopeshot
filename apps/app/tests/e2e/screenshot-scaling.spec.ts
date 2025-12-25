@@ -32,20 +32,20 @@ test.describe('Screenshot Scaling and Zoom', () => {
 
     // 4. Verify Screenshot Dimensions
     // It should be filling the container (minus padding).
-    // Verify it takes up most of the viewport width.
-    
-    const dimensions = await screenshotImage.evaluate((img: HTMLImageElement) => {
-        const imgRect = img.getBoundingClientRect();
-        return {
-            imgWidth: imgRect.width,
-            viewportWidth: window.innerWidth,
-        };
-    });
+    // Compare image width to the preview canvas width instead of viewport width
+    const previewCanvas = page.getByTestId('preview-canvas');
+    await expect(previewCanvas).toBeVisible();
 
-    expect(dimensions).not.toBeNull();
-    // Image should be at least 50% of viewport width (accounting for padding and sidebars)
-    // In Backdrop mode with 4K image, it should take up most of the available space.
-    expect(dimensions!.imgWidth).toBeGreaterThan(dimensions!.viewportWidth * 0.5);
+    const box = await previewCanvas.boundingBox();
+    expect(box).not.toBeNull();
+    const canvasWidth = box!.width;
+
+    const imgBox = await screenshotImage.boundingBox();
+    expect(imgBox).not.toBeNull();
+    const imgWidth = imgBox!.width;
+
+    // Image should be at least 80% of the canvas width
+    expect(imgWidth).toBeGreaterThan(canvasWidth * 0.8);
     
     // 5. Verify Zoom Out works
     // Set value to 0.5
