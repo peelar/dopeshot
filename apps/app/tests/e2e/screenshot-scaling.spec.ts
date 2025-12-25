@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'path';
 
 test.describe('Screenshot Scaling and Zoom', () => {
+  test.use({ viewport: { width: 1440, height: 900 } });
   const SCREENSHOT_PATH = path.join(__dirname, '../fixtures/screenshot-4k.png');
 
   test('Backdrop layout constrains zoom slider and fills canvas', async ({ page }) => {
@@ -43,9 +44,9 @@ test.describe('Screenshot Scaling and Zoom', () => {
     });
 
     expect(dimensions).not.toBeNull();
-    // Image should be at least 60% of viewport width (accounting for padding and sidebars)
+    // Image should be at least 80% of viewport width (accounting for padding and sidebars)
     // In Backdrop mode with 4K image, it should take up most of the available space.
-    expect(dimensions!.imgWidth).toBeGreaterThan(dimensions!.viewportWidth * 0.6);
+    expect(dimensions!.imgWidth).toBeGreaterThan(dimensions!.viewportWidth * 0.8);
     
     // 5. Verify Zoom Out works
     // Set value to 0.5
