@@ -128,7 +128,7 @@ export function PlaygroundWorkspace({
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
-      <div className="mx-auto flex h-full w-full max-w-4xl flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+      <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex flex-shrink-0 items-center justify-center">
           {/* Tiny icon-only orientation toggle - hidden for code snippets - centered against screenshot */}
           {!useFluidLayout ? (
