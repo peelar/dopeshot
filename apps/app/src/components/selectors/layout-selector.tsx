@@ -245,9 +245,9 @@ export function LayoutSelector({ className }: { className?: string }) {
               {assetType === "screenshot" ? "Screenshot" : "Code"}
             </span>
           </SelectTrigger>
-          <SelectContent align="start">
-            <SelectItem value="screenshot">Screenshot</SelectItem>
-            <SelectItem value="code">Code</SelectItem>
+          <SelectContent align="start" className="min-w-32">
+            <SelectItem value="screenshot" className="py-2 text-sm">Screenshot</SelectItem>
+            <SelectItem value="code" className="py-2 text-sm">Code</SelectItem>
           </SelectContent>
         </Select>
       </div>
