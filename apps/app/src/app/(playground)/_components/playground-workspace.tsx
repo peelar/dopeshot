@@ -62,6 +62,7 @@ export function PlaygroundWorkspace({
 
   // Code snippet uses fluid layout (content-based sizing)
   const useFluidLayout = config.layoutId === "code-snippet";
+  const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
 
   const handleViewportMetricsChange = useCallback(
     (metrics: { bottomWhitespace: number }) => {
@@ -207,18 +208,18 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        {!useFluidLayout && (
-          <div
-            className="relative z-10"
-            style={
-              bottomWhitespace
-                ? { transform: `translateY(-${bottomWhitespace}px)` }
-                : undefined
-            }
-          >
-            <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
-          </div>
-        )}
+          {!useFluidLayout && (
+            <div
+              className="relative z-10"
+              style={
+                bottomWhitespace
+                  ? { transform: `translateY(-${bottomWhitespace}px)` }
+                  : undefined
+              }
+            >
+              <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} />
+            </div>
+          )}
       </div>
     </div>
   );

@@ -8,9 +8,17 @@ interface ScreenshotZoomSliderProps {
   value: number;
   onChange: (value: number) => void;
   className?: string;
+  min?: number;
+  max?: number;
 }
 
-export function ScreenshotZoomSlider({ value, onChange, className }: ScreenshotZoomSliderProps) {
+export function ScreenshotZoomSlider({
+  value,
+  onChange,
+  className,
+  min = 0.5,
+  max = 1.5,
+}: ScreenshotZoomSliderProps) {
   const startValueRef = useRef(value);
 
   const handleZoomEnd = () => {
@@ -26,8 +34,8 @@ export function ScreenshotZoomSlider({ value, onChange, className }: ScreenshotZ
     <div className={cn("flex items-center justify-center", className)}>
       <input
         type="range"
-        min={0.5}
-        max={1.5}
+        min={min}
+        max={max}
         step={0.05}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
