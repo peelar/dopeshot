@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Github, Twitter, Mail } from "lucide-react";
+import { Twitter, Mail } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { Logo } from "./logo";
 
@@ -54,17 +54,7 @@ export function LandingFooter() {
             <h3 className="font-semibold mb-4">Connect</h3>
             <div className="flex items-center gap-4">
               <Link
-                href="https://github.com/dopeshot"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => track("landing_footer_link_clicked", { link: "github" })}
-                className="text-muted-foreground hover:text-[var(--accent-orange)] transition-all hover:scale-110"
-                aria-label="GitHub"
-              >
-                <Github className="h-5 w-5" />
-              </Link>
-              <Link
-                href="https://twitter.com/dopeshot"
+                href="https://twitter.com/gaba6ool"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => track("landing_footer_link_clicked", { link: "twitter" })}
@@ -74,7 +64,7 @@ export function LandingFooter() {
                 <Twitter className="h-5 w-5" />
               </Link>
               <Link
-                href="mailto:hello@dopeshot.io"
+                href="mailto:adrian@peelar.dev"
                 onClick={() => track("landing_footer_link_clicked", { link: "contact" })}
                 className="text-muted-foreground hover:text-[var(--accent-orange)] transition-all hover:scale-110"
                 aria-label="Email"
@@ -90,23 +80,6 @@ export function LandingFooter() {
           <p className="text-sm text-muted-foreground">
             © {currentYear} dopeshot. Ship fast, post faster.
           </p>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/terms"
-              className="text-xs text-muted-foreground hover:text-[var(--accent-orange)] transition-colors"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/privacy"
-              className="text-xs text-muted-foreground hover:text-[var(--accent-orange)] transition-colors"
-            >
-              Privacy
-            </Link>
-            <p className="text-xs text-muted-foreground">
-              Made with ☕ for builders
-            </p>
-          </div>
         </div>
       </div>
     </footer>

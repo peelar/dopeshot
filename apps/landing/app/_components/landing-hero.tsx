@@ -3,14 +3,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { track } from "@/lib/analytics";
-import { BeforeAfter } from "./before-after";
 
 export function LandingHero() {
-  const scrollToWaitlist = () => {
-    track("landing_secondary_cta_clicked", { action: "scroll_to_waitlist" });
-    document.getElementById("waitlist")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
     <section className="relative overflow-hidden min-h-[80vh] flex items-center">
       {/* Background with subtle orange gradient */}
@@ -35,13 +29,18 @@ export function LandingHero() {
           {/* Left side - Content */}
           <div className="space-y-8 lg:pr-8">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card/50 backdrop-blur-sm px-4 py-1.5 text-sm text-muted-foreground">
-              <span className="relative flex h-2 w-2">
+            <Link
+              href="/log"
+              onClick={() => track("landing_update_badge_clicked")}
+              className="group relative inline-flex items-center gap-3 rounded-full border border-[var(--accent-orange)]/30 bg-[var(--accent-orange)]/5 backdrop-blur-sm px-4 py-2 text-sm transition-all hover:border-[var(--accent-orange)]/60 hover:bg-[var(--accent-orange)]/10"
+            >
+              <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-orange)] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--accent-orange)]"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[var(--accent-orange)]"></span>
               </span>
-              <span>Free. No login. No watermark.</span>
-            </div>
+              <span className="font-medium text-[var(--accent-orange)]">New in dopeshot:</span>
+              <span className="text-foreground">Preset backgrounds</span>
+            </Link>
 
             {/* Headline */}
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
@@ -66,18 +65,16 @@ export function LandingHero() {
                 </span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[var(--accent-orange)] to-[var(--accent-orange-light)] opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
-              <button
-                onClick={scrollToWaitlist}
-                className="inline-flex h-16 items-center justify-center rounded-xl px-8 text-base font-semibold text-muted-foreground transition-all hover:text-foreground hover:scale-105 active:scale-95"
-              >
-                Join the waitlist
-              </button>
             </div>
           </div>
 
-          {/* Right side - Before/After */}
+          {/* Right side - Screenshot placeholder */}
           <div className="relative lg:pl-8 order-first lg:order-last">
-            <BeforeAfter />
+            <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-border bg-muted/50">
+              <div className="absolute inset-0 flex items-center justify-center">
+                <p className="text-muted-foreground">Screenshot placeholder</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>

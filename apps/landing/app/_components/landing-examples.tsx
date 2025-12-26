@@ -63,10 +63,10 @@ export function LandingExamples() {
       <div className="container mx-auto mb-10 max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="mb-3 text-2xl font-bold tracking-tight text-white sm:text-3xl">
-            See what you can create
+            Gallery
           </h2>
           <p className="mx-auto max-w-xl text-gray-400">
-            Product shots, code snippets, app previews—pick a layout and make it yours
+            Assets created with dopeshot
           </p>
         </div>
       </div>

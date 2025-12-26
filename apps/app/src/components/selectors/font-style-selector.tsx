@@ -32,11 +32,11 @@ export function FontStyleSelector({ fontStyle, onFontStyleChange }: FontStyleSel
             {currentStyle?.name ?? "Select font style"}
           </SelectValue>
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="min-w-48">
           {FONT_STYLES.map((style) => (
-            <SelectItem key={style.id} value={style.id}>
+            <SelectItem key={style.id} value={style.id} className="py-2">
               <div className="flex flex-col gap-1">
-                <span className="font-medium">{style.name}</span>
+                <span className="font-medium text-sm">{style.name}</span>
                 <span
                   style={{ fontFamily: `var(${style.cssVariable})` }}
                   className="text-xs text-muted-foreground"

@@ -1,13 +1,12 @@
 "use client";
 
 import { useRef, type ChangeEvent, useCallback } from "react";
-import { useAtomValue, useAtom, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { Asset } from "@/domain/asset/types";
 import { UploadCloud, X } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { assetsAtom, brandSettingsAtom, configAtom, orientationAtom } from "@/hooks/atoms";
+import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
 import { ScreenshotSection } from "@/components/sidebar/screenshot-section";
 import { LogoSection } from "@/components/sidebar/logo-section";
@@ -26,9 +25,6 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const logoAsset = useAtomValue(logoAssetAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const orientation = useAtomValue(orientationAtom);
-  const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
-  const setAssets = useSetAtom(assetsAtom);
-  const setConfig = useSetAtom(configAtom);
 
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -69,49 +65,7 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
     [onUploadAsset],
   );
 
-  const handleBrandLogoToggle = useCallback(
-    (checked: boolean) => {
-      setBrandSettings((prev) => ({
-        ...prev,
-        useLogoOnScreenshots: checked,
-      }));
 
-      if (checked && brandSettings.logoUrl && brandSettings.logoPath) {
-        const brandLogoAsset: Asset = {
-          id: `brand-logo-${Date.now()}`,
-          projectId: "brand",
-          userId: "brand",
-          url: brandSettings.logoUrl,
-          name: brandSettings.logoPath.split("/").pop() || "brand-logo",
-          kind: "logo",
-          createdAt: new Date().toISOString(),
-        };
-
-        setAssets((prev) => [...prev, brandLogoAsset]);
-        setConfig((currentConfig) => ({
-          ...currentConfig,
-          assets: {
-            ...currentConfig.assets,
-            logo: brandLogoAsset.id,
-          },
-        }));
-      } else if (!checked) {
-        setConfig((currentConfig) => ({
-          ...currentConfig,
-          assets: {
-            ...currentConfig.assets,
-            logo: undefined,
-          },
-        }));
-      }
-    },
-    [brandSettings, setAssets, setBrandSettings, setConfig],
-  );
-
-  const brandLogoAvailable = Boolean(brandSettings.logoUrl && brandSettings.logoPath);
-  const isUsingBrandLogo = logoAsset?.url === brandSettings.logoUrl;
-  const hasCustomLogo = Boolean(logoAsset && !isUsingBrandLogo);
-  const showBrandToggle = brandLogoAvailable && !hasCustomLogo;
 
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
@@ -178,11 +132,11 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
                   )}
                 >
                   {screenshotAsset ? (
-                    <span className="max-w-[12rem] truncate" title={screenshotAsset.name}>
+                    <span className="max-w-[8rem] truncate" title={screenshotAsset.name}>
                       {screenshotAsset.name}
                     </span>
                   ) : (
-                    <span className="max-w-[12rem] truncate" title="Choose file">
+                    <span className="max-w-[8rem] truncate" title="Choose file">
                       Choose file...
                     </span>
                   )}
@@ -198,51 +152,39 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Logo</span>
               <div className="flex items-center gap-2">
-                {showBrandToggle ? (
-                  <>
-                    <span className="text-xs text-muted-foreground">Brand logo</span>
-                    <Switch
-                      checked={brandSettings.useLogoOnScreenshots}
-                      onCheckedChange={handleBrandLogoToggle}
-                    />
-                  </>
-                ) : (
-                  <>
-                    <input
-                      type="file"
-                      className="hidden"
-                      ref={logoInputRef}
-                      accept="image/*"
-                      onChange={(event) => handleHeaderFileChange(event, "logo")}
-                      aria-hidden="true"
-                      tabIndex={-1}
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="xs"
-                      disabled={!onUploadAsset}
-                      onClick={(event) => handleHeaderUploadClick(event, "logo")}
-                      className={cn(
-                        "h-6 gap-1.5 px-2 text-xs",
-                        logoAsset
-                          ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                          : "text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
-                      {logoAsset ? (
-                        <span className="max-w-[12rem] truncate" title={logoAsset.name}>
-                          {logoAsset.name}
-                        </span>
-                      ) : (
-                        <span className="max-w-[12rem] truncate" title="Choose file">
-                          Choose file...
-                        </span>
-                      )}
-                    </Button>
-                  </>
-                )}
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={logoInputRef}
+                  accept="image/*"
+                  onChange={(event) => handleHeaderFileChange(event, "logo")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  disabled={!onUploadAsset}
+                  onClick={(event) => handleHeaderUploadClick(event, "logo")}
+                  className={cn(
+                    "h-6 gap-1.5 px-2 text-xs",
+                    logoAsset
+                      ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {!logoAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
+                  {logoAsset ? (
+                    <span className="max-w-[8rem] truncate" title={logoAsset.name}>
+                      {logoAsset.name}
+                    </span>
+                  ) : (
+                    <span className="max-w-[8rem] truncate" title="Choose file">
+                      Choose file...
+                    </span>
+                  )}
+                </Button>
               </div>
             </div>
             <LogoSection onUploadAsset={onUploadAsset} />
@@ -377,7 +319,7 @@ export const AssetDropzone = ({
       >
         <span
           className={cn(
-            "truncate font-semibold text-foreground",
+            "w-full truncate font-semibold text-foreground",
             variant === "logo" ? "text-sm" : "text-xs",
           )}
           title={asset?.name ?? label}
