@@ -1,5 +1,13 @@
 # dopeshot
 
+## 0.3.1
+
+### Patch Changes
+
+- b5b8c85: Fix screenshot scaling in backdrop layouts and allow full zoom range.
+- 74e19b5: Improve asset upload UI in sidebar: truncate long file names to 8rem max-width for better readability, hide upload icon when logo is uploaded to reduce visual clutter, and remove brand logo toggle for simplified workflow.
+- d3c9416: Increase dropdown menu sizes for better mobile usability. Font style and asset type (screenshot/code) selectors now have wider dropdowns, larger touch targets, and improved text readability on mobile devices.
+
 ## 0.3.0
 
 ### Minor Changes
