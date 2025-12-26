@@ -53,7 +53,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
 
   const screenshotAspectRatio = screenshot?.metadata?.aspectRatio ?? DEFAULT_LOCKED_ASPECT_RATIO;
   const stagePadding = 48;
-  const frameMaxWidth = `min(1100px, calc(100% - ${stagePadding * 2}px))`;
+  const frameMaxWidth = `calc(100% - ${stagePadding * 2}px)`;
   const frameMaxHeight = `calc(100% - ${stagePadding * 2}px)`;
 
   return (
@@ -67,7 +67,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     >
       <div className="relative z-10 h-full w-full" data-export-element data-element="container">
         <div
-          className="flex h-full w-full items-center justify-center"
+          className="flex h-full w-full items-center justify-center overflow-hidden"
           style={{ padding: `${stagePadding}px` }}
         >
           <div
@@ -75,8 +75,8 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
             style={{
               ...frameAppearance.style,
               boxShadow: appliedShadow,
-              width: "max-content",
-              maxWidth: frameMaxWidth,
+              width: "100%",
+              maxWidth: "100%",
               maxHeight: frameMaxHeight,
               aspectRatio: screenshotAspectRatio,
               transform: `scale(${screenshotZoom})`,
