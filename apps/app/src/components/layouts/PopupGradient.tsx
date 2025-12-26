@@ -14,8 +14,8 @@ const SCREENSHOT_FRAME_WIDTH_DESKTOP = "62%";
 
 // Mobile dimensions (9:16) - bigger screenshot coverage
 const SIDE_CONTENT_TOP_MOBILE = "20%";
-const CENTER_CONTENT_TOP_MOBILE = "8%";
-const CENTER_SCREENSHOT_TOP_MOBILE = "20%";
+const CENTER_CONTENT_TOP_MOBILE = "12%";
+const CENTER_SCREENSHOT_TOP_MOBILE = "35%";
 const CENTER_SCREENSHOT_GUTTER_MOBILE = 0; // No side margins on mobile
 const SCREENSHOT_FRAME_WIDTH_MOBILE = "85%"; // Screenshots "peak" from the side, not full width
 
