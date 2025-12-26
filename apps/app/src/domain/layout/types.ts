@@ -114,9 +114,4 @@ export type LayoutConfig = {
   layoutSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-layout fade state
   };
-  code?: {
-    content: string;
-    language: string;
-    theme?: string;
-  };
 };

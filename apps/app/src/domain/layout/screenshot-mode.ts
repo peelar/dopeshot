@@ -73,18 +73,6 @@ export function getCanvasDimensions(
 ): { width: number; height: number; aspectRatio: number; mode: CanvasMode } {
   const layout = getLayoutDefinition(config.layoutId);
 
-  // Code snippet layout uses content-based sizing, not fixed canvas
-  if (config.layoutId === "code-snippet") {
-    // Return a flexible aspect ratio that will be overridden by content
-    // The actual size will be determined by the code content + padding
-    return {
-      width: BASE_CANVAS_WIDTH,
-      height: 720,
-      aspectRatio: 16 / 9,
-      mode: "adaptive",
-    };
-  }
-
   const treatment = getScreenshotTreatment(config);
   const effectiveMode = getEffectiveCanvasMode(config);
 

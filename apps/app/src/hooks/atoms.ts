@@ -37,7 +37,7 @@ function migrateLayoutConfig(config: LayoutConfig): LayoutConfig {
 // Use deterministic demo preset for SSR - random selection happens client-side
 const defaultPreset = getDefaultDemoPreset();
 
-export type AssetType = "screenshot" | "code";
+export type AssetType = "screenshot";
 
 // Orientation types - mobile (9:16) or desktop (16:9)
 export type Orientation = "mobile" | "desktop";
@@ -90,7 +90,6 @@ export const lastLayoutByAssetTypeAtom = atomWithStorage<Record<AssetType, strin
   "dopeshot:lastLayoutByAssetType",
   {
     screenshot: "popup-gradient-left", // First layout in rail
-    code: "code-snippet",
   },
 );
 

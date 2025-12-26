@@ -60,8 +60,6 @@ export function PlaygroundWorkspace({
   const setConfig = useSetAtom(configAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
 
-  // Code snippet uses fluid layout (content-based sizing)
-  const useFluidLayout = config.layoutId === "code-snippet";
   const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
 
   const handleViewportMetricsChange = useCallback(
@@ -130,9 +128,8 @@ export function PlaygroundWorkspace({
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex flex-shrink-0 items-center justify-center">
-          {/* Tiny icon-only orientation toggle - hidden for code snippets - centered against screenshot */}
-          {!useFluidLayout ? (
-            <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
+          {/* Tiny icon-only orientation toggle - centered against screenshot */}
+          <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
               <Button
                 type="button"
                 variant="ghost"
@@ -166,7 +163,6 @@ export function PlaygroundWorkspace({
                 <Smartphone className="h-3.5 w-3.5" />
               </Button>
             </div>
-          ) : null}
 
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
@@ -194,7 +190,6 @@ export function PlaygroundWorkspace({
             surfaceHeight={canvasHeight}
             isLoading={isAnalyzingColors}
             loadingText="Analyzing colors..."
-            fluidLayout={useFluidLayout}
             onViewportMetricsChange={handleViewportMetricsChange}
           >
             <CoverPreview />
@@ -208,18 +203,16 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-          {!useFluidLayout && (
-            <div
-              className="relative z-10"
-              style={
-                bottomWhitespace
-                  ? { transform: `translateY(-${bottomWhitespace}px)` }
-                  : undefined
-              }
-            >
-              <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
-            </div>
-          )}
+        <div
+          className="relative z-10"
+          style={
+            bottomWhitespace
+              ? { transform: `translateY(-${bottomWhitespace}px)` }
+              : undefined
+          }
+        >
+          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
+        </div>
       </div>
     </div>
   );

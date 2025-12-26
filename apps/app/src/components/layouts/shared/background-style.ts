@@ -42,11 +42,6 @@ function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
     return { type: "linear", angle: 180 };
   }
 
-  // Code snippet: diagonal linear
-  if (layoutId.startsWith("code-snippet")) {
-    return { type: "linear", angle: 135 };
-  }
-
   // Default: diagonal linear
   return { type: "linear", angle: 135 };
 }

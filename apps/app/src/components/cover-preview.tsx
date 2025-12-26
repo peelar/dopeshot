@@ -34,19 +34,12 @@ export function CoverPreview({ className, onUploadAsset, isStatic = false }: Cov
   // This ensures we catch missing component registrations immediately
   const LayoutComponent = getLayoutComponent(layout.id);
 
-  // Code snippet look should not have fixed aspect ratio
-  const useFluidLayout = layout.id === "code-snippet";
-
   return (
     <div
       className={cn("relative w-full overflow-hidden", isStatic ? "" : "rounded-lg", className)}
-      style={
-        useFluidLayout
-          ? undefined
-          : {
-              aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
-            }
-      }
+      style={{
+        aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
+      }}
     >
       <LayoutComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
     </div>

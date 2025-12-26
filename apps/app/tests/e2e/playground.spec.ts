@@ -7,9 +7,6 @@ test.describe('Playground', () => {
     // Check if the app header is visible
     await expect(page.getByRole('link', { name: 'Go to homepage' })).toBeVisible();
 
-    // Check if the asset type selector is visible
-    await expect(page.getByRole('combobox', { name: 'Select asset type' })).toBeVisible();
-
     // Check if upload button is visible
     await expect(page.getByRole('button', { name: /upload/i }).first()).toBeVisible();
   });
@@ -17,10 +14,10 @@ test.describe('Playground', () => {
   test('look selector displays multiple look options', async ({ page }) => {
     await page.goto('/');
 
-    // Wait for the asset type selector to be visible (indicates page is loaded)
-    await expect(page.getByRole('combobox', { name: 'Select asset type' })).toBeVisible();
+    // Wait for layout selector to be visible (indicates page is loaded)
+    await page.waitForSelector('[class*="flex"][class*="gap"]', { state: 'visible' });
 
-    // Check that look preview cards are rendered (should have 7: Peak Left/Right/Center, Spotlight Left/Right, Backdrop, Code)
+    // Check that look preview cards are rendered (should have 6: Peak Left/Right/Center, Spotlight Left/Right, Backdrop)
     const lookCards = page.getByRole('button', { name: /select.*look/i });
     const count = await lookCards.count();
     expect(count).toBeGreaterThan(0);
@@ -29,8 +26,8 @@ test.describe('Playground', () => {
   test('can switch between different looks', async ({ page }) => {
     await page.goto('/');
 
-    // Wait for the asset type selector to be visible (indicates page is loaded)
-    await expect(page.getByRole('combobox', { name: 'Select asset type' })).toBeVisible();
+    // Wait for layout selector to be visible (indicates page is loaded)
+    await page.waitForSelector('[class*="flex"][class*="gap"]', { state: 'visible' });
 
     // Find look selection buttons (e.g., "Select Peak Left look", "Select Peak Right look")
     const lookButtons = page.getByRole('button', { name: /select.*look/i });
@@ -52,8 +49,8 @@ test.describe('Playground', () => {
   test('pattern controls are present in sidebar', async ({ page }) => {
     await page.goto('/');
 
-    // Wait for the asset type selector to be visible (indicates page is loaded)
-    await expect(page.getByRole('combobox', { name: 'Select asset type' })).toBeVisible();
+    // Wait for layout selector to be visible (indicates page is loaded)
+    await page.waitForSelector('[class*="flex"][class*="gap"]', { state: 'visible' });
 
     // Look for Pattern Style label in the sidebar (only visible for gradient backgrounds)
     const patternStyleLabel = page.getByText('Pattern Style');
