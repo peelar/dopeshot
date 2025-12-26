@@ -62,7 +62,7 @@ test.describe('Screenshot Scaling and Zoom', () => {
     }).toPass();
 
     // 6. Verify Max Zoom is constrained (can go to 1.0)
-    await zoomSlider.fill('1.0');
+    await zoomSlider.fill('1');
     await zoomSlider.evaluate(e => e.dispatchEvent(new Event('change', { bubbles: true })));
     
      await expect(async () => {
