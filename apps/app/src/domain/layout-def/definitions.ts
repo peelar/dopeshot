@@ -289,76 +289,16 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       supportedOrientations: ["mobile", "desktop"],
     },
   },
-  {
-    id: "code-snippet",
-    name: "Code",
-    description: "Beautifully formatted code snippet on a gradient background.",
-    variants: ["center"],
-    createConfig: () => {
-      // Use DEFAULT_GRADIENT for consistent SSR hydration
-      // Random gradient selection happens client-side via gradient picker
-      return {
-        layoutId: "code-snippet",
-        variant: "center",
-        fontStyle: "terminal",
-        text: {
-          title: "",
-          subtitle: "",
-        },
-        colors: {
-          background: "slate-900",
-          text: DEFAULT_GRADIENT.textColor,
-          accent: "violet-400",
-        },
-        background: {
-          type: "gradient",
-          value: DEFAULT_GRADIENT.id,
-          gradientSource: "preset",
-          grainEnabled: true,
-          patternMode: "auto",
-        },
-      assets: {
-        screenshot: undefined,
-        logo: undefined,
-        background: undefined,
-      },
-      code: {
-        content: '// Paste your code here\nfunction hello() {\n  console.log("Hello, World!");\n}',
-        language: "javascript",
-        theme: "github-dark",
-      },
-      };
-    },
-    capabilities: {
-      focusMode: "always",
-      canvasBehavior: "adaptive",
-      zoomBehavior: "scale-container",
-      text: {
-        headline: "hidden",
-        subtitle: "hidden",
-      },
-      typography: false,
-      outline: {
-        softGlass: true,
-        shape: true,
-        shadow: true,
-      },
-      logo: "hidden",
-      screenshot: "hidden",
-      supportedOrientations: ["mobile", "desktop"],
-    },
-  },
 ];
 
 /**
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 7 layouts
+ * Total: 6 layouts
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
- * - code-snippet (Code, single variant)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 
@@ -382,7 +322,6 @@ export function normalizeLayoutId(id: string): string {
     "popup-gradient": "popup-gradient-right", // Default was "right" in createConfig
     "hero-center": "hero-center-left",        // First variant was "left"
     "adaptive-stage": "adaptive-stage",       // No variants (unchanged)
-    "code-snippet": "code-snippet",           // Single variant (unchanged)
   };
 
   return legacyDefaults[id] ?? id;

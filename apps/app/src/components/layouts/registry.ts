@@ -2,7 +2,6 @@ import type { ComponentType } from "react";
 import { PopupGradient } from "./PopupGradient";
 import { HeroCenter } from "./HeroCenter";
 import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
-import { CodeSnippet } from "./CodeSnippet";
 
 /**
  * Component registry for Layout rendering.
@@ -23,7 +22,6 @@ const LAYOUT_COMPONENTS: Record<string, LayoutComponent> = {
   "popup-gradient": PopupGradient,
   "hero-center": HeroCenter,
   "adaptive-stage": AdaptiveScreenshot,
-  "code-snippet": CodeSnippet,
 };
 
 export function getLayoutComponent(id: string): LayoutComponent {

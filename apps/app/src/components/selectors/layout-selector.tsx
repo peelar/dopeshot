@@ -1,6 +1,5 @@
 "use client";
 
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
@@ -11,14 +10,11 @@ import {
   withLayoutTextDefaults,
 } from "@/domain/layout-def/definitions";
 import {
-  assetTypeAtom,
   assetsAtom,
   configAtom,
-  lastLayoutByAssetTypeAtom,
   orientationAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
-  type AssetType,
 } from "@/hooks/atoms";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
@@ -47,8 +43,6 @@ type PreviewCard = {
 };
 
 export function LayoutSelector({ className }: { className?: string }) {
-  const [assetType, setAssetType] = useAtom(assetTypeAtom);
-  const [lastLayoutByAssetType, setLastLayoutByAssetType] = useAtom(lastLayoutByAssetTypeAtom);
   const orientation = useAtomValue(orientationAtom);
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
@@ -99,8 +93,6 @@ export function LayoutSelector({ className }: { className?: string }) {
           screenshotShadow: currentConfig.screenshotShadow,
           fontStyle: currentConfig.fontStyle,
           screenshotFrame: currentConfig.screenshotFrame,
-          // Preserve code snippet content, but fall back to default if undefined
-          code: currentConfig.code ?? defaultConfig.code,
         } as typeof currentConfig,
         { preserveEmptyText: true },
       );
@@ -121,7 +113,6 @@ export function LayoutSelector({ className }: { className?: string }) {
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
     currentConfig.text,
-    currentConfig.code,
     screenshotGradient,
   ]);
 
@@ -136,12 +127,8 @@ export function LayoutSelector({ className }: { className?: string }) {
   const filteredPreviewConfigs = useMemo(() => {
     let options = previewConfigs;
 
-    // Filter by asset type
-    if (assetType === "code") {
-      options = options.filter((option) => option.layoutId === "code-snippet");
-    } else {
-      options = options.filter((option) => supportsScreenshots(option.layoutId));
-    }
+    // Filter by screenshot support
+    options = options.filter((option) => supportsScreenshots(option.layoutId));
 
     // Filter by orientation
     options = options.filter((option) => {
@@ -154,7 +141,7 @@ export function LayoutSelector({ className }: { className?: string }) {
     });
 
     return options;
-  }, [assetType, orientation, previewConfigs]);
+  }, [orientation, previewConfigs]);
 
   const applyLayoutSelection = useCallback(
     (layoutId: string, displayName?: string) => {
@@ -183,75 +170,9 @@ export function LayoutSelector({ className }: { className?: string }) {
     [currentConfig.layoutId, previewConfigByLayoutId, setConfig, setScreenshotZoom],
   );
 
-  const handleAssetTypeChange = useCallback(
-    (nextType: AssetType) => {
-      setLastLayoutByAssetType((current) => ({
-        ...current,
-        [assetType]: currentConfig.layoutId,
-      }));
-      setAssetType(nextType);
-
-      // Use flattened layout IDs with default variants
-      const fallbackLayoutId = nextType === "code" ? "code-snippet" : "popup-gradient-right";
-      const storedLayoutId = lastLayoutByAssetType[nextType];
-      // Normalize stored ID to handle legacy IDs (e.g., "popup-gradient" → "popup-gradient-right")
-      const preferredLayoutId = storedLayoutId
-        ? normalizeLayoutId(storedLayoutId)
-        : fallbackLayoutId;
-      const nextLayoutId =
-        nextType === "code"
-          ? "code-snippet"
-          : supportsScreenshots(preferredLayoutId)
-            ? preferredLayoutId
-            : fallbackLayoutId;
-
-      setLastLayoutByAssetType((current) => ({ ...current, [nextType]: nextLayoutId }));
-      applyLayoutSelection(nextLayoutId);
-    },
-    [
-      applyLayoutSelection,
-      assetType,
-      currentConfig.layoutId,
-      lastLayoutByAssetType,
-      setAssetType,
-      setLastLayoutByAssetType,
-    ],
-  );
-
-  useEffect(() => {
-    const currentIsCodeLayout = currentConfig.layoutId === "code-snippet";
-    if (assetType === "code" && !currentIsCodeLayout) {
-      handleAssetTypeChange("code");
-    }
-    if (assetType === "screenshot" && currentIsCodeLayout) {
-      handleAssetTypeChange("screenshot");
-    }
-  }, [assetType, currentConfig.layoutId, handleAssetTypeChange]);
 
   return (
     <div className={cn("flex w-full flex-col gap-2 sm:px-4", className)}>
-      <div className="flex items-center px-4 pt-2 sm:pt-4">
-        <Select
-          value={assetType}
-          onValueChange={(value) => handleAssetTypeChange(value as AssetType)}
-        >
-          <SelectTrigger
-            className={cn(
-              "h-auto w-auto gap-1 rounded-md border-0 bg-transparent px-2 py-1 shadow-none ring-offset-0 focus:ring-0 focus:ring-offset-0 hover:bg-transparent data-[state=open]:bg-transparent dark:bg-transparent dark:hover:bg-transparent",
-            )}
-            aria-label="Select asset type"
-          >
-            <span className="text-sm font-medium text-foreground underline decoration-muted-foreground/40 underline-offset-4">
-              {assetType === "screenshot" ? "Screenshot" : "Code"}
-            </span>
-          </SelectTrigger>
-          <SelectContent align="start" className="min-w-32">
-            <SelectItem value="screenshot" className="py-2 text-sm">Screenshot</SelectItem>
-            <SelectItem value="code" className="py-2 text-sm">Code</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="flex w-full gap-3 overflow-x-auto px-1 py-2 sm:gap-4 sm:py-3">
         {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig }) => {
           // Normalize current config's layoutId before comparison to handle legacy IDs
@@ -259,7 +180,6 @@ export function LayoutSelector({ className }: { className?: string }) {
           const isSelected = normalizedCurrentLayoutId === layoutId;
 
           const handleSelect = () => {
-            setLastLayoutByAssetType((current) => ({ ...current, [assetType]: layoutId }));
             applyLayoutSelection(layoutId, displayName);
           };
 
@@ -286,7 +206,6 @@ function LayoutSketch({
   orientation: "mobile" | "desktop";
 }) {
   const isMobile = orientation === "mobile";
-  const isCodeSnippet = layoutId === "code-snippet";
 
   // Extract variant from layout ID (e.g., "popup-gradient-left" -> "left")
   const variant = layoutId.includes("-")
@@ -296,17 +215,6 @@ function LayoutSketch({
   const isPeakLayout = layoutId.startsWith("popup-gradient");
   const isSpotlightLayout = layoutId.startsWith("hero-center");
   const isBackdropLayout = layoutId.startsWith("adaptive-stage");
-
-  if (isCodeSnippet) {
-    // Code snippet: centered code block
-    return (
-      <div className="flex h-full w-full items-center justify-center bg-stone-100 p-3 dark:bg-stone-800">
-        <div className="h-full w-full rounded bg-stone-200 p-2 dark:bg-stone-700">
-          <div className="h-full w-full rounded border border-stone-300 bg-stone-50 dark:border-stone-600 dark:bg-stone-900/50" />
-        </div>
-      </div>
-    );
-  }
 
   if (isPeakLayout && variant) {
     // Peak layouts: text on one side, screenshot on the other or center

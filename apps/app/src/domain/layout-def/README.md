@@ -43,7 +43,6 @@ Defines available visual templates/styles (called "Looks") as pure data. Each Lo
 - **Peak** (`popup-gradient`): Gradient hero with elevated screenshot frame
 - **Spotlight** (`centered-hero`): Centered layout with screenshot focus
 - **Backdrop** (`background-emphasis`): Large background image with small screenshot
-- **Code Snippet** (`code-snippet`): Code display with syntax highlighting (no screenshot)
 
 ## Design Notes
 

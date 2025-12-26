@@ -13,7 +13,6 @@ import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
-import { CodeSection } from "@/components/sidebar/code-section";
 
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
@@ -30,14 +29,13 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
-  const showCodeSection = config.layoutId === "code-snippet";
 
   // Check if text is actually supported (not just hidden by layout type)
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
   const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
   const hasHeadlineSupport = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
   const hasSubtitleSupport = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
-  const showTextSection = !showCodeSection && (hasHeadlineSupport || hasSubtitleSupport);
+  const showTextSection = hasHeadlineSupport || hasSubtitleSupport;
 
   const handleHeaderFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>, kind: "screenshot" | "logo") => {
@@ -79,23 +77,12 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
           </section>
         )}
 
-        {showCodeSection && (
-          <section className="space-y-3 px-4">
-            <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Code</span>
-            </div>
-            <CodeSection />
-          </section>
-        )}
-
-        {!showCodeSection && (
-          <section className="space-y-3 px-4">
-            <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Effects</span>
-            </div>
-            <EffectsSection />
-          </section>
-        )}
+        <section className="space-y-3 px-4">
+          <div className="flex w-full items-center justify-between">
+            <span className="text-sm font-semibold">Effects</span>
+          </div>
+          <EffectsSection />
+        </section>
 
         <section className="space-y-3 px-4">
           <div className="flex w-full items-center justify-between">
@@ -104,48 +91,46 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
           <BackgroundSection />
         </section>
 
-        {!showCodeSection && (
-          <section className="space-y-3 px-4">
-            <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Screenshot</span>
-              <div className="flex items-center">
-                <input
-                  type="file"
-                  className="hidden"
-                  ref={screenshotInputRef}
-                  accept="image/*"
-                  onChange={(event) => handleHeaderFileChange(event, "screenshot")}
-                  aria-hidden="true"
-                  tabIndex={-1}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  disabled={!onUploadAsset}
-                  onClick={(event) => handleHeaderUploadClick(event, "screenshot")}
-                  className={cn(
-                    "h-6 px-2 text-xs",
-                    screenshotAsset
-                      ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {screenshotAsset ? (
-                    <span className="max-w-[8rem] truncate" title={screenshotAsset.name}>
-                      {screenshotAsset.name}
-                    </span>
-                  ) : (
-                    <span className="max-w-[8rem] truncate" title="Choose file">
-                      Choose file...
-                    </span>
-                  )}
-                </Button>
-              </div>
+        <section className="space-y-3 px-4">
+          <div className="flex w-full items-center justify-between">
+            <span className="text-sm font-semibold">Screenshot</span>
+            <div className="flex items-center">
+              <input
+                type="file"
+                className="hidden"
+                ref={screenshotInputRef}
+                accept="image/*"
+                onChange={(event) => handleHeaderFileChange(event, "screenshot")}
+                aria-hidden="true"
+                tabIndex={-1}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                disabled={!onUploadAsset}
+                onClick={(event) => handleHeaderUploadClick(event, "screenshot")}
+                className={cn(
+                  "h-6 px-2 text-xs",
+                  screenshotAsset
+                    ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {screenshotAsset ? (
+                  <span className="max-w-[8rem] truncate" title={screenshotAsset.name}>
+                    {screenshotAsset.name}
+                  </span>
+                ) : (
+                  <span className="max-w-[8rem] truncate" title="Choose file">
+                    Choose file...
+                  </span>
+                )}
+              </Button>
             </div>
-            <ScreenshotSection onUploadAsset={onUploadAsset} />
-          </section>
-        )}
+          </div>
+          <ScreenshotSection onUploadAsset={onUploadAsset} />
+        </section>
 
         {showLogoSection && (
           <section className="space-y-3 px-4">

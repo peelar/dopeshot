@@ -41,19 +41,17 @@ export function GradientPicker({
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
-  const isCodeSnippet = config.layoutId === "code-snippet";
 
   // Generate multi-stop gradients from screenshot colors
-  // Code snippets should never use screenshot-derived gradients
   const dynamicGradients = useMemo((): CustomGradient[] => {
-    if (!colorPalette || isCodeSnippet) return [];
+    if (!colorPalette) return [];
 
     // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
     return generateGradientOptions(colorPalette, {
       aspectCategory: "landscape",
       variant: undefined,
     });
-  }, [colorPalette, isCodeSnippet]);
+  }, [colorPalette]);
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const displayGradients = useMemo(
