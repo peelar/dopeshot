@@ -51,7 +51,7 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     titleMinSize: 2.25,
     titleMaxSize: 4.5,
     subtitleMinSize: 1.0,
-    subtitleMaxSize: 1.375,
+    subtitleMaxSize: 1.5,
     titleLineHeight: 0.95,
     subtitleLineHeight: 1.3,
     titleMaxLines: 2,
@@ -70,16 +70,7 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     titleLetterSpacing: -0.01,
     subtitleLetterSpacing: -0.01,
   },
-  editorial: {
-    titleMinSize: 2.25,
-    titleMaxSize: 4.5,
-    subtitleMinSize: 1.0,
-    subtitleMaxSize: 1.375,
-    titleLineHeight: 1.15,
-    subtitleLineHeight: 1.45,
-    titleMaxLines: 2,
-    subtitleMaxLines: 3,
-  },
+
 };
 
 /**
@@ -116,7 +107,6 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
     founder: ["tracking-tight"],
     billboard: ["tracking-tighter", "font-extrabold"],
     terminal: ["tracking-tight", "font-mono"],
-    editorial: ["tracking-normal"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
@@ -144,9 +134,8 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
   // Add style-specific classes
   const styleClasses: Record<FontStyle, string[]> = {
     founder: ["tracking-normal"],
-    billboard: ["tracking-tight", "font-semibold"],
+    billboard: ["tracking-tight", "font-medium"],
     terminal: ["tracking-tight", "font-mono"],
-    editorial: ["tracking-normal"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);

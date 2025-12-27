@@ -43,14 +43,6 @@ export const FONT_STYLES: FontStyleDefinition[] = [
     cssVariable: "--font-developer",
     description: "Monospace, technical, tool-like",
   },
-  {
-    id: "editorial",
-    name: "Editorial",
-    fontName: "Playfair Display",
-    foundry: "Claus Eggers Sorensen",
-    cssVariable: "--font-premium",
-    description: "Serif-based, calm, story-driven",
-  },
 ];
 
 export const DEFAULT_FONT_STYLE: FontStyle = "founder";
@@ -232,12 +224,12 @@ export function migrateFontIdToStyle(fontId: FontId): FontStyle {
     clean: "founder",
     bold: "billboard",
     developer: "terminal",
-    premium: "editorial",
     // Other legacy fonts default to founder
     professional: "founder",
     friendly: "founder",
     edgy: "founder",
     technical: "terminal",
+    premium: "founder",
   };
 
   return mapping[fontId] ?? "founder";
