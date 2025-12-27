@@ -22,7 +22,11 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export interface UseFileUploadOptions {
   onScreenshotUploaded?: (asset: Asset, aspectCategory?: AspectCategory) => Promise<void>;
-  processColorAnalysis?: (dataUrl: string, assetId: string) => Promise<void>;
+  processColorAnalysis?: (
+    dataUrl: string,
+    assetId: string,
+    autoLayoutMessage: string | null,
+  ) => Promise<void>;
 }
 
 export function useFileUpload({
@@ -196,7 +200,7 @@ export function useFileUpload({
         }
 
         if (kind === "screenshot" && processColorAnalysis) {
-          await processColorAnalysis(asset.url, asset.id);
+          await processColorAnalysis(asset.url, asset.id, null);
         }
 
         // Auto-expand relevant sections after upload
