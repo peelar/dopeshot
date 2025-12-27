@@ -106,10 +106,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       return (
         <div className="flex h-full flex-1 items-center justify-center">
           <div
-            className={cn(
-              "relative flex h-full max-h-full w-full items-center justify-center overflow-hidden",
-              "rounded-[16px]",
-            )}
+            className="relative flex h-full max-h-full w-full items-center justify-center overflow-hidden"
             style={{
               ...frameAppearance.style,
               boxShadow: appliedShadow,
@@ -147,10 +144,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     return (
       <div className="flex h-full flex-1 items-center justify-center">
         <div
-          className={cn(
-            "relative flex max-h-full w-full items-center justify-center overflow-hidden",
-            "rounded-[16px]",
-          )}
+          className="relative flex max-h-full w-full items-center justify-center overflow-hidden"
           style={{
             ...frameAppearance.style,
             boxShadow: appliedShadow,

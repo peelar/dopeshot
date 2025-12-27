@@ -111,7 +111,7 @@ export function LayoutSurface({
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <PatternOverlay config={config} assets={assets} assetMap={assetMap} screenshotAsset={screenshot} />
+      <PatternOverlay config={config} />
       <div className="relative z-10 h-full w-full">{children}</div>
     </div>
   );

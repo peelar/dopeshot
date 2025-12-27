@@ -7,9 +7,9 @@ export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
 export type LayoutOutlineControls = {
   softGlass: boolean;
-  shape: boolean;
   shadow: boolean;
   fade?: boolean;
+  shape?: boolean; // Optional since corners are always rounded now
 };
 
 export type LayoutFocusMode = "auto" | "always" | "never";
@@ -136,30 +136,29 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
         background: undefined,
       },
       screenshotShadow: "medium",
-      screenshotFrame: {
-        preset: "soft-glass",
-        canvasMode: "locked",
-        lockedAspectRatio: 16 / 9,
-        shadowEnabled: true,
-        shape: "rounded",
-      },
+       screenshotFrame: {
+         preset: "soft-glass",
+         canvasMode: "adaptive",
+         lockedAspectRatio: 16 / 9,
+         shadowEnabled: true,
+         shape: "rounded",
+       },
     }),
-    capabilities: {
-      focusMode: "never",
-      canvasBehavior: "locked",
-      zoomBehavior: "scale-content",
-      text: {
-        headline: "required",
-        subtitle: "optional",
-      },
-      typography: true,
-      outline: {
-        softGlass: false,
-        shape: false,
-        shadow: true,
-        fade: true,
-      },
-      logo: "supported",
+     capabilities: {
+       focusMode: "never",
+       canvasBehavior: "locked",
+       zoomBehavior: "scale-content",
+       text: {
+         headline: "required",
+         subtitle: "optional",
+       },
+       typography: true,
+       outline: {
+         softGlass: false,
+         shadow: true,
+         fade: true,
+       },
+       logo: "supported",
       screenshot: "supported",
       supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
@@ -181,32 +180,30 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
         title: "Bring the heat",
         subtitle: "Keep the heat going",
       },
-      colors: {
-        background: "slate-50",
-        text: "slate-900",
-        accent: "violet-400",
-      },
-      background: {
-        type: "gradient",
-        value: "cotton-candy",
-        gradientSource: "preset",
-        grainEnabled: true,
-        patternMode: "auto",
-      },
-      assets: {
-        screenshot: undefined,
-        logo: undefined,
-        background: undefined,
-      },
-      screenshotShadow: "medium",
-      screenshotFrame: {
-        preset: "soft-glass",
-        canvasMode: "locked",
-        lockedAspectRatio: 16 / 9,
-        shadowEnabled: true,
-        shape: "rounded",
-      },
-    }),
+       colors: {
+         background: "slate-50",
+         text: "slate-900",
+         accent: "violet-400",
+       },
+       background: {
+         type: "gradient",
+         value: "cotton-candy",
+         gradientSource: "preset",
+       },
+       assets: {
+         screenshot: undefined,
+         logo: undefined,
+         background: undefined,
+       },
+       screenshotShadow: "medium",
+       screenshotFrame: {
+         preset: "soft-glass",
+         canvasMode: "locked",
+         lockedAspectRatio: 16 / 9,
+         shadowEnabled: true,
+         shape: "rounded",
+       },
+     }),
     capabilities: {
       focusMode: "never",
       canvasBehavior: "locked",
@@ -218,8 +215,8 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       typography: true,
       outline: {
         softGlass: true,
-        shape: true,
         shadow: true,
+        fade: false,
       },
       logo: "supported",
       screenshot: "supported",
@@ -243,27 +240,25 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
         title: "",
         subtitle: "",
       },
-      colors: {
-        background: "zinc-50",
-        text: "slate-900",
-        accent: "violet-400",
-      },
-      background: {
-        type: "gradient",
-        value: DEFAULT_GRADIENT.id,
-        gradientSource: "preset",
-        grainEnabled: true,
-        patternMode: "auto",
-      },
-      assets: {
-        screenshot: undefined,
-        logo: undefined,
-        background: undefined,
-      },
+       colors: {
+         background: "zinc-50",
+         text: "slate-900",
+         accent: "violet-400",
+       },
+       background: {
+         type: "gradient",
+         value: DEFAULT_GRADIENT.id,
+         gradientSource: "preset",
+       },
+       assets: {
+         screenshot: undefined,
+         logo: undefined,
+         background: undefined,
+       },
       screenshotShadow: "medium",
       screenshotFrame: {
-        preset: "soft-glass",
-        canvasMode: "adaptive",
+        preset: "solid",
+        canvasMode: "locked",
         lockedAspectRatio: 16 / 9,
         shadowEnabled: true,
         shape: "rounded",
@@ -280,9 +275,8 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       typography: false,
       outline: {
         softGlass: true,
-        shape: true,
         shadow: true,
-        fade: true,
+        fade: false,
       },
       logo: "hidden",
       screenshot: "supported",

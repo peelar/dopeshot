@@ -40,7 +40,7 @@ export type ScreenshotTreatment = {
 };
 
 // Font styles - semantic typographic systems for free users
-export type FontStyle = "founder" | "billboard" | "terminal" | "editorial";
+export type FontStyle = "founder" | "billboard" | "terminal";
 
 // Legacy types - kept for backward compatibility during migration
 export type FontId =

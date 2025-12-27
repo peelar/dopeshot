@@ -123,7 +123,6 @@ export function useFileUpload({
         }
 
         setConfig((currentConfig) => {
-          const grainEnabled = currentConfig.background?.grainEnabled ?? true;
           const newConfig = {
             ...currentConfig,
             assets: {
@@ -136,9 +135,6 @@ export function useFileUpload({
             newConfig.background = {
               type: "image",
               value: asset.id,
-              grainEnabled: true,
-              patternMode: "manual",
-              patternId: "grain",
             };
           }
 
@@ -150,8 +146,6 @@ export function useFileUpload({
               background: {
                 type: "solid",
                 value: "slate-100",
-                grainEnabled,
-                patternMode: "auto",
               },
             };
           }
