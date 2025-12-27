@@ -1,8 +1,4 @@
-import type {
-  BackgroundSelection,
-  PersonalBackground,
-  PresetBackground,
-} from "./types";
+import type { BackgroundSelection, PersonalBackground } from "./types";
 
 type ListResponse<T> = {
   items: T[];
@@ -16,12 +12,6 @@ type SelectionResponse = BackgroundSelection & {
 type UploadResponse = PersonalBackground & {
   userTier?: string | null;
 };
-
-const PRESET_CACHE_TTL_MS = 5 * 60 * 1000;
-let presetCache:
-  | { data: ListResponse<PresetBackground>; expiresAt: number }
-  | null = null;
-let presetInFlight: Promise<ListResponse<PresetBackground>> | null = null;
 
 export class BackgroundApiError extends Error {
   status: number;
@@ -44,31 +34,6 @@ async function parseResponse<T>(response: Response): Promise<T> {
     throw new BackgroundApiError(message, response.status, payload);
   }
   return payload as T;
-}
-
-export async function listPresetBackgrounds(): Promise<ListResponse<PresetBackground>> {
-  const now = Date.now();
-  if (presetCache && presetCache.expiresAt > now) {
-    return presetCache.data;
-  }
-  if (presetInFlight) {
-    return presetInFlight;
-  }
-
-  presetInFlight = (async () => {
-    try {
-      const response = await fetch("/api/backgrounds/presets", {
-        method: "GET",
-      });
-      const data = await parseResponse<ListResponse<PresetBackground>>(response);
-      presetCache = { data, expiresAt: Date.now() + PRESET_CACHE_TTL_MS };
-      return data;
-    } finally {
-      presetInFlight = null;
-    }
-  })();
-
-  return presetInFlight;
 }
 
 export async function listPersonalBackgrounds(): Promise<ListResponse<PersonalBackground>> {

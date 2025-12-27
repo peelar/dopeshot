@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getUserDb } from "@/lib/data/dal";
 import { getBackgroundAuthContext } from "@/lib/supabase-admin";
 
-const ALLOWED_BACKGROUND_TYPES = new Set(["preset", "personal"]);
+const ALLOWED_BACKGROUND_TYPES = new Set(["personal"]);
 
 export async function GET() {
   try {
@@ -57,33 +56,15 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Invalid selection" }, { status: 400 });
     }
 
-    if (backgroundType === "preset") {
-      if (!auth.isBranded) {
-        return NextResponse.json({ error: "Branded account required" }, { status: 403 });
-      }
-
-      const preset = await prisma.presetBackground.findUnique({
-        where: { id: backgroundId },
-        select: { isActive: true },
-      });
-
-      if (!preset || !preset.isActive) {
-        return NextResponse.json({ error: "Preset not found" }, { status: 404 });
-      }
-    }
-
-    if (backgroundType === "personal") {
-      const db = await getUserDb(auth.userId);
-      const personal = await db.personalBackground.findFirst({
-        where: { id: backgroundId },
-        select: { id: true },
-      });
-      if (!personal) {
-        return NextResponse.json({ error: "Personal background not found" }, { status: 404 });
-      }
-    }
-
     const db = await getUserDb(auth.userId);
+    const personal = await db.personalBackground.findFirst({
+      where: { id: backgroundId },
+      select: { id: true },
+    });
+    if (!personal) {
+      return NextResponse.json({ error: "Personal background not found" }, { status: 404 });
+    }
+
     const selection = await db.backgroundSelection.upsert({
       where: { userId: auth.userId },
       create: {

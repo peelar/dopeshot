@@ -15,7 +15,7 @@ import {
   hasCustomScreenshotAtom,
 } from "./atoms";
 import { expandSidebarSectionAtom } from "./use-sidebar-state";
-import { backgroundSelectionAtom, backgroundUserTierAtom } from "./atoms/backgrounds";
+import { backgroundSelectionAtom } from "./atoms/backgrounds";
 const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);
 const ACCEPTED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
@@ -34,9 +34,7 @@ export function useFileUpload({
   processColorAnalysis,
 }: UseFileUploadOptions) {
   const [isProcessingUpload, setIsProcessingUpload] = useAtom(isProcessingUploadAtom);
-  const backgroundUserTier = useAtomValue(backgroundUserTierAtom);
   const setBackgroundSelection = useSetAtom(backgroundSelectionAtom);
-  const setBackgroundUserTier = useSetAtom(backgroundUserTierAtom);
   const setAssets = useSetAtom(assetsAtom);
   const setConfig = useSetAtom(configAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
@@ -76,7 +74,6 @@ export function useFileUpload({
           const extension = file.name.split(".").pop()?.toLowerCase();
           const fileType = file.type || extension || "unknown";
           track("background_upload_started", {
-            user_tier: backgroundUserTier,
             file_type: fileType,
             file_size_kb: Math.round(file.size / 1024),
           });
@@ -97,7 +94,6 @@ export function useFileUpload({
         } else if (kind === "background") {
           track("background_upload_completed", {
             background_id: asset.id,
-            user_tier: backgroundUserTier,
           });
           try {
             const selection = await saveBackgroundSelection({
@@ -108,9 +104,6 @@ export function useFileUpload({
               backgroundType: selection.backgroundType,
               backgroundId: selection.backgroundId,
             });
-            if (selection.userTier) {
-              setBackgroundUserTier(selection.userTier);
-            }
           } catch (error) {
             setStatusMessage(
               "Background uploaded, but selection could not be saved. Please reselect it.",
@@ -218,7 +211,6 @@ export function useFileUpload({
         if (kind === "background") {
           track("background_upload_failed", {
             error_reason: error instanceof Error ? error.message : "unknown",
-            user_tier: backgroundUserTier,
           });
         }
         const message =
@@ -236,12 +228,10 @@ export function useFileUpload({
       setConfig,
       setStatusMessage,
       setBackgroundSelection,
-      setBackgroundUserTier,
       setHasCustomScreenshot,
       onScreenshotUploaded,
       processColorAnalysis,
       expandSidebarSection,
-      backgroundUserTier,
     ],
   );
 

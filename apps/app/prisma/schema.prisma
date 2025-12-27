@@ -153,21 +153,6 @@ model GeneratedAsset {
   @@schema("public")
 }
 
-model PresetBackground {
-  id          String   @id @default(cuid())
-  name        String
-  description String?
-  storagePath String   @map("storage_path")
-  previewUrl  String   @map("preview_url")
-  isActive    Boolean  @default(true) @map("is_active")
-  sortOrder   Int      @default(0) @map("sort_order")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
-
-  @@map("preset_backgrounds")
-  @@schema("public")
-}
-
 model PersonalBackground {
   id         String   @id @default(cuid())
   userId     String   @map("user_id")

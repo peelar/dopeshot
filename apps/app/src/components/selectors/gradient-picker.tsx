@@ -10,7 +10,6 @@ import {
   isAdvancedGradient,
   isLegacyGradient,
 } from "@/domain/layout/types";
-import type { PresetBackground } from "@/domain/backgrounds/types";
 import { customGradientToCss, generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
 import { getColorSourceType } from "@/domain/layout/gradients/color-source";
 import { cn } from "@/lib/utils/cn";
@@ -21,19 +20,9 @@ import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
 interface GradientPickerProps {
   onChangeAction: (background: BackgroundConfig, textColor: ColorToken) => void;
-  presetBackgrounds?: PresetBackground[];
-  selectedPresetId?: string | null;
-  isLoadingPresets?: boolean;
-  onSelectPreset?: (background: PresetBackground) => void;
 }
 
-export function GradientPicker({
-  onChangeAction,
-  presetBackgrounds = [],
-  selectedPresetId = null,
-  isLoadingPresets = false,
-  onSelectPreset,
-}: GradientPickerProps) {
+export function GradientPicker({ onChangeAction }: GradientPickerProps) {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
@@ -57,10 +46,6 @@ export function GradientPicker({
   const displayGradients = useMemo(
     () => dynamicGradients.slice(0, 4),
     [dynamicGradients],
-  );
-  const displayPresets = useMemo(
-    () => presetBackgrounds.slice(0, 4),
-    [presetBackgrounds],
   );
 
   const matchesScreenshotGradient = useMemo(() => {
@@ -152,14 +137,10 @@ export function GradientPicker({
         <div className="space-y-3 px-3 pb-3 pt-3">
           <ScreenshotGradients
             gradients={displayGradients}
-            presets={displayPresets}
             activeGradient={background.customGradient}
-            selectedPresetId={selectedPresetId}
             disabled={!hasScreenshotGradients}
             onSelect={handleScreenshotSelect}
-            onSelectPreset={onSelectPreset}
             isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
-            isLoadingPresets={isLoadingPresets}
           />
         </div>
       </div>
@@ -169,31 +150,20 @@ export function GradientPicker({
 
 interface ScreenshotGradientsProps {
   gradients: CustomGradient[];
-  presets: PresetBackground[];
   activeGradient?: CustomGradient;
-  selectedPresetId?: string | null;
   disabled: boolean;
   onSelect: (gradient: CustomGradient) => void;
-  onSelectPreset?: (background: PresetBackground) => void;
   isLoading?: boolean;
-  isLoadingPresets?: boolean;
 }
 
 function ScreenshotGradients({
   gradients,
-  presets,
   activeGradient,
-  selectedPresetId,
   disabled,
   onSelect,
-  onSelectPreset,
   isLoading,
-  isLoadingPresets,
 }: ScreenshotGradientsProps) {
-  const presetSwatches = presets.filter((preset) => preset.previewUrl).slice(0, 4);
-  const hasPresetSwatches = presetSwatches.length > 0;
-
-  if (!gradients.length && !hasPresetSwatches && !isLoading && !isLoadingPresets) {
+  if (!gradients.length && !isLoading) {
     return (
       <div className="rounded-lg border border-dashed border-border/40 bg-background/50 px-3 py-6 text-center text-xs text-muted-foreground">
         Upload a screenshot to reveal curated gradients.
@@ -202,41 +172,23 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-4 gap-3">
-        {isLoading
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
-            ))
-          : gradients.map((gradient, index) => {
-              const isSelected = areGradientsEqual(activeGradient, gradient);
-              return (
-                <GradientSwatch
-                  key={`gradient-${index}`}
-                  gradientCss={customGradientToCss(gradient)}
-                  selected={isSelected}
-                  onClick={() => !disabled && onSelect(gradient)}
-                  ariaLabel="Screenshot gradient"
-                />
-              );
-            })}
-      </div>
-
-      <div className="grid grid-cols-4 gap-3">
-        {isLoadingPresets
-          ? Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={`preset-skeleton-${index}`} className="h-12 w-full rounded-lg" />
-            ))
-          : presetSwatches.map((preset) => (
+    <div className="grid grid-cols-4 gap-3">
+      {isLoading
+        ? Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
+          ))
+        : gradients.map((gradient, index) => {
+            const isSelected = areGradientsEqual(activeGradient, gradient);
+            return (
               <GradientSwatch
-                key={`preset-${preset.id}`}
-                gradientCss={`url(${preset.previewUrl}) center / cover no-repeat`}
-                selected={selectedPresetId === preset.id}
-                onClick={() => onSelectPreset?.(preset)}
-                ariaLabel={preset.name ?? "Preset background"}
+                key={`gradient-${index}`}
+                gradientCss={customGradientToCss(gradient)}
+                selected={isSelected}
+                onClick={() => !disabled && onSelect(gradient)}
+                ariaLabel="Screenshot gradient"
               />
-            ))}
-      </div>
+            );
+          })}
     </div>
   );
 }

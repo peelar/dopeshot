@@ -1,12 +1,4 @@
-export type BackgroundType = "preset" | "personal";
-
-export type PresetBackground = {
-  id: string;
-  name: string;
-  previewUrl: string | null;
-  sortOrder: number;
-  description?: string | null;
-};
+export type BackgroundType = "personal";
 
 export type PersonalBackground = {
   id: string;
