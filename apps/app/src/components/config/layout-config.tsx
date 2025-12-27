@@ -14,6 +14,7 @@ import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
 
+
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }

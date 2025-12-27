@@ -46,25 +46,7 @@ test.describe('Playground', () => {
     }
   });
 
-  test('pattern controls are present in sidebar', async ({ page }) => {
-    await page.goto('/');
 
-    // Wait for layout selector to be visible (indicates page is loaded)
-    await page.waitForSelector('[class*="flex"][class*="gap"]', { state: 'visible' });
-
-    // Look for Pattern Style label in the sidebar (only visible for gradient backgrounds)
-    const patternStyleLabel = page.getByText('Pattern Style');
-
-    // Pattern controls may not always be visible (depends on background type)
-    // Just verify they exist when visible, don't try to interact
-    if (await patternStyleLabel.isVisible()) {
-      // Verify pattern buttons exist: Off, Grain, Glow, Grid
-      await expect(page.getByRole('button', { name: 'Off', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Grain', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Glow', exact: true })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Grid', exact: true })).toBeVisible();
-    }
-  });
 
   test('shows upload button in header', async ({ page }) => {
     await page.goto('/');

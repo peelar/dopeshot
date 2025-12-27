@@ -1,165 +1,139 @@
 "use client";
 
 import { useMemo, useCallback, useRef, useEffect } from "react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { track } from "@/lib/analytics";
-import {
-  BackgroundConfig,
-  ColorToken,
-  CustomGradient,
-  isAdvancedGradient,
-  isLegacyGradient,
-} from "@/domain/layout/types";
-import type { PresetBackground } from "@/domain/backgrounds/types";
-import { customGradientToCss, generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
+import { BackgroundConfig, ColorToken } from "@/domain/layout/types";
+import { customGradientToCss } from "@/domain/layout/gradients";
 import { getColorSourceType } from "@/domain/layout/gradients/color-source";
 import { cn } from "@/lib/utils/cn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { configAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
-import { screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { configAtom, screenshotGradientAtom } from "@/hooks/atoms";
+import type { DynamicBackground } from "@/domain/backgrounds/dynamic";
 
 interface GradientPickerProps {
   onChangeAction: (background: BackgroundConfig, textColor: ColorToken) => void;
-  presetBackgrounds?: PresetBackground[];
-  selectedPresetId?: string | null;
-  isLoadingPresets?: boolean;
-  onSelectPreset?: (background: PresetBackground) => void;
+  dynamicBackgrounds: DynamicBackground[];
+  selectedBackgroundId?: string | null;
+  isLoading?: boolean;
 }
 
 export function GradientPicker({
   onChangeAction,
-  presetBackgrounds = [],
-  selectedPresetId = null,
-  isLoadingPresets = false,
-  onSelectPreset,
+  dynamicBackgrounds,
+  selectedBackgroundId = null,
+  isLoading = false,
 }: GradientPickerProps) {
   const config = useAtomValue(configAtom);
-  const screenshotAsset = useAtomValue(screenshotAssetAtom);
-  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const background =
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
-  const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
 
-  // Generate multi-stop gradients from screenshot colors
-  const dynamicGradients = useMemo((): CustomGradient[] => {
-    if (!colorPalette) return [];
+  const hasBackgrounds = dynamicBackgrounds.length > 0;
 
-    // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
-    return generateGradientOptions(colorPalette, {
-      aspectCategory: "landscape",
-      variant: undefined,
-    });
-  }, [colorPalette]);
-
-  const hasScreenshotGradients = dynamicGradients.length > 0;
-  const displayGradients = useMemo(
-    () => dynamicGradients.slice(0, 4),
-    [dynamicGradients],
+  // Split backgrounds into vibrant (top row) and subtle (bottom row)
+  const vibrantBackgrounds = useMemo(
+    () => dynamicBackgrounds.filter((bg) => bg.row === "vibrant"),
+    [dynamicBackgrounds],
   );
-  const displayPresets = useMemo(
-    () => presetBackgrounds.slice(0, 4),
-    [presetBackgrounds],
+  const subtleBackgrounds = useMemo(
+    () => dynamicBackgrounds.filter((bg) => bg.row === "subtle"),
+    [dynamicBackgrounds],
   );
 
-  const matchesScreenshotGradient = useMemo(() => {
-    if (!background.customGradient || !hasScreenshotGradients) return false;
-    return dynamicGradients.some((gradient) =>
-      areGradientsEqual(gradient, background.customGradient),
-    );
-  }, [background.customGradient, dynamicGradients, hasScreenshotGradients]);
+  const hasAutoAppliedRef = useRef(false);
 
-  const sourceOverrideRef = useRef(false);
-
-  // Auto-apply first screenshot gradient when available
+  // Auto-apply first background when dynamic backgrounds become available
   useEffect(() => {
-    if (!hasScreenshot) return;
-    if (background.type !== "gradient") return;
-    if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
-    if (matchesScreenshotGradient) return;
+    // Reset auto-apply flag when backgrounds change (new screenshot uploaded)
+    hasAutoAppliedRef.current = false;
+  }, [dynamicBackgrounds]);
 
-    // Skip auto-apply if user has manually selected a preset or custom gradient
-    // Check legacy string format first (handles "preset", "custom", "screenshot")
-    if (typeof background.gradientSource === "string") {
-      const source = background.gradientSource;
-      if (source === "preset" || source === "custom") {
+  useEffect(() => {
+    // Need screenshot and generated backgrounds
+    if (!hasScreenshot || dynamicBackgrounds.length === 0) return;
+
+    // Already applied for this set of backgrounds
+    if (hasAutoAppliedRef.current) return;
+
+    // Already has a valid selection from this set
+    if (dynamicBackgrounds.some((bg) => bg.id === selectedBackgroundId)) {
+      hasAutoAppliedRef.current = true;
+      return;
+    }
+
+    // Skip if user uploaded a custom background image
+    if (background.type === "image") return;
+
+    // Skip if user manually selected a preset gradient
+    if (background.type === "gradient" && background.gradientSource) {
+      const sourceType = typeof background.gradientSource === "string"
+        ? background.gradientSource
+        : getColorSourceType(background.gradientSource);
+      if (sourceType === "preset" || sourceType === "manual" || sourceType === "brand") {
         return;
       }
     }
 
-    // Check new ColorSourceInfo format
-    const gradientSourceType = getColorSourceType(background.gradientSource);
-    if (
-      gradientSourceType === "preset" ||
-      gradientSourceType === "manual" ||
-      gradientSourceType === "brand"
-    ) {
-      return;
-    }
+    const firstBackground = dynamicBackgrounds[0];
+    if (!firstBackground) return;
 
-    // Skip if ref indicates manual override (for backwards compatibility)
-    if (sourceOverrideRef.current) return;
+    hasAutoAppliedRef.current = true;
 
-    const firstGradient = dynamicGradients[0];
-    if (!firstGradient) return;
+    const newBackground: BackgroundConfig = {
+      type: "gradient",
+      value: firstBackground.id,
+      customGradient: firstBackground.gradient,
+      gradientSource: "screenshot",
+    };
 
-    const textColor = getTextColorFromGradient(firstGradient);
-    const grainEnabled = background.grainEnabled ?? true;
-    onChangeAction(
-      {
-        type: "gradient",
-        value: "custom",
-        customGradient: firstGradient,
-        gradientSource: "screenshot",
-        grainEnabled,
-      },
-      textColor,
-    );
+    setScreenshotGradient(newBackground);
+    onChangeAction(newBackground, firstBackground.textColor);
   }, [
-    background.grainEnabled,
+    background.type,
     background.gradientSource,
-    dynamicGradients,
+    dynamicBackgrounds,
     hasScreenshot,
-    hasScreenshotGradients,
-    matchesScreenshotGradient,
+    selectedBackgroundId,
     onChangeAction,
+    setScreenshotGradient,
   ]);
 
-  const handleScreenshotSelect = useCallback(
-    (gradient: CustomGradient) => {
+  const handleBackgroundSelect = useCallback(
+    (bg: DynamicBackground) => {
       track("gradient_source_changed", {
         source: "screenshot",
+        backgroundId: bg.id,
       });
-      sourceOverrideRef.current = true;
-      const textColor = getTextColorFromGradient(gradient);
-      onChangeAction(
-        {
-          type: "gradient",
-          value: "custom",
-          customGradient: gradient,
-          gradientSource: "screenshot",
-        },
-        textColor,
-      );
+
+      const newBackground: BackgroundConfig = {
+        type: "gradient",
+        value: bg.id,
+        customGradient: bg.gradient,
+        gradientSource: "screenshot",
+      };
+
+      // Store in screenshotGradientAtom for persistence across layout changes
+      setScreenshotGradient(newBackground);
+
+      onChangeAction(newBackground, bg.textColor);
     },
-    [onChangeAction],
+    [onChangeAction, setScreenshotGradient],
   );
 
   return (
     <div className="space-y-5">
       <div className="rounded-lg border border-border/60 bg-muted/30">
         <div className="space-y-3 px-3 pb-3 pt-3">
-          <ScreenshotGradients
-            gradients={displayGradients}
-            presets={displayPresets}
-            activeGradient={background.customGradient}
-            selectedPresetId={selectedPresetId}
-            disabled={!hasScreenshotGradients}
-            onSelect={handleScreenshotSelect}
-            onSelectPreset={onSelectPreset}
-            isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
-            isLoadingPresets={isLoadingPresets}
+          <DynamicBackgroundGrid
+            vibrantBackgrounds={vibrantBackgrounds}
+            subtleBackgrounds={subtleBackgrounds}
+            selectedId={selectedBackgroundId}
+            disabled={!hasBackgrounds}
+            onSelect={handleBackgroundSelect}
+            isLoading={isLoading || (!hasBackgrounds && hasScreenshot)}
           />
         </div>
       </div>
@@ -167,33 +141,26 @@ export function GradientPicker({
   );
 }
 
-interface ScreenshotGradientsProps {
-  gradients: CustomGradient[];
-  presets: PresetBackground[];
-  activeGradient?: CustomGradient;
-  selectedPresetId?: string | null;
+interface DynamicBackgroundGridProps {
+  vibrantBackgrounds: DynamicBackground[];
+  subtleBackgrounds: DynamicBackground[];
+  selectedId?: string | null;
   disabled: boolean;
-  onSelect: (gradient: CustomGradient) => void;
-  onSelectPreset?: (background: PresetBackground) => void;
+  onSelect: (background: DynamicBackground) => void;
   isLoading?: boolean;
-  isLoadingPresets?: boolean;
 }
 
-function ScreenshotGradients({
-  gradients,
-  presets,
-  activeGradient,
-  selectedPresetId,
+function DynamicBackgroundGrid({
+  vibrantBackgrounds,
+  subtleBackgrounds,
+  selectedId,
   disabled,
   onSelect,
-  onSelectPreset,
   isLoading,
-  isLoadingPresets,
-}: ScreenshotGradientsProps) {
-  const presetSwatches = presets.filter((preset) => preset.previewUrl).slice(0, 4);
-  const hasPresetSwatches = presetSwatches.length > 0;
+}: DynamicBackgroundGridProps) {
+  const hasBackgrounds = vibrantBackgrounds.length > 0 || subtleBackgrounds.length > 0;
 
-  if (!gradients.length && !hasPresetSwatches && !isLoading && !isLoadingPresets) {
+  if (!hasBackgrounds && !isLoading) {
     return (
       <div className="rounded-lg border border-dashed border-border/40 bg-background/50 px-3 py-6 text-center text-xs text-muted-foreground">
         Upload a screenshot to reveal curated gradients.
@@ -203,37 +170,36 @@ function ScreenshotGradients({
 
   return (
     <div className="space-y-3">
+      {/* Vibrant row */}
       <div className="grid grid-cols-4 gap-3">
         {isLoading
           ? Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
+              <Skeleton key={`skeleton-vibrant-${index}`} className="h-12 w-full rounded-lg" />
             ))
-          : gradients.map((gradient, index) => {
-              const isSelected = areGradientsEqual(activeGradient, gradient);
-              return (
-                <GradientSwatch
-                  key={`gradient-${index}`}
-                  gradientCss={customGradientToCss(gradient)}
-                  selected={isSelected}
-                  onClick={() => !disabled && onSelect(gradient)}
-                  ariaLabel="Screenshot gradient"
-                />
-              );
-            })}
+          : vibrantBackgrounds.map((bg) => (
+              <GradientSwatch
+                key={bg.id}
+                gradientCss={customGradientToCss(bg.gradient)}
+                selected={selectedId === bg.id}
+                onClick={() => !disabled && onSelect(bg)}
+                ariaLabel={bg.name}
+              />
+            ))}
       </div>
 
+      {/* Subtle row */}
       <div className="grid grid-cols-4 gap-3">
-        {isLoadingPresets
+        {isLoading
           ? Array.from({ length: 4 }).map((_, index) => (
-              <Skeleton key={`preset-skeleton-${index}`} className="h-12 w-full rounded-lg" />
+              <Skeleton key={`skeleton-subtle-${index}`} className="h-12 w-full rounded-lg" />
             ))
-          : presetSwatches.map((preset) => (
+          : subtleBackgrounds.map((bg) => (
               <GradientSwatch
-                key={`preset-${preset.id}`}
-                gradientCss={`url(${preset.previewUrl}) center / cover no-repeat`}
-                selected={selectedPresetId === preset.id}
-                onClick={() => onSelectPreset?.(preset)}
-                ariaLabel={preset.name ?? "Preset background"}
+                key={bg.id}
+                gradientCss={customGradientToCss(bg.gradient)}
+                selected={selectedId === bg.id}
+                onClick={() => !disabled && onSelect(bg)}
+                ariaLabel={bg.name}
               />
             ))}
       </div>
@@ -267,50 +233,4 @@ function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientS
       <span className="sr-only">Gradient swatch</span>
     </Button>
   );
-}
-
-function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
-  if (!a || !b) return false;
-
-  // Compare legacy gradients
-  if (isLegacyGradient(a) && isLegacyGradient(b)) {
-    // Compare colors only - ignore direction since users can adjust angle after selection
-    return a.from === b.from && a.to === b.to;
-  }
-
-  // Compare advanced gradients
-  if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
-    if (a.stops.length !== b.stops.length) return false;
-    if (a.type !== b.type) return false;
-    // Compare stops by colors and positions - ignore angle since it's user-adjustable
-    return a.stops.every((stop, i) => {
-      const otherStop = b.stops[i];
-      if (!otherStop) return false;
-      const colorMatch = stop.color === otherStop.color;
-      const positionMatch =
-        stop.position === otherStop.position ||
-        Math.abs((stop.position ?? 0) - (otherStop.position ?? 0)) < 0.1;
-      return colorMatch && positionMatch;
-    });
-  }
-
-  // Different types are not equal
-  return false;
-}
-
-function getTextColorFromGradient(gradient: CustomGradient): ColorToken {
-  const palette: string[] = [];
-  if (isAdvancedGradient(gradient)) {
-    gradient.stops.forEach((stop) => {
-      if (stop?.color) {
-        palette.push(stop.color);
-      }
-    });
-  } else if (isLegacyGradient(gradient)) {
-    palette.push(gradient.from, gradient.to);
-  }
-  if (palette.length === 0) {
-    palette.push("#000000");
-  }
-  return getContrastTextColor(palette);
 }

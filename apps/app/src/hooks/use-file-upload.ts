@@ -22,11 +22,7 @@ const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 
 export interface UseFileUploadOptions {
   onScreenshotUploaded?: (asset: Asset, aspectCategory?: AspectCategory) => Promise<void>;
-  processColorAnalysis?: (
-    dataUrl: string,
-    assetId: string,
-    autoLayoutMessage: string | null,
-  ) => Promise<void>;
+  processColorAnalysis?: (dataUrl: string, assetId: string) => Promise<void>;
 }
 
 export function useFileUpload({
@@ -123,7 +119,6 @@ export function useFileUpload({
         }
 
         setConfig((currentConfig) => {
-          const grainEnabled = currentConfig.background?.grainEnabled ?? true;
           const newConfig = {
             ...currentConfig,
             assets: {
@@ -136,9 +131,6 @@ export function useFileUpload({
             newConfig.background = {
               type: "image",
               value: asset.id,
-              grainEnabled: true,
-              patternMode: "manual",
-              patternId: "grain",
             };
           }
 
@@ -150,8 +142,6 @@ export function useFileUpload({
               background: {
                 type: "solid",
                 value: "slate-100",
-                grainEnabled,
-                patternMode: "auto",
               },
             };
           }
@@ -206,7 +196,7 @@ export function useFileUpload({
         }
 
         if (kind === "screenshot" && processColorAnalysis) {
-          await processColorAnalysis(asset.url, asset.id, null);
+          await processColorAnalysis(asset.url, asset.id);
         }
 
         // Auto-expand relevant sections after upload
