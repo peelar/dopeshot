@@ -188,7 +188,7 @@ export function MobileActions({
               />
             </div>
             <div className="mt-4 h-[calc(100%-48px)] overflow-y-auto">
-              <LayoutConfigPanel onUploadAsset={onUploadAsset} />
+              <LayoutConfigPanel onUploadAsset={onUploadAsset} isMobile={true} />
             </div>
           </SheetContent>
         </Sheet>

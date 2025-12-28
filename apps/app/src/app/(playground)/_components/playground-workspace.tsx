@@ -6,6 +6,7 @@ import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
+import { BackgroundSection } from "@/components/sidebar/background-section";
 import {
   screenshotZoomAtom,
   configAtom,
@@ -213,6 +214,15 @@ export function PlaygroundWorkspace({
         >
           <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
         </div>
+
+        {/* Mobile-only background selector */}
+        {isMobile && (
+          <div className="relative z-10 px-2">
+            <div className="mx-auto max-w-md">
+              <BackgroundSection />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
