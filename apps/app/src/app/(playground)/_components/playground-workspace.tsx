@@ -204,7 +204,7 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative z-10 flex flex-col gap-3">
+        <div className="relative z-10 flex flex-col gap-1">
           <div
             style={
               bottomWhitespace
