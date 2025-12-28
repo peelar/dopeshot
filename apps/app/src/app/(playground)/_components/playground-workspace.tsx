@@ -217,10 +217,8 @@ export function PlaygroundWorkspace({
 
         {/* Mobile-only background selector */}
         {isMobile && (
-          <div className="relative z-10 px-2">
-            <div className="mx-auto max-w-md">
-              <BackgroundSection />
-            </div>
+          <div className="relative z-10 -mt-2">
+            <BackgroundSection />
           </div>
         )}
       </div>
