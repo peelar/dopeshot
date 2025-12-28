@@ -204,23 +204,20 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div
-          className="relative z-10"
-          style={
-            bottomWhitespace
-              ? { transform: `translateY(-${bottomWhitespace}px)` }
-              : undefined
-          }
-        >
-          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
-        </div>
-
-        {/* Mobile-only background selector */}
-        {isMobile && (
-          <div className="relative z-10 -mt-2">
-            <BackgroundSection variant="inline" />
+        <div className="relative z-10 flex flex-col gap-3">
+          <div
+            style={
+              bottomWhitespace
+                ? { transform: `translateY(-${bottomWhitespace}px)` }
+                : undefined
+            }
+          >
+            <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
           </div>
-        )}
+
+          {/* Mobile-only background selector */}
+          {isMobile && <BackgroundSection variant="inline" />}
+        </div>
       </div>
     </div>
   );
