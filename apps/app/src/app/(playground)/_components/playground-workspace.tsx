@@ -218,7 +218,7 @@ export function PlaygroundWorkspace({
         {/* Mobile-only background selector */}
         {isMobile && (
           <div className="relative z-10 -mt-2">
-            <BackgroundSection />
+            <BackgroundSection variant="inline" />
           </div>
         )}
       </div>

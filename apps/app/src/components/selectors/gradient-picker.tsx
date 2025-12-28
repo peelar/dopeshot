@@ -20,9 +20,10 @@ import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 
 interface GradientPickerProps {
   onChangeAction: (background: BackgroundConfig, textColor: ColorToken) => void;
+  variant?: "default" | "inline";
 }
 
-export function GradientPicker({ onChangeAction }: GradientPickerProps) {
+export function GradientPicker({ onChangeAction, variant = "default" }: GradientPickerProps) {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
@@ -130,6 +131,18 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
     },
     [onChangeAction],
   );
+
+  if (variant === "inline") {
+    return (
+      <ScreenshotGradients
+        gradients={displayGradients}
+        activeGradient={background.customGradient}
+        disabled={!hasScreenshotGradients}
+        onSelect={handleScreenshotSelect}
+        isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
+      />
+    );
+  }
 
   return (
     <div className="space-y-5">

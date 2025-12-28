@@ -9,7 +9,11 @@ import { GradientPicker } from "@/components/selectors/gradient-picker";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import { clearBackgroundSelection } from "@/domain/backgrounds/background-service";
 
-export function BackgroundSection() {
+interface BackgroundSectionProps {
+  variant?: "default" | "inline";
+}
+
+export function BackgroundSection({ variant = "default" }: BackgroundSectionProps = {}) {
   const { data: session } = useSession();
   const setConfig = useSetAtom(configAtom);
   const [selection, setSelection] = useAtom(backgroundSelectionAtom);
@@ -51,6 +55,10 @@ export function BackgroundSection() {
     },
     [selection, setConfig, setSelection],
   );
+
+  if (variant === "inline") {
+    return <GradientPicker onChangeAction={handleGradientChange} variant="inline" />;
+  }
 
   return (
     <div className="flex flex-col gap-4 pt-2">
