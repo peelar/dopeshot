@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
 
     // Send email via Resend
     const emailResult = await resend.emails.send({
-      from: "DopeShot Feedback <feedback@dopeshot.io>",
+      from: "dopeshot Feedback <feedback@dopeshot.io>",
       to: FEEDBACK_RECIPIENT,
       subject: `New Feedback: ${message.slice(0, 50)}${message.length > 50 ? "..." : ""}`,
       html: emailHtml,
@@ -285,7 +285,7 @@ function buildFeedbackEmailHtml(context: {
   </div>
 
   <div class="footer">
-    Sent from DopeShot Feedback System
+    Sent from dopeshot Feedback System
   </div>
 </body>
 </html>

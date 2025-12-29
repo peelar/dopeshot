@@ -126,7 +126,7 @@ export function FeedbackModal({
             Share Your Feedback
           </DialogTitle>
           <DialogDescription className="text-center text-sm mt-1.5">
-            Help us improve DopeShot for you
+            Help us improve dopeshot for you
           </DialogDescription>
         </DialogHeader>
 
@@ -147,7 +147,7 @@ export function FeedbackModal({
             {/* Feedback textarea */}
             <div className="space-y-2">
               <Label htmlFor="feedback-message">
-                What are you trying to do, and what would make DopeShot better
+                What are you trying to do, and what would make dopeshot better
                 for you?
               </Label>
               <Textarea

@@ -63,20 +63,6 @@ export function AppHeader({
             <span>{uploadButtonLabel}</span>
           </Button>
         ) : null}
-        {canExport ? (
-          <Button
-            size="sm"
-            variant="default"
-            className="flex items-center gap-2 shadow-none"
-            onClick={onExport}
-            disabled={isExporting}
-            aria-busy={isExporting}
-            aria-label={isExporting ? "Exporting image" : "Export as PNG"}
-          >
-            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            {isExporting ? "Exporting..." : "Export PNG"}
-          </Button>
-        ) : null}
         {onBrandClick ? (
           <Button
             variant="ghost"
@@ -98,10 +84,24 @@ export function AppHeader({
               onFeedbackClick();
               track("feedback_button_clicked");
             }}
-            className="text-foreground hover:bg-muted hover:text-foreground"
+            className="text-xs text-muted-foreground hover:text-foreground"
             aria-label="Open feedback modal"
           >
-            <span>Feedback</span>
+            feedback
+          </Button>
+        ) : null}
+        {canExport ? (
+          <Button
+            size="sm"
+            variant="default"
+            className="flex items-center gap-2 shadow-none"
+            onClick={onExport}
+            disabled={isExporting}
+            aria-busy={isExporting}
+            aria-label={isExporting ? "Exporting image" : "Export as PNG"}
+          >
+            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
         {process.env.NODE_ENV === "development" && <ThemeToggle />}

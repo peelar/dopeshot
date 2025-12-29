@@ -26,7 +26,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
     expect(screen.getByText("Share Your Feedback")).toBeInTheDocument();
     expect(
-      screen.getByText("Help us improve DopeShot for you")
+      screen.getByText("Help us improve dopeshot for you")
     ).toBeInTheDocument();
   });
 
@@ -39,7 +39,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
     expect(
       screen.getByLabelText(
-        /What are you trying to do, and what would make DopeShot better for you/i
+        /What are you trying to do, and what would make dopeshot better for you/i
       )
     ).toBeInTheDocument();
   });
@@ -84,7 +84,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "This is my feedback" } });
 
@@ -103,7 +103,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} onOpenChange={onOpenChange} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
@@ -130,7 +130,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
@@ -152,7 +152,7 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
@@ -186,7 +186,7 @@ describe("FeedbackModal", () => {
     );
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
@@ -222,7 +222,7 @@ describe("FeedbackModal", () => {
     rerender(<FeedbackModal {...defaultProps} open={true} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
 
     // Form should be empty

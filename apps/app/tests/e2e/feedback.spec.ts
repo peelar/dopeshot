@@ -23,7 +23,7 @@ test.describe("Feedback Feature", () => {
     // Modal should open
     await expect(page.getByText("Share Your Feedback")).toBeVisible();
     await expect(
-      page.getByText("Help us improve DopeShot for you")
+      page.getByText("Help us improve dopeshot for you")
     ).toBeVisible();
   });
 
@@ -37,7 +37,7 @@ test.describe("Feedback Feature", () => {
     // Check form elements
     await expect(
       page.getByLabel(
-        /What are you trying to do, and what would make DopeShot better for you/i
+        /What are you trying to do, and what would make dopeshot better for you/i
       )
     ).toBeVisible();
     await expect(page.getByLabel(/Email/i)).toBeVisible();
@@ -83,7 +83,7 @@ test.describe("Feedback Feature", () => {
 
     // Type feedback
     const textarea = page.getByLabel(
-      /What are you trying to do, and what would make DopeShot better for you/i
+      /What are you trying to do, and what would make dopeshot better for you/i
     );
     await textarea.fill("This is my test feedback");
 
@@ -129,7 +129,7 @@ test.describe("Feedback Feature", () => {
     // Fill in feedback
     await page
       .getByLabel(
-        /What are you trying to do, and what would make DopeShot better for you/i
+        /What are you trying to do, and what would make dopeshot better for you/i
       )
       .fill("Great app!");
 
@@ -164,7 +164,7 @@ test.describe("Feedback Feature", () => {
     // Fill in feedback
     await page
       .getByLabel(
-        /What are you trying to do, and what would make DopeShot better for you/i
+        /What are you trying to do, and what would make dopeshot better for you/i
       )
       .fill("Test error handling");
 
@@ -206,7 +206,7 @@ test.describe("Feedback Feature", () => {
     // Can interact with form
     await page
       .getByLabel(
-        /What are you trying to do, and what would make DopeShot better for you/i
+        /What are you trying to do, and what would make dopeshot better for you/i
       )
       .fill("Mobile feedback test");
 
