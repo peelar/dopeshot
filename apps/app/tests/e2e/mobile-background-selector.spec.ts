@@ -11,7 +11,8 @@ test.describe('Mobile Background Selector Layout', () => {
 
     // Find the gradient tiles in the sticky bottom container (not the one in the Design sheet)
     // The sticky container has position fixed
-    const gradientGrid = page.locator('[class*="fixed"][class*="bottom"] div.grid.grid-cols-4');
+    // We now have 6 gradients in a 3-column grid (3x2 layout)
+    const gradientGrid = page.locator('[class*="fixed"][class*="bottom"] div.grid.grid-cols-3');
     await expect(gradientGrid).toBeVisible();
 
     // Find the Design button in mobile menu
@@ -30,8 +31,9 @@ test.describe('Mobile Background Selector Layout', () => {
       expect(gradientBox.y + gradientBox.height).toBeLessThanOrEqual(designButtonBox.y);
 
       // Check that both are near the bottom of the viewport
-      // The gradient container should be within the bottom 150px of viewport
-      expect(gradientBox.y).toBeGreaterThan(667 - 150);
+      // The gradient container has 2 rows now (6 gradients in 3x2), so it needs more space
+      // It should be within the bottom 200px of viewport
+      expect(gradientBox.y).toBeGreaterThan(667 - 200);
 
       console.log(`Gradient bottom: ${gradientBox.y + gradientBox.height}px`);
       console.log(`Design button top: ${designButtonBox.y}px`);
