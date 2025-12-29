@@ -10,8 +10,7 @@ test.describe('Screenshot Scaling and Zoom', () => {
     // 1. Upload large screenshot FIRST
     // We upload first because uploading might trigger an auto-layout recommendation
     // that switches us away from Backdrop. We want to be in Backdrop eventually.
-    // Use the main file input which is a direct child of main
-    const fileInput = page.locator('main > input[type="file"]');
+    const fileInput = page.locator('input[type="file"]').first();
     await fileInput.setInputFiles(SCREENSHOT_PATH);
     
     // Wait for image to load

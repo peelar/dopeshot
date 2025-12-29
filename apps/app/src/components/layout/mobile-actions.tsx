@@ -9,6 +9,7 @@ import {
   type TransitionEvent,
 } from "react";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
+import { BackgroundSection } from "@/components/sidebar/background-section";
 import {
   Sheet,
   SheetContent,
@@ -138,8 +139,17 @@ export function MobileActions({
   }, []);
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
-      <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
+    <>
+      {/* Background selector - positioned just above the bottom menu */}
+      <div className="fixed bottom-[64px] left-0 right-0 z-40 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
+        <div className="mx-auto w-full max-w-5xl px-3 py-2">
+          <BackgroundSection variant="inline" />
+        </div>
+      </div>
+
+      {/* Bottom action buttons */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
         <Sheet open={isOpen} onOpenChange={onOpenChange}>
           <SheetTrigger asChild>
             <Button
@@ -188,7 +198,7 @@ export function MobileActions({
               />
             </div>
             <div className="mt-4 h-[calc(100%-48px)] overflow-y-auto">
-              <LayoutConfigPanel onUploadAsset={onUploadAsset} />
+              <LayoutConfigPanel onUploadAsset={onUploadAsset} isMobile={true} />
             </div>
           </SheetContent>
         </Sheet>
@@ -206,7 +216,8 @@ export function MobileActions({
             <span className="text-sm font-semibold">{isProcessingUpload ? "Uploading..." : "Upload"}</span>
           </Button>
         ) : null}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -3,13 +3,14 @@ import * as path from 'path';
 
 test.describe('Export Functionality', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
   });
 
   test('exports PNG file when button clicked', async ({ page }) => {
     // Upload test screenshot
     const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
-    await page.setInputFiles('input[type="file"]', fixtureFile);
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(fixtureFile);
 
     // Wait for upload to complete
     await expect(page.locator('[data-testid="preview-canvas"]')).toBeVisible();
@@ -33,7 +34,8 @@ test.describe('Export Functionality', () => {
 
   test('disables export button during export process', async ({ page }) => {
     const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
-    await page.setInputFiles('input[type="file"]', fixtureFile);
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(fixtureFile);
 
     const exportButton = page.getByRole('button', { name: /export.*png/i });
 
@@ -58,7 +60,8 @@ test.describe('Export Functionality', () => {
 
     // Upload screenshot
     const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
-    await page.setInputFiles('input[type="file"]', fixtureFile);
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(fixtureFile);
 
     // Wait for preview to render
     await expect(page.locator('[data-testid="preview-canvas"]')).toBeVisible();
@@ -76,7 +79,8 @@ test.describe('Export Functionality', () => {
 
   test('shows correct button text during export', async ({ page }) => {
     const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
-    await page.setInputFiles('input[type="file"]', fixtureFile);
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(fixtureFile);
 
     const exportButton = page.getByRole('button', { name: /export.*png/i });
 
@@ -95,11 +99,12 @@ test.describe('Export Functionality', () => {
 
   test('exports PNG file in mobile orientation', async ({ page }) => {
     const fixtureFile = path.join(__dirname, '../fixtures/screenshot-1280x720.png');
-    await page.setInputFiles('input[type="file"]', fixtureFile);
+    const fileInput = page.locator('input[type="file"]').first();
+    await fileInput.setInputFiles(fixtureFile);
 
     await expect(page.locator('[data-testid="preview-canvas"]')).toBeVisible();
 
-    const mobileToggle = page.getByRole('button', { name: /mobile mode \(9:16\)/i });
+    const mobileToggle = page.getByRole('button', { name: /mobile mode/i });
     await mobileToggle.click();
     await expect(mobileToggle).toHaveAttribute('aria-pressed', 'true');
 

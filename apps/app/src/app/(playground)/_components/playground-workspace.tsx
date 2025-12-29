@@ -34,7 +34,6 @@ import { Button } from "@/components/ui/button";
  */
 
 interface PlaygroundWorkspaceProps {
-  isMobile: boolean;
   shouldShowAspectLock: boolean;
   isAspectLocked: boolean;
   onToggleAspect: () => void;
@@ -45,7 +44,6 @@ interface PlaygroundWorkspaceProps {
 }
 
 export function PlaygroundWorkspace({
-  isMobile,
   shouldShowAspectLock,
   isAspectLocked,
   onToggleAspect,
@@ -127,7 +125,7 @@ export function PlaygroundWorkspace({
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
-        <div className="relative z-10 flex flex-shrink-0 items-center justify-center">
+        <div className="relative z-10 flex shrink-0 items-center justify-center">
           {/* Tiny icon-only orientation toggle - centered against screenshot */}
           <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
               <Button
@@ -152,7 +150,7 @@ export function PlaygroundWorkspace({
                 size="icon-sm"
                 onClick={() => handleOrientationChange("mobile")}
                 aria-pressed={orientation === "mobile"}
-                aria-label="Mobile mode (9:16)"
+                aria-label="Mobile mode"
                 className={cn(
                   "h-7 w-7 rounded transition-colors",
                   orientation === "mobile"
@@ -179,13 +177,16 @@ export function PlaygroundWorkspace({
                   : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
               )}
             >
-              {isAspectLocked ? "Locked · 16:9" : "Lock to 16:9"}
+              {isAspectLocked 
+                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}` 
+                : `Lock to ${orientation === "mobile" ? "Mobile" : "16:9"}`}
             </Button>
           ) : null}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 w-full justify-center">
+        <div className="relative flex min-h-0 flex-1 w-full justify-center items-center">
           <PreviewViewport
+            className={orientation === "mobile" ? "max-h-[85%]" : undefined}
             surfaceWidth={canvasWidth}
             surfaceHeight={canvasHeight}
             isLoading={isAnalyzingColors}
@@ -203,15 +204,16 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div
-          className="relative z-10"
-          style={
-            bottomWhitespace
-              ? { transform: `translateY(-${bottomWhitespace}px)` }
-              : undefined
-          }
-        >
-          <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
+        <div className="relative z-10">
+          <div
+            style={
+              bottomWhitespace
+                ? { transform: `translateY(-${bottomWhitespace}px)` }
+                : undefined
+            }
+          >
+            <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
+          </div>
         </div>
       </div>
     </div>

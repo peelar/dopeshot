@@ -17,9 +17,10 @@ import { EffectsSection } from "@/components/sidebar/effects-section";
 
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  isMobile?: boolean;
 }
 
-export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
@@ -85,12 +86,15 @@ export const LayoutConfigPanel = ({ onUploadAsset }: LayoutConfigProps) => {
           <EffectsSection />
         </section>
 
-        <section className="space-y-3 px-4">
-          <div className="flex w-full items-center justify-between">
-            <span className="text-sm font-semibold">Background</span>
-          </div>
-          <BackgroundSection />
-        </section>
+        {/* Hide background section on mobile - now shown inline beneath canvas */}
+        {!isMobile && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Background</span>
+            </div>
+            <BackgroundSection />
+          </section>
+        )}
 
         <section className="space-y-3 px-4">
           <div className="flex w-full items-center justify-between">
