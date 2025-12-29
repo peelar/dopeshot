@@ -48,6 +48,20 @@ export function AppHeader({
         <Logo />
       </a>
       <div className="flex items-center gap-3">
+        {onFeedbackClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onFeedbackClick();
+              track("feedback_button_clicked");
+            }}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Open feedback modal"
+          >
+            Feedback
+          </Button>
+        ) : null}
         {showUploadButton ? (
           <Button
             type="button"
@@ -74,20 +88,6 @@ export function AppHeader({
             className="text-foreground hover:bg-muted hover:text-foreground"
           >
             <span className="hidden md:inline">Brand</span>
-          </Button>
-        ) : null}
-        {onFeedbackClick ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onFeedbackClick();
-              track("feedback_button_clicked");
-            }}
-            className="text-xs text-muted-foreground hover:text-foreground"
-            aria-label="Open feedback modal"
-          >
-            feedback
           </Button>
         ) : null}
         {canExport ? (
