@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
@@ -20,6 +20,7 @@ import {
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 
 /**
  * PlaygroundWorkspace
@@ -57,8 +58,26 @@ export function PlaygroundWorkspace({
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
+  const isMobile = useMobileDetection();
+  const hasAutoSetOrientation = useRef(false);
 
   const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+
+  // Set mobile as default orientation on mobile devices
+  useEffect(() => {
+    // Only auto-set once, and only if we're on mobile with desktop orientation
+    if (hasAutoSetOrientation.current) return;
+    if (!isMobile) return;
+    if (orientation !== "desktop") return;
+
+    setOrientation("mobile");
+    hasAutoSetOrientation.current = true;
+
+    track("orientation_auto_set", {
+      orientation: "mobile",
+      reason: "mobile_device_detected",
+    });
+  }, [isMobile, orientation, setOrientation]);
 
   const handleViewportMetricsChange = useCallback(
     (metrics: { bottomWhitespace: number }) => {
@@ -127,40 +146,80 @@ export function PlaygroundWorkspace({
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex shrink-0 items-center justify-center">
           {/* Tiny icon-only orientation toggle - centered against screenshot */}
+          {/* On mobile: vertical first, then horizontal. On desktop: horizontal first, then vertical */}
           <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleOrientationChange("desktop")}
-                aria-pressed={orientation === "desktop"}
-                aria-label="Desktop mode (16:9)"
-                className={cn(
-                  "h-7 w-7 rounded transition-colors",
-                  orientation === "desktop"
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Monitor className="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => handleOrientationChange("mobile")}
-                aria-pressed={orientation === "mobile"}
-                aria-label="Mobile mode"
-                className={cn(
-                  "h-7 w-7 rounded transition-colors",
-                  orientation === "mobile"
-                    ? "bg-foreground text-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                <Smartphone className="h-3.5 w-3.5" />
-              </Button>
-            </div>
+            {isMobile ? (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleOrientationChange("mobile")}
+                  aria-pressed={orientation === "mobile"}
+                  aria-label="Mobile mode (9:16)"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    orientation === "mobile"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleOrientationChange("desktop")}
+                  aria-pressed={orientation === "desktop"}
+                  aria-label="Desktop mode (16:9)"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    orientation === "desktop"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Monitor className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleOrientationChange("desktop")}
+                  aria-pressed={orientation === "desktop"}
+                  aria-label="Desktop mode (16:9)"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    orientation === "desktop"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Monitor className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handleOrientationChange("mobile")}
+                  aria-pressed={orientation === "mobile"}
+                  aria-label="Mobile mode (9:16)"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    orientation === "mobile"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Smartphone className="h-3.5 w-3.5" />
+                </Button>
+              </>
+            )}
+          </div>
 
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
