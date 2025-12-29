@@ -172,10 +172,10 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-3 gap-3 w-[75%]">
       {isLoading
         ? Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={`skeleton-${index}`} className="h-9 w-full rounded-md" />
+            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-md" />
           ))
         : gradients.map((gradient, index) => {
             const isSelected = areGradientsEqual(activeGradient, gradient);
@@ -209,7 +209,7 @@ function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientS
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        "group relative flex h-9 w-full items-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
+        "group relative flex h-12 w-full items-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
         selected
           ? "shadow-sm ring-2 ring-foreground/50 ring-offset-1 ring-offset-background"
           : "ring-1 ring-white/15",

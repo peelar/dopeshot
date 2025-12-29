@@ -315,31 +315,66 @@ function generateMeshGradient(
 ): AdvancedGradient {
   const colors = getPaletteColorPool(enhanced);
 
-  // Create 3-4 mesh layers with varied positions and sizes
-  // Positions are offset to create visual interest and organic flow
+  // For monochromatic palettes, generate additional colors using color theory
+  const isMonochromatic = isPoolMonochromatic(colors);
+  let meshColors = [...colors];
+
+  if (isMonochromatic && colors.length > 0) {
+    const baseColor = colors[0];
+    // Generate harmonious colors for a richer mesh
+    meshColors = [
+      baseColor,
+      generateHarmonyColor(baseColor, "complementary"),
+      generateHarmonyColor(baseColor, "triadic", 0),
+      generateHarmonyColor(baseColor, "split-complementary", 0),
+      enhanceColor(baseColor, { lightnessShift: -0.2, saturationBoost: 0.15 }),
+    ];
+  } else if (colors.length < 5) {
+    // Enhance existing colors to create more variety
+    const additionalColors = colors.map((color, i) =>
+      enhanceColor(color, {
+        saturationBoost: i % 2 === 0 ? 0.15 : -0.1,
+        lightnessShift: i % 2 === 0 ? 0.1 : -0.1,
+      }),
+    );
+    meshColors = [...colors, ...additionalColors].slice(0, 6);
+  }
+
+  // Create 5-6 mesh layers with varied positions and sizes for rich depth
+  // Positions are strategically placed to create visual interest and organic flow
   const meshLayers: MeshLayer[] = [
     {
-      color: hexToRgba(colors[0], 0.85), // Primary - top left quadrant
-      position: { x: 20, y: 25 },
-      size: 75,
-    },
-    {
-      color: hexToRgba(colors[1] || colors[0], 0.7), // Secondary - bottom right
-      position: { x: 80, y: 75 },
+      color: hexToRgba(meshColors[0], 0.8), // Primary - top left
+      position: { x: 15, y: 20 },
       size: 70,
     },
     {
-      color: hexToRgba(colors[2] || colors[1] || colors[0], 0.6), // Tertiary - center-bottom
-      position: { x: 50, y: 60 },
-      size: 85,
+      color: hexToRgba(meshColors[1] || meshColors[0], 0.75), // Secondary - bottom right
+      position: { x: 85, y: 80 },
+      size: 75,
+    },
+    {
+      color: hexToRgba(meshColors[2] || meshColors[1] || meshColors[0], 0.65), // Tertiary - center
+      position: { x: 50, y: 50 },
+      size: 90,
+    },
+    {
+      color: hexToRgba(meshColors[3] || meshColors[0], 0.6), // Quaternary - top right
+      position: { x: 80, y: 25 },
+      size: 65,
+    },
+    {
+      color: hexToRgba(meshColors[4] || meshColors[1] || meshColors[0], 0.55), // Quinary - bottom left
+      position: { x: 20, y: 75 },
+      size: 60,
     },
   ];
 
-  // Add fourth layer for richer palettes (top-right accent)
-  if (colors.length >= 3) {
+  // Add sixth layer for maximum richness (center-top accent)
+  if (meshColors.length >= 5) {
     meshLayers.push({
-      color: hexToRgba(colors[2], 0.5),
-      position: { x: 85, y: 20 },
+      color: hexToRgba(meshColors[5] || meshColors[2], 0.5),
+      position: { x: 45, y: 30 },
       size: 55,
     });
   }
@@ -347,8 +382,8 @@ function generateMeshGradient(
   return {
     type: "linear", // Type is used for fallback; mesh renders via meshLayers
     stops: [
-      { color: colors[0], position: 0 },
-      { color: colors[1] || colors[0], position: 100 },
+      { color: meshColors[0], position: 0 },
+      { color: meshColors[1] || meshColors[0], position: 100 },
     ],
     meshLayers,
     colorSpace: "oklch",
