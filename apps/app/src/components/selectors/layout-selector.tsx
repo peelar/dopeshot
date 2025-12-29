@@ -265,13 +265,33 @@ function LayoutSketch({
   }
 
   if (isSpotlightLayout) {
-    // Spotlight: centered screenshot with text overlay or above
+    // Spotlight: side-by-side with text on one side and screenshot on the other
+    const isLeft = variant === "left";
+    const showText = !isMobile;
+    
     return (
-      <div className="flex h-full w-full flex-col items-center justify-center bg-stone-100 p-2 dark:bg-stone-800">
-        <div className="mb-1.5 flex h-3 w-full items-center justify-center">
-          <div className="h-2 w-20 rounded bg-stone-400 dark:bg-stone-500" />
-        </div>
-        <div className="h-3/4 w-4/5 rounded bg-stone-300 dark:bg-stone-700" />
+      <div className="flex h-full w-full bg-stone-100 p-2 dark:bg-stone-800">
+        {isLeft && (
+          <div className="mr-1 flex w-1/3 flex-col justify-center">
+            {showText && (
+              <>
+                <div className="mb-1 h-2 w-full rounded bg-stone-400 dark:bg-stone-500" />
+                <div className="h-1.5 w-3/4 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+              </>
+            )}
+          </div>
+        )}
+        <div className={cn("flex-1 rounded bg-stone-300 dark:bg-stone-700", !isLeft && "ml-1")} />
+        {!isLeft && (
+          <div className="ml-1 flex w-1/3 flex-col items-end justify-center">
+            {showText && (
+              <>
+                <div className="mb-1 h-2 w-full rounded bg-stone-400 dark:bg-stone-500" />
+                <div className="h-1.5 w-3/4 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+              </>
+            )}
+          </div>
+        )}
       </div>
     );
   }

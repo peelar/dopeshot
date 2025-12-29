@@ -99,7 +99,7 @@ test.describe('Export Functionality', () => {
 
     await expect(page.locator('[data-testid="preview-canvas"]')).toBeVisible();
 
-    const mobileToggle = page.getByRole('button', { name: /mobile mode \(9:16\)/i });
+    const mobileToggle = page.getByRole('button', { name: /mobile mode \(2:3\)/i });
     await mobileToggle.click();
     await expect(mobileToggle).toHaveAttribute('aria-pressed', 'true');
 

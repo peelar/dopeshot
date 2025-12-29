@@ -144,7 +144,6 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
 
           <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
             <PlaygroundWorkspace
-              isMobile={isMobile}
               shouldShowAspectLock={shouldShowAspectLock}
               isAspectLocked={isAspectLocked}
               onToggleAspect={toggleCanvasMode}

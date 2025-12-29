@@ -9,13 +9,13 @@ const BASE_CANVAS_WIDTH = 1280;
 // Preview dimensions - optimized for UI preview performance and text readability
 export const ORIENTATION_DIMENSIONS = {
   desktop: { width: 1280, height: 720 },  // 16:9
-  mobile: { width: 720, height: 1280 },   // 9:16
+  mobile: { width: 720, height: 1080 },   // 2:3
 } as const;
 
 // Export dimensions - full resolution for high-quality exports
 export const EXPORT_ORIENTATION_DIMENSIONS = {
   desktop: { width: 1920, height: 1080 },  // 16:9
-  mobile: { width: 1080, height: 1920 },   // 9:16
+  mobile: { width: 1080, height: 1620 },   // 2:3
 } as const;
 
 function isBlank(value?: string) {

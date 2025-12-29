@@ -56,9 +56,9 @@ describe('Export Utilities', () => {
       expect(dims).toEqual({ width: 1920, height: 1080 });
     });
 
-    it('returns 1080×1920 for mobile orientation', () => {
+    it('returns 1080×1620 for mobile orientation', () => {
       const dims = getExportDimensions('mobile');
-      expect(dims).toEqual({ width: 1080, height: 1920 });
+      expect(dims).toEqual({ width: 1080, height: 1620 });
     });
 
     it('maintains 16:9 aspect ratio for desktop', () => {
@@ -67,10 +67,10 @@ describe('Export Utilities', () => {
       expect(aspectRatio).toBeCloseTo(16 / 9, 5);
     });
 
-    it('maintains 9:16 aspect ratio for mobile', () => {
+    it('maintains 2:3 aspect ratio for mobile', () => {
       const dims = getExportDimensions('mobile');
       const aspectRatio = dims.width / dims.height;
-      expect(aspectRatio).toBeCloseTo(9 / 16, 5);
+      expect(aspectRatio).toBeCloseTo(2 / 3, 5);
     });
   });
 });
