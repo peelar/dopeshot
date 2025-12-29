@@ -230,6 +230,9 @@ function getPaletteColorPool(palette: EnhancedColorPalette): string[] {
  * Build color pairs for gradient generation.
  * When the palette is monochromatic (limited color variety), uses color theory
  * harmonies to generate visually distinct gradient options.
+ *
+ * Slots 1-3 are linear gradients and should each have DISTINCT color harmonies
+ * to ensure visual variety even with limited source colors.
  */
 function buildColorPairs(palette: EnhancedColorPalette, count: number): [string, string][] {
   const pool = getPaletteColorPool(palette);
@@ -242,15 +245,17 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
     // Use the hero color (most prominent/saturated) as the base
     const baseColor = palette.hero ?? pool[0];
 
-    // Generate 4 distinct gradient pairs using color theory harmonies
-    // Each pair uses a different harmony rule for maximum visual variety
+    // Generate distinct gradient pairs using color theory harmonies.
+    // ALL pairs use different hue rotations to ensure visual variety.
+    // This is crucial for dark/monochromatic screenshots where all gradients
+    // would otherwise look the same.
     for (let i = 0; i < count; i++) {
       switch (i) {
         case 0:
-          // Pair 0: Original color with slight lightness variation
+          // Pair 0: Analogous warm (30° hue rotation) - subtle but distinct shift
           pairs.push([
             baseColor,
-            enhanceColor(baseColor, { lightnessShift: -0.25 }),
+            generateHarmonyColor(baseColor, "analogous", 0),
           ]);
           break;
         case 1:
@@ -261,17 +266,17 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
           ]);
           break;
         case 2:
-          // Pair 2: Triadic (120° hue rotation) - vibrant contrast
-          pairs.push([
-            baseColor,
-            generateHarmonyColor(baseColor, "triadic", 0),
-          ]);
-          break;
-        case 3:
-          // Pair 3: Split-complementary (150° hue rotation) - sophisticated contrast
+          // Pair 2: Split-complementary (150° hue rotation) - sophisticated contrast
           pairs.push([
             baseColor,
             generateHarmonyColor(baseColor, "split-complementary", 0),
+          ]);
+          break;
+        case 3:
+          // Pair 3: Triadic (120° hue rotation) - vibrant contrast
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "triadic", 0),
           ]);
           break;
         default:
@@ -417,45 +422,47 @@ function generateMeshGradient(
 /**
  * Generate an ambient gradient from screenshot colors.
  * Creates "safe" gradients that always have two distinct colors.
- * Dark mode: accent color darkened → near-black (#0a0a0a)
- * Light mode: accent color lightened → off-white (#f5f5f5)
+ * Dark mode: accent color darkened → true black (#000000)
+ * Light mode: accent color lightened → pure white (#ffffff)
  */
 function generateAmbientGradient(
   enhanced: EnhancedColorPalette,
   mode: "dark" | "light",
 ): AdvancedGradient {
-  const accentColor = enhanced.hero ?? enhanced.accent ?? enhanced.dominant;
+  // For ambient gradients, prioritize the most vibrant/saturated color
+  // Use raw palette colors (vibrant > accent) before falling back to enhanced hero
+  const accentColor = enhanced.vibrant ?? enhanced.accent ?? enhanced.hero ?? enhanced.dominant;
 
   if (mode === "dark") {
-    // Darken accent significantly, ensure it stays distinct from near-black
+    // Dark ambient: mostly black with a subtle colored glow at the edge
+    // Keep accent very dark so transition from black is smooth
     const darkAccent = enhanceColor(accentColor, {
-      lightnessShift: -0.5, // Make much darker
-      saturationBoost: 0.15, // Preserve saturation to keep color visible
+      lightnessShift: -0.7, // Very dark, close to black but with color
+      saturationBoost: 0.4, // Higher saturation to make color visible despite darkness
     });
-    const { colorA, colorB } = enforceColorSeparation(darkAccent, "#0a0a0a", 0, 0.12);
 
     return {
       type: "linear",
       stops: [
-        { color: colorA, position: 0 },
-        { color: colorB, position: 100 },
+        { color: "#000000", position: 0 },
+        { color: darkAccent, position: 100 },
       ],
       angle: 135,
       colorSpace: "oklch",
     };
   } else {
-    // Lighten accent, ensure it stays distinct from off-white
+    // Light ambient: mostly white with a subtle colored tint at the edge
+    // Keep accent very light so transition from white is smooth
     const lightAccent = enhanceColor(accentColor, {
-      lightnessShift: 0.3, // Make lighter but keep some color
-      saturationBoost: 0.15, // Boost saturation to stay visible
+      lightnessShift: 0.6, // Very light, close to white but with color
+      saturationBoost: 0.3, // Higher saturation to make color visible despite lightness
     });
-    const { colorA, colorB } = enforceColorSeparation(lightAccent, "#f5f5f5", 0, 0.15);
 
     return {
       type: "linear",
       stops: [
-        { color: colorA, position: 0 },
-        { color: colorB, position: 100 },
+        { color: "#ffffff", position: 0 },
+        { color: lightAccent, position: 100 },
       ],
       angle: 135,
       colorSpace: "oklch",
