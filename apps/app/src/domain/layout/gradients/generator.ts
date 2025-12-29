@@ -7,6 +7,7 @@ import {
   enhanceColor,
   enforceColorSeparation,
   generateHarmonyColor,
+  generateNeonColor,
   isPoolMonochromatic,
 } from "./colors";
 import { hexToRgba } from "./utils";
@@ -305,9 +306,41 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
 }
 
 /**
+ * Generate a vibrant neon color palette for mesh gradients.
+ * Creates 6 electric, eye-catching colors spread across the color wheel.
+ * Each color is pushed to maximum saturation for a bold, neon aesthetic.
+ *
+ * @param baseColor - The primary color extracted from the screenshot
+ * @returns Array of 6 neon hex colors with wide hue distribution
+ */
+function generateNeonMeshPalette(baseColor: string): string[] {
+  // Hue offsets designed for maximum visual variety
+  // Spread across 240°+ of the color wheel for rainbow effect
+  const hueOffsets = [
+    0,    // Original hue (neon version)
+    180,  // Complementary (opposite on wheel)
+    60,   // Warm analogous
+    120,  // Triadic
+    -60,  // Cool analogous (300° = -60°)
+    240,  // Second triadic
+  ];
+
+  return hueOffsets.map(offset => generateNeonColor(baseColor, offset));
+}
+
+/**
+ * Check if a color pool has limited variety (needs neon enhancement).
+ * Returns true if there are fewer than 4 distinct hues.
+ */
+function needsNeonEnhancement(colors: string[]): boolean {
+  if (colors.length < 4) return true;
+  return isPoolMonochromatic(colors);
+}
+
+/**
  * Generate mesh gradient with multiple organic blob layers
  * Creates fluid, modern shapes using overlaid radial gradients
- * Uses colors from screenshot palette for cohesive design
+ * Uses neon colors for vibrant, eye-catching gradients
  */
 function generateMeshGradient(
   palette: ColorPalette,
@@ -315,75 +348,66 @@ function generateMeshGradient(
 ): AdvancedGradient {
   const colors = getPaletteColorPool(enhanced);
 
-  // For monochromatic palettes, generate additional colors using color theory
-  const isMonochromatic = isPoolMonochromatic(colors);
-  let meshColors = [...colors];
+  // Generate neon palette when color variety is limited
+  // This creates bold, electric gradients instead of dull monochrome
+  let meshColors: string[];
 
-  if (isMonochromatic && colors.length > 0) {
-    const baseColor = colors[0];
-    // Generate harmonious colors for a richer mesh
-    meshColors = [
-      baseColor,
-      generateHarmonyColor(baseColor, "complementary"),
-      generateHarmonyColor(baseColor, "triadic", 0),
-      generateHarmonyColor(baseColor, "split-complementary", 0),
-      enhanceColor(baseColor, { lightnessShift: -0.2, saturationBoost: 0.15 }),
-    ];
-  } else if (colors.length < 5) {
-    // Enhance existing colors to create more variety
-    const additionalColors = colors.map((color, i) =>
-      enhanceColor(color, {
-        saturationBoost: i % 2 === 0 ? 0.15 : -0.1,
-        lightnessShift: i % 2 === 0 ? 0.1 : -0.1,
-      }),
+  if (needsNeonEnhancement(colors)) {
+    // Use hero color (most prominent) as base for neon generation
+    const baseColor = enhanced.hero ?? colors[0];
+    meshColors = generateNeonMeshPalette(baseColor);
+  } else {
+    // Multi-color palette: enhance existing colors with neon boost
+    meshColors = colors.slice(0, 6).map((color, i) =>
+      generateNeonColor(color, i * 15) // Slight hue shift for variety
     );
-    meshColors = [...colors, ...additionalColors].slice(0, 6);
+    // Pad to 6 colors if needed
+    while (meshColors.length < 6) {
+      const baseColor = colors[0];
+      meshColors.push(generateNeonColor(baseColor, meshColors.length * 60));
+    }
   }
 
-  // Create 5-6 mesh layers with varied positions and sizes for rich depth
-  // Positions are strategically placed to create visual interest and organic flow
+  // Create 6 mesh layers with increased opacity for bolder effect
+  // Positions strategically placed for organic flow and visual interest
   const meshLayers: MeshLayer[] = [
     {
-      color: hexToRgba(meshColors[0], 0.8), // Primary - top left
+      color: hexToRgba(meshColors[0], 0.85), // Primary - top left
       position: { x: 15, y: 20 },
       size: 70,
     },
     {
-      color: hexToRgba(meshColors[1] || meshColors[0], 0.75), // Secondary - bottom right
+      color: hexToRgba(meshColors[1], 0.80), // Secondary - bottom right
       position: { x: 85, y: 80 },
       size: 75,
     },
     {
-      color: hexToRgba(meshColors[2] || meshColors[1] || meshColors[0], 0.65), // Tertiary - center
+      color: hexToRgba(meshColors[2], 0.70), // Tertiary - center
       position: { x: 50, y: 50 },
       size: 90,
     },
     {
-      color: hexToRgba(meshColors[3] || meshColors[0], 0.6), // Quaternary - top right
+      color: hexToRgba(meshColors[3], 0.65), // Quaternary - top right
       position: { x: 80, y: 25 },
       size: 65,
     },
     {
-      color: hexToRgba(meshColors[4] || meshColors[1] || meshColors[0], 0.55), // Quinary - bottom left
+      color: hexToRgba(meshColors[4], 0.60), // Quinary - bottom left
       position: { x: 20, y: 75 },
       size: 60,
     },
-  ];
-
-  // Add sixth layer for maximum richness (center-top accent)
-  if (meshColors.length >= 5) {
-    meshLayers.push({
-      color: hexToRgba(meshColors[5] || meshColors[2], 0.5),
+    {
+      color: hexToRgba(meshColors[5], 0.55), // Senary - center-top accent
       position: { x: 45, y: 30 },
       size: 55,
-    });
-  }
+    },
+  ];
 
   return {
     type: "linear", // Type is used for fallback; mesh renders via meshLayers
     stops: [
       { color: meshColors[0], position: 0 },
-      { color: meshColors[1] || meshColors[0], position: 100 },
+      { color: meshColors[1], position: 100 },
     ],
     meshLayers,
     colorSpace: "oklch",
