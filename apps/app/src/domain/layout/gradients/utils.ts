@@ -1,6 +1,13 @@
 import { ColorToken } from "../types";
 import { ColorPalette } from "../../asset/types";
-import { CustomGradient, isLegacyGradient, isAdvancedGradient, GradientColorSpace } from "./types";
+import {
+  CustomGradient,
+  AdvancedGradient,
+  isLegacyGradient,
+  isAdvancedGradient,
+  isMeshGradient,
+  GradientColorSpace,
+} from "./types";
 
 function isColorSpaceSupported(_space?: GradientColorSpace): boolean {
   return false;
@@ -52,6 +59,15 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 }
 
 /**
+ * Convert hex color to rgba string with alpha transparency
+ */
+export function hexToRgba(hex: string, alpha: number): string {
+  const rgb = hexToRgb(normalizeHex(hex));
+  if (!rgb) return `rgba(0, 0, 0, ${alpha})`;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+/**
  * Determine if a color is considered "dark"
  */
 function contrastRatio(colorA: string, colorB: string): number {
@@ -100,6 +116,84 @@ export function getContrastTextColorFromPalette(palette: ColorPalette): ColorTok
 }
 
 /**
+ * Convert mesh gradient to CSS background string
+ * Mesh gradients use multiple overlaid radial gradients creating organic blob shapes
+ * Each layer is a soft-edged radial gradient with transparency
+ */
+function meshGradientToCss(gradient: AdvancedGradient): string {
+  if (!gradient.meshLayers || gradient.meshLayers.length === 0) {
+    // Fallback to simple radial if no layers defined
+    const stopsString = gradient.stops
+      .map((stop) => {
+        if (stop.position !== undefined) {
+          const position = stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
+          return `${stop.color} ${position}`;
+        }
+        return stop.color;
+      })
+      .join(", ");
+    return `radial-gradient(circle at center, ${stopsString})`;
+  }
+
+  // Build layered radial gradients - each blob is a soft-edged ellipse
+  const layers = gradient.meshLayers.map((layer) => {
+    const { color, position, size } = layer;
+    // Create elliptical gradient for organic feel
+    // Size determines the spread, position places the center
+    return `radial-gradient(ellipse ${size}% ${size}% at ${position.x}% ${position.y}%, ${color}, transparent)`;
+  });
+
+  // Add a subtle base color from the first stop for depth
+  const baseColor = gradient.stops[0]?.color ?? "#1a1a2e";
+  const darkBase = hexToRgba(baseColor, 0.15);
+  layers.push(`linear-gradient(135deg, ${darkBase}, transparent)`);
+
+  // Return comma-separated layers (first layer renders on top)
+  return layers.join(", ");
+}
+
+/**
+ * Convert aurora gradient to CSS background string
+ * Aurora gradients create an ethereal, flowing wave effect using layered linear gradients
+ * with varying transparency and angles
+ */
+function auroraGradientToCss(gradient: AdvancedGradient): string {
+  const stops = gradient.stops;
+  if (stops.length < 2) {
+    // Fallback for minimal stops
+    const color = stops[0]?.color ?? "#6366f1";
+    return `linear-gradient(135deg, ${color}, ${hexToRgba(color, 0.7)})`;
+  }
+
+  // Extract primary colors from stops
+  const primary = stops[0].color;
+  const secondary = stops[Math.floor(stops.length / 2)]?.color ?? stops[1].color;
+  const tertiary = stops[stops.length - 1]?.color ?? secondary;
+
+  // Create semi-transparent versions for layering
+  const primaryAlpha = hexToRgba(primary, 0.5);
+  const secondaryAlpha = hexToRgba(secondary, 0.35);
+  const tertiaryAlpha = hexToRgba(tertiary, 0.25);
+
+  // Base angle from gradient config
+  const baseAngle = gradient.angle ?? 135;
+
+  // Aurora uses multiple angled gradients for flowing wave effect
+  const layers = [
+    // Top flowing wave - primary color sweep
+    `linear-gradient(${baseAngle}deg, ${primaryAlpha} 0%, transparent 40%, ${secondaryAlpha} 70%, transparent 100%)`,
+    // Middle wave - offset angle creates depth
+    `linear-gradient(${(baseAngle + 60) % 360}deg, transparent 10%, ${tertiaryAlpha} 35%, transparent 60%, ${primaryAlpha} 85%, transparent 100%)`,
+    // Accent shimmer - subtle highlight
+    `linear-gradient(${(baseAngle + 120) % 360}deg, transparent 20%, ${secondaryAlpha} 50%, transparent 80%)`,
+    // Base gradient - solid foundation
+    `linear-gradient(${baseAngle}deg, ${primary} 0%, ${secondary} 50%, ${tertiary} 100%)`,
+  ];
+
+  return layers.join(", ");
+}
+
+/**
  * Convert CustomGradient to CSS gradient string
  * Supports both legacy 2-color and advanced multi-stop gradients
  */
@@ -112,7 +206,17 @@ export function customGradientToCss(gradient: CustomGradient): string {
 
   // Handle advanced multi-stop gradients
   if (isAdvancedGradient(gradient)) {
+    // Handle mesh gradients (multi-layer radial blobs)
+    if (isMeshGradient(gradient)) {
+      return meshGradientToCss(gradient);
+    }
+
     const { type, stops, direction, colorSpace, angle } = gradient;
+
+    // Handle aurora gradients (4+ stops with flowing wave effect)
+    if (type === "linear" && stops.length >= 4) {
+      return auroraGradientToCss(gradient);
+    }
 
     const directionOrAngle = angle !== undefined ? `${angle}deg` : (direction ?? "to right");
     const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace);

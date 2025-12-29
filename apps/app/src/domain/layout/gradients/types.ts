@@ -18,6 +18,19 @@ export type GradientStop = {
 };
 
 /**
+ * A single radial blob layer for mesh gradients
+ * Creates organic, fluid shapes when multiple layers are overlaid
+ */
+export type MeshLayer = {
+  color: string; // rgba color string for transparency support
+  position: {
+    x: number; // 0-100 percentage horizontal position
+    y: number; // 0-100 percentage vertical position
+  };
+  size: number; // Percentage of container (e.g., 70 for 70%)
+};
+
+/**
  * Gradient type - linear, radial, or conic
  */
 export type GradientType = "linear" | "radial" | "conic";
@@ -36,6 +49,7 @@ export type AdvancedGradient = {
   direction?: string; // e.g., "to right", "45deg", "circle at center"
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
   angle?: number; // for linear gradients in degrees (0-360)
+  meshLayers?: MeshLayer[]; // For mesh gradients - overlaid radial blob layers
 };
 
 /**
@@ -64,6 +78,30 @@ export function isLegacyGradient(gradient: CustomGradient): gradient is LegacyGr
  */
 export function isAdvancedGradient(gradient: CustomGradient): gradient is AdvancedGradient {
   return "stops" in gradient && Array.isArray(gradient.stops);
+}
+
+/**
+ * Type guard to check if gradient is a mesh gradient (has meshLayers)
+ */
+export function isMeshGradient(gradient: CustomGradient): boolean {
+  return (
+    isAdvancedGradient(gradient) &&
+    gradient.meshLayers !== undefined &&
+    gradient.meshLayers.length > 0
+  );
+}
+
+/**
+ * Type guard to check if gradient is an aurora gradient
+ * Aurora gradients are linear with 4+ stops for flowing wave effect
+ */
+export function isAuroraGradient(gradient: CustomGradient): boolean {
+  return (
+    isAdvancedGradient(gradient) &&
+    gradient.type === "linear" &&
+    gradient.stops.length >= 4 &&
+    !gradient.meshLayers
+  );
 }
 
 

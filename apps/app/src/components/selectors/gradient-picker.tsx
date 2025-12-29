@@ -44,7 +44,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const displayGradients = useMemo(
-    () => dynamicGradients.slice(0, 4),
+    () => dynamicGradients.slice(0, 6),
     [dynamicGradients],
   );
 
@@ -172,10 +172,10 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-3 gap-2">
       {isLoading
-        ? Array.from({ length: 4 }).map((_, index) => (
-            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
+        ? Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton key={`skeleton-${index}`} className="h-9 w-full rounded-md" />
           ))
         : gradients.map((gradient, index) => {
             const isSelected = areGradientsEqual(activeGradient, gradient);
@@ -209,7 +209,7 @@ function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientS
       aria-label={ariaLabel}
       onClick={onClick}
       className={cn(
-        "group relative flex h-12 w-full items-center overflow-hidden rounded-lg p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
+        "group relative flex h-9 w-full items-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
         selected
           ? "shadow-sm ring-2 ring-foreground/50 ring-offset-1 ring-offset-background"
           : "ring-1 ring-white/15",
@@ -234,6 +234,28 @@ function areGradientsEqual(a?: CustomGradient, b?: CustomGradient) {
   if (isAdvancedGradient(a) && isAdvancedGradient(b)) {
     if (a.stops.length !== b.stops.length) return false;
     if (a.type !== b.type) return false;
+
+    // Mesh gradients: compare by meshLayers presence
+    const aHasMesh = a.meshLayers && a.meshLayers.length > 0;
+    const bHasMesh = b.meshLayers && b.meshLayers.length > 0;
+    if (aHasMesh !== bHasMesh) return false;
+
+    // If both are mesh gradients, compare layer count
+    if (aHasMesh && bHasMesh) {
+      if (a.meshLayers!.length !== b.meshLayers!.length) return false;
+      // Compare mesh layer colors and positions
+      return a.meshLayers!.every((layer, i) => {
+        const otherLayer = b.meshLayers![i];
+        if (!otherLayer) return false;
+        return (
+          layer.color === otherLayer.color &&
+          layer.position.x === otherLayer.position.x &&
+          layer.position.y === otherLayer.position.y
+        );
+      });
+    }
+
+    // For non-mesh gradients, also check stop count to differentiate aurora (4 stops) from linear (2 stops)
     // Compare stops by colors and positions - ignore angle since it's user-adjustable
     return a.stops.every((stop, i) => {
       const otherStop = b.stops[i];

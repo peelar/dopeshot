@@ -3,7 +3,7 @@
 import { useAtom, useSetAtom } from "jotai";
 import { useCallback, useEffect } from "react";
 import { useSession } from "@/lib/auth/auth-client";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, screenshotGradientAtom } from "@/hooks/atoms";
 import { backgroundSelectionAtom } from "@/hooks/atoms/backgrounds";
 import { GradientPicker } from "@/components/selectors/gradient-picker";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
@@ -12,6 +12,7 @@ import { clearBackgroundSelection } from "@/domain/backgrounds/background-servic
 export function BackgroundSection() {
   const { data: session } = useSession();
   const setConfig = useSetAtom(configAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const [selection, setSelection] = useAtom(backgroundSelectionAtom);
 
   const isAuthenticated = Boolean(session?.user);
@@ -28,19 +29,27 @@ export function BackgroundSection() {
         const currentBackground =
           currentConfig.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
         const grainEnabled = background.grainEnabled ?? currentBackground.grainEnabled ?? true;
+
+        const newBackground = {
+          ...currentBackground,
+          ...background,
+          grainEnabled,
+          patternId: background.patternId ?? currentBackground.patternId,
+          patternMode: background.patternMode ?? currentBackground.patternMode,
+        };
+
+        // Store screenshot gradient for persistence across layout changes
+        if (background.gradientSource === "screenshot") {
+          setScreenshotGradient(newBackground);
+        }
+
         return {
           ...currentConfig,
           colors: {
             ...currentConfig.colors,
             text: textColor,
           },
-          background: {
-            ...currentBackground,
-            ...background,
-            grainEnabled,
-            patternId: background.patternId ?? currentBackground.patternId,
-            patternMode: background.patternMode ?? currentBackground.patternMode,
-          },
+          background: newBackground,
         };
       });
 
@@ -49,7 +58,7 @@ export function BackgroundSection() {
         void clearBackgroundSelection().catch(() => null);
       }
     },
-    [selection, setConfig, setSelection],
+    [selection, setConfig, setScreenshotGradient, setSelection],
   );
 
   return (

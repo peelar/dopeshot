@@ -16,9 +16,15 @@ export type {
   AdvancedGradient,
   LegacyGradient,
   CustomGradient,
+  MeshLayer,
 } from "./types";
 
-export { isLegacyGradient, isAdvancedGradient } from "./types";
+export {
+  isLegacyGradient,
+  isAdvancedGradient,
+  isMeshGradient,
+  isAuroraGradient,
+} from "./types";
 
 // Color space and palette enhancement
 export type { EnhancedColorPalette } from "./colors";
@@ -33,4 +39,5 @@ export {
   getContrastTextColorFromPalette,
   customGradientToCss,
   directionStringToDegrees,
+  hexToRgba,
 } from "./utils";

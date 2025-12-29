@@ -1,6 +1,11 @@
 import { LayoutConfig, CustomGradient } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
-import { customGradientToCss, isAdvancedGradient, isLegacyGradient } from "@/domain/layout/gradients";
+import {
+  customGradientToCss,
+  isAdvancedGradient,
+  isLegacyGradient,
+  isMeshGradient,
+} from "@/domain/layout/gradients";
 import { getGradientById } from "@/domain/layout/gradient-presets";
 import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
@@ -78,6 +83,17 @@ function gradientToCssWithLayout(
   layoutId: string,
   variant?: string
 ): string {
+  // Mesh gradients have their own layered geometry - bypass layout adjustments
+  // They use multiple overlaid radial gradients that shouldn't be modified
+  if (isMeshGradient(gradient)) {
+    return customGradientToCss(gradient);
+  }
+
+  // Aurora gradients (4+ stops) also have specific layered structure
+  if (isAdvancedGradient(gradient) && gradient.stops.length >= 4) {
+    return customGradientToCss(gradient);
+  }
+
   const stops = getGradientStopsString(gradient);
   const geometry = getLayoutGeometry(layoutId, variant);
 
