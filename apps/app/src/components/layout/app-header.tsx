@@ -16,6 +16,7 @@ interface AppHeaderProps {
   onExport: () => void;
   isExporting: boolean;
   onBrandClick?: () => void;
+  onFeedbackClick?: () => void;
 }
 
 export function AppHeader({
@@ -27,6 +28,7 @@ export function AppHeader({
   onExport,
   isExporting,
   onBrandClick,
+  onFeedbackClick,
 }: AppHeaderProps) {
   const uploadButtonLabel = isProcessingUpload
     ? "Uploading..."
@@ -86,6 +88,20 @@ export function AppHeader({
             className="text-foreground hover:bg-muted hover:text-foreground"
           >
             <span className="hidden md:inline">Brand</span>
+          </Button>
+        ) : null}
+        {onFeedbackClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onFeedbackClick();
+              track("feedback_button_clicked");
+            }}
+            className="text-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Open feedback modal"
+          >
+            <span>Feedback</span>
           </Button>
         ) : null}
         {process.env.NODE_ENV === "development" && <ThemeToggle />}
