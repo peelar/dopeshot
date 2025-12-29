@@ -1,5 +1,5 @@
 import { AspectCategory } from "../aspect";
-import { AdvancedGradient, GradientStop, GradientType } from "./types";
+import { AdvancedGradient, GradientStop, GradientType, MeshLayer } from "./types";
 import { ColorPalette } from "@/domain/asset/types";
 import {
   enhanceColorPalette,
@@ -7,8 +7,10 @@ import {
   enhanceColor,
   enforceColorSeparation,
   generateHarmonyColor,
+  generateNeonColor,
   isPoolMonochromatic,
 } from "./colors";
+import { hexToRgba } from "./utils";
 
 type GradientVariation = {
   colorPair?: [string, string];
@@ -228,6 +230,9 @@ function getPaletteColorPool(palette: EnhancedColorPalette): string[] {
  * Build color pairs for gradient generation.
  * When the palette is monochromatic (limited color variety), uses color theory
  * harmonies to generate visually distinct gradient options.
+ *
+ * Slots 1-3 are linear gradients and should each have DISTINCT color harmonies
+ * to ensure visual variety even with limited source colors.
  */
 function buildColorPairs(palette: EnhancedColorPalette, count: number): [string, string][] {
   const pool = getPaletteColorPool(palette);
@@ -240,15 +245,17 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
     // Use the hero color (most prominent/saturated) as the base
     const baseColor = palette.hero ?? pool[0];
 
-    // Generate 4 distinct gradient pairs using color theory harmonies
-    // Each pair uses a different harmony rule for maximum visual variety
+    // Generate distinct gradient pairs using color theory harmonies.
+    // ALL pairs use different hue rotations to ensure visual variety.
+    // This is crucial for dark/monochromatic screenshots where all gradients
+    // would otherwise look the same.
     for (let i = 0; i < count; i++) {
       switch (i) {
         case 0:
-          // Pair 0: Original color with slight lightness variation
+          // Pair 0: Analogous warm (30° hue rotation) - subtle but distinct shift
           pairs.push([
             baseColor,
-            enhanceColor(baseColor, { lightnessShift: -0.25 }),
+            generateHarmonyColor(baseColor, "analogous", 0),
           ]);
           break;
         case 1:
@@ -259,17 +266,17 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
           ]);
           break;
         case 2:
-          // Pair 2: Triadic (120° hue rotation) - vibrant contrast
-          pairs.push([
-            baseColor,
-            generateHarmonyColor(baseColor, "triadic", 0),
-          ]);
-          break;
-        case 3:
-          // Pair 3: Split-complementary (150° hue rotation) - sophisticated contrast
+          // Pair 2: Split-complementary (150° hue rotation) - sophisticated contrast
           pairs.push([
             baseColor,
             generateHarmonyColor(baseColor, "split-complementary", 0),
+          ]);
+          break;
+        case 3:
+          // Pair 3: Triadic (120° hue rotation) - vibrant contrast
+          pairs.push([
+            baseColor,
+            generateHarmonyColor(baseColor, "triadic", 0),
           ]);
           break;
         default:
@@ -304,27 +311,204 @@ function buildColorPairs(palette: EnhancedColorPalette, count: number): [string,
 }
 
 /**
+ * Generate a vibrant neon color palette for mesh gradients.
+ * Creates 6 electric, eye-catching colors spread across the color wheel.
+ * Each color is pushed to maximum saturation for a bold, neon aesthetic.
+ *
+ * @param baseColor - The primary color extracted from the screenshot
+ * @returns Array of 6 neon hex colors with wide hue distribution
+ */
+function generateNeonMeshPalette(baseColor: string): string[] {
+  // Hue offsets designed for maximum visual variety
+  // Spread across 240°+ of the color wheel for rainbow effect
+  const hueOffsets = [
+    0,    // Original hue (neon version)
+    180,  // Complementary (opposite on wheel)
+    60,   // Warm analogous
+    120,  // Triadic
+    -60,  // Cool analogous (300° = -60°)
+    240,  // Second triadic
+  ];
+
+  return hueOffsets.map(offset => generateNeonColor(baseColor, offset));
+}
+
+/**
+ * Check if a color pool has limited variety (needs neon enhancement).
+ * Returns true if there are fewer than 4 distinct hues.
+ */
+function needsNeonEnhancement(colors: string[]): boolean {
+  if (colors.length < 4) return true;
+  return isPoolMonochromatic(colors);
+}
+
+/**
+ * Generate mesh gradient with multiple organic blob layers
+ * Creates fluid, modern shapes using overlaid radial gradients
+ * Uses neon colors for vibrant, eye-catching gradients
+ */
+function generateMeshGradient(
+  palette: ColorPalette,
+  enhanced: EnhancedColorPalette,
+): AdvancedGradient {
+  const colors = getPaletteColorPool(enhanced);
+
+  // Generate neon palette when color variety is limited
+  // This creates bold, electric gradients instead of dull monochrome
+  let meshColors: string[];
+
+  if (needsNeonEnhancement(colors)) {
+    // Use hero color (most prominent) as base for neon generation
+    const baseColor = enhanced.hero ?? colors[0];
+    meshColors = generateNeonMeshPalette(baseColor);
+  } else {
+    // Multi-color palette: enhance existing colors with neon boost
+    meshColors = colors.slice(0, 6).map((color, i) =>
+      generateNeonColor(color, i * 15) // Slight hue shift for variety
+    );
+    // Pad to 6 colors if needed
+    while (meshColors.length < 6) {
+      const baseColor = colors[0];
+      meshColors.push(generateNeonColor(baseColor, meshColors.length * 60));
+    }
+  }
+
+  // Create 6 mesh layers with balanced opacity for smooth blending
+  // Positions strategically placed for organic flow and visual interest
+  const meshLayers: MeshLayer[] = [
+    {
+      color: hexToRgba(meshColors[0], 0.75), // Primary - top left
+      position: { x: 15, y: 20 },
+      size: 70,
+    },
+    {
+      color: hexToRgba(meshColors[1], 0.70), // Secondary - bottom right
+      position: { x: 85, y: 80 },
+      size: 75,
+    },
+    {
+      color: hexToRgba(meshColors[2], 0.60), // Tertiary - center
+      position: { x: 50, y: 50 },
+      size: 90,
+    },
+    {
+      color: hexToRgba(meshColors[3], 0.55), // Quaternary - top right
+      position: { x: 80, y: 25 },
+      size: 65,
+    },
+    {
+      color: hexToRgba(meshColors[4], 0.50), // Quinary - bottom left
+      position: { x: 20, y: 75 },
+      size: 60,
+    },
+    {
+      color: hexToRgba(meshColors[5], 0.45), // Senary - center-top accent
+      position: { x: 45, y: 30 },
+      size: 55,
+    },
+  ];
+
+  return {
+    type: "linear", // Type is used for fallback; mesh renders via meshLayers
+    stops: [
+      { color: meshColors[0], position: 0 },
+      { color: meshColors[1], position: 100 },
+    ],
+    meshLayers,
+    colorSpace: "oklch",
+  };
+}
+
+/**
+ * Generate an ambient gradient from screenshot colors.
+ * Creates "safe" gradients that always have two distinct colors.
+ * Dark mode: accent color darkened → true black (#000000)
+ * Light mode: accent color lightened → pure white (#ffffff)
+ */
+function generateAmbientGradient(
+  enhanced: EnhancedColorPalette,
+  mode: "dark" | "light",
+): AdvancedGradient {
+  // For ambient gradients, prioritize the most vibrant/saturated color
+  // Use raw palette colors (vibrant > accent) before falling back to enhanced hero
+  const accentColor = enhanced.vibrant ?? enhanced.accent ?? enhanced.hero ?? enhanced.dominant;
+
+  if (mode === "dark") {
+    // Dark ambient: mostly black with a subtle colored glow at the edge
+    // Keep accent very dark so transition from black is smooth
+    const darkAccent = enhanceColor(accentColor, {
+      lightnessShift: -0.7, // Very dark, close to black but with color
+      saturationBoost: 0.4, // Higher saturation to make color visible despite darkness
+    });
+
+    return {
+      type: "linear",
+      stops: [
+        { color: "#000000", position: 0 },
+        { color: darkAccent, position: 100 },
+      ],
+      angle: 135,
+      colorSpace: "oklch",
+    };
+  } else {
+    // Light ambient: mostly white with a subtle colored tint at the edge
+    // Keep accent very light so transition from white is smooth
+    const lightAccent = enhanceColor(accentColor, {
+      lightnessShift: 0.6, // Very light, close to white but with color
+      saturationBoost: 0.3, // Higher saturation to make color visible despite lightness
+    });
+
+    return {
+      type: "linear",
+      stops: [
+        { color: "#ffffff", position: 0 },
+        { color: lightAccent, position: 100 },
+      ],
+      angle: 135,
+      colorSpace: "oklch",
+    };
+  }
+}
+
+/**
  * Generate multiple gradient options from a palette
  * Used in gradient picker to show different variations
- * Each option uses a different color strategy for maximum visual variety
+ *
+ * Slot layout:
+ * 1-3: Linear gradients (multi-color, complementary, analogous)
+ * 4: Mesh gradient (neon blob layers)
+ * 5: Dark ambient (accent → near-black #0a0a0a)
+ * 6: Light ambient (accent → off-white #f5f5f5)
  */
 export function generateGradientOptions(
   palette: ColorPalette,
   context: GradientContext,
 ): AdvancedGradient[] {
   const enhanced = enhanceColorPalette(palette);
-  const strategies: Array<"multi-color" | "complementary" | "analogous" | "triadic"> = [
+
+  // 3 linear gradient strategies
+  const strategies: Array<"multi-color" | "complementary" | "analogous"> = [
     "multi-color",
     "complementary",
     "analogous",
-    "triadic",
   ];
 
   const colorPairs = buildColorPairs(enhanced, strategies.length);
 
-  return strategies.map((strategy, index) =>
+  const linearGradients = strategies.map((strategy, index) =>
     generateGradient(palette, context, strategy, {
       colorPair: colorPairs[index],
     }),
   );
+
+  // Slot 4: Mesh gradient
+  const meshGradient = generateMeshGradient(palette, enhanced);
+
+  // Slot 5: Dark ambient (accent → near-black #0a0a0a)
+  const darkAmbient = generateAmbientGradient(enhanced, "dark");
+
+  // Slot 6: Light ambient (accent → off-white #f5f5f5)
+  const lightAmbient = generateAmbientGradient(enhanced, "light");
+
+  return [...linearGradients, meshGradient, darkAmbient, lightAmbient];
 }

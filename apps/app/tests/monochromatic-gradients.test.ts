@@ -70,8 +70,8 @@ async function testNonMonochromaticPreservesExistingBehavior() {
     aspectCategory: "landscape",
   });
 
-  // Just verify we got 4 gradients
-  assert.equal(gradients.length, 4, "Should generate 4 gradient options");
+  // Verify we got 6 gradients (4 linear + mesh + aurora)
+  assert.equal(gradients.length, 6, "Should generate 6 gradient options");
 }
 
 async function runTests() {

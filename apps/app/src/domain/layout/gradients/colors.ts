@@ -31,6 +31,57 @@ function oklchToHex(color: Oklch): string {
 export type ColorHarmony = "complementary" | "analogous" | "triadic" | "split-complementary";
 
 /**
+ * Generate a vibrant version of a color at a given hue offset.
+ * Creates saturated but balanced colors for attractive mesh gradients.
+ *
+ * @param baseHex - The base color in hex format
+ * @param hueOffset - Degrees to rotate the hue (0-360)
+ * @returns A vibrant hex color with good saturation
+ */
+export function generateNeonColor(baseHex: string, hueOffset: number): string {
+  const oklch = hexToOklch(baseHex);
+  if (!oklch) return baseHex;
+
+  const baseHue = oklch.h ?? 0;
+  const newHue = ((baseHue + hueOffset) % 360 + 360) % 360;
+
+  // Vibrant but not overwhelming - rich colors that work well together
+  const vibrantColor: Oklch = {
+    mode: "oklch",
+    l: getVibrantLightness(newHue), // Hue-dependent lightness
+    c: 0.25, // Rich saturation without being overpowering
+    h: newHue,
+  };
+
+  return oklchToHex(vibrantColor);
+}
+
+/**
+ * Get optimal lightness for a vibrant color based on its hue.
+ * Different hues look best at different lightness levels.
+ */
+function getVibrantLightness(hue: number): number {
+  // Cyan/teal (160-210°) - needs higher lightness for good saturation
+  if (hue >= 160 && hue <= 210) {
+    return 0.72;
+  }
+  // Yellow/green hues - lighter for vibrancy
+  if (hue >= 60 && hue <= 160) {
+    return 0.68;
+  }
+  // Blue range (210-270°) - slightly darker works well
+  if (hue >= 210 && hue <= 270) {
+    return 0.55;
+  }
+  // Purple/magenta range (270-330°)
+  if (hue >= 270 && hue <= 330) {
+    return 0.58;
+  }
+  // Red/orange/pink range
+  return 0.62;
+}
+
+/**
  * Generate a harmonious color from a base color using hue rotation.
  * Uses color theory principles to create visually pleasing color combinations.
  *
@@ -209,7 +260,7 @@ export function enhanceColor(
 
   // Boost saturation (chroma in OKLCH)
   if (saturationBoost > 0) {
-    c = Math.min(0.4, c + saturationBoost * 0.3);
+    c = Math.min(0.45, c + saturationBoost * 0.3);
   }
 
   // Shift lightness
