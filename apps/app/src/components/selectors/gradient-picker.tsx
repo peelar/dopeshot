@@ -45,8 +45,12 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const displayGradients = useMemo(
-    () => dynamicGradients.slice(0, 6),
-    [dynamicGradients],
+    () => {
+      // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
+      // Default variant (sidebar): show all 6 gradients
+      return variant === "inline" ? dynamicGradients.slice(0, 4) : dynamicGradients.slice(0, 6);
+    },
+    [dynamicGradients, variant],
   );
 
   const matchesScreenshotGradient = useMemo(() => {
@@ -185,9 +189,9 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-2">
+    <div className="grid grid-cols-4 gap-3">
       {isLoading
-        ? Array.from({ length: 6 }).map((_, index) => (
+        ? Array.from({ length: 4 }).map((_, index) => (
             <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
           ))
         : gradients.map((gradient, index) => {
