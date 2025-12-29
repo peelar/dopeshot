@@ -59,23 +59,24 @@ export function PlaygroundWorkspace({
   const setConfig = useSetAtom(configAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
-  const hasSetInitialOrientation = useRef(false);
+  const hasAutoSetOrientation = useRef(false);
 
   const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
 
   // Set mobile as default orientation on mobile devices
   useEffect(() => {
-    if (hasSetInitialOrientation.current) return;
+    // Only auto-set once, and only if we're on mobile with desktop orientation
+    if (hasAutoSetOrientation.current) return;
+    if (!isMobile) return;
+    if (orientation !== "desktop") return;
 
-    if (isMobile && orientation === "desktop") {
-      setOrientation("mobile");
-      track("orientation_auto_set", {
-        orientation: "mobile",
-        reason: "mobile_device_detected",
-      });
-    }
+    setOrientation("mobile");
+    hasAutoSetOrientation.current = true;
 
-    hasSetInitialOrientation.current = true;
+    track("orientation_auto_set", {
+      orientation: "mobile",
+      reason: "mobile_device_detected",
+    });
   }, [isMobile, orientation, setOrientation]);
 
   const handleViewportMetricsChange = useCallback(
