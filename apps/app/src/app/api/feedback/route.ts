@@ -22,13 +22,23 @@ export async function POST(request: NextRequest) {
     if (!resend) {
       console.error("Resend is not configured (missing RESEND_API_KEY)");
       return NextResponse.json(
-        { error: "Feedback service is not configured" },
+        { error: "Feedback service is not configured. Please check environment variables." },
         { status: 503 }
       );
     }
 
-    // Parse request body
-    const body = (await request.json()) as FeedbackRequest;
+    // Parse request body with size validation
+    let body: FeedbackRequest;
+    try {
+      body = (await request.json()) as FeedbackRequest;
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
+      return NextResponse.json(
+        { error: "Invalid request format" },
+        { status: 400 }
+      );
+    }
+
     const { message, email, screenshot } = body;
 
     // Validate required fields
@@ -36,6 +46,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Feedback message is required" },
         { status: 400 }
+      );
+    }
+
+    // Validate screenshot size (max 10MB when base64 encoded)
+    if (screenshot && screenshot.length > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "Screenshot is too large. Please try without the screenshot." },
+        { status: 413 }
       );
     }
 
@@ -109,9 +127,19 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, id: emailResult.data?.id });
   } catch (error) {
     console.error("Feedback submission failed:", error);
-    const message =
-      error instanceof Error ? error.message : "Failed to submit feedback";
-    return NextResponse.json({ error: message }, { status: 500 });
+
+    // Always return JSON, even for unexpected errors
+    const errorMessage = error instanceof Error
+      ? error.message
+      : "An unexpected error occurred while submitting feedback";
+
+    return NextResponse.json(
+      { error: errorMessage },
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
   }
 }
 

@@ -115,7 +115,7 @@ export function FeedbackModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="sm:max-w-[520px] data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-top-0">
         <DialogHeader>
           <div className="flex items-center justify-center mb-3">
             <div className="rounded-full bg-muted p-2.5">
@@ -217,7 +217,7 @@ export function FeedbackModal({
             )}
 
             {/* Action buttons */}
-            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -230,7 +230,7 @@ export function FeedbackModal({
               <Button
                 type="submit"
                 disabled={isSubmitting || !feedback.trim()}
-                className="w-full sm:flex-1"
+                className="w-full sm:w-auto"
               >
                 {isSubmitting ? (
                   <>
