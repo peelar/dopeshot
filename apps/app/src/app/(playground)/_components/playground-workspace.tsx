@@ -150,7 +150,7 @@ export function PlaygroundWorkspace({
                 size="icon-sm"
                 onClick={() => handleOrientationChange("mobile")}
                 aria-pressed={orientation === "mobile"}
-                aria-label="Mobile mode (9:16)"
+                aria-label="Mobile mode"
                 className={cn(
                   "h-7 w-7 rounded transition-colors",
                   orientation === "mobile"
@@ -177,7 +177,9 @@ export function PlaygroundWorkspace({
                   : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
               )}
             >
-              {isAspectLocked ? "Locked · 16:9" : "Lock to 16:9"}
+              {isAspectLocked 
+                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}` 
+                : `Lock to ${orientation === "mobile" ? "Mobile" : "16:9"}`}
             </Button>
           ) : null}
         </div>

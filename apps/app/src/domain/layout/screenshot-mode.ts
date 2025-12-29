@@ -9,7 +9,7 @@ const BASE_CANVAS_WIDTH = 1280;
 // Preview dimensions - optimized for UI preview performance and text readability
 export const ORIENTATION_DIMENSIONS = {
   desktop: { width: 1280, height: 720 },  // 16:9
-  mobile: { width: 720, height: 1080 },   // 2:3
+  mobile: { width: 720, height: 1280 },   // 9:16
 } as const;
 
 // Export dimensions - full resolution for high-quality exports
