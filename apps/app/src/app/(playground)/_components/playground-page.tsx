@@ -36,34 +36,37 @@ function ExportContainer({
   const scale = width / baseDims.width;
   
   return (
-    <div
-      id="export-container"
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: `${width}px`,
-        height: `${height}px`,
-        zIndex: -100,
-        overflow: "hidden",
-        visibility: "visible",
-        background: "white",
-        WebkitFontSmoothing: "antialiased",
-        MozOsxFontSmoothing: "grayscale",
-        textRendering: "optimizeLegibility",
-      }}
-    >
       <div
+        id="export-container"
         style={{
-          width: `${baseDims.width}px`,
-          height: `${baseDims.height}px`,
-          transformOrigin: "top left",
-          transform: `scale(${scale})`,
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: `${width}px`,
+          height: `${height}px`,
+          zIndex: -100,
+          overflow: "hidden",
+          visibility: "visible",
+          background: "white",
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+          textRendering: "optimizeLegibility",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        <CoverPreview isStatic />
+        <div
+          style={{
+            width: `${baseDims.width}px`,
+            height: `${baseDims.height}px`,
+            transformOrigin: "center",
+            transform: `scale(${scale})`,
+          }}
+        >
+          <CoverPreview isStatic />
+        </div>
       </div>
-    </div>
   );
 }
 

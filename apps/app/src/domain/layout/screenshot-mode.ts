@@ -15,7 +15,7 @@ export const ORIENTATION_DIMENSIONS = {
 // Export dimensions - full resolution for high-quality exports
 export const EXPORT_ORIENTATION_DIMENSIONS = {
   desktop: { width: 1920, height: 1080 },  // 16:9
-  mobile: { width: 1080, height: 1620 },   // 2:3
+  mobile: { width: 1080, height: 1920 },   // 9:16
 } as const;
 
 function isBlank(value?: string) {

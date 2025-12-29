@@ -141,7 +141,7 @@ export function MobileActions({
   return (
     <>
       {/* Background selector - positioned just above the bottom menu */}
-      <div className="fixed bottom-[72px] left-0 right-0 z-40 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
+      <div className="fixed bottom-[64px] left-0 right-0 z-40 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
         <div className="mx-auto w-full max-w-5xl px-3 py-2">
           <BackgroundSection variant="inline" />
         </div>
