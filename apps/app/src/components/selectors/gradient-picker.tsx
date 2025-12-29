@@ -144,6 +144,8 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
         disabled={!hasScreenshotGradients}
         onSelect={handleScreenshotSelect}
         isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
+        gridClassName="grid-cols-4"
+        skeletonCount={4}
       />
     );
   }
@@ -158,6 +160,8 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
             disabled={!hasScreenshotGradients}
             onSelect={handleScreenshotSelect}
             isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
+            gridClassName="grid-cols-3"
+            skeletonCount={6}
           />
         </div>
       </div>
@@ -171,6 +175,8 @@ interface ScreenshotGradientsProps {
   disabled: boolean;
   onSelect: (gradient: CustomGradient) => void;
   isLoading?: boolean;
+  gridClassName?: string;
+  skeletonCount?: number;
 }
 
 function ScreenshotGradients({
@@ -179,6 +185,8 @@ function ScreenshotGradients({
   disabled,
   onSelect,
   isLoading,
+  gridClassName = "grid-cols-4",
+  skeletonCount = 4,
 }: ScreenshotGradientsProps) {
   if (!gradients.length && !isLoading) {
     return (
@@ -189,9 +197,9 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className={cn("grid gap-3", gridClassName)}>
       {isLoading
-        ? Array.from({ length: 4 }).map((_, index) => (
+        ? Array.from({ length: skeletonCount }).map((_, index) => (
             <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
           ))
         : gradients.map((gradient, index) => {
