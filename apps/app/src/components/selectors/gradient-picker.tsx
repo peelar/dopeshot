@@ -44,7 +44,7 @@ export function GradientPicker({ onChangeAction }: GradientPickerProps) {
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const displayGradients = useMemo(
-    () => dynamicGradients.slice(0, 6),
+    () => dynamicGradients.slice(0, 4),
     [dynamicGradients],
   );
 
@@ -172,10 +172,10 @@ function ScreenshotGradients({
   }
 
   return (
-    <div className="grid grid-cols-3 gap-3 w-[75%]">
+    <div className="grid grid-cols-4 gap-3">
       {isLoading
-        ? Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-md" />
+        ? Array.from({ length: 4 }).map((_, index) => (
+            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
           ))
         : gradients.map((gradient, index) => {
             const isSelected = areGradientsEqual(activeGradient, gradient);

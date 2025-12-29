@@ -2,6 +2,11 @@
 "dopeshot-app": patch
 ---
 
-Improve gradient variety for monochromatic screenshots. When a screenshot has limited color variety (like a dark dashboard with tiny accents), the first 3 gradient options now use distinct color harmonies (analogous, complementary, split-complementary) instead of just lightness variations of the same hue.
+Improve gradient variety and ambient gradient quality:
 
-Make ambient gradients more extreme: dark ambient now fades to true black (#000000) and light ambient fades to pure white (#ffffff) for stronger contrast.
+- **Monochromatic gradients**: Slots 1-3 now use distinct color harmonies (analogous, complementary, split-complementary) instead of just lightness variations, ensuring visual variety even with dark dashboards that have minimal accent colors.
+
+- **Ambient gradients**: Redesigned for stronger contrast and better color selection:
+  - Dark ambient: smooth transition from pure black to very dark accent color (-0.7 lightness)
+  - Light ambient: smooth transition from pure white to very light accent color (+0.6 lightness)
+  - Now prioritizes vibrant color from screenshot (vibrant > accent > hero) for more impactful results
