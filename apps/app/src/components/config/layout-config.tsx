@@ -79,12 +79,15 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
           </section>
         )}
 
-        <section className="space-y-3 px-4">
-          <div className="flex w-full items-center justify-between">
-            <span className="text-sm font-semibold">Effects</span>
-          </div>
-          <EffectsSection />
-        </section>
+        {/* Hide effects section on mobile - keeps drawer focused on essential controls */}
+        {!isMobile && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Effects</span>
+            </div>
+            <EffectsSection />
+          </section>
+        )}
 
         {/* Hide background section on mobile - now shown inline beneath canvas */}
         {!isMobile && (
@@ -96,46 +99,49 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
           </section>
         )}
 
-        <section className="space-y-3 px-4">
-          <div className="flex w-full items-center justify-between">
-            <span className="text-sm font-semibold">Screenshot</span>
-            <div className="flex items-center">
-              <input
-                type="file"
-                className="hidden"
-                ref={screenshotInputRef}
-                accept="image/*"
-                onChange={(event) => handleHeaderFileChange(event, "screenshot")}
-                aria-hidden="true"
-                tabIndex={-1}
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="xs"
-                disabled={!onUploadAsset}
-                onClick={(event) => handleHeaderUploadClick(event, "screenshot")}
-                className={cn(
-                  "h-6 px-2 text-xs",
-                  screenshotAsset
-                    ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {screenshotAsset ? (
-                  <span className="max-w-[8rem] truncate" title={screenshotAsset.name}>
-                    {screenshotAsset.name}
-                  </span>
-                ) : (
-                  <span className="max-w-[8rem] truncate" title="Choose file">
-                    Choose file...
-                  </span>
-                )}
-              </Button>
+        {/* Hide screenshot section on mobile - upload available via Upload button in bottom menu */}
+        {!isMobile && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Screenshot</span>
+              <div className="flex items-center">
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={screenshotInputRef}
+                  accept="image/*"
+                  onChange={(event) => handleHeaderFileChange(event, "screenshot")}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  disabled={!onUploadAsset}
+                  onClick={(event) => handleHeaderUploadClick(event, "screenshot")}
+                  className={cn(
+                    "h-6 px-2 text-xs",
+                    screenshotAsset
+                      ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  {screenshotAsset ? (
+                    <span className="max-w-[8rem] truncate" title={screenshotAsset.name}>
+                      {screenshotAsset.name}
+                    </span>
+                  ) : (
+                    <span className="max-w-[8rem] truncate" title="Choose file">
+                      Choose file...
+                    </span>
+                  )}
+                </Button>
+              </div>
             </div>
-          </div>
-          <ScreenshotSection onUploadAsset={onUploadAsset} />
-        </section>
+            <ScreenshotSection onUploadAsset={onUploadAsset} />
+          </section>
+        )}
 
         {showLogoSection && (
           <section className="space-y-3 px-4">

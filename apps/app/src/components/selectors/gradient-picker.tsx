@@ -45,8 +45,12 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
 
   const hasScreenshotGradients = dynamicGradients.length > 0;
   const displayGradients = useMemo(
-    () => dynamicGradients.slice(0, 4),
-    [dynamicGradients],
+    () => {
+      // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
+      // Default variant (sidebar): show all 6 gradients
+      return variant === "inline" ? dynamicGradients.slice(0, 4) : dynamicGradients.slice(0, 6);
+    },
+    [dynamicGradients, variant],
   );
 
   const matchesScreenshotGradient = useMemo(() => {
