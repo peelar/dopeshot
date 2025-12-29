@@ -368,36 +368,36 @@ function generateMeshGradient(
     }
   }
 
-  // Create 6 mesh layers with increased opacity for bolder effect
+  // Create 6 mesh layers with balanced opacity for smooth blending
   // Positions strategically placed for organic flow and visual interest
   const meshLayers: MeshLayer[] = [
     {
-      color: hexToRgba(meshColors[0], 0.85), // Primary - top left
+      color: hexToRgba(meshColors[0], 0.75), // Primary - top left
       position: { x: 15, y: 20 },
       size: 70,
     },
     {
-      color: hexToRgba(meshColors[1], 0.80), // Secondary - bottom right
+      color: hexToRgba(meshColors[1], 0.70), // Secondary - bottom right
       position: { x: 85, y: 80 },
       size: 75,
     },
     {
-      color: hexToRgba(meshColors[2], 0.70), // Tertiary - center
+      color: hexToRgba(meshColors[2], 0.60), // Tertiary - center
       position: { x: 50, y: 50 },
       size: 90,
     },
     {
-      color: hexToRgba(meshColors[3], 0.65), // Quaternary - top right
+      color: hexToRgba(meshColors[3], 0.55), // Quaternary - top right
       position: { x: 80, y: 25 },
       size: 65,
     },
     {
-      color: hexToRgba(meshColors[4], 0.60), // Quinary - bottom left
+      color: hexToRgba(meshColors[4], 0.50), // Quinary - bottom left
       position: { x: 20, y: 75 },
       size: 60,
     },
     {
-      color: hexToRgba(meshColors[5], 0.55), // Senary - center-top accent
+      color: hexToRgba(meshColors[5], 0.45), // Senary - center-top accent
       position: { x: 45, y: 30 },
       size: 55,
     },

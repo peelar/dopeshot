@@ -31,12 +31,12 @@ function oklchToHex(color: Oklch): string {
 export type ColorHarmony = "complementary" | "analogous" | "triadic" | "split-complementary";
 
 /**
- * Generate a neon/electric version of a color at a given hue offset.
- * Creates maximally saturated, eye-catching colors for vibrant mesh gradients.
+ * Generate a vibrant version of a color at a given hue offset.
+ * Creates saturated but balanced colors for attractive mesh gradients.
  *
  * @param baseHex - The base color in hex format
  * @param hueOffset - Degrees to rotate the hue (0-360)
- * @returns A neon hex color with high chroma and optimal lightness
+ * @returns A vibrant hex color with good saturation
  */
 export function generateNeonColor(baseHex: string, hueOffset: number): string {
   const oklch = hexToOklch(baseHex);
@@ -45,45 +45,40 @@ export function generateNeonColor(baseHex: string, hueOffset: number): string {
   const baseHue = oklch.h ?? 0;
   const newHue = ((baseHue + hueOffset) % 360 + 360) % 360;
 
-  // Neon colors need high chroma and optimal lightness for that "glowing" effect
-  // Different hues have different optimal lightness for maximum perceived vibrancy
-  // We use 0.40 chroma which may get slightly reduced during gamut mapping
-  const neonColor: Oklch = {
+  // Vibrant but not overwhelming - rich colors that work well together
+  const vibrantColor: Oklch = {
     mode: "oklch",
-    l: getNeonLightness(newHue), // Hue-dependent lightness for best vibrancy
-    c: 0.40, // Maximum chroma for electric effect (slightly reduced after gamut mapping)
+    l: getVibrantLightness(newHue), // Hue-dependent lightness
+    c: 0.25, // Rich saturation without being overpowering
     h: newHue,
   };
 
-  return oklchToHex(neonColor);
+  return oklchToHex(vibrantColor);
 }
 
 /**
- * Get optimal lightness for a neon color based on its hue.
- * Different hues appear most vibrant at different lightness levels.
- * Cyan/teal hues (160-210°) have severely limited sRGB gamut (~0.16 max chroma),
- * so we use higher lightness to maximize their achievable saturation.
+ * Get optimal lightness for a vibrant color based on its hue.
+ * Different hues look best at different lightness levels.
  */
-function getNeonLightness(hue: number): number {
-  // Cyan/teal (160-210°) - pure cyan #00FFFF is at L=0.91, C=0.155
-  // Use high lightness to maximize the limited gamut
+function getVibrantLightness(hue: number): number {
+  // Cyan/teal (160-210°) - needs higher lightness for good saturation
   if (hue >= 160 && hue <= 210) {
-    return 0.85; // High lightness maximizes cyan chroma in sRGB
-  }
-  // Yellow/green hues need higher lightness to appear vibrant
-  if (hue >= 60 && hue <= 160) {
     return 0.72;
   }
-  // Blue range (210-270°) - moderate lightness
+  // Yellow/green hues - lighter for vibrancy
+  if (hue >= 60 && hue <= 160) {
+    return 0.68;
+  }
+  // Blue range (210-270°) - slightly darker works well
   if (hue >= 210 && hue <= 270) {
+    return 0.55;
+  }
+  // Purple/magenta range (270-330°)
+  if (hue >= 270 && hue <= 330) {
     return 0.58;
   }
-  // Purple/magenta range (270-330°) - can be slightly lighter
-  if (hue >= 270 && hue <= 330) {
-    return 0.62;
-  }
-  // Red/orange/pink range - medium lightness
-  return 0.67;
+  // Red/orange/pink range
+  return 0.62;
 }
 
 /**

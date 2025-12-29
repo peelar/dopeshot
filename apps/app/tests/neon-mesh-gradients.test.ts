@@ -49,11 +49,9 @@ function extractHexFromRgba(rgba: string): string | null {
 }
 
 async function testGenerateNeonColorHighChroma() {
-  // Test that generateNeonColor produces high-chroma colors
-  // Note: sRGB gamut severely limits certain hues:
-  // - Cyan (180°) max chroma is ~0.155 (pure cyan #00FFFF)
-  // - Most other hues can achieve 0.20-0.30
-  // We use 0.15 as threshold to account for cyan's gamut limitation
+  // Test that generateNeonColor produces vibrant colors
+  // With toned-down chroma of 0.25, most colors achieve 0.12-0.25
+  // Cyan is limited by sRGB gamut to ~0.10-0.12 at this lightness
   const testColors = [
     "#FFB6C1", // Light pink
     "#808080", // Gray
@@ -66,10 +64,10 @@ async function testGenerateNeonColorHighChroma() {
       const neonColor = generateNeonColor(baseColor, offset);
       const chroma = getOklchChroma(neonColor);
 
-      // sRGB gamut limits cyan to ~0.155; 0.15 accounts for this
+      // Vibrant but toned down - expect 0.10+ for all hues
       assert.ok(
-        chroma >= 0.15,
-        `Neon color from ${baseColor} at offset ${offset} should have chroma >= 0.15, got ${chroma.toFixed(3)}`
+        chroma >= 0.10,
+        `Vibrant color from ${baseColor} at offset ${offset} should have chroma >= 0.10, got ${chroma.toFixed(3)}`
       );
     }
   }
@@ -124,25 +122,25 @@ async function testMeshLayerOpacity() {
   const meshGradient = getMeshGradient(gradients);
   assert.ok(meshGradient?.meshLayers, "Should have mesh layers");
 
-  // Verify opacity values are in expected range (0.55 to 0.85)
+  // Verify opacity values are in expected range (0.45 to 0.75)
   const opacities = meshGradient.meshLayers.map(layer => {
     const match = layer.color.match(/,\s*([\d.]+)\)$/);
     return match ? parseFloat(match[1]) : 0;
   });
 
   assert.ok(
-    Math.max(...opacities) >= 0.80,
-    `Max opacity should be >= 0.80, got ${Math.max(...opacities)}`
+    Math.max(...opacities) >= 0.70,
+    `Max opacity should be >= 0.70, got ${Math.max(...opacities)}`
   );
   assert.ok(
-    Math.min(...opacities) >= 0.50,
-    `Min opacity should be >= 0.50, got ${Math.min(...opacities)}`
+    Math.min(...opacities) >= 0.40,
+    `Min opacity should be >= 0.40, got ${Math.min(...opacities)}`
   );
 }
 
 async function testNeonColorAllHues() {
-  // Test that neon colors across the spectrum all have high chroma
-  // sRGB gamut limits cyan (180°) to ~0.155; use 0.15 as threshold
+  // Test that vibrant colors across the spectrum have good saturation
+  // Toned down but still colorful - expect 0.10+ for all hues
   const baseColor = "#FF6B6B"; // Red-ish
 
   for (let hue = 0; hue < 360; hue += 30) {
@@ -150,8 +148,8 @@ async function testNeonColorAllHues() {
     const chroma = getOklchChroma(neonColor);
 
     assert.ok(
-      chroma >= 0.15,
-      `Neon color at hue offset ${hue} should have chroma >= 0.15, got ${chroma.toFixed(3)}`
+      chroma >= 0.10,
+      `Vibrant color at hue offset ${hue} should have chroma >= 0.10, got ${chroma.toFixed(3)}`
     );
   }
 }
@@ -180,10 +178,10 @@ async function testMonochromaticGrayProducesNeonColors() {
   const chromas = layerColors.map(getOklchChroma);
   const avgChroma = chromas.reduce((a, b) => a + b, 0) / chromas.length;
 
-  // sRGB gamut limits cyan; 0.18 accounts for mix of hues
+  // Toned down colors - expect average chroma around 0.12-0.20
   assert.ok(
-    avgChroma >= 0.18,
-    `Average chroma from gray input should be >= 0.18, got ${avgChroma.toFixed(3)}`
+    avgChroma >= 0.12,
+    `Average chroma from gray input should be >= 0.12, got ${avgChroma.toFixed(3)}`
   );
 }
 
