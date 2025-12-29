@@ -1,5 +1,5 @@
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, fireEvent, cleanup } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { FeedbackModal } from "@/components/feedback/feedback-modal";
 
 // Mock analytics
@@ -20,6 +20,12 @@ describe("FeedbackModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+    // Clean up any Radix UI portals that might be left in document.body
+    document.body.innerHTML = '';
   });
 
   it("renders when open is true", () => {

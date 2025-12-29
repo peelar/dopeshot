@@ -113,6 +113,9 @@ export function FeedbackModal({
     track("feedback_screenshot_removed");
   };
 
+  // Only render Dialog when open to ensure proper cleanup and test isolation
+  if (!open) return null;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
