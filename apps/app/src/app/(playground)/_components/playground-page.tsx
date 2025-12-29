@@ -192,6 +192,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         aria-hidden="true"
         tabIndex={-1}
         disabled={isProcessingUpload}
+        data-testid="file-upload-input"
       />
 
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">

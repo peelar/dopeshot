@@ -51,8 +51,8 @@ test.describe('Playground', () => {
   test('shows upload button in header', async ({ page }) => {
     await page.goto('/');
 
-    // Find the upload button
-    const uploadButton = page.getByRole('button', { name: /upload your screenshot/i }).first();
+    // Find the upload button using aria-label
+    const uploadButton = page.getByRole('button', { name: /upload/i }).first();
     await expect(uploadButton).toBeVisible();
   });
 

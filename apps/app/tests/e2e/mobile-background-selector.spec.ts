@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Mobile Background Selector Layout', () => {
-  test('background selector should be close to slider on mobile', async ({ page }) => {
+  test('background selector should be sticky at bottom above mobile menu', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto('/');
@@ -9,32 +9,33 @@ test.describe('Mobile Background Selector Layout', () => {
     // Wait for page to load
     await page.waitForLoadState('networkidle');
 
-    // Find the slider
-    const slider = page.locator('input[type="range"][aria-label="Screenshot zoom"]');
-    await expect(slider).toBeVisible();
-
-    // Find the gradient tiles (should be in a grid)
-    const gradientGrid = page.locator('div.grid.grid-cols-4');
+    // Find the gradient tiles in the sticky bottom container (not the one in the Design sheet)
+    // The sticky container has position fixed
+    const gradientGrid = page.locator('[class*="fixed"][class*="bottom"] div.grid.grid-cols-4');
     await expect(gradientGrid).toBeVisible();
 
+    // Find the Design button in mobile menu
+    const designButton = page.getByRole('button', { name: /design/i }).last();
+    await expect(designButton).toBeVisible();
+
     // Get bounding boxes
-    const sliderBox = await slider.boundingBox();
     const gradientBox = await gradientGrid.boundingBox();
+    const designButtonBox = await designButton.boundingBox();
 
-    expect(sliderBox).not.toBeNull();
     expect(gradientBox).not.toBeNull();
+    expect(designButtonBox).not.toBeNull();
 
-    if (sliderBox && gradientBox) {
-      // Calculate the gap between slider bottom and gradient top
-      const gap = gradientBox.y - (sliderBox.y + sliderBox.height);
+    if (gradientBox && designButtonBox) {
+      // The gradient grid should be above the Design button
+      expect(gradientBox.y + gradientBox.height).toBeLessThanOrEqual(designButtonBox.y);
 
-      console.log(`Spacing between slider and gradients: ${gap}px`);
-      console.log(`Slider bottom: ${sliderBox.y + sliderBox.height}px`);
-      console.log(`Gradient top: ${gradientBox.y}px`);
+      // Check that both are near the bottom of the viewport
+      // The gradient container should be within the bottom 150px of viewport
+      expect(gradientBox.y).toBeGreaterThan(667 - 150);
 
-      // Gap should be very small (less than 16px)
-      expect(gap).toBeLessThan(16);
-      expect(gap).toBeGreaterThanOrEqual(0);
+      console.log(`Gradient bottom: ${gradientBox.y + gradientBox.height}px`);
+      console.log(`Design button top: ${designButtonBox.y}px`);
+      console.log(`Gap: ${designButtonBox.y - (gradientBox.y + gradientBox.height)}px`);
     }
   });
 });
