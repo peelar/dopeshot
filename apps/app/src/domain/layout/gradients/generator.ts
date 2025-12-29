@@ -415,40 +415,63 @@ function generateMeshGradient(
 }
 
 /**
- * Generate aurora gradient with ethereal flowing wave effect
- * Uses 4 color stops for smooth, layered transitions
- * Creates northern lights inspired aesthetic
+ * Generate an ambient gradient from screenshot colors.
+ * Creates "safe" gradients that always have two distinct colors.
+ * Dark mode: accent color darkened → near-black (#0a0a0a)
+ * Light mode: accent color lightened → off-white (#f5f5f5)
  */
-function generateAuroraGradient(
-  palette: ColorPalette,
+function generateAmbientGradient(
   enhanced: EnhancedColorPalette,
+  mode: "dark" | "light",
 ): AdvancedGradient {
-  const colors = getPaletteColorPool(enhanced);
-  const primary = colors[0];
-  const secondary = colors[1] || enhanceColor(primary, { lightnessShift: 0.2 });
-  const tertiary = colors[2] || enhanceColor(secondary, { lightnessShift: -0.15 });
+  const accentColor = enhanced.hero ?? enhanced.accent ?? enhanced.dominant;
 
-  // Aurora uses 4 stops for smooth wave-like transitions
-  // Positions create bands of color that flow into each other
-  const stops: GradientStop[] = [
-    { color: primary, position: 0 },
-    { color: enhanceColor(primary, { lightnessShift: 0.08, saturationBoost: 0.1 }), position: 25 },
-    { color: secondary, position: 55 },
-    { color: tertiary, position: 100 },
-  ];
+  if (mode === "dark") {
+    // Darken accent significantly, ensure it stays distinct from near-black
+    const darkAccent = enhanceColor(accentColor, {
+      lightnessShift: -0.5, // Make much darker
+      saturationBoost: 0.15, // Preserve saturation to keep color visible
+    });
+    const { colorA, colorB } = enforceColorSeparation(darkAccent, "#0a0a0a", 0, 0.12);
 
-  return {
-    type: "linear",
-    stops,
-    angle: 135, // Diagonal for flowing effect
-    colorSpace: "oklch",
-  };
+    return {
+      type: "linear",
+      stops: [
+        { color: colorA, position: 0 },
+        { color: colorB, position: 100 },
+      ],
+      angle: 135,
+      colorSpace: "oklch",
+    };
+  } else {
+    // Lighten accent, ensure it stays distinct from off-white
+    const lightAccent = enhanceColor(accentColor, {
+      lightnessShift: 0.3, // Make lighter but keep some color
+      saturationBoost: 0.15, // Boost saturation to stay visible
+    });
+    const { colorA, colorB } = enforceColorSeparation(lightAccent, "#f5f5f5", 0, 0.15);
+
+    return {
+      type: "linear",
+      stops: [
+        { color: colorA, position: 0 },
+        { color: colorB, position: 100 },
+      ],
+      angle: 135,
+      colorSpace: "oklch",
+    };
+  }
 }
 
 /**
  * Generate multiple gradient options from a palette
  * Used in gradient picker to show different variations
- * Each option uses a different color strategy for maximum visual variety
+ *
+ * Slot layout:
+ * 1-3: Linear gradients (multi-color, complementary, analogous)
+ * 4: Mesh gradient (neon blob layers)
+ * 5: Dark ambient (accent → near-black #0a0a0a)
+ * 6: Light ambient (accent → off-white #f5f5f5)
  */
 export function generateGradientOptions(
   palette: ColorPalette,
@@ -456,12 +479,11 @@ export function generateGradientOptions(
 ): AdvancedGradient[] {
   const enhanced = enhanceColorPalette(palette);
 
-  // Original 4 linear gradient strategies
-  const strategies: Array<"multi-color" | "complementary" | "analogous" | "triadic"> = [
+  // 3 linear gradient strategies
+  const strategies: Array<"multi-color" | "complementary" | "analogous"> = [
     "multi-color",
     "complementary",
     "analogous",
-    "triadic",
   ];
 
   const colorPairs = buildColorPairs(enhanced, strategies.length);
@@ -472,9 +494,14 @@ export function generateGradientOptions(
     }),
   );
 
-  // Add mesh and aurora gradients for 6 total options
+  // Slot 4: Mesh gradient
   const meshGradient = generateMeshGradient(palette, enhanced);
-  const auroraGradient = generateAuroraGradient(palette, enhanced);
 
-  return [...linearGradients, meshGradient, auroraGradient];
+  // Slot 5: Dark ambient (accent → near-black #0a0a0a)
+  const darkAmbient = generateAmbientGradient(enhanced, "dark");
+
+  // Slot 6: Light ambient (accent → off-white #f5f5f5)
+  const lightAmbient = generateAmbientGradient(enhanced, "light");
+
+  return [...linearGradients, meshGradient, darkAmbient, lightAmbient];
 }
