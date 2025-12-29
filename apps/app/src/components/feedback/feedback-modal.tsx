@@ -115,7 +115,7 @@ export function FeedbackModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px] data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-top-0">
+      <DialogContent className="sm:max-w-[520px]">
         <DialogHeader>
           <div className="flex items-center justify-center mb-3">
             <div className="rounded-full bg-muted p-2.5">
