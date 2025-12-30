@@ -19,12 +19,15 @@ import { useAuth } from "@/lib/auth";
 import { signOut } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { useTheme } from "next-themes";
-import { LogOut, Monitor, Moon, Sun, User } from "lucide-react";
+import { LogOut, Monitor, Moon, Sun, User, History } from "lucide-react";
+import { useSetAtom } from "jotai";
+import { memorySidebarOpenAtom } from "@/hooks/atoms/memory";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const setMemorySidebarOpen = useSetAtom(memorySidebarOpenAtom);
 
   React.useEffect(() => {
     setMounted(true);
@@ -72,6 +75,18 @@ export function UserMenu() {
                 </p>
               </div>
             </DropdownMenuLabel>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem
+              onSelect={() => {
+                setMemorySidebarOpen(true);
+                track("memory_opened_from_user_menu");
+              }}
+            >
+              <History className="mr-2 h-4 w-4" />
+              My Exports
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           {mounted && (

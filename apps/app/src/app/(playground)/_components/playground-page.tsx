@@ -18,7 +18,6 @@ import { useAtom, useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { MemorySidebar } from "@/components/memory/memory-sidebar";
-import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
 import { useMemory } from "@/hooks/use-memory";
 
 const OnboardingModal = dynamic(
@@ -163,8 +162,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
 
         {/* Center: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex flex-shrink-0 items-center gap-3 bg-muted/20 pl-4 sm:pl-8">
-            <MemorySidebarTrigger />
+          <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
             <LayoutSelector />
           </div>
 
