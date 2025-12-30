@@ -17,6 +17,8 @@ import { orientationAtom, feedbackModalOpenAtom, type Orientation } from "@/hook
 import { useAtom, useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
+import { MemorySidebar } from "@/components/memory/memory-sidebar";
+import { useMemory } from "@/hooks/use-memory";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -95,6 +97,8 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
     setFeedbackScreenshot(screenshot);
     setFeedbackModalOpen(true);
   };
+  // Memory hook for loading items
+  const { loadMemoryItem } = useMemory();
 
   const {
     dragAndUpload,
@@ -151,9 +155,12 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         onFeedbackClick={handleFeedbackClick}
       />
 
-      {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
+      {/* Three-column layout: Memory Sidebar | Content (Looks + Preview) | Design Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
-        {/* Left: Content Column (Looks Rail + Preview) */}
+        {/* Left: Memory Sidebar (collapsible) */}
+        <MemorySidebar onLoadItem={loadMemoryItem} />
+
+        {/* Center: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
             <LayoutSelector />

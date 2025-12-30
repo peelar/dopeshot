@@ -1,0 +1,373 @@
+openapi: 3.1.0
+info:
+  title: DopeShot Memory API
+  version: 1.0.0
+  description: API for managing memory items (persisted exports) in DopeShot
+
+servers:
+  - url: /api/memory
+    description: Memory API routes
+
+paths:
+  /items:
+    get:
+      operationId: listMemoryItems
+      summary: List user's memory items
+      description: Returns paginated list of memory items for authenticated user, ordered by createdAt desc
+      security:
+        - session: []
+      parameters:
+        - name: cursor
+          in: query
+          schema:
+            type: string
+          description: Cursor for pagination (createdAt of last item)
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+            maximum: 50
+          description: Number of items to return
+      responses:
+        '200':
+          description: List of memory items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MemoryItemDTO'
+                  nextCursor:
+                    type: string
+                    nullable: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    post:
+      operationId: createMemoryItem
+      summary: Create a new memory item
+      description: Persists export configuration and uploads screenshot
+      security:
+        - session: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - configHash
+                - configuration
+                - screenshot
+              properties:
+                configHash:
+                  type: string
+                  pattern: '^[a-f0-9]{32}$'
+                  description: SHA-256 hash (first 32 chars) of normalized config
+                configuration:
+                  type: string
+                  description: JSON-encoded MemoryConfiguration
+                screenshot:
+                  type: string
+                  format: binary
+                  description: Screenshot file (PNG or JPEG, max 10MB)
+      responses:
+        '201':
+          description: Memory item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryItemDTO'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          description: Duplicate config hash exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Config already exists in memory
+                  existingId:
+                    type: string
+                    description: ID of existing memory item with same config
+
+  /items/{itemId}:
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      operationId: getMemoryItem
+      summary: Get a specific memory item
+      description: Returns full memory item with configuration for loading into editor
+      security:
+        - session: []
+      responses:
+        '200':
+          description: Memory item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemoryItemFull'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    delete:
+      operationId: deleteMemoryItem
+      summary: Delete a memory item
+      description: Removes memory item and associated screenshot from storage
+      security:
+        - session: []
+      responses:
+        '204':
+          description: Memory item deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /items/{itemId}/share:
+    parameters:
+      - name: itemId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      operationId: shareMemoryItem
+      summary: Generate share URL for memory item
+      description: Creates public share hash and returns shareable URL
+      security:
+        - session: []
+      responses:
+        '200':
+          description: Share URL generated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  shareUrl:
+                    type: string
+                    example: https://dopeshot.app/abc123xyz789
+                  shareHash:
+                    type: string
+                    example: abc123xyz789
+        '400':
+          description: Item already shared
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Item already shared
+                  shareUrl:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /shared/{shareHash}:
+    parameters:
+      - name: shareHash
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: '^[A-Za-z0-9_-]{12}$'
+
+    get:
+      operationId: getSharedItem
+      summary: Get shared memory item by hash
+      description: Public endpoint - returns configuration for shared items
+      responses:
+        '200':
+          description: Shared item configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedItemDTO'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  securitySchemes:
+    session:
+      type: apiKey
+      in: cookie
+      name: better-auth.session_token
+
+  schemas:
+    MemoryItemDTO:
+      type: object
+      required:
+        - id
+        - screenshotUrl
+        - isShared
+        - createdAt
+      properties:
+        id:
+          type: string
+          format: uuid
+        screenshotUrl:
+          type: string
+          format: uri
+          description: Signed URL for thumbnail (expires in 1 hour)
+        isShared:
+          type: boolean
+        shareUrl:
+          type: string
+          format: uri
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+
+    MemoryItemFull:
+      allOf:
+        - $ref: '#/components/schemas/MemoryItemDTO'
+        - type: object
+          required:
+            - configuration
+          properties:
+            configuration:
+              $ref: '#/components/schemas/MemoryConfiguration'
+
+    SharedItemDTO:
+      type: object
+      required:
+        - screenshotUrl
+        - configuration
+      properties:
+        screenshotUrl:
+          type: string
+          format: uri
+          description: Public signed URL for screenshot
+        configuration:
+          $ref: '#/components/schemas/MemoryConfiguration'
+        ownerName:
+          type: string
+          nullable: true
+          description: Optional owner display name
+
+    MemoryConfiguration:
+      type: object
+      required:
+        - version
+        - layoutId
+        - variant
+        - orientation
+        - screenshotPath
+        - gradient
+        - textOverlays
+        - config
+        - renderingFlags
+      properties:
+        version:
+          type: integer
+          enum: [1]
+        layoutId:
+          type: string
+        variant:
+          type: string
+        orientation:
+          type: string
+          enum: [desktop, mobile]
+        screenshotPath:
+          type: string
+        gradient:
+          type: object
+          required:
+            - type
+            - colors
+          properties:
+            type:
+              type: string
+              enum: [linear, radial, mesh]
+            colors:
+              type: array
+              items:
+                type: string
+                pattern: '^#[0-9A-Fa-f]{6}$'
+              minItems: 2
+              maxItems: 6
+            angle:
+              type: number
+            positions:
+              type: array
+              items:
+                type: number
+            meshLayers:
+              type: array
+              items:
+                type: object
+        textOverlays:
+          type: object
+          additionalProperties:
+            type: string
+        config:
+          type: object
+          additionalProperties: true
+        renderingFlags:
+          type: object
+          required:
+            - aspectLocked
+            - screenshotZoom
+          properties:
+            aspectLocked:
+              type: boolean
+            screenshotZoom:
+              type: number
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Unauthorized
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              error:
+                type: string
+                example: Not found

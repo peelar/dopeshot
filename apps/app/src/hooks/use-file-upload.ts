@@ -13,8 +13,8 @@ import {
   statusMessageAtom,
   isProcessingUploadAtom,
   hasCustomScreenshotAtom,
+  screenshotGradientAtom,
 } from "./atoms";
-import { screenshotGradientAtom } from "./atoms";
 import { expandSidebarSectionAtom } from "./use-sidebar-state";
 import { backgroundSelectionAtom } from "./atoms/backgrounds";
 const ACCEPTED_IMAGE_TYPES = new Set(["image/png", "image/jpeg", "image/webp", "image/svg+xml"]);

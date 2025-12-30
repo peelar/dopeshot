@@ -29,6 +29,11 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
     if (isOpen && items.length === 0 && !isLoading) {
       fetchMemoryItems();
     }
+
+    // Track sidebar opened
+    if (isOpen) {
+      track("memory_sidebar_opened");
+    }
   }, [isOpen]);
 
   const fetchMemoryItems = async () => {

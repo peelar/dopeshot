@@ -14,10 +14,12 @@ import { getPreferredGradientAngle } from "@/domain/layout/gradient-application"
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import type { LayoutDefinition } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
-import { exportLayoutAsPng } from "@/domain/layout/export";
+import { exportLayoutAsPng, exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 import { PLACEHOLDER_ASSET_ID } from "@/hooks/atoms";
+import { useMemory } from "@/hooks/use-memory";
+import { useSession } from "@/lib/auth/auth-client";
 import {
   assetsAtom,
   configAtom,
@@ -52,6 +54,8 @@ interface ExportContext {
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
   orientation: "mobile" | "desktop";
+  createMemoryItem: (blob: Blob, path: string) => Promise<void>;
+  session: { user: { id: string } } | null;
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -92,6 +96,10 @@ export function usePlaygroundController() {
   const { processColorAnalysis } = useColorAnalysis({ gradientPreferences });
   const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
 
+  // Memory and auth for export persistence
+  const { createMemoryItem } = useMemory();
+  const { data: session } = useSession();
+
   usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
@@ -109,6 +117,8 @@ export function usePlaygroundController() {
     canvas,
     screenshotAsset,
     orientation,
+    createMemoryItem,
+    session,
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -248,6 +258,8 @@ function useExportHandler({
   canvas,
   screenshotAsset,
   orientation,
+  createMemoryItem,
+  session,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -277,11 +289,30 @@ function useExportHandler({
             )
           : undefined;
 
-      await exportLayoutAsPng("export-container", "cover-image.png", {
+      // Use blob export for memory persistence
+      const { dataUrl, blob } = await exportLayoutAsPngWithBlob("export-container", {
         width: exportDims.width,
         height: exportDims.height,
         maxImageScale,
       });
+
+      // Trigger download
+      const link = document.createElement("a");
+      link.download = "cover-image.png";
+      link.href = dataUrl;
+      link.click();
+
+      // Create memory item if user is logged in
+      if (session?.user?.id) {
+        try {
+          const screenshotPath = `${session.user.id}/${Date.now()}.png`;
+          await createMemoryItem(blob, screenshotPath);
+        } catch (memoryError) {
+          console.error("Failed to save to memory:", memoryError);
+          // Don't fail the export if memory creation fails
+        }
+      }
+
       setStatusMessage("Image exported successfully.");
     } catch (error) {
       console.error("Export Error Handler:", error);
@@ -305,6 +336,8 @@ function useExportHandler({
     screenshotAsset?.metadata?.width,
     setIsExporting,
     setStatusMessage,
+    createMemoryItem,
+    session,
   ]);
 }
 
