@@ -49,10 +49,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate screenshot size (max 10MB when base64 encoded)
-    if (screenshot && screenshot.length > 10 * 1024 * 1024) {
+    // Validate screenshot size (max 3MB to stay under Vercel's 4.5MB payload limit)
+    if (screenshot && screenshot.length > 3 * 1024 * 1024) {
       return NextResponse.json(
-        { error: "Screenshot is too large. Please try without the screenshot." },
+        { error: "Screenshot is too large. Please try again." },
         { status: 413 }
       );
     }
