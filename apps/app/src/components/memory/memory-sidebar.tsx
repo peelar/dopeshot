@@ -60,24 +60,21 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
     onLoadItem(itemId);
   };
 
-  if (!isOpen) {
-    return null;
-  }
-
   return (
     <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-        onClick={handleClose}
-      />
+      {/* Backdrop - only show when open */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          onClick={handleClose}
+        />
+      )}
 
-      {/* Sidebar */}
+      {/* Sidebar - always mounted for animation */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-50 h-full w-80 border-r bg-background transition-transform",
-          "lg:relative lg:z-auto",
-          isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+          "fixed left-0 top-0 z-50 h-full w-80 border-r bg-background transition-transform duration-300 ease-in-out",
+          isOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
         {/* Header */}
