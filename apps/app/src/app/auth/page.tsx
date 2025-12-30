@@ -2,7 +2,6 @@
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { Logo } from "@/components/ui/logo";
-import { ThemeToggle } from "@/components/providers/theme-toggle";
 
 export default function AuthPage() {
   return (
@@ -62,12 +61,11 @@ export default function AuthPage() {
         }}
       />
 
-      {/* Header with logo and theme toggle */}
-      <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between p-6">
+      {/* Header with logo */}
+      <div className="absolute left-0 top-0 z-10 p-6">
         <a href="/" aria-label="Go to homepage" className="transition-opacity hover:opacity-80">
           <Logo />
         </a>
-        {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
 
       {/* Auth form */}

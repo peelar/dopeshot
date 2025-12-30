@@ -59,7 +59,7 @@ test.describe('Memory: Logged-Out Export', () => {
     expect(downloadPath).toBeTruthy();
   });
 
-  test('should not show memory items when logged out', async ({ page }) => {
+  test('should show sign-up prompt when logged out', async ({ page }) => {
     // Try to find and open memory sidebar
     const memoryButton = page.locator('[aria-label*="memory"]').or(
       page.getByRole('button', { name: /memory/i })
@@ -79,19 +79,32 @@ test.describe('Memory: Logged-Out Export', () => {
       const sidebarVisible = await memorySidebar.isVisible({ timeout: 2000 }).catch(() => false);
 
       if (sidebarVisible) {
-        // Sidebar should show empty state
-        const emptyStateText = memorySidebar.locator('text=/no exports/i').or(
-          memorySidebar.locator('text=/your exported designs/i')
-        );
+        // Look for sign-up prompt elements
+        const signUpButton = memorySidebar.getByRole('link', { name: /sign up/i });
+        const saveWorkHeading = memorySidebar.locator('text=/save your work/i');
 
-        // Either empty state is visible, or no items are shown
-        const memoryItems = memorySidebar.locator('[role="button"]').or(
-          memorySidebar.locator('button').filter({ hasText: /./ })
-        );
+        // Verify sign-up prompt is shown for logged-out users
+        const hasSignUpPrompt = await signUpButton.count() > 0;
 
-        const itemCount = await memoryItems.count();
+        if (hasSignUpPrompt) {
+          await expect(saveWorkHeading).toBeVisible();
+          await expect(signUpButton).toBeVisible();
+
+          // Verify the button links to /auth
+          const href = await signUpButton.getAttribute('href');
+          expect(href).toBe('/auth');
+
+          // Verify simplified description (without "access them anytime")
+          const description = memorySidebar.locator('text=/save your exported designs/i');
+          await expect(description).toBeVisible();
+        }
 
         // For logged-out users, there should be no memory items
+        const memoryItems = memorySidebar.locator('[role="button"]').or(
+          memorySidebar.locator('button').filter({ hasText: /./ })
+        ).filter({ hasNot: page.locator('a[href="/auth"]') }); // Exclude sign-up button
+
+        const itemCount = await memoryItems.count();
         expect(itemCount).toBe(0);
       }
     }
