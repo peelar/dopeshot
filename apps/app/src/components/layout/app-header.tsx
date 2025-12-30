@@ -1,11 +1,11 @@
 "use client";
 
-import { ThemeToggle } from "@/components/providers/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
 import { Download, ImageUp, Loader2, RefreshCw, MessageSquare } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { UserMenu } from "./user-menu";
 
 interface AppHeaderProps {
   hasCustomScreenshot: boolean;
@@ -105,7 +105,7 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
-        {process.env.NODE_ENV === "development" && <ThemeToggle />}
+        <UserMenu />
       </div>
     </header>
   );
