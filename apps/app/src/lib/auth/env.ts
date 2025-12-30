@@ -21,4 +21,7 @@ export const authEnv = {
   betterAuthSecret: getEnvVar("BETTER_AUTH_SECRET"),
   betterAuthUrl: resolveBetterAuthUrl(),
   resendApiKey: process.env.RESEND_API_KEY, // Optional - only needed for magic links
+  // Google OAuth credentials
+  googleClientId: getEnvVar("GOOGLE_CLIENT_ID"),
+  googleClientSecret: getEnvVar("GOOGLE_CLIENT_SECRET"),
 } as const;

@@ -2,7 +2,7 @@
 export { AuthProvider, useAuth } from "./provider";
 
 // Actions
-export { signInWithEmail, signUpWithEmail, signOutUser, sendMagicLink } from "./actions";
+export { signInWithEmail, signUpWithEmail, signOutUser, sendMagicLink, signInWithGoogle } from "./actions";
 
 // Types
 export type { User, Session, AuthError, AuthResult, BrandProfile } from "./types";
