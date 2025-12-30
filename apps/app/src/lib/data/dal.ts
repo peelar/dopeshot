@@ -16,6 +16,7 @@ const ALLOWED_MODELS = new Set([
   "GeneratedAsset",
   "PersonalBackground",
   "BackgroundSelection",
+  "MemoryItem",
 ]);
 const GENERATED_ASSET_UNSAFE_OPS = new Set([
   "findUnique",
