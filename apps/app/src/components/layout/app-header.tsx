@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils/cn";
 import { Download, ImageUp, Loader2, RefreshCw, MessageSquare } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { UserMenu } from "./user-menu";
+import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
 
 interface AppHeaderProps {
   hasCustomScreenshot: boolean;
@@ -44,9 +45,13 @@ export function AppHeader({
 
   return (
     <header className="relative sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-primary/30 after:via-primary/10 after:to-transparent after:opacity-40 sm:px-6">
-      <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
-        <Logo />
-      </a>
+      <div className="flex items-center gap-3">
+        <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
+          <Logo />
+        </a>
+        <div className="relative h-6 w-px bg-border/60" aria-hidden="true" />
+        <MemorySidebarTrigger />
+      </div>
       <div className="flex items-center gap-3">
         {onFeedbackClick ? (
           <Button

@@ -15,7 +15,12 @@ export const memorySidebarOpenAtom = atom(false);
 export const memoryItemsAtom = atom<MemoryItemDTO[]>([]);
 
 /**
- * Loading state for memory operations
+ * Loading state for fetching memory items list
+ */
+export const memoryItemsLoadingAtom = atom(false);
+
+/**
+ * Loading state for loading a specific memory item
  */
 export const memoryLoadingAtom = atom(false);
 
@@ -62,4 +67,34 @@ export const configExistsInMemoryAtom = atom((get) => {
   // We can't check hash directly from DTO, so for now return false
   // This will be properly implemented when we fetch full items or add hash to DTO
   return false;
+});
+
+/**
+ * Progressive disclosure state: Track if user has any exports
+ */
+export const hasExportsAtom = atom(false);
+
+/**
+ * Progressive disclosure state: Track if there are unseen exports since last view
+ */
+export const hasUnseenExportsAtom = atom(false);
+
+/**
+ * Progressive disclosure state: Timestamp when user last viewed history
+ */
+export const lastViewedHistoryAtom = atom<number | null>(null);
+
+/**
+ * Derived atom: Count of unseen exports
+ * Returns count of exports created after lastViewedHistory timestamp
+ */
+export const unseenExportCountAtom = atom((get) => {
+  const items = get(memoryItemsAtom);
+  const lastViewed = get(lastViewedHistoryAtom);
+
+  // If never viewed, all items are unseen
+  if (!lastViewed) return items.length;
+
+  // Count items created after last view
+  return items.filter((item) => new Date(item.createdAt).getTime() > lastViewed).length;
 });

@@ -18,6 +18,7 @@ export function AuthForm() {
   const [status, setStatus] = useState<{ type: "error" | "success"; message: string } | null>(null);
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleFormChange =
     (field: "email" | "password" | "confirmPassword") => (event: ChangeEvent<HTMLInputElement>) => {
@@ -48,12 +49,17 @@ export function AuthForm() {
 
     track("auth_attempt", { method: "password", mode });
 
+    setIsSubmitting(true);
+
     const handler =
       mode === "sign-in"
         ? () => signInWithEmail(trimmedEmail, form.password)
         : () => signUpWithEmail(trimmedEmail, form.password);
 
     const { error } = await handler();
+
+    setIsSubmitting(false);
+
     if (error) {
       setStatus({ type: "error", message: error.message });
       track("auth_failed", { method: "password", mode, error: error.message });
@@ -85,7 +91,12 @@ export function AuthForm() {
 
     track("auth_attempt", { method: "magic_link" });
 
+    setIsSubmitting(true);
+
     const { error } = await sendMagicLink(trimmedEmail);
+
+    setIsSubmitting(false);
+
     if (error) {
       setStatus({ type: "error", message: error.message });
       track("auth_failed", { method: "magic_link", error: error.message });
@@ -283,9 +294,19 @@ export function AuthForm() {
             <Button
               type="submit"
               className="h-12 w-full rounded-lg bg-foreground text-background hover:bg-foreground/90"
-              disabled={isLoading}
+              disabled={isLoading || isSubmitting}
             >
-              {useMagicLink ? "Send magic link" : mode === "sign-in" ? "Sign in" : "Create account"}
+              {isSubmitting
+                ? useMagicLink
+                  ? "Sending..."
+                  : mode === "sign-in"
+                    ? "Signing in..."
+                    : "Creating account..."
+                : useMagicLink
+                  ? "Send magic link"
+                  : mode === "sign-in"
+                    ? "Sign in"
+                    : "Create account"}
             </Button>
 
             {!useMagicLink && status && (

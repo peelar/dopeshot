@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,19 +16,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth";
-import { signOut } from "@/lib/auth/auth-client";
+import { useAuth, signOutUser } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 import { useTheme } from "next-themes";
-import { LogOut, Monitor, Moon, Sun, User, History } from "lucide-react";
-import { useSetAtom } from "jotai";
-import { memorySidebarOpenAtom } from "@/hooks/atoms/memory";
+import { LogOut, Monitor, Moon, Sun, LogIn } from "lucide-react";
 
 export function UserMenu() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const setMemorySidebarOpen = useSetAtom(memorySidebarOpenAtom);
 
   React.useEffect(() => {
     setMounted(true);
@@ -35,12 +32,13 @@ export function UserMenu() {
 
   const handleLogout = async () => {
     track("user_logout_clicked");
-    try {
-      await signOut();
-      window.location.href = "/";
-    } catch (error) {
+    const { error } = await signOutUser();
+    if (error) {
       console.error("Logout failed:", error);
     }
+    // Force hard reload to clear all cache and state
+    // Using replace instead of href to prevent back button issues
+    window.location.replace("/");
   };
 
   // Show skeleton while loading or not mounted to prevent layout shift and hydration mismatch
@@ -54,6 +52,7 @@ export function UserMenu() {
 
   // Show dropdown menu with avatar when logged in
   if (isAuthenticated && user) {
+    console.log("UserMenu: Rendering authenticated menu for", user.email);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger
@@ -75,18 +74,6 @@ export function UserMenu() {
                 </p>
               </div>
             </DropdownMenuLabel>
-          </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuGroup>
-            <DropdownMenuItem
-              onSelect={() => {
-                setMemorySidebarOpen(true);
-                track("memory_opened_from_user_menu");
-              }}
-            >
-              <History className="mr-2 h-4 w-4" />
-              My Exports
-            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           {mounted && (
@@ -119,7 +106,7 @@ export function UserMenu() {
               <DropdownMenuSeparator />
             </>
           )}
-          <DropdownMenuItem variant="destructive" onSelect={handleLogout}>
+          <DropdownMenuItem variant="destructive" onClick={handleLogout}>
             <LogOut className="mr-2 h-4 w-4" />
             Log out
           </DropdownMenuItem>
@@ -130,16 +117,15 @@ export function UserMenu() {
 
   // Show sign-in button when logged out
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted hover:text-foreground"
+    <Link
+      href="/auth"
+      className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       aria-label="Sign in"
       onClick={() => {
         track("user_menu_clicked", { authenticated: false });
       }}
     >
-      <User className="h-4 w-4" />
-    </Button>
+      <LogIn className="h-4 w-4" />
+    </Link>
   );
 }

@@ -271,18 +271,113 @@ All paths are relative to `apps/app/`:
 
 ---
 
-## Phase 10: Polish & Cross-Cutting Concerns
+## Phase 10: Memory Button Progressive Disclosure UX (Priority: P1 Enhancement)
+
+**Goal**: Improve memory button discoverability using progressive disclosure pattern - button reveals itself when it becomes relevant.
+
+**User Flow**: Subtle button on left → first export → button pulses/highlights with badge → user clicks → sidebar opens → badge clears
+
+**Reference**: See `MEMORY_BUTTON_UX_PLAN.md` in project root for complete design spec
+
+### State Management for Button UX
+
+- [X] T073A Create new atoms in `src/hooks/atoms/memory.ts`:
+  - `hasExportsAtom` (boolean) - tracks if user has any exports
+  - `hasUnseenExportsAtom` (boolean) - tracks if there are new exports since last view
+  - `lastViewedHistoryAtom` (number | null) - timestamp of last sidebar view
+  - `unseenExportCountAtom` (derived) - count of exports created after lastViewedHistory
+
+- [X] T073B Create localStorage persistence helpers in `src/lib/storage/memory-state.ts`:
+  - `getMemoryState()` - read hasExports, lastViewed from localStorage
+  - `setMemoryState()` - write state to localStorage
+  - Initialize atoms from localStorage on mount
+
+### Button Visual States
+
+- [X] T074A Update MemorySidebarTrigger in `src/components/memory/memory-sidebar-trigger.tsx`:
+  - Add ghost state styling when `!hasExports` (opacity-50, muted colors)
+  - Add filled state styling when `hasExports` (opacity-100, normal colors)
+  - Read `hasExportsAtom`, `unseenExportCountAtom` atoms
+
+- [X] T074B [P] Add badge indicator component to MemorySidebarTrigger:
+  - Render badge dot (8px circle, primary color) when `unseenExportCount > 0`
+  - Optional: Show count badge instead of dot if count > 1
+  - Position absolute (top-right of button)
+
+- [X] T074C [P] Add pulse animation to MemorySidebarTrigger:
+  - Create keyframes for pulse effect (scale + shadow)
+  - Trigger animation on first export (use `shouldPulse` state)
+  - Animation plays 2 times then stops
+
+### Button Placement
+
+- [X] T075A Add MemorySidebarTrigger to playground-page.tsx with fixed positioning:
+  - Use `className="fixed left-4 top-20 z-40"` (Option A from plan)
+  - Position: 16px from left, 80px from top (below header)
+  - Test desktop positioning (no layout shift)
+  - NOTE: Implemented in app-header.tsx instead for better grounding
+
+- [X] T075B Test mobile responsiveness:
+  - Verify button doesn't overlap with other UI
+  - Add responsive classes if needed (hide on very small screens?)
+  - Ensure button is tappable (min 44x44px touch target)
+
+- [X] T075C Remove "My Exports" from user menu dropdown in `src/components/layout/user-menu.tsx`:
+  - Remove the DropdownMenuItem that opens memory sidebar
+  - Keep user menu focused on account/settings
+
+### Export Flow Integration
+
+- [X] T076A Hook button state into export handler in `src/hooks/use-playground-controller.ts`:
+  - After successful export: `setHasExports(true)` and `setHasUnseenExports(true)`
+  - Trigger pulse animation on FIRST export only (check `!hasExports` before export)
+  - Track `memory_button_first_export` event
+  - NOTE: Implemented in use-memory.ts hook
+
+- [X] T076B Update sidebar open handler to clear unseen state:
+  - When memorySidebarOpenAtom becomes true: `setLastViewedHistory(Date.now())`
+  - This clears badge by updating unseenExportCountAtom calculation
+
+### Analytics
+
+- [ ] T077A [P] Add tracking events for button interactions:
+  - `memory_button_first_seen` - when button rendered with no exports
+  - `memory_button_highlighted` - when pulse animation triggers
+  - `memory_button_clicked_with_badge` - click with unseenCount > 0
+  - `memory_button_clicked_no_badge` - click with unseenCount = 0
+
+### Testing
+
+- [ ] T078A Create E2E test in `e2e/memory/button-progressive-disclosure.spec.ts`:
+  - New user → button visible but muted → export → button pulses with badge
+  - Click button → sidebar opens → badge disappears
+  - Close sidebar → export again → badge reappears
+  - Refresh page → state persists (localStorage)
+
+- [ ] T078B Manual testing checklist:
+  - Button visible on fresh session (ghost state)
+  - First export triggers pulse animation
+  - Badge appears after export
+  - Badge clears when sidebar opened
+  - State persists across page reloads
+  - Mobile: button doesn't overlap UI
+
+**Checkpoint**: Memory button UX complete - progressive disclosure working
+
+---
+
+## Phase 11: Polish & Cross-Cutting Concerns
 
 **Purpose**: Final cleanup, testing, and release prep
 
-- [ ] T073 Add changeset via `pnpm changeset` - major new feature "DopeShot Memory"
-- [ ] T074 Run `pnpm test:ui` and fix any failures
-- [ ] T075 Run `pnpm test:e2e` and fix any failures
-- [ ] T076 Run `pnpm knip` to identify unused exports/dependencies
-- [ ] T077 Review all tracking events are implemented (11 total from spec)
-- [ ] T078 Mobile responsiveness review for MemorySidebar (drawer pattern)
-- [ ] T079 Performance review: sidebar virtualization for 50+ items
-- [ ] T080 Update quickstart.md verification checklist with final tests
+- [ ] T079 Add changeset via `pnpm changeset` - major new feature "DopeShot Memory"
+- [ ] T080 Run `pnpm test:ui` and fix any failures
+- [ ] T081 Run `pnpm test:e2e` and fix any failures
+- [ ] T082 Run `pnpm knip` to identify unused exports/dependencies
+- [ ] T083 Review all tracking events are implemented (15 total: 11 original + 4 button UX)
+- [ ] T084 Mobile responsiveness review for MemorySidebar (drawer pattern)
+- [ ] T085 Performance review: sidebar virtualization for 50+ items
+- [ ] T086 Update quickstart.md verification checklist with final tests
 
 ---
 
@@ -388,8 +483,9 @@ Task: "T017 Create config-loader unit test"
 | US5 (P2) | 4 | 0 |
 | US6 (P3) | 6 | 1 |
 | US7 (P3) | 5 | 1 |
+| Button UX (P1) | 14 | 3 |
 | Polish | 8 | 0 |
-| **Total** | **80** | **25** |
+| **Total** | **94** | **28** |
 
 ---
 

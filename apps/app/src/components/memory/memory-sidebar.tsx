@@ -1,53 +1,84 @@
 "use client";
 
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useEffect, useState } from "react";
-import { X, History } from "lucide-react";
+import { X, History, Loader2 } from "lucide-react";
 import {
   memorySidebarOpenAtom,
   memoryItemsAtom,
-  memoryLoadingAtom,
+  memoryItemsLoadingAtom,
   loadedMemoryItemIdAtom,
+  lastViewedHistoryAtom,
+  hasUnseenExportsAtom,
 } from "@/hooks/atoms/memory";
 import { MemoryItem } from "./memory-item";
 import type { MemoryItemDTO } from "@/domain/memory/types";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
+import { setMemoryState } from "@/lib/storage/memory-state";
+import { useAuth } from "@/lib/auth";
 
 interface MemorySidebarProps {
   onLoadItem: (itemId: string) => void;
 }
 
 export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
+  const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useAtom(memorySidebarOpenAtom);
   const [items, setItems] = useAtom(memoryItemsAtom);
-  const [isLoading, setIsLoading] = useAtom(memoryLoadingAtom);
+  const [isLoadingItems, setIsLoadingItems] = useAtom(memoryItemsLoadingAtom);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
+  const setLastViewed = useSetAtom(lastViewedHistoryAtom);
+  const setHasUnseen = useSetAtom(hasUnseenExportsAtom);
 
-  // Fetch memory items when sidebar opens
+  // Debug logging
   useEffect(() => {
-    if (isOpen && items.length === 0 && !isLoading) {
-      fetchMemoryItems();
-    }
-
-    // Track sidebar opened
-    if (isOpen) {
-      track("memory_sidebar_opened");
-    }
+    console.log("MemorySidebar isOpen state:", isOpen);
   }, [isOpen]);
 
+  // Fetch memory items when sidebar opens + clear badge
+  useEffect(() => {
+    if (isOpen) {
+      // Only fetch if authenticated
+      if (isAuthenticated && items.length === 0 && !isLoadingItems) {
+        fetchMemoryItems();
+      } else if (!isAuthenticated) {
+        // Clear items for unauthenticated users
+        setItems([]);
+        setIsLoadingItems(false);
+      }
+
+      // Clear unseen badge when sidebar opens
+      const now = Date.now();
+      setLastViewed(now);
+      setHasUnseen(false);
+      setMemoryState({ lastViewed: now });
+
+      // Track sidebar opened
+      track("memory_sidebar_opened", { authenticated: isAuthenticated });
+    }
+  }, [isOpen, items.length, isLoadingItems, isAuthenticated, setLastViewed, setHasUnseen, setItems, setIsLoadingItems]);
+
   const fetchMemoryItems = async () => {
-    setIsLoading(true);
+    setIsLoadingItems(true);
     try {
       const response = await fetch("/api/memory/items");
       if (response.ok) {
         const data = await response.json();
         setItems(data.items);
+      } else if (response.status === 401) {
+        // User is not authenticated, set empty items array
+        // This prevents infinite retry loop
+        setItems([]);
+      } else {
+        console.error("Failed to fetch memory items:", response.statusText);
+        setItems([]);
       }
     } catch (error) {
       console.error("Failed to fetch memory items:", error);
+      setItems([]);
     } finally {
-      setIsLoading(false);
+      setIsLoadingItems(false);
     }
   };
 
@@ -58,6 +89,8 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
 
   const handleItemClick = (itemId: string) => {
     onLoadItem(itemId);
+    // Close sidebar after loading item to show the preview
+    setIsOpen(false);
   };
 
   return (
@@ -94,9 +127,10 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
 
         {/* Content */}
         <div className="h-[calc(100%-57px)] overflow-y-auto p-4">
-          {isLoading ? (
-            <div className="flex h-32 items-center justify-center text-muted-foreground">
-              Loading...
+          {isLoadingItems ? (
+            <div className="flex h-32 flex-col items-center justify-center text-center text-muted-foreground">
+              <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-50" />
+              <p className="text-sm">Loading your exports...</p>
             </div>
           ) : items.length === 0 ? (
             <div className="flex h-32 flex-col items-center justify-center text-center text-muted-foreground">

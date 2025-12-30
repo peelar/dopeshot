@@ -232,6 +232,7 @@ export function useFileUpload({
       setStatusMessage,
       setBackgroundSelection,
       setHasCustomScreenshot,
+      setScreenshotGradient,
       onScreenshotUploaded,
       processColorAnalysis,
       expandSidebarSection,

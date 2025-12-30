@@ -6,6 +6,10 @@ import {
   memoryItemsAtom,
   memoryLoadingAtom,
   loadedMemoryItemIdAtom,
+  hasExportsAtom,
+  hasUnseenExportsAtom,
+  lastViewedHistoryAtom,
+  memorySidebarOpenAtom,
 } from "@/hooks/atoms/memory";
 import {
   configAtom,
@@ -16,6 +20,7 @@ import {
 } from "@/hooks/atoms";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
+import { setMemoryState } from "@/lib/storage/memory-state";
 import { track } from "@/lib/analytics";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
 
@@ -23,6 +28,10 @@ export function useMemory() {
   const [items, setItems] = useAtom(memoryItemsAtom);
   const [isLoading, setIsLoading] = useAtom(memoryLoadingAtom);
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
+  const [hasExports, setHasExports] = useAtom(hasExportsAtom);
+  const setHasUnseenExports = useSetAtom(hasUnseenExportsAtom);
+  const setLastViewed = useSetAtom(lastViewedHistoryAtom);
+  const isOpen = useAtomValue(memorySidebarOpenAtom);
 
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
@@ -73,7 +82,17 @@ export function useMemory() {
         // Optimistic update - add to list
         setItems((prev) => [newItem, ...prev]);
 
-        // Track event
+        // Progressive disclosure: Mark that user has exports + unseen
+        const wasFirstExport = !hasExports;
+        setHasExports(true);
+        setHasUnseenExports(true);
+        setMemoryState({ hasExports: true });
+
+        // Track events
+        if (wasFirstExport) {
+          track("memory_button_first_export");
+        }
+
         track("memory_item_created", {
           item_id: newItem.id,
           duplicate: data.duplicate || false,
@@ -83,7 +102,17 @@ export function useMemory() {
         throw error;
       }
     },
-    [config, assets, screenshotGradient, orientation, screenshotZoom, setItems],
+    [
+      config,
+      assets,
+      screenshotGradient,
+      orientation,
+      screenshotZoom,
+      setItems,
+      hasExports,
+      setHasExports,
+      setHasUnseenExports,
+    ],
   );
 
   /**
@@ -110,6 +139,13 @@ export function useMemory() {
         setOrientation(state.orientation);
         setScreenshotZoom(state.screenshotZoom);
         setLoadedItemId(itemId);
+
+        // Update URL with memory item ID
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.set("memory", itemId);
+          window.history.pushState({}, "", url.toString());
+        }
 
         // Track event
         track("memory_item_loaded", {
