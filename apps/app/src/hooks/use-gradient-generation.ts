@@ -42,9 +42,8 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
         return;
       }
 
-      // Randomly select one gradient
-      const randomIndex = Math.floor(Math.random() * gradientOptions.length);
-      const selectedGradient = gradientOptions[randomIndex];
+      // Always select the first gradient for consistent behavior
+      const selectedGradient = gradientOptions[0];
 
       // Apply user's preferred angle
       const finalGradient = applyPreferredAngle(selectedGradient, gradientPreferences.angle);
