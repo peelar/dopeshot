@@ -119,20 +119,6 @@ export function FeedbackModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[520px]">
-        <DialogHeader>
-          <div className="flex items-center justify-center mb-3">
-            <div className="rounded-full bg-muted p-2.5">
-              <MessageSquare className="h-5 w-5 text-foreground" />
-            </div>
-          </div>
-          <DialogTitle className="text-center text-xl">
-            Share Your Feedback
-          </DialogTitle>
-          <DialogDescription className="text-center text-sm mt-1.5">
-            Help us improve dopeshot for you
-          </DialogDescription>
-        </DialogHeader>
-
         {submitStatus === "success" ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3 mb-4">
@@ -146,7 +132,22 @@ export function FeedbackModal({
             </p>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+          <>
+            <DialogHeader>
+              <div className="flex items-center justify-center mb-3">
+                <div className="rounded-full bg-muted p-2.5">
+                  <MessageSquare className="h-5 w-5 text-foreground" />
+                </div>
+              </div>
+              <DialogTitle className="text-center text-xl">
+                Share Your Feedback
+              </DialogTitle>
+              <DialogDescription className="text-center text-sm mt-1.5">
+                Help us improve dopeshot for you
+              </DialogDescription>
+            </DialogHeader>
+
+            <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             {/* Feedback textarea */}
             <div className="space-y-2">
               <Label htmlFor="feedback-message">
@@ -246,6 +247,7 @@ export function FeedbackModal({
               </Button>
             </div>
           </form>
+          </>
         )}
       </DialogContent>
     </Dialog>
