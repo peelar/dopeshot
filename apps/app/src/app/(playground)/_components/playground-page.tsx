@@ -13,12 +13,18 @@ import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom, type Orientation } from "@/hooks/atoms";
-import { useAtomValue } from "jotai";
+import { orientationAtom, feedbackModalOpenAtom, type Orientation } from "@/hooks/atoms";
+import { useAtom, useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
+import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
+  { ssr: false }
+);
+
+const FeedbackModal = dynamic(
+  () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
   { ssr: false }
 );
 
@@ -77,9 +83,18 @@ type PlaygroundPageProps = {
 export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
+  const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
+  const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
 
   // Auto-apply brand logo on mount if toggle is enabled
   useBrandLogoAutoApply({ enabled: showBrandExperience });
+
+  // Handle feedback button click - capture screenshot and open modal
+  const handleFeedbackClick = async () => {
+    const screenshot = await captureFeedbackScreenshot();
+    setFeedbackScreenshot(screenshot);
+    setFeedbackModalOpen(true);
+  };
 
   const {
     dragAndUpload,
@@ -133,6 +148,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         onExport={handleExport}
         isExporting={isExporting}
         onBrandClick={undefined}
+        onFeedbackClick={handleFeedbackClick}
       />
 
       {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
@@ -205,6 +221,12 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
           onOpenChange={setShowOnboardingModal}
         />
       ) : null}
+
+      <FeedbackModal
+        open={feedbackModalOpen}
+        onOpenChange={setFeedbackModalOpen}
+        screenshotDataUrl={feedbackScreenshot}
+      />
     </main>
   );
 }

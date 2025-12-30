@@ -4,7 +4,7 @@ import { ThemeToggle } from "@/components/providers/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, RefreshCw } from "lucide-react";
+import { Download, ImageUp, Loader2, RefreshCw, MessageSquare } from "lucide-react";
 import { track } from "@/lib/analytics";
 
 interface AppHeaderProps {
@@ -16,6 +16,7 @@ interface AppHeaderProps {
   onExport: () => void;
   isExporting: boolean;
   onBrandClick?: () => void;
+  onFeedbackClick?: () => void;
 }
 
 export function AppHeader({
@@ -27,6 +28,7 @@ export function AppHeader({
   onExport,
   isExporting,
   onBrandClick,
+  onFeedbackClick,
 }: AppHeaderProps) {
   const uploadButtonLabel = isProcessingUpload
     ? "Uploading..."
@@ -46,6 +48,21 @@ export function AppHeader({
         <Logo />
       </a>
       <div className="flex items-center gap-3">
+        {onFeedbackClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onFeedbackClick();
+              track("feedback_button_clicked");
+            }}
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+            aria-label="Open feedback modal"
+          >
+            <MessageSquare className="h-4 w-4" aria-hidden="true" />
+            <span className="hidden sm:inline">Feedback</span>
+          </Button>
+        ) : null}
         {showUploadButton ? (
           <Button
             type="button"
@@ -61,6 +78,19 @@ export function AppHeader({
             <span>{uploadButtonLabel}</span>
           </Button>
         ) : null}
+        {onBrandClick ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              onBrandClick();
+              track("brand_panel_opened");
+            }}
+            className="text-foreground hover:bg-muted hover:text-foreground"
+          >
+            <span className="hidden md:inline">Brand</span>
+          </Button>
+        ) : null}
         {canExport ? (
           <Button
             size="sm"
@@ -73,19 +103,6 @@ export function AppHeader({
           >
             <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
             {isExporting ? "Exporting..." : "Export PNG"}
-          </Button>
-        ) : null}
-        {onBrandClick ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onBrandClick();
-              track("brand_panel_opened");
-            }}
-            className="text-foreground hover:bg-muted hover:text-foreground"
-          >
-            <span className="hidden md:inline">Brand</span>
           </Button>
         ) : null}
         {process.env.NODE_ENV === "development" && <ThemeToggle />}

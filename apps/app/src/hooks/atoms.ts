@@ -108,3 +108,6 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
     useLogoOnScreenshots: false,
   }
 );
+
+// Feedback modal
+export const feedbackModalOpenAtom = atom<boolean>(false);
