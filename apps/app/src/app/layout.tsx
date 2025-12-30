@@ -17,11 +17,11 @@ import { AuthProvider } from "@/lib/auth";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
-const simpleAnalyticsScriptUrl =
-  process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_SCRIPT_URL ??
-  "https://scripts.simpleanalyticscdn.com/latest.js";
-const isSimpleAnalyticsEnabled = process.env.NEXT_PUBLIC_SIMPLE_ANALYTICS_ENABLED !== "false";
-const shouldLoadAnalytics = isSimpleAnalyticsEnabled && process.env.NODE_ENV === "production";
+const umamiScriptUrl =
+  process.env.NEXT_PUBLIC_UMAMI_SCRIPT_URL ?? "https://analytics.umami.is/script.js";
+const umamiWebsiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+const shouldLoadAnalytics =
+  process.env.NODE_ENV === "production" && !!umamiWebsiteId && !!umamiScriptUrl;
 
 // Font definitions with CSS variables
 const geistSans = GeistSans;
@@ -152,7 +152,13 @@ export default function RootLayout({
           </ThemeProvider>
         </AuthProvider>
         {shouldLoadAnalytics ? (
-          <Script async defer src={simpleAnalyticsScriptUrl} strategy="afterInteractive" />
+          <Script
+            async
+            defer
+            src={umamiScriptUrl}
+            data-website-id={umamiWebsiteId}
+            strategy="afterInteractive"
+          />
         ) : null}
       </body>
     </html>

@@ -1,6 +1,6 @@
 /**
- * Analytics tracking utility (Simple Analytics)
- * Privacy-first event tracking with no persistent identifiers
+ * Analytics tracking utility (Umami)
+ * Privacy-first event tracking
  *
  * Features:
  * - No cookies or personal data collection
@@ -9,10 +9,12 @@
  * - Provider-agnostic API for easy swaps
  */
 
-// Extend the Window interface to include Simple Analytics
+// Extend the Window interface to include Umami
 declare global {
   interface Window {
-    sa_event?: (eventName: string, eventData?: Record<string, unknown>) => void;
+    umami?: {
+      track: (eventName: string, eventData?: Record<string, unknown>) => void;
+    };
   }
 }
 
@@ -30,8 +32,8 @@ export function track(
   }
 
   try {
-    if (window.sa_event) {
-      window.sa_event(eventName, props);
+    if (window.umami) {
+      window.umami.track(eventName, props);
     }
   } catch (error) {
     // Silently fail in development/testing
