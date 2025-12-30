@@ -22,6 +22,14 @@ export const auth = betterAuth({
       verify: async ({ hash, password }) => await bcrypt.compare(password, hash),
     },
   },
+  // Social authentication providers
+  socialProviders: {
+    google: {
+      clientId: authEnv.googleClientId,
+      clientSecret: authEnv.googleClientSecret,
+      enabled: true,
+    },
+  },
   session: {
     cookieCache: {
       enabled: true,
