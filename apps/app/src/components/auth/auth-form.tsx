@@ -376,7 +376,7 @@ export function AuthForm() {
             )}
           </form>
 
-          {!magicLinkSent && (
+          {useMagicLink && !magicLinkSent && (
             <Button
               type="button"
               variant="link"
@@ -384,7 +384,7 @@ export function AuthForm() {
               onClick={toggleAuthMethod}
               className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
             >
-              {useMagicLink ? "Use email & password" : "Send me a magic link"}
+              Use email & password instead
             </Button>
           )}
           </>
