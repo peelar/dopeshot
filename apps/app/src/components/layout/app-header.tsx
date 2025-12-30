@@ -1,6 +1,5 @@
 "use client";
 
-import { ThemeToggle } from "@/components/providers/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
@@ -105,7 +104,6 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
-        {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
     </header>
   );

@@ -187,7 +187,7 @@ export function AuthForm() {
 
   const getSubheading = () => {
     if (useMagicLink && magicLinkSent) return `We sent a magic link to ${sentEmail}`;
-    if (useMagicLink) return "We'll send you a magic link to sign in or create an account";
+    if (useMagicLink) return "";
     if (mode === "sign-in") return "Enter your email and password";
     return "Enter your email and password to get started";
   };
@@ -241,7 +241,7 @@ export function AuthForm() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="h-12 w-full rounded-lg border border-border/50 bg-white text-foreground shadow-sm hover:bg-muted/50 dark:bg-muted/20 dark:hover:bg-muted/40"
+              className="h-12 w-full rounded-lg border border-border/50 bg-muted/40 text-foreground hover:bg-muted/60 hover:text-foreground"
               variant="outline"
             >
               <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">
@@ -363,7 +363,7 @@ export function AuthForm() {
               onClick={toggleAuthMethod}
               className="w-full text-center text-sm text-muted-foreground hover:text-foreground"
             >
-              {useMagicLink ? "Use email & password instead" : "Send me a magic link"}
+              {useMagicLink ? "Use email & password" : "Send me a magic link"}
             </Button>
           )}
           </>
