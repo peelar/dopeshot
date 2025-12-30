@@ -97,10 +97,10 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
 
   return (
     <>
-      {/* Backdrop - only show when open */}
+      {/* Backdrop - show when open, transparent on desktop for click-outside */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-black/50 lg:bg-transparent"
           onClick={handleClose}
         />
       )}
@@ -113,10 +113,10 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
         )}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b px-4 py-3">
+        <div className="flex h-14 items-center justify-between border-b bg-muted/50 px-4">
           <div className="flex items-center gap-2">
             <History className="h-5 w-5" />
-            <h2 className="font-semibold">Memory</h2>
+            <h2 className="font-semibold">History</h2>
           </div>
           <button
             onClick={handleClose}
@@ -128,7 +128,7 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
         </div>
 
         {/* Content */}
-        <div className="h-[calc(100%-57px)] overflow-y-auto p-4">
+        <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-4">
           {isLoadingItems ? (
             <div className="flex h-32 flex-col items-center justify-center text-center text-muted-foreground">
               <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-50" />

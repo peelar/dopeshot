@@ -11,48 +11,82 @@ interface MemoryItemProps {
 }
 
 export function MemoryItem({ item, isLoaded = false, onClick }: MemoryItemProps) {
+  const formatDate = (date: string) => {
+    const d = new Date(date);
+    const now = new Date();
+    const time = d.toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+
+    // Check if today
+    const isToday = d.toDateString() === now.toDateString();
+    if (isToday) {
+      return `Today, ${time}`;
+    }
+
+    // Check if yesterday
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const isYesterday = d.toDateString() === yesterday.toDateString();
+    if (isYesterday) {
+      return `Yesterday, ${time}`;
+    }
+
+    // For older dates, show full date
+    const day = d.getDate();
+    const month = d.toLocaleDateString("en-US", { month: "long" });
+
+    // Add ordinal suffix (1st, 2nd, 3rd, 4th, etc.)
+    const suffix = (day: number) => {
+      if (day > 3 && day < 21) return "th";
+      switch (day % 10) {
+        case 1: return "st";
+        case 2: return "nd";
+        case 3: return "rd";
+        default: return "th";
+      }
+    };
+
+    return `${month} ${day}${suffix(day)}, ${time}`;
+  };
+
   return (
     <button
       onClick={onClick}
       className={cn(
-        "group relative aspect-video w-full overflow-hidden rounded-lg border transition-all",
-        "hover:ring-2 hover:ring-primary hover:ring-offset-2",
+        "group flex w-full items-center gap-3 rounded-lg border p-2 transition-all",
+        "bg-muted hover:bg-muted/60",
         isLoaded && "ring-2 ring-primary ring-offset-2",
-        "bg-muted",
       )}
-      aria-label="Load memory item"
+      aria-label="Load history item"
     >
-      <Image
-        src={item.screenshotUrl}
-        alt="Memory screenshot"
-        fill
-        className="object-cover transition-transform group-hover:scale-105"
-        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 300px, 300px"
-      />
-
-      {/* Timestamp overlay */}
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-        <p className="text-xs text-white">
-          {new Date(item.createdAt).toLocaleDateString(undefined, {
-            month: "short",
-            day: "numeric",
-          })}
-        </p>
+      {/* Thumbnail */}
+      <div className="relative h-16 w-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
+        <Image
+          src={item.screenshotUrl}
+          alt="History screenshot"
+          fill
+          className="object-cover"
+          sizes="80px"
+        />
       </div>
 
-      {/* Loaded indicator */}
-      {isLoaded && (
-        <div className="absolute right-2 top-2 rounded-full bg-primary px-2 py-1 text-xs font-medium text-primary-foreground">
-          Current
-        </div>
-      )}
+      {/* Content */}
+      <div className="flex min-w-0 flex-1 flex-col justify-center">
+        {/* Date */}
+        <p className="text-sm font-normal">
+          {formatDate(item.createdAt)}
+        </p>
 
-      {/* Shared indicator */}
-      {item.isShared && (
-        <div className="absolute left-2 top-2 rounded-full bg-blue-500 px-2 py-1 text-xs font-medium text-white">
-          Shared
-        </div>
-      )}
+        {/* Shared badge */}
+        {item.isShared && (
+          <span className="mt-1 w-fit rounded-full bg-blue-500 px-2 py-0.5 text-xs font-medium text-white">
+            Shared
+          </span>
+        )}
+      </div>
     </button>
   );
 }

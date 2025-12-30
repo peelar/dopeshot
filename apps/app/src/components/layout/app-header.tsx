@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, RefreshCw, MessageSquare } from "lucide-react";
+import { Download, ImageUp, Loader2, RefreshCw } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { UserMenu } from "./user-menu";
 import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
@@ -53,21 +53,6 @@ export function AppHeader({
         <MemorySidebarTrigger />
       </div>
       <div className="flex items-center gap-3">
-        {onFeedbackClick ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onFeedbackClick();
-              track("feedback_button_clicked");
-            }}
-            className="text-muted-foreground hover:text-foreground gap-1.5"
-            aria-label="Open feedback modal"
-          >
-            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Feedback</span>
-          </Button>
-        ) : null}
         {showUploadButton ? (
           <Button
             type="button"
@@ -110,7 +95,7 @@ export function AppHeader({
             {isExporting ? "Exporting..." : "Export PNG"}
           </Button>
         ) : null}
-        <UserMenu />
+        <UserMenu onFeedbackClick={onFeedbackClick} />
       </div>
     </header>
   );

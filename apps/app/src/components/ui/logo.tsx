@@ -15,7 +15,7 @@ export function Logo({ className = "" }: { className?: string }) {
           <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
         </svg>
       </div>
-      <span className="font-bold text-sm tracking-tight">dopeshot</span>
+      <span className="hidden font-bold text-sm tracking-tight sm:inline">dopeshot</span>
     </div>
   );
 }

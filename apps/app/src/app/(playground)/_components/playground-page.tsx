@@ -194,7 +194,11 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
 
         {/* Right: Sidebar - spans full height from below nav */}
         <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-          <SidebarTabs showBrandExperience={showBrandExperience} onUploadAsset={handleFileProcess} />
+          <SidebarTabs
+            showBrandExperience={showBrandExperience}
+            onUploadAsset={handleFileProcess}
+            onFeedbackClick={handleFeedbackClick}
+          />
         </div>
       </div>
 

@@ -131,6 +131,16 @@ export function useMemory() {
         // Optimistic update - add to list
         setItems((prev) => [newItem, ...prev]);
 
+        // Update selection to the newly created item
+        setLoadedItemId(newItem.id);
+
+        // Update URL with new memory item ID
+        if (typeof window !== "undefined") {
+          const url = new URL(window.location.href);
+          url.searchParams.set("memory", newItem.id);
+          window.history.pushState({}, "", url.toString());
+        }
+
         // Progressive disclosure: Mark that user has exports + unseen
         const wasFirstExport = !hasExports;
         setHasExports(true);
@@ -158,6 +168,7 @@ export function useMemory() {
       orientation,
       screenshotZoom,
       setItems,
+      setLoadedItemId,
       hasExports,
       setHasExports,
       setHasUnseenExports,

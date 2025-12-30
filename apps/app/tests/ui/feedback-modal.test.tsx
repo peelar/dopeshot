@@ -55,28 +55,37 @@ describe("FeedbackModal", () => {
     expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
   });
 
-  it("shows screenshot preview when screenshotDataUrl is provided", () => {
+  it("shows screenshot toggle when screenshotDataUrl is provided", () => {
     const screenshotDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     render(
       <FeedbackModal {...defaultProps} screenshotDataUrl={screenshotDataUrl} />
     );
-    expect(screen.getByText("Screenshot")).toBeInTheDocument();
-    const img = screen.getByAltText("Canvas screenshot");
-    expect(img).toHaveAttribute("src", screenshotDataUrl);
+    expect(screen.getByText("Include screenshot")).toBeInTheDocument();
+    expect(screen.getByText(/Attach a screenshot of your current canvas/i)).toBeInTheDocument();
+    const toggle = screen.getByRole("switch", { name: /Include screenshot/i });
+    expect(toggle).toBeInTheDocument();
+    expect(toggle).toBeChecked();
   });
 
-  it("allows removing screenshot", async () => {
+  it("allows toggling screenshot inclusion", async () => {
     const screenshotDataUrl = "data:image/png;base64,test";
     render(
       <FeedbackModal {...defaultProps} screenshotDataUrl={screenshotDataUrl} />
     );
 
-    const removeButton = screen.getByRole("button", { name: /Remove screenshot/i });
-    fireEvent.click(removeButton);
+    const toggle = screen.getByRole("switch", { name: /Include screenshot/i });
+    expect(toggle).toBeChecked();
 
-    // Screenshot should be hidden after removal
+    // Toggle off
+    fireEvent.click(toggle);
     await waitFor(() => {
-      expect(screen.queryByAltText("Canvas screenshot")).not.toBeInTheDocument();
+      expect(toggle).not.toBeChecked();
+    });
+
+    // Toggle back on
+    fireEvent.click(toggle);
+    await waitFor(() => {
+      expect(toggle).toBeChecked();
     });
   });
 

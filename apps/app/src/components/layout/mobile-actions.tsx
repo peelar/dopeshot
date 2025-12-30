@@ -13,6 +13,7 @@ import { BackgroundSection } from "@/components/sidebar/background-section";
 import {
   Sheet,
   SheetContent,
+  SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils/cn";
@@ -182,6 +183,7 @@ export function MobileActions({
             onPointerCancel={handleDragEnd}
             className="group h-[82vh] w-full max-w-none rounded-t-3xl border border-border bg-background px-5 pb-10 pt-3 sm:hidden will-change-transform data-[dragging=true]:transition-none data-[settling=true]:duration-200 data-[settling=true]:ease-[cubic-bezier(0.22,1,0.36,1)]"
           >
+            <SheetTitle className="sr-only">Design Settings</SheetTitle>
             <div className="relative mx-auto flex h-1.5 w-14 items-center justify-center">
               <div
                 className="absolute inset-x-[-24px] top-[-20px] bottom-[-12px] touch-none select-none"
