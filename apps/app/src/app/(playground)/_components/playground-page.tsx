@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/app-header";
 import { CoverPreview } from "@/components/cover-preview";
@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { MemorySidebar } from "@/components/memory/memory-sidebar";
 import { useMemory } from "@/hooks/use-memory";
+import { useSession } from "@/lib/auth/auth-client";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -98,7 +99,17 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
     setFeedbackModalOpen(true);
   };
   // Memory hook for loading items
-  const { loadMemoryItem } = useMemory();
+  const { loadMemoryItem, fetchMemoryItems } = useMemory();
+  const { data: session } = useSession();
+
+  // Preload memory items on mount (if logged in)
+  useEffect(() => {
+    if (session?.user) {
+      fetchMemoryItems().catch((error) => {
+        console.error("Failed to preload memory items:", error);
+      });
+    }
+  }, [session?.user, fetchMemoryItems]);
 
   const {
     dragAndUpload,

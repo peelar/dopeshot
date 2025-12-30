@@ -46,6 +46,55 @@ export function useMemory() {
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
 
   /**
+   * Fetch memory items with pagination support
+   */
+  const fetchMemoryItems = useCallback(
+    async (cursor?: string): Promise<{ hasMore: boolean; nextCursor: string | null }> => {
+      setIsLoading(true);
+      try {
+        const url = new URL("/api/memory/items", window.location.origin);
+        url.searchParams.set("limit", "10");
+        if (cursor) {
+          url.searchParams.set("cursor", cursor);
+        }
+
+        const response = await fetch(url.toString());
+        if (!response.ok) {
+          throw new Error("Failed to fetch memory items");
+        }
+
+        const data = await response.json();
+        const newItems: MemoryItemDTO[] = data.items;
+        const pagination = data.pagination;
+
+        // Append or replace items
+        if (cursor) {
+          setItems((prev) => [...prev, ...newItems]);
+        } else {
+          setItems(newItems);
+        }
+
+        // Update hasExports state based on whether items exist
+        if (newItems.length > 0 && !hasExports) {
+          setHasExports(true);
+          setMemoryState({ hasExports: true });
+        }
+
+        return {
+          hasMore: pagination.hasMore,
+          nextCursor: pagination.nextCursor,
+        };
+      } catch (error) {
+        console.error("Failed to fetch memory items:", error);
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [setIsLoading, setItems, hasExports, setHasExports],
+  );
+
+  /**
    * Create a memory item from current editor state + screenshot blob
    */
   const createMemoryItem = useCallback(
@@ -164,6 +213,7 @@ export function useMemory() {
   return {
     items,
     isLoading,
+    fetchMemoryItems,
     createMemoryItem,
     loadMemoryItem,
   };

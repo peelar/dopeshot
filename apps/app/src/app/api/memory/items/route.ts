@@ -22,15 +22,20 @@ export async function GET(request: NextRequest) {
 
     // Get query params for pagination
     const searchParams = request.nextUrl.searchParams;
-    const limit = parseInt(searchParams.get("limit") || "50", 10);
-    const offset = parseInt(searchParams.get("offset") || "0", 10);
+    const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 50); // Default 10, max 50
+    const cursor = searchParams.get("cursor"); // ISO timestamp for cursor-based pagination
 
-    // Fetch memory items for this user
+    // Build where clause with cursor
+    const where: any = { userId: authContext.userId };
+    if (cursor) {
+      where.createdAt = { lt: new Date(cursor) };
+    }
+
+    // Fetch memory items for this user (limit + 1 to check if there are more)
     const items = await db.memoryItem.findMany({
-      where: { userId: authContext.userId },
+      where,
       orderBy: { createdAt: "desc" },
-      take: limit,
-      skip: offset,
+      take: limit + 1,
       select: {
         id: true,
         screenshotPath: true,
@@ -40,9 +45,14 @@ export async function GET(request: NextRequest) {
       },
     });
 
+    // Check if there are more items
+    const hasMore = items.length > limit;
+    const resultItems = hasMore ? items.slice(0, limit) : items;
+    const nextCursor = hasMore ? resultItems[resultItems.length - 1].createdAt.toISOString() : null;
+
     // Generate signed URLs for thumbnails
     const itemDTOs: MemoryItemDTO[] = await Promise.all(
-      items.map(async (item) => {
+      resultItems.map(async (item) => {
         const screenshotUrl = await getSignedUrl(item.screenshotPath);
         return {
           id: item.id,
@@ -56,7 +66,13 @@ export async function GET(request: NextRequest) {
       }),
     );
 
-    return NextResponse.json({ items: itemDTOs });
+    return NextResponse.json({
+      items: itemDTOs,
+      pagination: {
+        hasMore,
+        nextCursor,
+      },
+    });
   } catch (error) {
     console.error("Failed to fetch memory items:", error);
     return NextResponse.json(
