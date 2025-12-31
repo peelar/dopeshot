@@ -18,6 +18,7 @@ const shouldLoadAnalytics =
 
 const siteUrl = "https://dopeshot.io";
 const previewImage = "/cover.png";
+const twitterImage = "/og-preview.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -44,9 +45,9 @@ export const metadata: Metadata = {
     siteName: "dopeshot",
     images: [
       {
-        url: previewImage,
-        width: 2816,
-        height: 1584,
+        url: twitterImage,
+        width: 1200,
+        height: 630,
         alt: "dopeshot - Screenshot beautification for builders",
       },
     ],
@@ -56,7 +57,7 @@ export const metadata: Metadata = {
     title: "dopeshot - Screenshot beautification for builders",
     description:
       "Your product is dope, your screenshots should be too. Drop a screenshot, get a shareable graphic in seconds.",
-    images: [previewImage],
+    images: [twitterImage],
   },
   icons: {
     icon: [{ url: "/dopeshot-icon.svg" }, { url: "/favicon.ico" }],

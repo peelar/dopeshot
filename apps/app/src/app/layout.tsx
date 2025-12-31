@@ -87,6 +87,7 @@ const fontVariables = [
 
 const siteUrl = "https://app.dopeshot.io";
 const previewImage = "/cover.png";
+const twitterImage = "/og-preview.png";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -110,10 +111,10 @@ export const metadata: Metadata = {
     siteName: "dopeshot",
     images: [
       {
-        url: previewImage,
-        width: 2816,
-        height: 1584,
-        alt: "dopeshot cover graphic",
+        url: twitterImage,
+        width: 1200,
+        height: 630,
+        alt: "dopeshot - Screenshot beautification for builders",
       },
     ],
   },
@@ -122,7 +123,7 @@ export const metadata: Metadata = {
     title: "dopeshot",
     description:
       "Your product is dope, your screenshots should be too. Transform product screenshots into polished marketing assets in seconds.",
-    images: [previewImage],
+    images: [twitterImage],
   },
   icons: {
     icon: [{ url: "/dopeshot-icon.svg" }, { url: "/favicon.ico" }],
