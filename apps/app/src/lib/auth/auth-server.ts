@@ -88,8 +88,6 @@ export const auth = betterAuth({
               where: { userId: user.id },
               create: {
                 userId: user.id,
-                subscriptionTier: "free",
-                subscriptionStatus: "active",
                 exportsThisMonth: 0,
               },
               update: {},

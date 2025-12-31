@@ -7,8 +7,6 @@ type SessionInfo = {
 
 export async function updateUserMetadata(options: {
   onboardingSteps?: string[];
-  subscriptionTier?: string;
-  subscriptionStatus?: string;
   session?: SessionInfo;
 }) {
   const session =
@@ -51,8 +49,6 @@ export async function updateUserMetadata(options: {
   // Build update data
   const updateData: {
     onboardingProgress?: { completedSteps: string[] };
-    subscriptionTier?: string;
-    subscriptionStatus?: string;
   } = {};
 
   if (options.onboardingSteps?.length) {
@@ -60,20 +56,12 @@ export async function updateUserMetadata(options: {
       completedSteps: Array.from(progressSet),
     };
   }
-  if (typeof options.subscriptionTier !== "undefined") {
-    updateData.subscriptionTier = options.subscriptionTier;
-  }
-  if (typeof options.subscriptionStatus !== "undefined") {
-    updateData.subscriptionStatus = options.subscriptionStatus;
-  }
 
   if (Object.keys(updateData).length) {
     await db.userMetadata.upsert({
       where: { userId: session.userId },
       create: {
         userId: session.userId,
-        subscriptionTier: "free",
-        subscriptionStatus: "active",
         exportsThisMonth: 0,
         ...updateData,
       },

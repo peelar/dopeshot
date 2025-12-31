@@ -34,8 +34,6 @@ export async function GET() {
         where: { userId },
         select: {
           onboardingProgress: true,
-          subscriptionTier: true,
-          subscriptionStatus: true,
         },
       }),
     ]);

@@ -24,7 +24,6 @@ export type BackgroundAuthContext = {
   isAuth: boolean;
   userId: string | null;
   isBranded: boolean;
-  userTier: string | null;
   error?: string;
 };
 
@@ -37,22 +36,15 @@ export async function getBackgroundAuthContext(options?: {
       isAuth: false,
       userId: null,
       isBranded: false,
-      userTier: null,
       error: "Unauthorized",
     };
   }
 
   const db = await getUserDb(session.userId);
-  const [brandProfile, metadata] = await Promise.all([
-    db.brandProfile.findUnique({
-      where: { userId: session.userId },
-      select: { id: true },
-    }),
-    db.userMetadata.findUnique({
-      where: { userId: session.userId },
-      select: { subscriptionTier: true },
-    }),
-  ]);
+  const brandProfile = await db.brandProfile.findUnique({
+    where: { userId: session.userId },
+    select: { id: true },
+  });
 
   const isBranded = Boolean(brandProfile);
   if (options?.requireBranded && !isBranded) {
@@ -60,7 +52,6 @@ export async function getBackgroundAuthContext(options?: {
       isAuth: true,
       userId: session.userId,
       isBranded,
-      userTier: metadata?.subscriptionTier ?? "free",
       error: "Branded account required",
     };
   }
@@ -69,6 +60,5 @@ export async function getBackgroundAuthContext(options?: {
     isAuth: true,
     userId: session.userId,
     isBranded,
-    userTier: metadata?.subscriptionTier ?? "free",
   };
 }
