@@ -13,10 +13,19 @@ describe("deserializeEditorState", () => {
       layoutId: "classic",
       variant: "default",
       background: {
-        type: "color",
+        type: "solid",
         value: "#ffffff",
       },
-      fontStyle: "sans-serif",
+      fontStyle: "founder",
+      text: {
+        title: "Test Title",
+        subtitle: "Test Subtitle",
+      },
+      colors: {
+        background: "slate-50",
+        text: "slate-900",
+        accent: "indigo-400",
+      },
       assets: {
         screenshot: "screenshot-1",
       },
@@ -89,7 +98,7 @@ describe("deserializeEditorState", () => {
       ...mockMemoryConfig,
       config: {
         ...mockMemoryConfig.config,
-        fontStyle: "monospace",
+        fontStyle: "terminal",
         background: {
           type: "gradient",
           value: "custom",
@@ -106,7 +115,7 @@ describe("deserializeEditorState", () => {
 
     const result = deserializeEditorState(complexConfig);
 
-    expect(result.config.fontStyle).toBe("monospace");
+    expect(result.config.fontStyle).toBe("terminal");
     expect(result.config.background.type).toBe("gradient");
     expect(result.config.background.value).toBe("custom");
   });

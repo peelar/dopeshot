@@ -16,7 +16,16 @@ describe("computeConfigHash", () => {
         type: "gradient",
         value: "custom",
       },
-      fontStyle: "sans-serif",
+      fontStyle: "founder",
+      text: {
+        title: "Test Title",
+        subtitle: "Test Subtitle",
+      },
+      colors: {
+        background: "slate-50",
+        text: "slate-900",
+        accent: "indigo-400",
+      },
       assets: {},
     },
     renderingFlags: {
@@ -74,7 +83,7 @@ describe("computeConfigHash", () => {
       ...baseConfig,
       config: {
         ...baseConfig.config,
-        fontStyle: "serif",
+        fontStyle: "billboard",
       },
     };
 

@@ -9,27 +9,41 @@ describe("serializeEditorState", () => {
     layoutId: "classic",
     variant: "default",
     background: {
-      type: "color",
+      type: "solid",
       value: "#ffffff",
     },
-    fontStyle: "sans-serif",
+    fontStyle: "founder",
+    text: {
+      title: "Test Title",
+      subtitle: "Test Subtitle",
+    },
+    colors: {
+      background: "slate-50",
+      text: "slate-900",
+      accent: "indigo-400",
+    },
     assets: {
       screenshot: "screenshot-1",
     },
     screenshotFrame: {
       canvasMode: "adaptive",
-      treatment: "focused",
+      preset: "soft-glass",
     },
   };
 
   const mockAssets: Asset[] = [
     {
       id: "screenshot-1",
-      type: "image",
+      projectId: "project-1",
+      userId: "user-1",
+      name: "screenshot.png",
+      kind: "screenshot",
       url: "https://example.com/screenshot.png",
+      createdAt: new Date().toISOString(),
       metadata: {
         width: 1920,
         height: 1080,
+        aspectRatio: 1920 / 1080,
       },
     },
   ];
@@ -76,7 +90,7 @@ describe("serializeEditorState", () => {
     });
 
     expect(result.config.background).toEqual({
-      type: "color",
+      type: "solid",
       value: "#ffffff",
     });
   });
@@ -114,7 +128,7 @@ describe("serializeEditorState", () => {
       ...mockConfig,
       screenshotFrame: {
         canvasMode: "locked",
-        treatment: "focused",
+        preset: "soft-glass",
         lockedAspectRatio: 16 / 9,
       },
     };
@@ -136,7 +150,7 @@ describe("serializeEditorState", () => {
       ...mockConfig,
       screenshotFrame: {
         canvasMode: "adaptive",
-        treatment: "focused",
+        preset: "soft-glass",
       },
     };
 
