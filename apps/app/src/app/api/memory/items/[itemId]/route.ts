@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBackgroundAuthContext } from "@/lib/supabase-admin";
 import { getUserDb } from "@/lib/data/dal";
-import { getSignedUrl } from "@/lib/storage/memory-storage";
+import { getSignedUrl, deleteScreenshot } from "@/lib/storage/memory-storage";
 import type { MemoryItemFull } from "@/domain/memory/types";
 
 /**
@@ -53,6 +53,59 @@ export async function GET(
     console.error("Failed to fetch memory item:", error);
     return NextResponse.json(
       { error: "Failed to fetch memory item" },
+      { status: 500 },
+    );
+  }
+}
+
+/**
+ * DELETE /api/memory/items/[itemId]
+ * Delete a memory item and its associated screenshot
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: Promise<{ itemId: string }> },
+) {
+  const authContext = await getBackgroundAuthContext();
+
+  if (!authContext.isAuth || !authContext.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { itemId } = await params;
+    const db = await getUserDb(authContext.userId);
+
+    // Fetch item to get screenshot path (for storage deletion)
+    const item = await db.memoryItem.findFirst({
+      where: {
+        id: itemId,
+        userId: authContext.userId,
+      },
+    });
+
+    if (!item) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    }
+
+    // Delete from database first
+    await db.memoryItem.delete({
+      where: { id: itemId },
+    });
+
+    // Delete from storage (non-blocking, log errors)
+    try {
+      await deleteScreenshot(item.screenshotPath);
+    } catch (storageError) {
+      console.error("Failed to delete screenshot from storage:", storageError);
+      // Don't fail the request - database delete succeeded
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Failed to delete memory item:", error);
+    return NextResponse.json(
+      { error: "Failed to delete memory item" },
       { status: 500 },
     );
   }

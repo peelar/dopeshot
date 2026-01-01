@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import { Trash2 } from "lucide-react";
 import { type MemoryItemDTO } from "@/domain/memory/types";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -8,9 +10,18 @@ interface MemoryItemProps {
   item: MemoryItemDTO;
   isLoaded?: boolean;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-export function MemoryItem({ item, isLoaded = false, onClick }: MemoryItemProps) {
+export function MemoryItem({ item, isLoaded = false, onClick, onDelete }: MemoryItemProps) {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering onClick
+    if (onDelete) {
+      onDelete();
+    }
+  };
   const formatDate = (date: string) => {
     const d = new Date(date);
     const now = new Date();
@@ -53,15 +64,20 @@ export function MemoryItem({ item, isLoaded = false, onClick }: MemoryItemProps)
   };
 
   return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "group flex w-full items-center gap-3 rounded-lg border p-2 transition-all",
-        "bg-muted hover:bg-muted/60",
-        isLoaded && "ring-2 ring-primary ring-offset-2",
-      )}
-      aria-label="Load history item"
+    <div
+      className="relative group/item"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
+      <button
+        onClick={onClick}
+        className={cn(
+          "group flex w-full items-center gap-3 rounded-lg border p-2 transition-all",
+          "bg-muted hover:bg-muted/60",
+          isLoaded && "ring-2 ring-primary ring-offset-2",
+        )}
+        aria-label="Load saved design"
+      >
       {/* Thumbnail */}
       <div className="relative h-16 w-20 flex-shrink-0 overflow-hidden rounded-md bg-muted">
         <Image
@@ -71,6 +87,24 @@ export function MemoryItem({ item, isLoaded = false, onClick }: MemoryItemProps)
           className="object-cover"
           sizes="80px"
         />
+
+        {/* Subtle overlay on hover with delete action */}
+        {isHovered && onDelete && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-150">
+            <button
+              onClick={handleDelete}
+              className={cn(
+                "rounded-md p-1.5 transition-all",
+                "bg-white/10 hover:bg-white/20",
+                "text-white/90 hover:text-white",
+                "ring-1 ring-white/20 hover:ring-white/30",
+              )}
+              aria-label="Delete saved design"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -88,5 +122,6 @@ export function MemoryItem({ item, isLoaded = false, onClick }: MemoryItemProps)
         )}
       </div>
     </button>
+  </div>
   );
 }

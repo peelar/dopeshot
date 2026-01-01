@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, type ChangeEvent, type FormEvent } from "react";
+import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, signInWithEmail, signUpWithEmail, signOutUser, sendMagicLink, signInWithGoogle } from "@/lib/auth";
+import { useAuth, signInWithEmail, signUpWithEmail, sendMagicLink, signInWithGoogle } from "@/lib/auth";
 import { track } from "@/lib/analytics";
 
 type AuthMode = "sign-in" | "sign-up";
 
 export function AuthForm() {
   const { user, isLoading } = useAuth();
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>("sign-in");
   const [useMagicLink, setUseMagicLink] = useState(true); // Default to magic link
   const [form, setForm] = useState({ email: "", password: "", confirmPassword: "" });
@@ -19,6 +21,12 @@ export function AuthForm() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user && !isLoading) {
+      router.replace("/");
+    }
+  }, [user, isLoading, router]);
 
   const handleFormChange =
     (field: "email" | "password" | "confirmPassword") => (event: ChangeEvent<HTMLInputElement>) => {
@@ -108,22 +116,23 @@ export function AuthForm() {
     setMagicLinkSent(true);
   };
 
-  const handleSignOut = async () => {
-    setStatus(null);
-    const { error } = await signOutUser();
-    if (error) {
-      setStatus({ type: "error", message: error.message });
-      return;
-    }
-    track("auth_sign_out");
-    setStatus({ type: "success", message: "Signed out successfully." });
-  };
-
   const toggleAuthMethod = () => {
     setUseMagicLink(!useMagicLink);
     setStatus(null);
     setMagicLinkSent(false);
     track("auth_method_toggled", { to: !useMagicLink ? "magic_link" : "password" });
+  };
+
+  const switchToMode = (nextMode: AuthMode) => {
+    setStatus(null);
+    setMagicLinkSent(false);
+
+    if (nextMode === "sign-up" && useMagicLink) {
+      setUseMagicLink(false);
+      track("auth_method_toggled", { to: "password" });
+    }
+
+    setMode(nextMode);
   };
 
   const handleGoogleSignIn = async () => {
@@ -135,59 +144,7 @@ export function AuthForm() {
   };
 
   if (user) {
-    return (
-      <div className="mx-auto w-full max-w-md space-y-8 px-4">
-        <div className="flex justify-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-foreground">
-            <div
-              className="flex h-6 w-6 items-center justify-center rounded-sm bg-background text-foreground"
-              aria-hidden="true"
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <rect x="2" y="2" width="20" height="20" rx="4" transform="rotate(45 12 12)" />
-              </svg>
-            </div>
-          </div>
-        </div>
-        <div className="space-y-3 text-center">
-          <h1 className="font-bold text-3xl tracking-tight text-foreground">Welcome back</h1>
-          <p className="text-sm text-muted-foreground">You&apos;re signed in as {user.email}</p>
-        </div>
-
-        <div className="space-y-6 rounded-2xl border border-border/30 bg-white/40 p-4 shadow-xl backdrop-blur-xl dark:bg-background/60 sm:p-6">
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Member since {new Date(user.createdAt).toLocaleDateString()}
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={handleSignOut}
-            disabled={isLoading}
-            className="h-12 w-full rounded-lg border-border/50 bg-muted/40 text-foreground hover:bg-muted/60 hover:text-foreground"
-          >
-            Sign out
-          </Button>
-          {status && (
-            <div
-              className={`rounded-lg p-3 text-sm ${
-                status.type === "error"
-                  ? "border border-red-500/20 bg-red-500/10 text-red-400"
-                  : "border border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-              }`}
-            >
-              {status.message}
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return null;
   }
 
   const getHeading = () => {
@@ -391,7 +348,7 @@ export function AuthForm() {
         )}
       </div>
 
-      {!useMagicLink && !magicLinkSent && (
+      {!magicLinkSent && (
         <div className="text-center text-sm text-muted-foreground">
           {mode === "sign-in" ? (
             <>
@@ -400,7 +357,7 @@ export function AuthForm() {
                 type="button"
                 variant="link"
                 size="sm"
-                onClick={() => setMode("sign-up")}
+                onClick={() => switchToMode("sign-up")}
                 className="h-auto p-0 text-foreground underline underline-offset-2 hover:text-foreground/80"
               >
                 Sign up
@@ -413,7 +370,7 @@ export function AuthForm() {
                 type="button"
                 variant="link"
                 size="sm"
-                onClick={() => setMode("sign-in")}
+                onClick={() => switchToMode("sign-in")}
                 className="h-auto p-0 text-foreground underline underline-offset-2 hover:text-foreground/80"
               >
                 Sign in

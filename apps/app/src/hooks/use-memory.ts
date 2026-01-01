@@ -10,6 +10,7 @@ import {
   hasUnseenExportsAtom,
   lastViewedHistoryAtom,
   memorySidebarOpenAtom,
+  saveCountAtom,
 } from "@/hooks/atoms/memory";
 import {
   configAtom,
@@ -32,6 +33,7 @@ export function useMemory() {
   const setHasUnseenExports = useSetAtom(hasUnseenExportsAtom);
   const setLastViewed = useSetAtom(lastViewedHistoryAtom);
   const isOpen = useAtomValue(memorySidebarOpenAtom);
+  const setSaveCount = useSetAtom(saveCountAtom);
 
   const config = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
@@ -72,6 +74,8 @@ export function useMemory() {
           setItems((prev) => [...prev, ...newItems]);
         } else {
           setItems(newItems);
+          // Update save count on initial fetch
+          setSaveCount(newItems.length);
         }
 
         // Update hasExports state based on whether items exist
@@ -91,88 +95,7 @@ export function useMemory() {
         setIsLoading(false);
       }
     },
-    [setIsLoading, setItems, hasExports, setHasExports],
-  );
-
-  /**
-   * Create a memory item from current editor state + screenshot blob
-   */
-  const createMemoryItem = useCallback(
-    async (screenshotBlob: Blob, screenshotPath: string): Promise<void> => {
-      try {
-        // Serialize current state
-        const configuration = serializeEditorState({
-          config,
-          assets,
-          screenshotGradient,
-          orientation,
-          screenshotZoom,
-          screenshotPath,
-        });
-
-        // Prepare form data
-        const formData = new FormData();
-        formData.append("configuration", JSON.stringify(configuration));
-        formData.append("screenshot", screenshotBlob, "screenshot.png");
-
-        // Send to API
-        const response = await fetch("/api/memory/items", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to create memory item");
-        }
-
-        const data = await response.json();
-        const newItem: MemoryItemDTO = data.item;
-
-        // Optimistic update - add to list
-        setItems((prev) => [newItem, ...prev]);
-
-        // Update selection to the newly created item
-        setLoadedItemId(newItem.id);
-
-        // Update URL with new memory item ID
-        if (typeof window !== "undefined") {
-          const url = new URL(window.location.href);
-          url.searchParams.set("memory", newItem.id);
-          window.history.pushState({}, "", url.toString());
-        }
-
-        // Progressive disclosure: Mark that user has exports + unseen
-        const wasFirstExport = !hasExports;
-        setHasExports(true);
-        setHasUnseenExports(true);
-        setMemoryState({ hasExports: true });
-
-        // Track events
-        if (wasFirstExport) {
-          track("memory_button_first_export");
-        }
-
-        track("memory_item_created", {
-          item_id: newItem.id,
-          duplicate: data.duplicate || false,
-        });
-      } catch (error) {
-        console.error("Failed to create memory item:", error);
-        throw error;
-      }
-    },
-    [
-      config,
-      assets,
-      screenshotGradient,
-      orientation,
-      screenshotZoom,
-      setItems,
-      setLoadedItemId,
-      hasExports,
-      setHasExports,
-      setHasUnseenExports,
-    ],
+    [setIsLoading, setItems, hasExports, setHasExports, setSaveCount],
   );
 
   /**
@@ -208,7 +131,7 @@ export function useMemory() {
         }
 
         // Track event
-        track("memory_item_loaded", {
+        track("saved_loaded", {
           item_id: itemId,
         });
       } catch (error) {
@@ -225,7 +148,6 @@ export function useMemory() {
     items,
     isLoading,
     fetchMemoryItems,
-    createMemoryItem,
     loadMemoryItem,
   };
 }

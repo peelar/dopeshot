@@ -1,6 +1,12 @@
 import { atom } from "jotai";
 import type { MemoryItemDTO } from "@/domain/memory/types";
-import { configAtom, assetsAtom, screenshotGradientAtom } from "@/hooks/atoms";
+import {
+  configAtom,
+  assetsAtom,
+  screenshotGradientAtom,
+  orientationAtom,
+  screenshotZoomAtom,
+} from "@/hooks/atoms";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { computeConfigHash } from "@/domain/memory/config-hash";
 
@@ -98,3 +104,60 @@ export const unseenExportCountAtom = atom((get) => {
   // Count items created after last view
   return items.filter((item) => new Date(item.createdAt).getTime() > lastViewed).length;
 });
+
+/**
+ * Derived atom: Hash of current design configuration for change detection
+ * Changes when user modifies any design aspect
+ * Used to detect when to reset Export/Save button state
+ */
+export const currentDesignHashAtom = atom((get) => {
+  const config = get(configAtom);
+  const assets = get(assetsAtom);
+  const screenshotGradient = get(screenshotGradientAtom);
+  const orientation = get(orientationAtom);
+  const screenshotZoom = get(screenshotZoomAtom);
+
+  // Create a stable hash of current design state
+  const stateSnapshot = JSON.stringify({
+    layoutId: config.layoutId,
+    variant: config.variant,
+    background: config.background,
+    fontStyle: config.fontStyle,
+    screenshotFrame: config.screenshotFrame,
+    orientation,
+    screenshotZoom,
+    assetCount: assets.length,
+    screenshotGradient,
+  });
+
+  return stateSnapshot;
+});
+
+/**
+ * Save count atom (number of saved designs)
+ */
+export const saveCountAtom = atom<number>(0);
+
+/**
+ * Save limit atom (default 5 for free tier)
+ */
+export const saveLimitAtom = atom<number>(5);
+
+/**
+ * Derived atom: Current save count from items
+ */
+export const currentSaveCountAtom = atom((get) => {
+  const items = get(memoryItemsAtom);
+  return items.length;
+});
+
+/**
+ * Track when a save just completed (for showing success indicator)
+ * Auto-clears after 30 seconds or when sidebar is opened
+ */
+export const justSavedAtom = atom<boolean>(false);
+
+/**
+ * Track which item is currently being deleted (for showing loading state)
+ */
+export const deletingItemIdAtom = atom<string | null>(null);

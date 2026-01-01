@@ -111,3 +111,8 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
 
 // Feedback modal
 export const feedbackModalOpenAtom = atom<boolean>(false);
+
+// Export/Save button state tracking
+export const hasExportedAtom = atom<boolean>(false); // True after successful export
+export const currentExportBlobAtom = atom<Blob | null>(null); // Store blob for save
+export const isSavingAtom = atom<boolean>(false); // Save in progress

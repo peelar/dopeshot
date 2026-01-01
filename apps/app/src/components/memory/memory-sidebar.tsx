@@ -1,8 +1,8 @@
 "use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useEffect, useState } from "react";
-import { X, History, Loader2, Sparkles } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { X, History, Sparkles, BookmarkCheck } from "lucide-react";
 import Link from "next/link";
 import {
   memorySidebarOpenAtom,
@@ -13,6 +13,7 @@ import {
   hasUnseenExportsAtom,
 } from "@/hooks/atoms/memory";
 import { MemoryItem } from "./memory-item";
+import { MemoryItemSkeleton } from "./memory-item-skeleton";
 import type { MemoryItemDTO } from "@/domain/memory/types";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
@@ -22,71 +23,34 @@ import { buttonVariants } from "@/components/ui/button";
 
 interface MemorySidebarProps {
   onLoadItem: (itemId: string) => void;
+  onDeleteItem?: (itemId: string) => void;
 }
 
-export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
+export function MemorySidebar({ onLoadItem, onDeleteItem }: MemorySidebarProps) {
   const { isAuthenticated } = useAuth();
   const [isOpen, setIsOpen] = useAtom(memorySidebarOpenAtom);
-  const [items, setItems] = useAtom(memoryItemsAtom);
-  const [isLoadingItems, setIsLoadingItems] = useAtom(memoryItemsLoadingAtom);
+  const items = useAtomValue(memoryItemsAtom);
+  const isLoadingItems = useAtomValue(memoryItemsLoadingAtom);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
   const setLastViewed = useSetAtom(lastViewedHistoryAtom);
   const setHasUnseen = useSetAtom(hasUnseenExportsAtom);
 
-  // Debug logging
-  useEffect(() => {
-    console.log("MemorySidebar isOpen state:", isOpen);
-  }, [isOpen]);
-
-  // Fetch memory items when sidebar opens + clear badge
+  // Clear unseen badge when sidebar opens
   useEffect(() => {
     if (isOpen) {
-      // Only fetch if authenticated
-      if (isAuthenticated && items.length === 0 && !isLoadingItems) {
-        fetchMemoryItems();
-      } else if (!isAuthenticated) {
-        // Clear items for unauthenticated users
-        setItems([]);
-        setIsLoadingItems(false);
-      }
-
-      // Clear unseen badge when sidebar opens
       const now = Date.now();
       setLastViewed(now);
       setHasUnseen(false);
       setMemoryState({ lastViewed: now });
 
       // Track sidebar opened
-      track("memory_sidebar_opened", { authenticated: isAuthenticated });
+      track("saved_sidebar_opened", { authenticated: isAuthenticated });
     }
-  }, [isOpen, items.length, isLoadingItems, isAuthenticated, setLastViewed, setHasUnseen, setItems, setIsLoadingItems]);
-
-  const fetchMemoryItems = async () => {
-    setIsLoadingItems(true);
-    try {
-      const response = await fetch("/api/memory/items");
-      if (response.ok) {
-        const data = await response.json();
-        setItems(data.items);
-      } else if (response.status === 401) {
-        // User is not authenticated, set empty items array
-        // This prevents infinite retry loop
-        setItems([]);
-      } else {
-        console.error("Failed to fetch memory items:", response.statusText);
-        setItems([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch memory items:", error);
-      setItems([]);
-    } finally {
-      setIsLoadingItems(false);
-    }
-  };
+  }, [isOpen, isAuthenticated, setLastViewed, setHasUnseen]);
 
   const handleClose = () => {
     setIsOpen(false);
-    track("memory_sidebar_closed");
+    track("saved_sidebar_closed");
   };
 
   const handleItemClick = (itemId: string) => {
@@ -115,34 +79,40 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
         {/* Header */}
         <div className="flex h-14 items-center justify-between border-b bg-muted/50 px-4">
           <div className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            <h2 className="font-semibold">History</h2>
+            <BookmarkCheck className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-semibold text-muted-foreground">Saved</h2>
           </div>
-          <button
-            onClick={handleClose}
-            className="rounded-md p-1 hover:bg-accent"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">
+              {items.length} of 5
+            </span>
+            <button
+              onClick={handleClose}
+              className="rounded-md p-1 hover:bg-accent"
+              aria-label="Close sidebar"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
         <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-4">
           {isLoadingItems ? (
-            <div className="flex h-32 flex-col items-center justify-center text-center text-muted-foreground">
-              <Loader2 className="mb-2 h-8 w-8 animate-spin opacity-50" />
-              <p className="text-sm">Loading your exports...</p>
+            <div className="space-y-3">
+              <MemoryItemSkeleton />
+              <MemoryItemSkeleton />
+              <MemoryItemSkeleton />
             </div>
           ) : items.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center px-4 text-center">
               {isAuthenticated ? (
                 // Empty state for logged-in users
                 <div className="flex flex-col items-center text-muted-foreground">
-                  <History className="mb-3 h-10 w-10 opacity-40" />
-                  <p className="text-sm font-medium">No exports yet</p>
+                  <BookmarkCheck className="mb-3 h-10 w-10 opacity-40" />
+                  <p className="text-sm font-medium">Nothing saved yet</p>
                   <p className="mt-1 text-xs opacity-75">
-                    Your exported designs will appear here
+                    Create a design and click "Save" to access it later
                   </p>
                 </div>
               ) : (
@@ -158,7 +128,7 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
                   <Link
                     href="/auth"
                     onClick={() => {
-                      track("memory_empty_state_signup_clicked");
+                      track("saved_empty_state_signup_clicked");
                       handleClose();
                     }}
                     className={cn(
@@ -177,6 +147,7 @@ export function MemorySidebar({ onLoadItem }: MemorySidebarProps) {
                   key={item.id}
                   item={item}
                   isLoaded={item.id === loadedItemId}
+                  onDelete={onDeleteItem ? () => onDeleteItem(item.id) : undefined}
                   onClick={() => handleItemClick(item.id)}
                 />
               ))}

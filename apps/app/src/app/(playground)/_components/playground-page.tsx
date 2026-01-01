@@ -13,13 +13,16 @@ import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom, feedbackModalOpenAtom, type Orientation } from "@/hooks/atoms";
+import { orientationAtom, feedbackModalOpenAtom, hasExportedAtom, type Orientation } from "@/hooks/atoms";
 import { useAtom, useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { MemorySidebar } from "@/components/memory/memory-sidebar";
 import { useMemory } from "@/hooks/use-memory";
 import { useSession } from "@/lib/auth/auth-client";
+import { useSaveDesign } from "@/hooks/use-save-design";
+import { useExportStateReset } from "@/hooks/use-export-state-reset";
+import { useDeleteDesign } from "@/hooks/use-delete-design";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -101,6 +104,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
   // Memory hook for loading items
   const { loadMemoryItem, fetchMemoryItems } = useMemory();
   const { data: session } = useSession();
+  const isLoggedIn = Boolean(session?.user);
 
   // Preload memory items on mount (if logged in)
   useEffect(() => {
@@ -133,6 +137,14 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
     setIsConfigDrawerOpen,
   } = usePlaygroundController();
 
+  // Save design hooks
+  const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
+  const hasExported = useAtomValue(hasExportedAtom);
+  useExportStateReset(); // Auto-reset on design changes
+
+  // Delete design hook
+  const { deleteDesign } = useDeleteDesign();
+
   const {
     isDragging,
     uploadInputRef,
@@ -162,6 +174,12 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
+        onSave={saveDesign}
+        isSaving={isSaving}
+        canSave={canSave}
+        isAtSaveLimit={isAtLimit}
+        saveCount={saveCount}
+        saveLimit={saveLimit}
         onBrandClick={undefined}
         onFeedbackClick={handleFeedbackClick}
       />
@@ -169,7 +187,7 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
       {/* Three-column layout: Memory Sidebar | Content (Looks + Preview) | Design Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
         {/* Left: Memory Sidebar (collapsible) */}
-        <MemorySidebar onLoadItem={loadMemoryItem} />
+        <MemorySidebar onLoadItem={loadMemoryItem} onDeleteItem={deleteDesign} />
 
         {/* Center: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">

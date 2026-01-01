@@ -110,6 +110,25 @@ export async function POST(request: NextRequest) {
 
     const db = await getUserDb(authContext.userId);
 
+    // Check save limit (5 for free tier)
+    const currentSaveCount = await db.memoryItem.count({
+      where: { userId: authContext.userId },
+    });
+
+    const SAVE_LIMIT = 5; // Free tier limit
+
+    if (currentSaveCount >= SAVE_LIMIT) {
+      return NextResponse.json(
+        {
+          error: "Save limit reached",
+          message: "Delete a saved design to save this one",
+          limit: SAVE_LIMIT,
+          current: currentSaveCount,
+        },
+        { status: 403 }, // Forbidden - quota exceeded
+      );
+    }
+
     // Check for duplicate (same configHash for this user)
     const existing = await db.memoryItem.findFirst({
       where: {

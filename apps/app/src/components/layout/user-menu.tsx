@@ -11,8 +11,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -57,16 +55,30 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
   // Show dropdown menu with avatar when logged in
   if (isAuthenticated && user) {
     console.log("UserMenu: Rendering authenticated menu for", user.email);
+    const themeCycle = [
+      { value: "system", label: "Automatic", icon: Monitor },
+      { value: "light", label: "Light", icon: Sun },
+      { value: "dark", label: "Dark", icon: Moon },
+    ] as const;
+    const currentTheme =
+      themeCycle.find((option) => option.value === theme) ?? themeCycle[0];
+    const nextTheme =
+      themeCycle[(themeCycle.indexOf(currentTheme) + 1) % themeCycle.length];
+    const CurrentIcon = currentTheme.icon;
     return (
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="h-8 w-8 rounded-full p-0 inline-flex items-center justify-center hover:bg-muted outline-hidden"
+          className="group inline-flex h-8 w-8 items-center justify-center rounded-full p-0 outline-hidden transition-[box-shadow,transform] duration-150 hover:scale-[1.02] hover:shadow-sm"
           aria-label={`Logged in as ${user.email}`}
           onClick={() => {
             track("user_menu_opened", { authenticated: true });
           }}
         >
-          <Avatar name={user.email} size="sm" />
+          <Avatar
+            name={user.email}
+            size="sm"
+            className="transition-[filter] duration-150 group-hover:brightness-105"
+          />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 sm:w-56">
           {/* Social links - mobile only, at very top */}
@@ -139,30 +151,20 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
           {mounted && (
             <>
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="text-xs font-medium">
+                <DropdownMenuItem
+                  closeOnClick={false}
+                  onClick={() => {
+                    setTheme(nextTheme.value);
+                    track("theme_changed", { theme: nextTheme.value });
+                  }}
+                >
+                  <CurrentIcon className="mr-2 h-4 w-4" />
                   Theme
-                </DropdownMenuLabel>
+                  <span className="ml-auto text-xs tracking-normal text-muted-foreground">
+                    {currentTheme.label}
+                  </span>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuRadioGroup
-                value={theme}
-                onValueChange={(value) => {
-                  setTheme(value);
-                  track("theme_changed", { theme: value });
-                }}
-              >
-                <DropdownMenuRadioItem value="light">
-                  <Sun className="mr-2 h-4 w-4" />
-                  Light
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="dark">
-                  <Moon className="mr-2 h-4 w-4" />
-                  Dark
-                </DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="system">
-                  <Monitor className="mr-2 h-4 w-4" />
-                  System
-                </DropdownMenuRadioItem>
-              </DropdownMenuRadioGroup>
               <DropdownMenuSeparator />
             </>
           )}

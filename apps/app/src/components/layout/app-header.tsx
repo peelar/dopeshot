@@ -2,8 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, RefreshCw } from "lucide-react";
+import { Download, ImageUp, Loader2, RefreshCw, Save } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { UserMenu } from "./user-menu";
 import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
@@ -16,6 +17,12 @@ interface AppHeaderProps {
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
+  onSave: () => void;
+  isSaving: boolean;
+  canSave: boolean;
+  isAtSaveLimit: boolean;
+  saveCount: number;
+  saveLimit: number;
   onBrandClick?: () => void;
   onFeedbackClick?: () => void;
 }
@@ -28,6 +35,12 @@ export function AppHeader({
   canExport,
   onExport,
   isExporting,
+  onSave,
+  isSaving,
+  canSave,
+  isAtSaveLimit,
+  saveCount,
+  saveLimit,
   onBrandClick,
   onFeedbackClick,
 }: AppHeaderProps) {
@@ -81,6 +94,41 @@ export function AppHeader({
             <span className="hidden md:inline">Brand</span>
           </Button>
         ) : null}
+        {/* Save button - independent of export */}
+        {canSave || isAtSaveLimit ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="flex items-center gap-2 shadow-none"
+                  onClick={onSave}
+                  disabled={isSaving || !canSave || isAtSaveLimit}
+                  aria-busy={isSaving}
+                  aria-label={isSaving ? "Saving design" : "Save design"}
+                >
+                  {isSaving ? (
+                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                  )}
+                  Save
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {isAtSaveLimit
+                    ? `Delete a saved design to save this one (${saveCount}/${saveLimit})`
+                    : canSave
+                      ? "Save this design to access it later"
+                      : "Sign in to save designs"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : null}
+        {/* Export button - independent of save */}
         {canExport ? (
           <Button
             size="sm"
@@ -91,8 +139,12 @@ export function AppHeader({
             aria-busy={isExporting}
             aria-label={isExporting ? "Exporting image" : "Export as PNG"}
           >
-            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            {isExporting ? "Exporting..." : "Export PNG"}
+            {isExporting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            Export PNG
           </Button>
         ) : null}
         <UserMenu onFeedbackClick={onFeedbackClick} />

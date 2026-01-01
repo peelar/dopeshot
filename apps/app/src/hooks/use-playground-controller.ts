@@ -17,10 +17,8 @@ import type { GradientPreferences } from "@/domain/gradient-generation";
 import { exportLayoutAsPng, exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
-import { PLACEHOLDER_ASSET_ID } from "@/hooks/atoms";
-import { useMemory } from "@/hooks/use-memory";
-import { useSession } from "@/lib/auth/auth-client";
 import {
+  PLACEHOLDER_ASSET_ID,
   assetsAtom,
   configAtom,
   hasCustomScreenshotAtom,
@@ -28,6 +26,8 @@ import {
   isExportingAtom,
   orientationAtom,
   statusMessageAtom,
+  hasExportedAtom,
+  currentExportBlobAtom,
 } from "@/hooks/atoms";
 import {
   canvasAtom,
@@ -54,8 +54,8 @@ interface ExportContext {
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
   orientation: "mobile" | "desktop";
-  createMemoryItem: (blob: Blob, path: string) => Promise<void>;
-  session: { user: { id: string } } | null;
+  setHasExported: Setter<boolean>;
+  setCurrentExportBlob: Setter<Blob | null>;
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -96,9 +96,9 @@ export function usePlaygroundController() {
   const { processColorAnalysis } = useColorAnalysis({ gradientPreferences });
   const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
 
-  // Memory and auth for export persistence
-  const { createMemoryItem } = useMemory();
-  const { data: session } = useSession();
+  // Export state atoms for voluntary save
+  const setHasExported = useSetAtom(hasExportedAtom);
+  const setCurrentExportBlob = useSetAtom(currentExportBlobAtom);
 
   usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
@@ -117,8 +117,8 @@ export function usePlaygroundController() {
     canvas,
     screenshotAsset,
     orientation,
-    createMemoryItem,
-    session,
+    setHasExported,
+    setCurrentExportBlob,
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -258,8 +258,8 @@ function useExportHandler({
   canvas,
   screenshotAsset,
   orientation,
-  createMemoryItem,
-  session,
+  setHasExported,
+  setCurrentExportBlob,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -302,18 +302,17 @@ function useExportHandler({
       link.href = dataUrl;
       link.click();
 
-      // Create memory item if user is logged in
-      if (session?.user?.id) {
-        try {
-          const screenshotPath = `${session.user.id}/${Date.now()}.png`;
-          await createMemoryItem(blob, screenshotPath);
-        } catch (memoryError) {
-          console.error("Failed to save to memory:", memoryError);
-          // Don't fail the export if memory creation fails
-        }
-      }
+      // Store blob for voluntary save and update button state
+      setCurrentExportBlob(blob);
+      setHasExported(true);
 
       setStatusMessage("Image exported successfully.");
+
+      // Track successful export
+      track("export_completed", {
+        look_id: config.layoutId,
+        orientation,
+      });
     } catch (error) {
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
@@ -336,8 +335,8 @@ function useExportHandler({
     screenshotAsset?.metadata?.width,
     setIsExporting,
     setStatusMessage,
-    createMemoryItem,
-    session,
+    setHasExported,
+    setCurrentExportBlob,
   ]);
 }
 

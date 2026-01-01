@@ -1,10 +1,14 @@
 "use client";
 
-import { useAtom, useAtomValue } from "jotai";
-import { History } from "lucide-react";
+import { useEffect } from "react";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { BookmarkCheck } from "lucide-react";
 import {
   memorySidebarOpenAtom,
   hasExportsAtom,
+  justSavedAtom,
+  currentSaveCountAtom,
+  saveLimitAtom,
 } from "@/hooks/atoms/memory";
 import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
@@ -16,16 +20,35 @@ interface MemorySidebarTriggerProps {
 export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
   const [isOpen, setIsOpen] = useAtom(memorySidebarOpenAtom);
   const hasExports = useAtomValue(hasExportsAtom);
+  const [justSaved, setJustSaved] = useAtom(justSavedAtom);
+  const saveCount = useAtomValue(currentSaveCountAtom);
+  const saveLimit = useAtomValue(saveLimitAtom);
+
+  // Auto-clear indicator after 30 seconds
+  useEffect(() => {
+    if (justSaved) {
+      const timeout = setTimeout(() => {
+        setJustSaved(false);
+      }, 30000); // 30 seconds
+
+      return () => clearTimeout(timeout);
+    }
+  }, [justSaved, setJustSaved]);
 
   const handleToggle = () => {
     const newState = !isOpen;
     setIsOpen(newState);
 
+    // Clear indicator when opening sidebar
+    if (newState && justSaved) {
+      setJustSaved(false);
+    }
+
     if (newState) {
-      track("memory_button_clicked");
-      track("memory_sidebar_opened");
+      track("saved_button_clicked");
+      track("saved_sidebar_opened");
     } else {
-      track("memory_sidebar_closed");
+      track("saved_sidebar_closed");
     }
   };
 
@@ -40,11 +63,13 @@ export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
         !hasExports && "opacity-40",
         className,
       )}
-      aria-label="Toggle history sidebar"
+      aria-label="Toggle saved designs sidebar"
       aria-pressed={isOpen}
     >
-      <History className="h-4 w-4 transition-transform group-hover:scale-110" />
-      <span className="hidden text-sm font-medium sm:inline">History</span>
+      <BookmarkCheck className={cn("h-4 w-4", justSaved && "text-primary")} />
+      <span className={cn("hidden text-sm font-medium sm:inline", justSaved ? "text-primary" : "text-foreground/60")}>
+        Saved {hasExports && `(${saveCount}/${saveLimit})`}
+      </span>
     </button>
   );
 }
