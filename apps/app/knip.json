@@ -1,5 +1,15 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignore": [
+    "prisma/schema.prisma",
+    "src/components/providers/theme-toggle.tsx",
+    "src/components/ui/context-menu.tsx",
+    "src/domain/layout/patterns.ts",
+    "tests/neon-mesh-gradients.test.ts"
+  ],
+  "ignoreDependencies": [
+    "prisma-json-types-generator"
+  ],
   "ignoreExportsUsedInFile": {
     "interface": true,
     "type": true

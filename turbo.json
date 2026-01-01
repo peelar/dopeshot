@@ -7,7 +7,9 @@
     "BETTER_AUTH_SECRET",
     "BETTER_AUTH_URL",
     "RESEND_API_KEY",
-    "SENTRY_AUTH_TOKEN"
+    "SENTRY_AUTH_TOKEN",
+    "GOOGLE_CLIENT_ID",
+    "GOOGLE_CLIENT_SECRET"
   ],
   "tasks": {
     "dev": {

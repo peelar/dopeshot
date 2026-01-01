@@ -45,6 +45,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Load app test environment
+        shell: bash
+        run: |
+          if [ -f apps/app/.env.test ]; then
+            grep -v '^[[:space:]]*#' apps/app/.env.test | grep -v '^[[:space:]]*$' >> "$GITHUB_ENV"
+          fi
+
       - name: Typecheck
         run: pnpm --filter dopeshot-app typecheck
 

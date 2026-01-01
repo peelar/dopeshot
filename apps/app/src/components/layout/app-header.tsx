@@ -98,23 +98,25 @@ export function AppHeader({
         {canSave || isAtSaveLimit ? (
           <TooltipProvider>
             <Tooltip>
-              <TooltipTrigger>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  className="flex items-center gap-2 shadow-none"
-                  onClick={onSave}
-                  disabled={isSaving || !canSave || isAtSaveLimit}
-                  aria-busy={isSaving}
-                  aria-label={isSaving ? "Saving design" : "Save design"}
-                >
-                  {isSaving ? (
-                    <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-                  )}
-                  Save
-                </Button>
+              <TooltipTrigger
+                render={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex items-center gap-2 shadow-none"
+                    onClick={onSave}
+                    disabled={isSaving || !canSave || isAtSaveLimit}
+                    aria-busy={isSaving}
+                    aria-label={isSaving ? "Saving design" : "Save design"}
+                  />
+                }
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                Save
               </TooltipTrigger>
               <TooltipContent>
                 <p>
