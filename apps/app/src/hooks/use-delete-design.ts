@@ -5,6 +5,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { memoryItemsAtom, saveCountAtom, loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { statusMessageAtom } from "@/hooks/atoms";
 import { track } from "@/lib/analytics";
+import { clearMemoryUrl, setMemoryUrl } from "@/lib/memory/memory-url";
 
 export function useDeleteDesign() {
   const [items, setItems] = useAtom(memoryItemsAtom);
@@ -33,11 +34,7 @@ export function useDeleteDesign() {
         setLoadedItemId(null);
 
         // Clear URL param
-        if (typeof window !== "undefined") {
-          const url = new URL(window.location.href);
-          url.searchParams.delete("memory");
-          window.history.pushState({}, "", url.toString());
-        }
+        clearMemoryUrl();
       }
 
       try {
@@ -76,11 +73,7 @@ export function useDeleteDesign() {
           setLoadedItemId(itemId);
 
           // Restore URL param
-          if (typeof window !== "undefined") {
-            const url = new URL(window.location.href);
-            url.searchParams.set("memory", itemId);
-            window.history.pushState({}, "", url.toString());
-          }
+          setMemoryUrl(itemId);
         }
 
         track("design_delete_failed", {

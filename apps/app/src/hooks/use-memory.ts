@@ -23,6 +23,7 @@ import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
 import { setMemoryState } from "@/lib/storage/memory-state";
 import { track } from "@/lib/analytics";
+import { setMemoryUrl } from "@/lib/memory/memory-url";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
 
 export function useMemory() {
@@ -124,11 +125,7 @@ export function useMemory() {
         setLoadedItemId(itemId);
 
         // Update URL with memory item ID
-        if (typeof window !== "undefined") {
-          const url = new URL(window.location.href);
-          url.searchParams.set("memory", itemId);
-          window.history.pushState({}, "", url.toString());
-        }
+        setMemoryUrl(itemId);
 
         // Track event
         track("saved_loaded", {

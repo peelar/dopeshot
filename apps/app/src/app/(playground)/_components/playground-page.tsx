@@ -84,9 +84,10 @@ function ExportContainer({
 
 type PlaygroundPageProps = {
   showBrandExperience: boolean;
+  initialMemoryItemId?: string;
 };
 
-export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
+export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
@@ -114,6 +115,16 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
       });
     }
   }, [session?.user, fetchMemoryItems]);
+
+  useEffect(() => {
+    if (!initialMemoryItemId || !session?.user) {
+      return;
+    }
+
+    loadMemoryItem(initialMemoryItemId).catch((error) => {
+      console.error("Failed to load memory item from URL:", error);
+    });
+  }, [initialMemoryItemId, session?.user, loadMemoryItem]);
 
   const {
     dragAndUpload,

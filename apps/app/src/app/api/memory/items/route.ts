@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate new memory item ID
-    const memoryItemId = nanoid();
+    const memoryItemId = nanoid(8);
 
     // Upload screenshot to Supabase
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());

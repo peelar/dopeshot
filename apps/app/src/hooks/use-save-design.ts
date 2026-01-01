@@ -24,6 +24,7 @@ import type { MemoryItemDTO } from "@/domain/memory/types";
 import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import { setMemoryUrl } from "@/lib/memory/memory-url";
 
 export function useSaveDesign() {
   const { data: session } = useSession();
@@ -115,11 +116,7 @@ export function useSaveDesign() {
       setLoadedItemId(newItem.id);
 
       // Update URL
-      if (typeof window !== "undefined") {
-        const url = new URL(window.location.href);
-        url.searchParams.set("memory", newItem.id);
-        window.history.pushState({}, "", url.toString());
-      }
+      setMemoryUrl(newItem.id);
 
       setStatusMessage(isDuplicate ? "Design already saved" : "Design saved successfully");
 
