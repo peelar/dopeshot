@@ -14,8 +14,29 @@ const resend = authEnv.resendApiKey ? new Resend(authEnv.resendApiKey) : null;
  * In development: allows all localhost/127.0.0.1 ports
  * In production: only the configured base URL
  */
+function normalizeOrigin(url?: string) {
+  if (!url) return null;
+
+  try {
+    return new URL(url).origin;
+  } catch (error) {
+    console.warn(`[Auth] Unable to parse origin from URL: ${url}`, error);
+    return null;
+  }
+}
+
 function getTrustedOrigins(): string[] {
-  const origins = [authEnv.betterAuthUrl];
+  const origins = new Set<string>();
+
+  const addOrigin = (origin?: string | null) => {
+    if (origin) origins.add(origin);
+  };
+
+  addOrigin(normalizeOrigin(authEnv.betterAuthUrl));
+  addOrigin(normalizeOrigin(process.env.NEXT_PUBLIC_APP_URL));
+
+  const additionalOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS?.split(",");
+  additionalOrigins?.forEach((origin) => addOrigin(normalizeOrigin(origin.trim())));
 
   if (process.env.NODE_ENV === "development") {
     // Allow common dev ports for both localhost and 127.0.0.1
@@ -23,10 +44,11 @@ function getTrustedOrigins(): string[] {
       `http://localhost:${port}`,
       `http://127.0.0.1:${port}`,
     ]);
-    return [...origins, ...localhostOrigins];
+
+    localhostOrigins.forEach((origin) => addOrigin(origin));
   }
 
-  return origins;
+  return Array.from(origins);
 }
 
 export const auth = betterAuth({
