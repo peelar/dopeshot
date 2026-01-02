@@ -122,14 +122,24 @@ export async function signInWithGoogle(): Promise<AuthResult> {
   try {
     track("auth_attempt", { method: "google" });
 
-    await signIn.social({
+    const result = await signIn.social({
       provider: "google",
       callbackURL: "/auth",
+      // Handle redirect manually to support environments where automatic redirect plugins may not fire
+      disableRedirect: true,
     });
 
-    // Social sign-in redirects to OAuth provider, so we won't reach here
-    // Success tracking happens after redirect callback
-    return {};
+    if (result.error) {
+      track("auth_sign_in_failed", { error: result.error.message || "Unknown error", method: "google" });
+      return { error: { message: result.error.message || "Failed to sign in with Google" } };
+    }
+
+    if (result.data?.url) {
+      window.location.href = result.data.url;
+      return {};
+    }
+
+    return { error: { message: "Failed to start Google sign-in flow" } };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to sign in with Google";
     track("auth_sign_in_error", { error: message, method: "google" });
