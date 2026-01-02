@@ -2,16 +2,11 @@ import type { BackgroundSelection, PersonalBackground } from "./types";
 
 type ListResponse<T> = {
   items: T[];
-  userTier?: string | null;
 };
 
-type SelectionResponse = BackgroundSelection & {
-  userTier?: string | null;
-};
+type SelectionResponse = BackgroundSelection;
 
-type UploadResponse = PersonalBackground & {
-  userTier?: string | null;
-};
+type UploadResponse = PersonalBackground;
 
 export class BackgroundApiError extends Error {
   status: number;

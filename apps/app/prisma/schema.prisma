@@ -28,6 +28,7 @@ model User {
   generatedAssets GeneratedAsset[]
   personalBackgrounds PersonalBackground[]
   backgroundSelection BackgroundSelection?
+  memoryItems     MemoryItem[]
 
   @@map("user")
   @@schema("public")
@@ -109,8 +110,6 @@ model BrandProfile {
 model UserMetadata {
   id                 String  @id @default(cuid())
   userId             String  @unique @map("user_id")
-  subscriptionTier   String  @default("free") @map("subscription_tier")
-  subscriptionStatus String  @default("active") @map("subscription_status")
   exportsThisMonth   Int     @default(0) @map("exports_this_month")
 
   /// [OnboardingProgress]
@@ -183,5 +182,27 @@ model BackgroundSelection {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("background_selections")
+  @@schema("public")
+}
+
+model MemoryItem {
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  configHash      String    @map("config_hash") @db.VarChar(32)
+  screenshotPath  String    @map("screenshot_path")
+
+  /// [MemoryConfiguration]
+  configuration   Json
+
+  shareHash       String?   @unique @map("share_hash") @db.VarChar(12)
+  sharedAt        DateTime? @map("shared_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, configHash])
+  @@map("memory_items")
   @@schema("public")
 }

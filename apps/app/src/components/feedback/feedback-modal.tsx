@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { track } from "@/lib/analytics";
 import { MessageSquare, X, Check } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
+import { Switch } from "@/components/ui/switch";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -108,17 +109,12 @@ export function FeedbackModal({
     }
   };
 
-  const handleRemoveScreenshot = () => {
-    setIncludeScreenshot(false);
-    track("feedback_screenshot_removed");
-  };
-
   // Only render Dialog when open to ensure proper cleanup and test isolation
   if (!open) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[520px]">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[520px]">
         {submitStatus === "success" ? (
           <div className="flex flex-col items-center justify-center py-12">
             <div className="rounded-full bg-green-100 dark:bg-green-900/20 p-3 mb-4">
@@ -150,7 +146,7 @@ export function FeedbackModal({
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
             {/* Feedback textarea */}
             <div className="space-y-2">
-              <Label htmlFor="feedback-message">
+              <Label htmlFor="feedback-message" className="leading-relaxed">
                 What are you trying to do, and what would make dopeshot better
                 for you?
               </Label>
@@ -164,6 +160,29 @@ export function FeedbackModal({
                 required
               />
             </div>
+
+            {/* Screenshot toggle */}
+            {screenshotDataUrl && (
+              <div className="flex items-start justify-between gap-4 rounded-lg border border-border p-4">
+                <div className="flex-1 space-y-1">
+                  <Label htmlFor="include-screenshot" className="text-sm font-medium cursor-pointer">
+                    Include screenshot
+                  </Label>
+                  <p className="text-xs text-muted-foreground">
+                    Attach a screenshot of your current canvas to help us understand your feedback better
+                  </p>
+                </div>
+                <Switch
+                  id="include-screenshot"
+                  checked={includeScreenshot}
+                  onCheckedChange={(checked) => {
+                    setIncludeScreenshot(checked);
+                    track(checked ? "feedback_screenshot_included" : "feedback_screenshot_removed");
+                  }}
+                  disabled={isSubmitting}
+                />
+              </div>
+            )}
 
             {/* Optional email */}
             <div className="space-y-2">
@@ -182,34 +201,6 @@ export function FeedbackModal({
                 disabled={isSubmitting}
               />
             </div>
-
-            {/* Screenshot preview */}
-            {screenshotDataUrl && includeScreenshot && (
-              <div className="space-y-2">
-                <Label className="text-sm">Screenshot</Label>
-                <div className="relative rounded-lg border border-border overflow-hidden bg-muted/20">
-                  <img
-                    src={screenshotDataUrl}
-                    alt="Canvas screenshot"
-                    className="w-full h-auto"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRemoveScreenshot}
-                    className="absolute top-2 right-2 bg-background/80 hover:bg-background backdrop-blur-sm"
-                    disabled={isSubmitting}
-                  >
-                    <X className="h-4 w-4" />
-                    <span className="sr-only">Remove screenshot</span>
-                  </Button>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Screenshot will be included with your feedback
-                </p>
-              </div>
-            )}
 
             {/* Error message */}
             {submitStatus === "error" && errorMessage && (

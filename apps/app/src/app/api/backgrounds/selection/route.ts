@@ -27,7 +27,6 @@ export async function GET() {
     return NextResponse.json({
       backgroundType: selection.backgroundType,
       backgroundId: selection.backgroundId,
-      userTier: auth.userTier ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load selection";
@@ -85,7 +84,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({
       backgroundType: selection.backgroundType,
       backgroundId: selection.backgroundId,
-      userTier: auth.userTier ?? null,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to save selection";

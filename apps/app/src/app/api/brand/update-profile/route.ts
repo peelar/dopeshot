@@ -16,8 +16,6 @@ type UpdateProfileBody = {
   logo_path?: string | null;
   onboardingStep?: string;
   onboardingSteps?: string[];
-  subscription_tier?: string;
-  subscription_status?: string;
 };
 
 export async function PATCH(request: Request) {
@@ -93,8 +91,6 @@ export async function PATCH(request: Request) {
 
     await updateUserMetadata({
       onboardingSteps,
-      subscriptionTier: body.subscription_tier,
-      subscriptionStatus: body.subscription_status,
       session,
     });
 

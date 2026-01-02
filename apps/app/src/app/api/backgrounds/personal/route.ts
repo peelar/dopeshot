@@ -55,7 +55,7 @@ export async function GET() {
       }),
     );
 
-    return NextResponse.json({ items, userTier: auth.userTier ?? null });
+    return NextResponse.json({ items });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to load backgrounds";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -147,7 +147,6 @@ export async function POST(request: Request) {
         widthPx: background.widthPx,
         heightPx: background.heightPx,
         fileFormat: background.fileFormat,
-        userTier: auth.userTier ?? null,
       },
       { status: 201 },
     );

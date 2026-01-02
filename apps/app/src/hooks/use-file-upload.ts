@@ -13,6 +13,7 @@ import {
   statusMessageAtom,
   isProcessingUploadAtom,
   hasCustomScreenshotAtom,
+  screenshotGradientAtom,
 } from "./atoms";
 import { expandSidebarSectionAtom } from "./use-sidebar-state";
 import { backgroundSelectionAtom } from "./atoms/backgrounds";
@@ -39,6 +40,7 @@ export function useFileUpload({
   const setConfig = useSetAtom(configAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const expandSidebarSection = useSetAtom(expandSidebarSectionAtom);
 
   const validateFile = useCallback(
@@ -87,6 +89,7 @@ export function useFileUpload({
 
         if (kind === "screenshot") {
           setHasCustomScreenshot(true);
+          setScreenshotGradient(null);
           track("screenshot_uploaded", {
             aspect_category: aspectCategory || "unknown",
             file_size_kb: Math.round(file.size / 1024),
@@ -229,6 +232,7 @@ export function useFileUpload({
       setStatusMessage,
       setBackgroundSelection,
       setHasCustomScreenshot,
+      setScreenshotGradient,
       onScreenshotUploaded,
       processColorAnalysis,
       expandSidebarSection,

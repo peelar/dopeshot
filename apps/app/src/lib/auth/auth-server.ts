@@ -9,6 +9,26 @@ import { prisma } from "@/lib/prisma";
 // Initialize Resend client (only if API key is configured)
 const resend = authEnv.resendApiKey ? new Resend(authEnv.resendApiKey) : null;
 
+/**
+ * Get trusted origins for Better Auth
+ * In development: allows all localhost/127.0.0.1 ports
+ * In production: only the configured base URL
+ */
+function getTrustedOrigins(): string[] {
+  const origins = [authEnv.betterAuthUrl];
+
+  if (process.env.NODE_ENV === "development") {
+    // Allow common dev ports for both localhost and 127.0.0.1
+    const localhostOrigins = [3000, 3001, 3002].flatMap((port) => [
+      `http://localhost:${port}`,
+      `http://127.0.0.1:${port}`,
+    ]);
+    return [...origins, ...localhostOrigins];
+  }
+
+  return origins;
+}
+
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -22,6 +42,14 @@ export const auth = betterAuth({
       verify: async ({ hash, password }) => await bcrypt.compare(password, hash),
     },
   },
+  // Social authentication providers
+  socialProviders: {
+    google: {
+      clientId: authEnv.googleClientId,
+      clientSecret: authEnv.googleClientSecret,
+      enabled: true,
+    },
+  },
   session: {
     cookieCache: {
       enabled: true,
@@ -30,7 +58,7 @@ export const auth = betterAuth({
   },
   secret: authEnv.betterAuthSecret,
   baseURL: authEnv.betterAuthUrl,
-  trustedOrigins: [authEnv.betterAuthUrl],
+  trustedOrigins: getTrustedOrigins(),
 
   // Auto-create related records on user signup
   databaseHooks: {
@@ -60,8 +88,6 @@ export const auth = betterAuth({
               where: { userId: user.id },
               create: {
                 userId: user.id,
-                subscriptionTier: "free",
-                subscriptionStatus: "active",
                 exportsThisMonth: 0,
               },
               update: {},
@@ -74,10 +100,23 @@ export const auth = betterAuth({
 
   plugins: [
     magicLink({
-      sendMagicLink: async ({ email, url, token }) => {
+      sendMagicLink: async ({ email, url, token }, request) => {
         if (!resend) {
           console.error("Resend API key not configured - cannot send magic link");
           throw new Error("Email service not configured");
+        }
+
+        // In development, replace the baseURL with the actual request origin
+        // This ensures magic links work regardless of which port you're using
+        let finalUrl = url;
+        if (process.env.NODE_ENV === "development" && request?.headers) {
+          const origin = request.headers.get("origin") || request.headers.get("referer");
+          if (origin) {
+            const requestOrigin = new URL(origin).origin;
+            const configuredOrigin = new URL(authEnv.betterAuthUrl).origin;
+            finalUrl = url.replace(configuredOrigin, requestOrigin);
+            console.log(`[Magic Link] Adjusted URL from ${url} to ${finalUrl}`);
+          }
         }
 
         try {
@@ -89,7 +128,7 @@ export const auth = betterAuth({
               <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
                 <h2>Sign in to dopeshot</h2>
                 <p>Click the button below to sign in to your account:</p>
-                <a href="${url}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                <a href="${finalUrl}" style="display: inline-block; background: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">
                   Sign In
                 </a>
                 <p style="color: #666; font-size: 14px;">This link will expire in 5 minutes.</p>

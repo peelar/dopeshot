@@ -78,6 +78,71 @@ export function getExportDimensions(orientation: Orientation) {
  * @param elementId - The ID of the DOM element to export.
  * @param fileName - The name of the file to download.
  */
+/**
+ * Export layout and return both the data URL and blob
+ * Used for memory persistence
+ */
+export async function exportLayoutAsPngWithBlob(
+  elementId: string,
+  {
+    width = 1280,
+    height = 720,
+    backgroundColor = "white",
+    pixelRatio,
+    maxImageScale,
+  }: ExportSizeOptions = {},
+): Promise<{ dataUrl: string; blob: Blob }> {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error(`Export target with id "${elementId}" not found`);
+  }
+
+  try {
+    await waitForRender();
+
+    const resolvedPixelRatio = calculatePixelRatio({
+      desiredPixelRatio: pixelRatio,
+      maxImageScale,
+      devicePixelRatio: window.devicePixelRatio,
+    });
+
+    const dataUrl = await toPng(element, {
+      cacheBust: true,
+      pixelRatio: resolvedPixelRatio,
+      width,
+      height,
+      skipAutoScale: true,
+      backgroundColor,
+      style: {
+        visibility: "visible",
+        zIndex: "auto",
+        textRendering: "optimizeLegibility",
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "grayscale",
+      } as Partial<CSSStyleDeclaration> & {
+        WebkitFontSmoothing?: string;
+        MozOsxFontSmoothing?: string;
+      },
+    });
+
+    // Convert data URL to blob
+    const response = await fetch(dataUrl);
+    const blob = await response.blob();
+
+    return { dataUrl, blob };
+  } catch (err) {
+    console.error("Failed to export layout:", err);
+    if (err instanceof Error) {
+      throw err;
+    } else if (typeof err === "object" && err !== null) {
+      const msg = (err as any).message || (err as any).toString();
+      throw new Error(`Export failed: ${msg}`);
+    } else {
+      throw new Error(`Export failed: ${String(err)}`);
+    }
+  }
+}
+
 export async function exportLayoutAsPng(
   elementId: string,
   fileName: string,
@@ -95,40 +160,18 @@ export async function exportLayoutAsPng(
   }
 
   try {
-    // Wait for next frame and idle time to ensure rendering is complete
-    await waitForRender();
-
-    // Target a hi-DPI export, but don't upscale screenshots beyond their natural size.
-    const resolvedPixelRatio = calculatePixelRatio({
-      desiredPixelRatio: pixelRatio,
-      maxImageScale,
-      devicePixelRatio: window.devicePixelRatio,
-    });
-
-    // The visible preview is a scaled version of the hidden export surface.
-    const dataUrl = await toPng(element, {
-      cacheBust: true,
-      pixelRatio: resolvedPixelRatio,
+    // Use the blob export function and download
+    const { dataUrl: exportDataUrl } = await exportLayoutAsPngWithBlob(elementId, {
       width,
       height,
-      skipAutoScale: true,
       backgroundColor,
-      // Ensure we capture styles correctly (typed to allow vendor props)
-      style: {
-        visibility: "visible",
-        zIndex: "auto",
-        textRendering: "optimizeLegibility",
-        WebkitFontSmoothing: "antialiased",
-        MozOsxFontSmoothing: "grayscale",
-      } as Partial<CSSStyleDeclaration> & {
-        WebkitFontSmoothing?: string;
-        MozOsxFontSmoothing?: string;
-      },
+      pixelRatio,
+      maxImageScale,
     });
 
     const link = document.createElement("a");
     link.download = fileName;
-    link.href = dataUrl;
+    link.href = exportDataUrl;
     link.click();
   } catch (err) {
     console.error("Failed to export layout:", err);

@@ -14,11 +14,11 @@ import { getPreferredGradientAngle } from "@/domain/layout/gradient-application"
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import type { LayoutDefinition } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
-import { exportLayoutAsPng } from "@/domain/layout/export";
+import { exportLayoutAsPng, exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
-import { PLACEHOLDER_ASSET_ID } from "@/hooks/atoms";
 import {
+  PLACEHOLDER_ASSET_ID,
   assetsAtom,
   configAtom,
   hasCustomScreenshotAtom,
@@ -26,6 +26,8 @@ import {
   isExportingAtom,
   orientationAtom,
   statusMessageAtom,
+  hasExportedAtom,
+  currentExportBlobAtom,
 } from "@/hooks/atoms";
 import {
   canvasAtom,
@@ -52,6 +54,8 @@ interface ExportContext {
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
   orientation: "mobile" | "desktop";
+  setHasExported: Setter<boolean>;
+  setCurrentExportBlob: Setter<Blob | null>;
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -92,6 +96,10 @@ export function usePlaygroundController() {
   const { processColorAnalysis } = useColorAnalysis({ gradientPreferences });
   const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
 
+  // Export state atoms for voluntary save
+  const setHasExported = useSetAtom(hasExportedAtom);
+  const setCurrentExportBlob = useSetAtom(currentExportBlobAtom);
+
   usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
@@ -109,6 +117,8 @@ export function usePlaygroundController() {
     canvas,
     screenshotAsset,
     orientation,
+    setHasExported,
+    setCurrentExportBlob,
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -248,6 +258,8 @@ function useExportHandler({
   canvas,
   screenshotAsset,
   orientation,
+  setHasExported,
+  setCurrentExportBlob,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -277,12 +289,30 @@ function useExportHandler({
             )
           : undefined;
 
-      await exportLayoutAsPng("export-container", "cover-image.png", {
+      // Use blob export for memory persistence
+      const { dataUrl, blob } = await exportLayoutAsPngWithBlob("export-container", {
         width: exportDims.width,
         height: exportDims.height,
         maxImageScale,
       });
+
+      // Trigger download
+      const link = document.createElement("a");
+      link.download = "cover-image.png";
+      link.href = dataUrl;
+      link.click();
+
+      // Store blob for voluntary save and update button state
+      setCurrentExportBlob(blob);
+      setHasExported(true);
+
       setStatusMessage("Image exported successfully.");
+
+      // Track successful export
+      track("export_completed", {
+        look_id: config.layoutId,
+        orientation,
+      });
     } catch (error) {
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
@@ -305,6 +335,8 @@ function useExportHandler({
     screenshotAsset?.metadata?.width,
     setIsExporting,
     setStatusMessage,
+    setHasExported,
+    setCurrentExportBlob,
   ]);
 }
 

@@ -1,11 +1,13 @@
 "use client";
 
-import { ThemeToggle } from "@/components/providers/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, RefreshCw, MessageSquare } from "lucide-react";
+import { Download, ImageUp, Loader2, RefreshCw, Save } from "lucide-react";
 import { track } from "@/lib/analytics";
+import { UserMenu } from "./user-menu";
+import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
 
 interface AppHeaderProps {
   hasCustomScreenshot: boolean;
@@ -15,6 +17,12 @@ interface AppHeaderProps {
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
+  onSave: () => void;
+  isSaving: boolean;
+  canSave: boolean;
+  isAtSaveLimit: boolean;
+  saveCount: number;
+  saveLimit: number;
   onBrandClick?: () => void;
   onFeedbackClick?: () => void;
 }
@@ -27,6 +35,12 @@ export function AppHeader({
   canExport,
   onExport,
   isExporting,
+  onSave,
+  isSaving,
+  canSave,
+  isAtSaveLimit,
+  saveCount,
+  saveLimit,
   onBrandClick,
   onFeedbackClick,
 }: AppHeaderProps) {
@@ -44,25 +58,14 @@ export function AppHeader({
 
   return (
     <header className="relative sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-primary/30 after:via-primary/10 after:to-transparent after:opacity-40 sm:px-6">
-      <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
-        <Logo />
-      </a>
       <div className="flex items-center gap-3">
-        {onFeedbackClick ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onFeedbackClick();
-              track("feedback_button_clicked");
-            }}
-            className="text-muted-foreground hover:text-foreground gap-1.5"
-            aria-label="Open feedback modal"
-          >
-            <MessageSquare className="h-4 w-4" aria-hidden="true" />
-            <span className="hidden sm:inline">Feedback</span>
-          </Button>
-        ) : null}
+        <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
+          <Logo />
+        </a>
+        <div className="relative h-6 w-px bg-border/60" aria-hidden="true" />
+        <MemorySidebarTrigger />
+      </div>
+      <div className="flex items-center gap-3">
         {showUploadButton ? (
           <Button
             type="button"
@@ -91,6 +94,43 @@ export function AppHeader({
             <span className="hidden md:inline">Brand</span>
           </Button>
         ) : null}
+        {/* Save button - independent of export */}
+        {canSave || isAtSaveLimit ? (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="flex items-center gap-2 shadow-none"
+                    onClick={onSave}
+                    disabled={isSaving || !canSave || isAtSaveLimit}
+                    aria-busy={isSaving}
+                    aria-label={isSaving ? "Saving design" : "Save design"}
+                  />
+                }
+              >
+                {isSaving ? (
+                  <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  <Save className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                )}
+                Save
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {isAtSaveLimit
+                    ? `Delete a saved design to save this one (${saveCount}/${saveLimit})`
+                    : canSave
+                      ? "Save this design to access it later"
+                      : "Sign in to save designs"}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        ) : null}
+        {/* Export button - independent of save */}
         {canExport ? (
           <Button
             size="sm"
@@ -101,11 +141,15 @@ export function AppHeader({
             aria-busy={isExporting}
             aria-label={isExporting ? "Exporting image" : "Export as PNG"}
           >
-            <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-            {isExporting ? "Exporting..." : "Export PNG"}
+            {isExporting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            Export PNG
           </Button>
         ) : null}
-        {process.env.NODE_ENV === "development" && <ThemeToggle />}
+        <UserMenu onFeedbackClick={onFeedbackClick} />
       </div>
     </header>
   );

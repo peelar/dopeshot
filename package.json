@@ -31,5 +31,8 @@
     "@changesets/cli": "^2.29.8",
     "knip": "^5.70.2",
     "turbo": "^2.5.6"
+  },
+  "dependencies": {
+    "nanoid": "^5.1.6"
   }
 }

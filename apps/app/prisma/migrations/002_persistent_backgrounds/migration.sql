@@ -12,7 +12,7 @@ create table if not exists public.preset_backgrounds (
 
 create table if not exists public.personal_backgrounds (
   id text primary key,
-  user_id uuid not null references auth.users(id) on delete cascade,
+  user_id text not null references public.user(id) on delete cascade,
   name text,
   storage_path text not null,
   preview_url text not null,
@@ -26,32 +26,9 @@ create table if not exists public.personal_backgrounds (
 
 create index if not exists personal_backgrounds_user_id_idx on public.personal_backgrounds(user_id);
 
-alter table public.personal_backgrounds enable row level security;
-
-create policy "Owners can select personal backgrounds"
-  on public.personal_backgrounds
-  for select
-  using (user_id = auth.uid());
-
-create policy "Owners can insert personal backgrounds"
-  on public.personal_backgrounds
-  for insert
-  with check (user_id = auth.uid());
-
-create policy "Owners can update personal backgrounds"
-  on public.personal_backgrounds
-  for update
-  using (user_id = auth.uid())
-  with check (user_id = auth.uid());
-
-create policy "Owners can delete personal backgrounds"
-  on public.personal_backgrounds
-  for delete
-  using (user_id = auth.uid());
-
 create table if not exists public.background_selections (
   id text primary key,
-  user_id uuid not null unique references auth.users(id) on delete cascade,
+  user_id text not null unique references public.user(id) on delete cascade,
   background_type text not null,
   background_id text not null,
   updated_at timestamptz not null default now()

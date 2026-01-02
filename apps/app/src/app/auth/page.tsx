@@ -2,11 +2,10 @@
 
 import { AuthForm } from "@/components/auth/auth-form";
 import { Logo } from "@/components/ui/logo";
-import { ThemeToggle } from "@/components/providers/theme-toggle";
 
 export default function AuthPage() {
   return (
-    <main className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-gradient-to-br from-zinc-50 via-zinc-100 to-zinc-50 px-4 py-12 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
+    <main className="relative flex min-h-screen flex-col justify-center overflow-hidden bg-gradient-to-br from-zinc-50 via-zinc-100 to-zinc-50 px-4 py-12 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950">
       {/* Animated grid pattern */}
       <div className="pointer-events-none absolute inset-0" aria-hidden="true">
         <div
@@ -62,12 +61,11 @@ export default function AuthPage() {
         }}
       />
 
-      {/* Header with logo and theme toggle */}
+      {/* Header with logo */}
       <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between p-6">
         <a href="/" aria-label="Go to homepage" className="transition-opacity hover:opacity-80">
           <Logo />
         </a>
-        {process.env.NODE_ENV === "development" && <ThemeToggle />}
       </div>
 
       {/* Auth form */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/app-header";
 import { CoverPreview } from "@/components/cover-preview";
@@ -13,10 +13,16 @@ import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom, feedbackModalOpenAtom, type Orientation } from "@/hooks/atoms";
+import { orientationAtom, feedbackModalOpenAtom, hasExportedAtom, type Orientation } from "@/hooks/atoms";
 import { useAtom, useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
+import { MemorySidebar } from "@/components/memory/memory-sidebar";
+import { useMemory } from "@/hooks/use-memory";
+import { useSession } from "@/lib/auth/auth-client";
+import { useSaveDesign } from "@/hooks/use-save-design";
+import { useExportStateReset } from "@/hooks/use-export-state-reset";
+import { useDeleteDesign } from "@/hooks/use-delete-design";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -78,9 +84,10 @@ function ExportContainer({
 
 type PlaygroundPageProps = {
   showBrandExperience: boolean;
+  initialMemoryItemId?: string;
 };
 
-export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
+export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
@@ -95,6 +102,29 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
     setFeedbackScreenshot(screenshot);
     setFeedbackModalOpen(true);
   };
+  // Memory hook for loading items
+  const { loadMemoryItem, fetchMemoryItems } = useMemory();
+  const { data: session } = useSession();
+  const isLoggedIn = Boolean(session?.user);
+
+  // Preload memory items on mount (if logged in)
+  useEffect(() => {
+    if (session?.user) {
+      fetchMemoryItems().catch((error) => {
+        console.error("Failed to preload memory items:", error);
+      });
+    }
+  }, [session?.user, fetchMemoryItems]);
+
+  useEffect(() => {
+    if (!initialMemoryItemId || !session?.user) {
+      return;
+    }
+
+    loadMemoryItem(initialMemoryItemId).catch((error) => {
+      console.error("Failed to load memory item from URL:", error);
+    });
+  }, [initialMemoryItemId, session?.user, loadMemoryItem]);
 
   const {
     dragAndUpload,
@@ -117,6 +147,14 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
     isConfigDrawerOpen,
     setIsConfigDrawerOpen,
   } = usePlaygroundController();
+
+  // Save design hooks
+  const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
+  const hasExported = useAtomValue(hasExportedAtom);
+  useExportStateReset(); // Auto-reset on design changes
+
+  // Delete design hook
+  const { deleteDesign } = useDeleteDesign();
 
   const {
     isDragging,
@@ -147,13 +185,22 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
+        onSave={saveDesign}
+        isSaving={isSaving}
+        canSave={canSave}
+        isAtSaveLimit={isAtLimit}
+        saveCount={saveCount}
+        saveLimit={saveLimit}
         onBrandClick={undefined}
         onFeedbackClick={handleFeedbackClick}
       />
 
-      {/* Two-column layout: Content (Looks + Preview) | Sidebar */}
+      {/* Three-column layout: Memory Sidebar | Content (Looks + Preview) | Design Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
-        {/* Left: Content Column (Looks Rail + Preview) */}
+        {/* Left: Memory Sidebar (collapsible) */}
+        <MemorySidebar onLoadItem={loadMemoryItem} onDeleteItem={deleteDesign} />
+
+        {/* Center: Content Column (Looks Rail + Preview) */}
         <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
           <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
             <LayoutSelector />
@@ -176,7 +223,11 @@ export function PlaygroundPage({ showBrandExperience }: PlaygroundPageProps) {
 
         {/* Right: Sidebar - spans full height from below nav */}
         <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-          <SidebarTabs showBrandExperience={showBrandExperience} onUploadAsset={handleFileProcess} />
+          <SidebarTabs
+            showBrandExperience={showBrandExperience}
+            onUploadAsset={handleFileProcess}
+            onFeedbackClick={handleFeedbackClick}
+          />
         </div>
       </div>
 
