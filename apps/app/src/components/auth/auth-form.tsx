@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth, signInWithEmail, signUpWithEmail, sendMagicLink, signInWithGoogle } from "@/lib/auth";
+import { useAuth, signInWithEmail, signUpWithEmail, sendMagicLink } from "@/lib/auth";
+import { signIn } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 
 type AuthMode = "sign-in" | "sign-up";
@@ -135,12 +136,17 @@ export function AuthForm() {
     setMode(nextMode);
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSignIn = () => {
     setStatus(null);
-    const { error } = await signInWithGoogle();
-    if (error) {
-      setStatus({ type: "error", message: error.message });
-    }
+    // Track attempt (fire and forget to maintain synchronous redirect)
+    track("auth_attempt", { method: "google" });
+    // Call signIn.social() directly and synchronously to ensure mobile browser compatibility
+    // Mobile browsers require OAuth redirects to happen in the same event loop as user interaction
+    // Any async operation before the redirect can cause the browser to block it
+    signIn.social({
+      provider: "google",
+      callbackURL: "/auth",
+    });
   };
 
   if (user) {
