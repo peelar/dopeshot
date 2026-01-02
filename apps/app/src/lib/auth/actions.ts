@@ -136,3 +136,16 @@ export async function signInWithGoogle(): Promise<AuthResult> {
     return { error: { message } };
   }
 }
+
+/**
+ * Get the Google OAuth authorization URL for direct navigation
+ * This is used for mobile browsers where JavaScript-initiated redirects may be blocked
+ */
+export function getGoogleOAuthUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "";
+  const callbackURL = encodeURIComponent("/auth");
+
+  // Better Auth social sign-in endpoint
+  // This GET request will redirect to Google's OAuth page
+  return `${baseUrl}/api/auth/sign-in/google?callbackURL=${callbackURL}`;
+}
