@@ -13,6 +13,7 @@ import { getBackgroundStyle } from "./background-style";
 import { tokenToTextColorClass } from "./color-utils";
 import { getShadowValue } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
+import { ShaderBackground } from "@/components/shaders";
 
 export function useLayoutPrimitives() {
   const config = useAtomValue(configAtom);
@@ -106,11 +107,22 @@ export function LayoutSurface({
   screenshot,
   children,
 }: LayoutSurfaceProps) {
+  const isShaderBackground = config.background?.type === "shader" && config.background.shaderConfig;
+
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle, isolation: "isolate" }}
+      style={{
+        background: isShaderBackground ? undefined : backgroundStyle,
+        isolation: "isolate"
+      }}
     >
+      {/* Shader background layer */}
+      {isShaderBackground && config.background.shaderConfig && (
+        <div className="absolute inset-0 z-0">
+          <ShaderBackground config={config.background.shaderConfig} />
+        </div>
+      )}
       <PatternOverlay config={config} />
       <div className="relative z-10 h-full w-full">{children}</div>
     </div>

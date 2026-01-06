@@ -17,7 +17,7 @@ export type ColorToken =
   | "violet-400"
   | "violet-500";
 
-export type BackgroundType = "gradient" | "image" | "solid";
+export type BackgroundType = "gradient" | "image" | "solid" | "shader";
 export type PatternId = "grain" | "glow" | "grid";
 export type PatternChoice = PatternId | "none";
 export type PatternMode = "auto" | "manual";
@@ -68,6 +68,7 @@ export type {
 export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 import type { CustomGradient } from "./gradients/types";
+import type { ShaderConfig } from "@/domain/shaders/types";
 
 // Import color source types for detailed gradient tracking
 export type { ColorSourceInfo, ColorSourceType } from "./gradients/color-source";
@@ -77,8 +78,9 @@ export type GradientSource = "preset" | "screenshot" | "custom";
 
 export type BackgroundConfig = {
   type: BackgroundType;
-  value: string; // gradientId, assetId, or ColorToken
+  value: string; // gradientId, assetId, ColorToken, or shaderPresetId
   customGradient?: CustomGradient; // for custom/dynamic gradients
+  shaderConfig?: ShaderConfig; // for shader backgrounds
   // Union type: accepts both string (legacy) and detailed info (new)
   gradientSource?: GradientSource | import("./gradients/color-source").ColorSourceInfo;
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
