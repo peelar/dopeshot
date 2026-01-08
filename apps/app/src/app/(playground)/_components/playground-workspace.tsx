@@ -37,6 +37,9 @@ interface PlaygroundWorkspaceProps {
   shouldShowAspectLock: boolean;
   isAspectLocked: boolean;
   onToggleAspect: () => void;
+  showEmptyState: boolean;
+  showLoadingState: boolean;
+  onEmptyStateClick: () => void;
   canvasWidth: number;
   canvasHeight: number;
   isAnalyzingColors: boolean;
@@ -47,6 +50,9 @@ export function PlaygroundWorkspace({
   shouldShowAspectLock,
   isAspectLocked,
   onToggleAspect,
+  showEmptyState,
+  showLoadingState,
+  onEmptyStateClick,
   canvasHeight,
   canvasWidth,
   isAnalyzingColors,
@@ -239,7 +245,11 @@ export function PlaygroundWorkspace({
             loadingText="Analyzing colors..."
             onViewportMetricsChange={handleViewportMetricsChange}
           >
-            <CoverPreview />
+            <CoverPreview
+              showEmptyState={showEmptyState}
+              showLoadingState={showLoadingState}
+              onEmptyStateClick={onEmptyStateClick}
+            />
           </PreviewViewport>
           {showFocusHint ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">

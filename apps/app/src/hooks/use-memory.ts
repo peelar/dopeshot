@@ -15,6 +15,7 @@ import {
 import {
   configAtom,
   assetsAtom,
+  hasCustomScreenshotAtom,
   screenshotGradientAtom,
   orientationAtom,
   screenshotZoomAtom,
@@ -44,6 +45,7 @@ export function useMemory() {
 
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
+  const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const setOrientation = useSetAtom(orientationAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
@@ -64,6 +66,19 @@ export function useMemory() {
         }
 
         const response = await fetch(url.toString());
+        if (response.status === 401 || response.status === 404) {
+          if (!cursor) {
+            setItems([]);
+            setSaveCount(0);
+          }
+
+          return {
+            items: [],
+            hasMore: false,
+            nextCursor: null,
+          };
+        }
+
         if (!response.ok) {
           throw new Error("Failed to fetch memory items");
         }
@@ -128,6 +143,8 @@ export function useMemory() {
         const state = deserializeEditorState(configuration);
 
         setConfig(state.config);
+        setAssets(state.assets ?? []);
+        setHasCustomScreenshot(Boolean(state.config.assets.screenshot));
         setScreenshotGradient(state.screenshotGradient);
         setOrientation(state.orientation);
         setScreenshotZoom(state.screenshotZoom);
@@ -148,7 +165,16 @@ export function useMemory() {
         setIsLoading(false);
       }
     },
-    [setIsLoading, setConfig, setScreenshotGradient, setOrientation, setScreenshotZoom, setLoadedItemId],
+    [
+      setIsLoading,
+      setConfig,
+      setAssets,
+      setHasCustomScreenshot,
+      setScreenshotGradient,
+      setOrientation,
+      setScreenshotZoom,
+      setLoadedItemId,
+    ],
   );
 
   return {

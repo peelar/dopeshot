@@ -34,6 +34,7 @@ export function useFileUpload({
   onScreenshotUploaded,
   processColorAnalysis,
 }: UseFileUploadOptions) {
+  const isBlank = (value?: string) => !value || !value.trim();
   const [isProcessingUpload, setIsProcessingUpload] = useAtom(isProcessingUploadAtom);
   const setBackgroundSelection = useSetAtom(backgroundSelectionAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -123,6 +124,10 @@ export function useFileUpload({
           }
 
           let nextConfig = newConfig;
+          const shouldApplyHeadline =
+            kind === "screenshot" &&
+            isBlank(currentConfig.text.title) &&
+            isBlank(currentConfig.text.subtitle);
 
           if (kind === "screenshot") {
             nextConfig = {
@@ -144,6 +149,17 @@ export function useFileUpload({
                 `Detected ${ASPECT_COPY[aspectCategory] || aspectCategory} screenshot — switched to ${result.layoutName}.`,
               );
             }
+          }
+
+          if (shouldApplyHeadline) {
+            nextConfig = {
+              ...nextConfig,
+              text: {
+                ...nextConfig.text,
+                title: "Your product looks dope",
+                subtitle: "And now your screenshot does too",
+              },
+            };
           }
 
           return nextConfig;

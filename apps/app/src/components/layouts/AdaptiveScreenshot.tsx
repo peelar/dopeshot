@@ -102,7 +102,11 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-base font-semibold text-white/70">
-                {isStatic ? null : "Drop a screenshot to get started"}
+                {isStatic
+                  ? null
+                  : config.assets.screenshot
+                    ? "Saved screenshot missing - upload to restore"
+                    : "Drop a screenshot to get started"}
               </div>
             )}
           </div>

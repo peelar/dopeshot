@@ -11,6 +11,7 @@ interface CoverPreviewProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isStatic?: boolean;
   showEmptyState?: boolean;
+  showLoadingState?: boolean;
   onEmptyStateClick?: () => void;
 }
 
@@ -19,6 +20,7 @@ export function CoverPreview({
   onUploadAsset,
   isStatic = false,
   showEmptyState = false,
+  showLoadingState = false,
   onEmptyStateClick,
 }: CoverPreviewProps) {
   const layout = useAtomValue(currentLayoutAtom);
@@ -51,7 +53,20 @@ export function CoverPreview({
       }}
     >
       <LayoutComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
-      {showEmptyState && !isStatic ? (
+      {showLoadingState && !isStatic ? (
+        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-lg bg-muted">
+          {/* Breathing glow orb */}
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute h-72 w-72 animate-breath-glow rounded-full bg-foreground/15"
+          />
+          {/* Loading text */}
+          <p className="relative z-10 animate-breath-text text-[10px] font-semibold uppercase tracking-[0.3em] text-foreground/50">
+            Loading
+          </p>
+        </div>
+      ) : null}
+      {showEmptyState && !showLoadingState && !isStatic ? (
         <button
           type="button"
           onClick={onEmptyStateClick}

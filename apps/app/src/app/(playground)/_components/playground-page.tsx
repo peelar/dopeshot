@@ -16,6 +16,7 @@ import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/
 import {
   assetsAtom,
   baseConfigAtom,
+  configAtom,
   feedbackModalOpenAtom,
   getEmptyCanvasConfig,
   hasCustomScreenshotAtom,
@@ -133,6 +134,7 @@ function PlaygroundPageInner({
   initialIsAuthenticated,
 }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
+  const config = useAtomValue(configAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
@@ -147,10 +149,11 @@ function PlaygroundPageInner({
     setFeedbackModalOpen(true);
   };
   // Memory hook for loading items
-  const { loadMemoryItem, fetchMemoryItems } = useMemory();
+  const { loadMemoryItem, fetchMemoryItems, isLoading: isMemoryLoading } = useMemory();
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
+  const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(() => Boolean(initialIsAuthenticated));
 
   const setConfig = useSetAtom(baseConfigAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -173,6 +176,7 @@ function PlaygroundPageInner({
   useEffect(() => {
     if (!isLoggedIn) {
       hasBootstrappedRef.current = false;
+      setIsBootstrappingMemory(false);
       return;
     }
 
@@ -186,6 +190,8 @@ function PlaygroundPageInner({
     if (!initialMemoryItemId && !loadedItemId) {
       resetToEmptyCanvas();
     }
+
+    setIsBootstrappingMemory(true);
 
     fetchMemoryItems()
       .then(({ items }) => {
@@ -201,6 +207,9 @@ function PlaygroundPageInner({
       })
       .catch((error) => {
         console.error("Failed to bootstrap memory items:", error);
+      })
+      .finally(() => {
+        setIsBootstrappingMemory(false);
       });
   }, [fetchMemoryItems, initialMemoryItemId, isLoggedIn, loadMemoryItem, loadedItemId, resetToEmptyCanvas]);
 
@@ -235,6 +244,25 @@ function PlaygroundPageInner({
     isConfigDrawerOpen,
     setIsConfigDrawerOpen,
   } = usePlaygroundController({ demoEnabled: !isLoggedIn });
+
+  const showLoadingState = isLoggedIn && (isBootstrappingMemory || (isMemoryLoading && !loadedItemId));
+
+  const showEmptyState = useMemo(() => {
+    const hasText = Boolean(config.text.title?.trim() || config.text.subtitle?.trim());
+    const hasAssets = Boolean(
+      config.assets.screenshot || config.assets.logo || config.assets.background,
+    );
+
+    return !showLoadingState && requiresScreenshot && !hasText && !hasAssets;
+  }, [
+    config.assets.background,
+    config.assets.logo,
+    config.assets.screenshot,
+    config.text.subtitle,
+    config.text.title,
+    requiresScreenshot,
+    showLoadingState,
+  ]);
 
   // Save design hooks
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
@@ -304,6 +332,9 @@ function PlaygroundPageInner({
                 shouldShowAspectLock={shouldShowAspectLock}
                 isAspectLocked={isAspectLocked}
                 onToggleAspect={toggleCanvasMode}
+                showEmptyState={showEmptyState}
+                showLoadingState={showLoadingState}
+                onEmptyStateClick={openFilePicker}
                 canvasHeight={canvas.height}
                 canvasWidth={canvas.width}
                 isAnalyzingColors={isAnalyzingColors}
