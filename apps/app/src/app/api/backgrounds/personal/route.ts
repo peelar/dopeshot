@@ -10,6 +10,7 @@ import {
 } from "@/domain/backgrounds/constants";
 import { signPersonalBackground } from "@/domain/backgrounds/background-storage";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
+import { compressImageBuffer, MAX_UPLOAD_SIZE_KB } from "@/lib/image-compression";
 
 const parseDimension = (value: FormDataEntryValue | null) => {
   if (!value || typeof value !== "string") return null;
@@ -119,9 +120,15 @@ export async function POST(request: Request) {
 
     const path = `${auth.userId}/background-${Date.now()}.${extension}`;
 
+    // Get file buffer and compress if needed
+    const originalBuffer = Buffer.from(await (file as Blob).arrayBuffer());
+    const compressionResult = await compressImageBuffer(originalBuffer, MAX_UPLOAD_SIZE_KB);
+    const uploadBuffer = compressionResult.buffer;
+    const finalFileSizeKb = Math.round(compressionResult.compressedSizeKB);
+
     const { error: uploadError } = await supabaseAdmin.storage
       .from(PERSONAL_BACKGROUND_BUCKET)
-      .upload(path, Buffer.from(await (file as Blob).arrayBuffer()), {
+      .upload(path, uploadBuffer, {
         cacheControl: "3600",
         upsert: false,
         contentType: fileObj.type || undefined,
@@ -138,7 +145,7 @@ export async function POST(request: Request) {
         name,
         storagePath: path,
         previewUrl: path,
-        fileSizeKb,
+        fileSizeKb: finalFileSizeKb,
         widthPx,
         heightPx,
         fileFormat,

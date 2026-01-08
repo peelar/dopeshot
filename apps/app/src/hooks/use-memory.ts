@@ -15,17 +15,21 @@ import {
 import {
   configAtom,
   assetsAtom,
+  PLACEHOLDER_ASSET_ID,
   screenshotGradientAtom,
   orientationAtom,
   screenshotZoomAtom,
 } from "@/hooks/atoms";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
+import { getImageMetadataFromDataUrl } from "@/domain/asset/get-image-metadata";
+import { getAspectCategory } from "@/domain/layout/aspect";
 import { setMemoryState } from "@/lib/storage/memory-state";
 import { track } from "@/lib/analytics";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
+import { getDefaultDemoPreset } from "@/domain/demo/presets";
 
 export function useMemory() {
   const [items, setItems] = useAtom(memoryItemsAtom);
@@ -124,12 +128,42 @@ export function useMemory() {
         }
 
         const data = await response.json();
-        const configuration: MemoryConfiguration = data.item.configuration;
+        const item = data.item as MemoryItemDTO & { configuration: MemoryConfiguration };
+        const configuration: MemoryConfiguration = item.configuration;
 
         // Deserialize and hydrate editor state
         const state = deserializeEditorState(configuration);
+        let nextAssets = state.assets;
+
+        if (nextAssets.length === 0) {
+          const screenshotId = configuration.config.assets.screenshot;
+          if (screenshotId && item.screenshotUrl) {
+            const metadata = await getImageMetadataFromDataUrl(item.screenshotUrl);
+            const orientation = metadata ? getAspectCategory(metadata.aspectRatio) : undefined;
+
+            nextAssets = [
+              {
+                id: screenshotId,
+                projectId: "memory",
+                userId: "memory",
+                name: "Saved screenshot",
+                url: item.screenshotUrl,
+                kind: "screenshot",
+                createdAt: item.createdAt,
+                metadata: metadata ? { ...metadata, orientation } : undefined,
+              },
+            ];
+          }
+        }
 
         setConfig(state.config);
+        if (nextAssets.length > 0) {
+          setAssets(nextAssets);
+        } else if (state.config.assets.screenshot === PLACEHOLDER_ASSET_ID) {
+          setAssets([getDefaultDemoPreset().asset]);
+        } else {
+          setAssets([]);
+        }
         setScreenshotGradient(state.screenshotGradient);
         setOrientation(state.orientation);
         setScreenshotZoom(state.screenshotZoom);

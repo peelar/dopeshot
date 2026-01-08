@@ -15,7 +15,14 @@ export function serializeEditorState(params: {
   screenshotZoom: number;
   screenshotPath: string;
 }): MemoryConfiguration {
-  const { config, screenshotGradient, orientation, screenshotZoom, screenshotPath } = params;
+  const {
+    config,
+    assets,
+    screenshotGradient,
+    orientation,
+    screenshotZoom,
+    screenshotPath,
+  } = params;
 
   // Create a deep copy of the config to avoid mutations
   const configCopy: LayoutConfig = JSON.parse(JSON.stringify(config));
@@ -25,6 +32,14 @@ export function serializeEditorState(params: {
     configCopy.background = screenshotGradient;
   }
 
+  const referencedAssetIds = new Set<string>();
+  if (configCopy.assets.screenshot) referencedAssetIds.add(configCopy.assets.screenshot);
+  if (configCopy.assets.logo) referencedAssetIds.add(configCopy.assets.logo);
+  if (configCopy.assets.background) referencedAssetIds.add(configCopy.assets.background);
+  if (configCopy.background?.type === "image") {
+    referencedAssetIds.add(configCopy.background.value);
+  }
+
   return {
     version: 1,
     layoutId: config.layoutId,
@@ -32,6 +47,7 @@ export function serializeEditorState(params: {
     orientation,
     screenshotPath,
     config: configCopy,
+    assets: assets.filter((asset) => referencedAssetIds.has(asset.id)),
     renderingFlags: {
       aspectLocked: config.screenshotFrame?.canvasMode === "locked",
       screenshotZoom,

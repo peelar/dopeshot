@@ -4,6 +4,7 @@
  */
 
 import type { LayoutConfig } from "@/domain/layout/types";
+import type { Asset } from "@/domain/asset/types";
 
 export interface MemoryConfiguration {
   // Schema version for future migrations
@@ -19,6 +20,9 @@ export interface MemoryConfiguration {
 
   // Full layout configuration
   config: LayoutConfig;
+
+  // Referenced assets needed to restore the editor state
+  assets?: Asset[];
 
   // Rendering state
   renderingFlags: {
