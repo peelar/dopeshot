@@ -26,6 +26,7 @@ import { useDeleteDesign } from "@/hooks/use-delete-design";
 import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
+import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -179,6 +180,8 @@ export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: Pla
       onDrop={handleDrop}
     >
       <DragOverlay visible={isDragging} />
+
+      <InAppUpdateBanner />
 
       <AppHeader
         hasCustomScreenshot={hasCustomScreenshot}
