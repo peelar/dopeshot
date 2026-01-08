@@ -2,11 +2,20 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { LayoutConfig, BackgroundConfig, FontId } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
-import { getDefaultDemoPreset } from "@/domain/demo/presets";
+import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import { migrateFontIdToStyle, DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
 
 // Keep ID here to avoid circular dependencies
 export const PLACEHOLDER_ASSET_ID = "placeholder-screenshot";
+export const DEFAULT_EMPTY_LAYOUT_ID = "popup-gradient-left";
+
+export function getEmptyCanvasConfig(): LayoutConfig {
+  const layout = getLayoutDefinition(DEFAULT_EMPTY_LAYOUT_ID);
+  if (!layout) {
+    throw new Error(`Missing layout definition for ${DEFAULT_EMPTY_LAYOUT_ID}`);
+  }
+  return layout.createConfig();
+}
 
 /**
  * Migrate legacy config with fontId/fontSize to new fontStyle
@@ -34,9 +43,6 @@ function migrateLayoutConfig(config: LayoutConfig): LayoutConfig {
   };
 }
 
-// Use deterministic demo preset for SSR - random selection happens client-side
-const defaultPreset = getDefaultDemoPreset();
-
 export type AssetType = "screenshot";
 
 // Orientation types - mobile (9:16) or desktop (16:9)
@@ -53,7 +59,7 @@ export const getDefaultOrientation = (): Orientation => {
 };
 
 // Base atoms - with migration support for legacy configs
-const baseConfigAtom = atom<LayoutConfig>(migrateLayoutConfig(defaultPreset.config));
+export const baseConfigAtom = atom<LayoutConfig>(migrateLayoutConfig(getEmptyCanvasConfig()));
 
 // Wrap configAtom to ensure migration on reads and writes
 // Support both direct values and update functions
@@ -67,7 +73,7 @@ export const configAtom = atom(
     set(baseConfigAtom, migrateLayoutConfig(newConfig));
   },
 );
-export const assetsAtom = atom<Asset[]>([defaultPreset.asset]);
+export const assetsAtom = atom<Asset[]>([]);
 export const statusMessageAtom = atom<string>("");
 export const isExportingAtom = atom<boolean>(false);
 export const hasCustomScreenshotAtom = atom<boolean>(false);

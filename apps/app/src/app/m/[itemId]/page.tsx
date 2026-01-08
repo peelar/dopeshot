@@ -15,6 +15,7 @@ export default async function Page({ params }: PageProps) {
   return (
     <PlaygroundPage
       showBrandExperience={showBrandExperience}
+      initialIsAuthenticated={session.isAuth}
       initialMemoryItemId={params.itemId}
     />
   );

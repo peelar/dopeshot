@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/app-header";
 import { CoverPreview } from "@/components/cover-preview";
@@ -13,8 +13,21 @@ import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
-import { orientationAtom, feedbackModalOpenAtom, hasExportedAtom, type Orientation } from "@/hooks/atoms";
-import { useAtom, useAtomValue } from "jotai";
+import {
+  assetsAtom,
+  baseConfigAtom,
+  feedbackModalOpenAtom,
+  getEmptyCanvasConfig,
+  hasCustomScreenshotAtom,
+  hasExportedAtom,
+  orientationAtom,
+  screenshotGradientAtom,
+  screenshotZoomAtom,
+  type Orientation,
+} from "@/hooks/atoms";
+import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
+import { getDefaultDemoPreset } from "@/domain/demo/presets";
+import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { MemorySidebar } from "@/components/memory/memory-sidebar";
@@ -88,9 +101,37 @@ function ExportContainer({
 type PlaygroundPageProps = {
   showBrandExperience: boolean;
   initialMemoryItemId?: string;
+  initialIsAuthenticated?: boolean;
 };
 
-export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: PlaygroundPageProps) {
+export function PlaygroundPage(props: PlaygroundPageProps) {
+  const store = useMemo(() => {
+    const nextStore = createStore();
+
+    if (props.initialIsAuthenticated) {
+      nextStore.set(baseConfigAtom, getEmptyCanvasConfig());
+      nextStore.set(assetsAtom, []);
+      return nextStore;
+    }
+
+    const preset = getDefaultDemoPreset();
+    nextStore.set(baseConfigAtom, preset.config);
+    nextStore.set(assetsAtom, [preset.asset]);
+    return nextStore;
+  }, [props.initialIsAuthenticated]);
+
+  return (
+    <JotaiProvider store={store}>
+      <PlaygroundPageInner {...props} />
+    </JotaiProvider>
+  );
+}
+
+function PlaygroundPageInner({
+  showBrandExperience,
+  initialMemoryItemId,
+  initialIsAuthenticated,
+}: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
@@ -108,26 +149,70 @@ export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: Pla
   // Memory hook for loading items
   const { loadMemoryItem, fetchMemoryItems } = useMemory();
   const { data: session } = useSession();
-  const isLoggedIn = Boolean(session?.user);
+  const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
+  const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
 
-  // Preload memory items on mount (if logged in)
+  const setConfig = useSetAtom(baseConfigAtom);
+  const setAssets = useSetAtom(assetsAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
+  const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
+  const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
+  const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
+
+  const resetToEmptyCanvas = useCallback(() => {
+    setConfig(getEmptyCanvasConfig());
+    setAssets([]);
+    setScreenshotGradient(null);
+    setScreenshotZoom(1.0);
+    setHasCustomScreenshot(false);
+    setLoadedItemId(null);
+  }, [setAssets, setConfig, setHasCustomScreenshot, setLoadedItemId, setScreenshotGradient, setScreenshotZoom]);
+
+  const hasBootstrappedRef = useRef(false);
+
   useEffect(() => {
-    if (session?.user) {
-      fetchMemoryItems().catch((error) => {
-        console.error("Failed to preload memory items:", error);
-      });
+    if (!isLoggedIn) {
+      hasBootstrappedRef.current = false;
+      return;
     }
-  }, [session?.user, fetchMemoryItems]);
+
+    if (hasBootstrappedRef.current) {
+      return;
+    }
+
+    hasBootstrappedRef.current = true;
+
+    // Ensure logged-in users never keep demo state (e.g., after signing in mid-session)
+    if (!initialMemoryItemId && !loadedItemId) {
+      resetToEmptyCanvas();
+    }
+
+    fetchMemoryItems()
+      .then(({ items }) => {
+        if (initialMemoryItemId || loadedItemId) return;
+        if (items.length === 0) return;
+
+        const mostRecent = items.reduce((latest, item) => {
+          if (!latest) return item;
+          return new Date(item.createdAt).getTime() > new Date(latest.createdAt).getTime() ? item : latest;
+        }, items[0]);
+
+        return loadMemoryItem(mostRecent.id);
+      })
+      .catch((error) => {
+        console.error("Failed to bootstrap memory items:", error);
+      });
+  }, [fetchMemoryItems, initialMemoryItemId, isLoggedIn, loadMemoryItem, loadedItemId, resetToEmptyCanvas]);
 
   useEffect(() => {
-    if (!initialMemoryItemId || !session?.user) {
+    if (!initialMemoryItemId || !isLoggedIn) {
       return;
     }
 
     loadMemoryItem(initialMemoryItemId).catch((error) => {
       console.error("Failed to load memory item from URL:", error);
     });
-  }, [initialMemoryItemId, session?.user, loadMemoryItem]);
+  }, [initialMemoryItemId, isLoggedIn, loadMemoryItem]);
 
   const {
     dragAndUpload,
@@ -149,7 +234,7 @@ export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: Pla
     handleFileProcess,
     isConfigDrawerOpen,
     setIsConfigDrawerOpen,
-  } = usePlaygroundController();
+  } = usePlaygroundController({ demoEnabled: !isLoggedIn });
 
   // Save design hooks
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();

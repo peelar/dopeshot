@@ -6,5 +6,10 @@ export default async function Page() {
   const [showBrandFlag, session] = await Promise.all([showBrandExperienceFlag(), verifySession()]);
   const showBrandExperience = showBrandFlag && session.isAuth;
 
-  return <PlaygroundPage showBrandExperience={showBrandExperience} />;
+  return (
+    <PlaygroundPage
+      showBrandExperience={showBrandExperience}
+      initialIsAuthenticated={session.isAuth}
+    />
+  );
 }

@@ -52,7 +52,9 @@ export function useMemory() {
    * Fetch memory items with pagination support
    */
   const fetchMemoryItems = useCallback(
-    async (cursor?: string): Promise<{ hasMore: boolean; nextCursor: string | null }> => {
+    async (
+      cursor?: string,
+    ): Promise<{ items: MemoryItemDTO[]; hasMore: boolean; nextCursor: string | null }> => {
       setIsLoading(true);
       try {
         const url = new URL("/api/memory/items", window.location.origin);
@@ -86,6 +88,7 @@ export function useMemory() {
         }
 
         return {
+          items: newItems,
           hasMore: pagination.hasMore,
           nextCursor: pagination.nextCursor,
         };
