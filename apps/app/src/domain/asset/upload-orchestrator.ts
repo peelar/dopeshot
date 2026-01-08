@@ -33,26 +33,39 @@ export async function processFileUpload(
       let backgroundRecord: Awaited<ReturnType<typeof uploadPersonalBackground>> | null = null;
 
       if (kind === "screenshot" || kind === "background") {
-        const metadata = await getImageMetadataFromDataUrl(dataUrl);
-        if (metadata) {
-          const orientation = getAspectCategory(metadata.aspectRatio);
-          if (kind === "screenshot") {
-            aspectCategory = orientation;
+        try {
+          const metadata = await getImageMetadataFromDataUrl(dataUrl);
+          if (metadata) {
+            const orientation = getAspectCategory(metadata.aspectRatio);
+            if (kind === "screenshot") {
+              aspectCategory = orientation;
+            }
+            assetMetadata = { ...metadata, orientation };
           }
-          assetMetadata = { ...metadata, orientation };
+        } catch (metadataError) {
+          // Non-critical: continue without metadata
+          console.warn("Failed to extract image metadata:", metadataError);
         }
       }
 
       if (kind === "background") {
-        const extension = file.name.split(".").pop()?.toLowerCase();
-        const fileFormat = extension || file.type.split("/").pop() || "png";
-        backgroundRecord = await uploadPersonalBackground({
-          file,
-          name: file.name,
-          widthPx: assetMetadata?.width,
-          heightPx: assetMetadata?.height,
-          fileFormat,
-        });
+        try {
+          const extension = file.name.split(".").pop()?.toLowerCase();
+          const fileFormat = extension || file.type.split("/").pop() || "png";
+          backgroundRecord = await uploadPersonalBackground({
+            file,
+            name: file.name,
+            widthPx: assetMetadata?.width,
+            heightPx: assetMetadata?.height,
+            fileFormat,
+          });
+        } catch (uploadError) {
+          const errorMessage = uploadError instanceof Error
+            ? uploadError.message
+            : "Failed to upload background";
+          reject(new Error(errorMessage));
+          return;
+        }
       }
 
       const assetId = backgroundRecord?.id ?? Math.random().toString(36).substring(7);

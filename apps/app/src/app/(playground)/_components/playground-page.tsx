@@ -23,6 +23,9 @@ import { useSession } from "@/lib/auth/auth-client";
 import { useSaveDesign } from "@/hooks/use-save-design";
 import { useExportStateReset } from "@/hooks/use-export-state-reset";
 import { useDeleteDesign } from "@/hooks/use-delete-design";
+import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
+import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
+import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 
 const OnboardingModal = dynamic(
   () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
@@ -198,37 +201,43 @@ export function PlaygroundPage({ showBrandExperience, initialMemoryItemId }: Pla
       {/* Three-column layout: Memory Sidebar | Content (Looks + Preview) | Design Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
         {/* Left: Memory Sidebar (collapsible) */}
-        <MemorySidebar onLoadItem={loadMemoryItem} onDeleteItem={deleteDesign} />
+        <MemoryErrorBoundary>
+          <MemorySidebar onLoadItem={loadMemoryItem} onDeleteItem={deleteDesign} />
+        </MemoryErrorBoundary>
 
         {/* Center: Content Column (Looks Rail + Preview) */}
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
-            <LayoutSelector />
-          </div>
+        <PlaygroundErrorBoundary>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
+              <LayoutSelector />
+            </div>
 
-          <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
+            <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
 
-          <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
-            <PlaygroundWorkspace
-              shouldShowAspectLock={shouldShowAspectLock}
-              isAspectLocked={isAspectLocked}
-              onToggleAspect={toggleCanvasMode}
-              canvasHeight={canvas.height}
-              canvasWidth={canvas.width}
-              isAnalyzingColors={isAnalyzingColors}
-              showFocusHint={showFocusHint}
-            />
+            <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
+              <PlaygroundWorkspace
+                shouldShowAspectLock={shouldShowAspectLock}
+                isAspectLocked={isAspectLocked}
+                onToggleAspect={toggleCanvasMode}
+                canvasHeight={canvas.height}
+                canvasWidth={canvas.width}
+                isAnalyzingColors={isAnalyzingColors}
+                showFocusHint={showFocusHint}
+              />
+            </div>
           </div>
-        </div>
+        </PlaygroundErrorBoundary>
 
         {/* Right: Sidebar - spans full height from below nav */}
-        <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-          <SidebarTabs
-            showBrandExperience={showBrandExperience}
-            onUploadAsset={handleFileProcess}
-            onFeedbackClick={handleFeedbackClick}
-          />
-        </div>
+        <SidebarErrorBoundary>
+          <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
+            <SidebarTabs
+              showBrandExperience={showBrandExperience}
+              onUploadAsset={handleFileProcess}
+              onFeedbackClick={handleFeedbackClick}
+            />
+          </div>
+        </SidebarErrorBoundary>
       </div>
 
       {isMobile ? (

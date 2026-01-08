@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import { useSession } from "@/lib/auth/auth-client";
 import { supabaseDb } from "@/lib/supabase-db";
+import { track } from "@/lib/analytics";
 import type { Asset } from "@/domain/asset/types";
 
 /**
@@ -18,6 +19,7 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
   const hasApplied = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     // Only run once, and only if feature is enabled, toggle is on, and logo not already applied
@@ -77,12 +79,21 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
 
         hasApplied.current = true;
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to load logo";
+        setError(errorMessage);
+
+        track("brand_logo_auto_apply_failed", {
+          error: errorMessage,
+        });
+
         if (process.env.NODE_ENV === "development") {
-          console.warn("Failed to auto-apply brand logo:", error);
+          console.error("Failed to auto-apply brand logo:", error);
         }
       }
     }
 
     loadAndApplyLogo();
   }, [session?.user?.id, brandSettings.useLogoOnScreenshots, config.assets?.logo]);
+
+  return { error };
 }

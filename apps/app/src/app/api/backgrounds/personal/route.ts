@@ -39,7 +39,7 @@ export async function GET() {
       },
     });
 
-    const items = await Promise.all(
+    const results = await Promise.allSettled(
       backgrounds.map(async (background) => {
         const previewPath = background.previewUrl || background.storagePath;
         const previewUrl = await signPersonalBackground(previewPath);
@@ -54,6 +54,25 @@ export async function GET() {
         };
       }),
     );
+
+    // Filter out failed items and log failures
+    const items = results
+      .filter((result): result is PromiseFulfilledResult<{
+        id: string;
+        name: string | null;
+        previewUrl: string | null;
+        fileSizeKb: number;
+        widthPx: number;
+        heightPx: number;
+        fileFormat: string;
+      }> => {
+        if (result.status === "rejected") {
+          console.error("Failed to generate signed URL for background:", result.reason);
+          return false;
+        }
+        return true;
+      })
+      .map((result) => result.value);
 
     return NextResponse.json({ items });
   } catch (error) {
