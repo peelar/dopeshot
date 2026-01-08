@@ -25,6 +25,7 @@ const CURRENT_UPDATE: InAppUpdate = {
 export function InAppUpdateBanner({ className }: { className?: string }) {
   const [ready, setReady] = useState(false);
   const [lastDismissedId, setLastDismissedId] = useState<string | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
   const update = CURRENT_UPDATE;
 
   useEffect(() => {
@@ -41,58 +42,75 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
   if (!shouldShow) return null;
 
   return (
-    <section
-      aria-label="Product update"
+    <div
       className={cn(
-        "relative z-40 border-b border-border bg-primary/10 px-4 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-primary/10 sm:px-6",
-        className
+        "relative z-40 overflow-hidden transition-[max-height,opacity] duration-200 ease-out motion-reduce:transition-none",
+        isClosing ? "max-h-0 opacity-0" : "max-h-16 opacity-100"
       )}
     >
-      <div className="flex items-center gap-2 pl-4">
-        <div className="flex min-w-0 items-center gap-2">
-          <span className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-muted/35 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-muted-foreground">
-            NEW
-          </span>
-          <p className="min-w-0 text-xs text-foreground/90">
-            <span className="font-premium text-foreground">{update.title}</span>
-            <span className="hidden text-muted-foreground sm:inline"> — {update.description}</span>
-          </p>
-        </div>
+      <section
+        aria-label="Product update"
+        className={cn(
+          "relative border-b border-border bg-primary/10 px-4 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-primary/10 sm:px-6",
+          className
+        )}
+      >
+        <div className="flex items-center gap-2 pl-4">
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-muted/35 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-muted-foreground">
+              NEW
+            </span>
+            <p className="min-w-0 text-xs text-foreground/90">
+              <span className="font-premium text-foreground">{update.title}</span>
+              <span className="hidden text-muted-foreground sm:inline"> — {update.description}</span>
+            </p>
+          </div>
 
-        <div className="flex items-center gap-1">
-          {update.cta ? (
-            <Link
-              href={update.cta.href}
-              className={cn(buttonVariants({ variant: "ghost", size: "xs" }), "text-foreground")}
+          <div className="flex items-center gap-1">
+            {update.cta ? (
+              <Link
+                href={update.cta.href}
+                className={cn(
+                  buttonVariants({ variant: "outline", size: "xs" }),
+                  "border-primary/25 bg-background/40 text-foreground hover:bg-background/60 hover:text-foreground"
+                )}
+              >
+                {update.cta.label}
+              </Link>
+            ) : null}
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-xs"
+              className="text-muted-foreground hover:text-foreground"
+              aria-label="Dismiss update banner"
+              onClick={() => {
+                try {
+                  localStorage.setItem(STORAGE_KEY, update.id);
+                } catch {
+                  // Ignore localStorage failures (privacy modes, etc.)
+                }
+
+                setIsClosing(true);
+                window.setTimeout(() => {
+                  setLastDismissedId(update.id);
+                }, 200);
+              }}
             >
-              {update.cta.label}
-            </Link>
-          ) : null}
-
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon-xs"
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Dismiss update banner"
-            onClick={() => {
-              try {
-                localStorage.setItem(STORAGE_KEY, update.id);
-              } catch {
-                // Ignore localStorage failures (privacy modes, etc.)
-              }
-              setLastDismissedId(update.id);
-            }}
-          >
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-          </Button>
+              <X className="h-3.5 w-3.5" aria-hidden="true" />
+            </Button>
+          </div>
         </div>
-      </div>
 
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/50 via-primary/10 to-transparent opacity-70"
-      />
-    </section>
+        <div
+          aria-hidden="true"
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/50 via-primary/10 to-transparent opacity-70 transition-opacity duration-200 motion-reduce:transition-none",
+            isClosing && "opacity-0"
+          )}
+        />
+      </section>
+    </div>
   );
 }
