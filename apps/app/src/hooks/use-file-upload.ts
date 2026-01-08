@@ -72,15 +72,6 @@ export function useFileUpload({
       setIsProcessingUpload(true);
 
       try {
-        if (kind === "background") {
-          const extension = file.name.split(".").pop()?.toLowerCase();
-          const fileType = file.type || extension || "unknown";
-          track("background_upload_started", {
-            file_type: fileType,
-            file_size_kb: Math.round(file.size / 1024),
-          });
-        }
-
         const result = await processFileUpload(file, kind);
         const { asset, aspectCategory } = result;
 
@@ -95,9 +86,6 @@ export function useFileUpload({
             file_size_kb: Math.round(file.size / 1024),
           });
         } else if (kind === "background") {
-          track("background_upload_completed", {
-            background_id: asset.id,
-          });
           try {
             const selection = await saveBackgroundSelection({
               backgroundType: "personal",
@@ -211,11 +199,6 @@ export function useFileUpload({
           expandSidebarSection("look");
         }
       } catch (error) {
-        if (kind === "background") {
-          track("background_upload_failed", {
-            error_reason: error instanceof Error ? error.message : "unknown",
-          });
-        }
         const message =
           error instanceof Error ? error.message : "Failed to read file. Please try another image.";
         setStatusMessage(message);

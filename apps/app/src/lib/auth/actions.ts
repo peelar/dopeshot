@@ -15,10 +15,6 @@ export async function signInWithEmail(
     });
 
     if (result.error) {
-      track("auth_sign_in_failed", {
-        error: result.error.message || "Unknown error",
-        method: "email",
-      });
       return { error: { message: result.error.message || "Sign in failed" } };
     }
 
@@ -36,7 +32,6 @@ export async function signInWithEmail(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sign in failed";
-    track("auth_sign_in_error", { error: message });
     return { error: { message } };
   }
 }
@@ -53,10 +48,6 @@ export async function signUpWithEmail(
     });
 
     if (result.error) {
-      track("auth_sign_up_failed", {
-        error: result.error.message || "Unknown error",
-        method: "email",
-      });
       return { error: { message: result.error.message || "Sign up failed" } };
     }
 
@@ -74,7 +65,6 @@ export async function signUpWithEmail(
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sign up failed";
-    track("auth_sign_up_error", { error: message });
     return { error: { message } };
   }
 }
@@ -82,11 +72,9 @@ export async function signUpWithEmail(
 export async function signOutUser(): Promise<AuthResult> {
   try {
     await signOut();
-    track("auth_sign_out_success");
     return {};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sign out failed";
-    track("auth_sign_out_error", { error: message });
     return { error: { message } };
   }
 }
@@ -99,29 +87,18 @@ export async function sendMagicLink(email: string): Promise<AuthResult> {
     });
 
     if (result.error) {
-      track("auth_magic_link_failed", {
-        error: result.error.message || "Unknown error",
-        method: "magic-link",
-      });
       return { error: { message: result.error.message || "Failed to send magic link" } };
     }
-
-    track("auth_magic_link_sent", {
-      method: "magic-link",
-    });
 
     return {};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to send magic link";
-    track("auth_magic_link_error", { error: message });
     return { error: { message } };
   }
 }
 
 export async function signInWithGoogle(): Promise<AuthResult> {
   try {
-    track("auth_attempt", { method: "google" });
-
     await signIn.social({
       provider: "google",
       callbackURL: "/auth",
@@ -132,7 +109,6 @@ export async function signInWithGoogle(): Promise<AuthResult> {
     return {};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to sign in with Google";
-    track("auth_sign_in_error", { error: message, method: "google" });
     return { error: { message } };
   }
 }

@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth, signInWithEmail, signUpWithEmail, sendMagicLink, signInWithGoogle } from "@/lib/auth";
-import { track } from "@/lib/analytics";
 
 type AuthMode = "sign-in" | "sign-up";
 
@@ -55,8 +54,6 @@ export function AuthForm() {
       return;
     }
 
-    track("auth_attempt", { method: "password", mode });
-
     setIsSubmitting(true);
 
     const handler =
@@ -70,11 +67,9 @@ export function AuthForm() {
 
     if (error) {
       setStatus({ type: "error", message: error.message });
-      track("auth_failed", { method: "password", mode, error: error.message });
       return;
     }
 
-    track("auth_success", { method: "password", mode });
     setStatus({
       type: "success",
       message: mode === "sign-in" ? "Signed in successfully." : "Account created successfully.",
@@ -97,8 +92,6 @@ export function AuthForm() {
       return;
     }
 
-    track("auth_attempt", { method: "magic_link" });
-
     setIsSubmitting(true);
 
     const { error } = await sendMagicLink(trimmedEmail);
@@ -107,11 +100,9 @@ export function AuthForm() {
 
     if (error) {
       setStatus({ type: "error", message: error.message });
-      track("auth_failed", { method: "magic_link", error: error.message });
       return;
     }
 
-    track("auth_magic_link_sent");
     setSentEmail(trimmedEmail);
     setMagicLinkSent(true);
   };
@@ -120,7 +111,6 @@ export function AuthForm() {
     setUseMagicLink(!useMagicLink);
     setStatus(null);
     setMagicLinkSent(false);
-    track("auth_method_toggled", { to: !useMagicLink ? "magic_link" : "password" });
   };
 
   const switchToMode = (nextMode: AuthMode) => {
@@ -129,7 +119,6 @@ export function AuthForm() {
 
     if (nextMode === "sign-up" && useMagicLink) {
       setUseMagicLink(false);
-      track("auth_method_toggled", { to: "password" });
     }
 
     setMode(nextMode);

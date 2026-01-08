@@ -17,7 +17,6 @@ import {
   getLayoutDefinition,
   withLayoutTextDefaults,
 } from "@/domain/layout-def/definitions";
-import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
@@ -72,11 +71,6 @@ export function PlaygroundWorkspace({
 
     setOrientation("mobile");
     hasAutoSetOrientation.current = true;
-
-    track("orientation_auto_set", {
-      orientation: "mobile",
-      reason: "mobile_device_detected",
-    });
   }, [isMobile, orientation, setOrientation]);
 
   const handleViewportMetricsChange = useCallback(
@@ -132,13 +126,6 @@ export function PlaygroundWorkspace({
     }
 
     setOrientation(newOrientation);
-    track("orientation_changed", {
-      orientation: newOrientation,
-      previous_orientation: orientation,
-      layout_changed: layoutChanged,
-      previous_layout: previousLayoutId,
-      new_layout: newLayoutId,
-    });
   };
 
   return (

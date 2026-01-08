@@ -1,8 +1,7 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useRef } from "react";
-import { track } from "@/lib/analytics";
+import { useCallback } from "react";
 import { configAtom, orientationAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
@@ -14,8 +13,6 @@ export function LayoutSection() {
   const setConfig = useSetAtom(configAtom);
   const orientation = useAtomValue(orientationAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
-  const headlineTrackedRef = useRef(false);
-  const subtitleTrackedRef = useRef(false);
 
   // Hide text inputs for Peak Left/Right on mobile orientation
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
@@ -40,37 +37,13 @@ export function LayoutSection() {
 
   const handleFontStyleChange = useCallback(
     (fontStyle: FontStyle) => {
-      track("font_style_changed", {
-        style_name: fontStyle,
-        previous_style: config.fontStyle,
-      });
       setConfig((currentConfig) => ({
         ...currentConfig,
         fontStyle,
       }));
     },
-    [setConfig, config.fontStyle],
+    [setConfig],
   );
-
-  const handleHeadlineBlur = useCallback(() => {
-    const text = config.text.title?.trim();
-    if (text && text.length > 0 && !headlineTrackedRef.current) {
-      track("headline_modified", {
-        length: text.length,
-      });
-      headlineTrackedRef.current = true;
-    }
-  }, [config.text.title]);
-
-  const handleSubtitleBlur = useCallback(() => {
-    const text = config.text.subtitle?.trim();
-    if (text && text.length > 0 && !subtitleTrackedRef.current) {
-      track("subtitle_modified", {
-        length: text.length,
-      });
-      subtitleTrackedRef.current = true;
-    }
-  }, [config.text.subtitle]);
 
   return (
     <div className="flex flex-col gap-4 pt-2">
@@ -83,7 +56,6 @@ export function LayoutSection() {
             id="look-headline"
             value={config.text.title ?? ""}
             onChange={(event) => handleTextInputChange("title", event.target.value)}
-            onBlur={handleHeadlineBlur}
             placeholder="Bring the heat"
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -100,7 +72,6 @@ export function LayoutSection() {
             id="look-subtitle"
             value={config.text.subtitle ?? ""}
             onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
-            onBlur={handleSubtitleBlur}
             placeholder="Keep the heat going"
             rows={2}
             maxLength={240}

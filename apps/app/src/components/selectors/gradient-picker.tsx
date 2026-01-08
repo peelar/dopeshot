@@ -2,7 +2,6 @@
 
 import { useMemo, useCallback, useRef, useEffect } from "react";
 import { useAtomValue } from "jotai";
-import { track } from "@/lib/analytics";
 import {
   BackgroundConfig,
   ColorToken,
@@ -118,9 +117,6 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
 
   const handleScreenshotSelect = useCallback(
     (gradient: CustomGradient) => {
-      track("gradient_source_changed", {
-        source: "screenshot",
-      });
       sourceOverrideRef.current = true;
       const textColor = getTextColorFromGradient(gradient);
       onChangeAction(

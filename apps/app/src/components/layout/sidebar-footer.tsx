@@ -8,7 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { MessageSquare } from "lucide-react";
-import { track } from "@/lib/analytics";
 
 interface SidebarFooterProps {
   onFeedbackClick?: () => void;
@@ -25,7 +24,6 @@ export function SidebarFooter({ onFeedbackClick }: SidebarFooterProps) {
             onClick={() => {
               if (onFeedbackClick) {
                 onFeedbackClick();
-                track("feedback_button_clicked");
               }
             }}
             className="gap-1.5 text-muted-foreground hover:text-foreground"
@@ -42,7 +40,6 @@ export function SidebarFooter({ onFeedbackClick }: SidebarFooterProps) {
                     href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
                     target="_blank"
                     rel="noopener noreferrer"
-                    onClick={() => track("cal_link_clicked")}
                     className="inline-flex h-9 items-center justify-center rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                     aria-label="Book a call"
                   />
@@ -65,7 +62,6 @@ export function SidebarFooter({ onFeedbackClick }: SidebarFooterProps) {
               href="https://twitter.com/gaba6ool"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => track("twitter_link_clicked")}
               className="inline-flex h-9 items-center justify-center rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label="Follow on Twitter"
             >

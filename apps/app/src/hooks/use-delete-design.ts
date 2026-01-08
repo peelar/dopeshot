@@ -76,11 +76,6 @@ export function useDeleteDesign() {
           setMemoryUrl(itemId);
         }
 
-        track("design_delete_failed", {
-          item_id: itemId,
-          error: error instanceof Error ? error.message : "unknown",
-        });
-
         return false;
       }
     },
