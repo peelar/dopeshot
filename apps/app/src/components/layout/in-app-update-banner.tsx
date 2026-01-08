@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { UserPlus, X } from "lucide-react";
+import { User, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
@@ -57,7 +57,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
       >
         <div className="flex items-center gap-2 pl-4">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-muted/35 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-muted-foreground">
+            <span className="inline-flex shrink-0 -translate-y-px items-center rounded-full border border-primary/25 bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-foreground/70 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:border-border/60 dark:bg-muted/35 dark:text-muted-foreground dark:shadow-none">
               NEW
             </span>
             <p className="min-w-0 text-xs text-foreground/90">
@@ -72,10 +72,10 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
                 href={update.cta.href}
                 className={cn(
                   buttonVariants({ variant: "default", size: "xs" }),
-                  "shadow-none"
+                  "cursor-default shadow-none"
                 )}
               >
-                <UserPlus className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
+                <User className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                 {update.cta.label}
               </Link>
             ) : null}
@@ -84,7 +84,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="cursor-default text-foreground/70 hover:bg-primary/10 hover:text-foreground"
               aria-label="Dismiss update banner"
               onClick={() => {
                 try {
