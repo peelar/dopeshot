@@ -19,7 +19,7 @@ const CURRENT_UPDATE: InAppUpdate = {
   id: "2026-01-accounts-saving-designs",
   title: "User accounts & saving designs",
   description: "Sign in to save designs and pick up where you left off.",
-  cta: { label: "Sign in", href: "/auth" },
+  cta: { label: "Sign up", href: "/auth" },
 };
 
 export function InAppUpdateBanner({ className }: { className?: string }) {
@@ -44,22 +44,22 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
     <section
       aria-label="Product update"
       className={cn(
-        "relative z-40 border-b border-border bg-background/85 px-4 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-6",
+        "relative z-40 border-b border-border bg-primary/10 px-4 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-primary/10 sm:px-6",
         className
       )}
     >
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-muted/35 px-2 py-0.5 font-mono text-[10px] tracking-[0.22em] text-muted-foreground">
+      <div className="flex items-center gap-2 pl-4">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="inline-flex shrink-0 items-center rounded-full border border-border/70 bg-muted/35 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-muted-foreground">
             NEW
           </span>
-          <p className="min-w-0 text-sm text-foreground/90">
+          <p className="min-w-0 text-xs text-foreground/90">
             <span className="font-premium text-foreground">{update.title}</span>
             <span className="hidden text-muted-foreground sm:inline"> — {update.description}</span>
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1">
           {update.cta ? (
             <Link
               href={update.cta.href}
@@ -91,7 +91,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
 
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/45 via-primary/10 to-transparent opacity-70"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-primary/50 via-primary/10 to-transparent opacity-70"
       />
     </section>
   );
