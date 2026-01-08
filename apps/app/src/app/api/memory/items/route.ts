@@ -6,6 +6,8 @@ import { computeConfigHash } from "@/domain/memory/config-hash";
 import { SAVE_LIMIT } from "@/domain/memory/constants";
 import type { MemoryConfiguration, MemoryItemDTO } from "@/domain/memory/types";
 import { nanoid } from "nanoid";
+import { revalidateTag } from "next/cache";
+import { getCachedMemoryItems } from "@/lib/data/cached-memory";
 
 /**
  * GET /api/memory/items
@@ -20,32 +22,13 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const db = await getUserDb(session.userId);
-
     // Get query params for pagination
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 50); // Default 10, max 50
     const cursor = searchParams.get("cursor"); // ISO timestamp for cursor-based pagination
 
-    // Build where clause with cursor
-    const where: any = { userId: session.userId };
-    if (cursor) {
-      where.createdAt = { lt: new Date(cursor) };
-    }
-
-    // Fetch memory items for this user (limit + 1 to check if there are more)
-    const items = await db.memoryItem.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: limit + 1,
-      select: {
-        id: true,
-        screenshotPath: true,
-        shareHash: true,
-        sharedAt: true,
-        createdAt: true,
-      },
-    });
+    // Fetch cached memory items
+    const items = await getCachedMemoryItems(session.userId, limit, cursor);
 
     // Check if there are more items
     const hasMore = items.length > limit;
@@ -191,6 +174,9 @@ export async function POST(request: NextRequest) {
       }),
       uploadScreenshot(session.userId, memoryItemId, screenshotBuffer),
     ]);
+
+    // Invalidate cache for this user's memory items
+    revalidateTag(`memory-items-${session.userId}`, "default");
 
     // Generate signed URL after upload completes
     const screenshotUrl = await getSignedUrl(storagePath);

@@ -3,6 +3,7 @@ import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getSignedUrl, deleteScreenshot } from "@/lib/storage/memory-storage";
 import type { MemoryItemFull } from "@/domain/memory/types";
+import { revalidateTag } from "next/cache";
 
 /**
  * GET /api/memory/items/[itemId]
@@ -120,6 +121,9 @@ export async function DELETE(
     await db.memoryItem.delete({
       where: { id: itemId },
     });
+
+    // Invalidate cache for this user's memory items
+    revalidateTag(`memory-items-${session.userId}`, "default");
 
     // Delete from storage (non-blocking, log errors)
     try {

@@ -95,7 +95,7 @@ export function MemorySidebar({ onLoadItem, onDeleteItem }: MemorySidebarProps) 
 
         {/* Content */}
         <div className="h-[calc(100%-3.5rem)] overflow-y-auto p-4">
-          {isLoadingItems ? (
+          {isLoadingItems && items.length === 0 ? (
             <div className="space-y-3">
               <MemoryItemSkeleton />
               <MemoryItemSkeleton />
