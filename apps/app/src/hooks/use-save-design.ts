@@ -25,6 +25,7 @@ import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
+import { toast } from "@/lib/utils/toast";
 
 export function useSaveDesign() {
   const { data: session } = useSession();
@@ -49,11 +50,17 @@ export function useSaveDesign() {
   const saveDesign = useCallback(async (): Promise<boolean> => {
     if (!session?.user?.id) {
       setStatusMessage("Please sign in to save designs.");
+      toast.error("Sign in required", {
+        description: "Please sign in to save your designs.",
+      });
       return false;
     }
 
     if (saveCount >= saveLimit) {
       setStatusMessage("Save limit reached. Delete a saved design first.");
+      toast.error("Save limit reached", {
+        description: `Delete a saved design to save this one (${saveCount}/${saveLimit})`,
+      });
       track("save_limit_reached", { limit: saveLimit });
       return false;
     }
@@ -95,7 +102,11 @@ export function useSaveDesign() {
         if (response.status === 403) {
           // Limit reached
           const errorData = await response.json();
-          setStatusMessage(errorData.message || "Save limit reached");
+          const errorMessage = errorData.message || "Save limit reached";
+          setStatusMessage(errorMessage);
+          toast.error("Save limit reached", {
+            description: errorMessage,
+          });
           track("save_limit_reached_server", { limit: saveLimit });
           return false;
         }
@@ -120,6 +131,17 @@ export function useSaveDesign() {
 
       setStatusMessage(isDuplicate ? "Design already saved" : "Design saved successfully");
 
+      // Show success toast
+      if (isDuplicate) {
+        toast.info("Already saved", {
+          description: "This design was already in your collection.",
+        });
+      } else {
+        toast.success("Design saved", {
+          description: "Your design has been saved successfully.",
+        });
+      }
+
       // Show success indicator
       setJustSaved(true);
 
@@ -135,6 +157,19 @@ export function useSaveDesign() {
     } catch (error) {
       console.error("Failed to save design:", error);
       setStatusMessage("Failed to save design");
+
+      // Show error toast with retry action
+      toast.error("Failed to save design", {
+        description: "Something went wrong. Please try again.",
+        action: {
+          label: "Retry",
+          onClick: () => {
+            track("design_save_retry_clicked");
+            saveDesign();
+          },
+        },
+      });
+
       track("design_save_failed", {
         error: error instanceof Error ? error.message : "unknown",
       });

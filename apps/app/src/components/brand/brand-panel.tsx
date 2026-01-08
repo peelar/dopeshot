@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
@@ -14,6 +15,7 @@ import type { Asset } from "@/domain/asset/types";
 export function BrandPanel() {
   const { data: session } = useSession();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({});
+  const { error: autoApplyError } = useBrandLogoAutoApply();
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
   const setConfig = useSetAtom(configAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -197,6 +199,13 @@ export function BrandPanel() {
                 className="w-full h-full object-contain p-4 relative z-10"
               />
             </div>
+
+            {/* Auto-apply error message */}
+            {autoApplyError && (
+              <p className="text-xs text-red-600 dark:text-red-400">
+                {autoApplyError}
+              </p>
+            )}
 
             {/* Toggle for using logo */}
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/10 p-3">

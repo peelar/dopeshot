@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { track } from "@/lib/analytics";
+import { toast } from "@/lib/utils/toast";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useTheme } from "next-themes";
 import {
@@ -317,6 +318,17 @@ function useExportHandler({
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
       setStatusMessage(`Export failed: ${msg}`);
+
+      // Show toast notification as fallback since status message may not be visible
+      toast.error("Export failed", {
+        description: msg,
+      });
+
+      track("export_failed", {
+        error: msg,
+        look_id: config.layoutId,
+        orientation,
+      });
     } finally {
       setIsExporting(false);
     }

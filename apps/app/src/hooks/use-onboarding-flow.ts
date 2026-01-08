@@ -71,11 +71,10 @@ export function useOnboardingFlow(options?: UseOnboardingFlowOptions) {
         if (retries < MAX_RETRIES) {
           retries++;
           setTimeout(checkOnboardingStatus, 2000 * retries);
-        } else {
-          setIsChecking(false);
         }
       } finally {
-        if (retries === 0) {
+        // Always reset checking state when not retrying
+        if (retries >= MAX_RETRIES || retries === 0) {
           setIsChecking(false);
         }
       }

@@ -73,14 +73,22 @@ export async function POST(request: Request) {
     });
 
     // Generate signed URL (Supabase Storage unchanged)
-    const { data: signedUrlData } = await supabaseAdmin.storage
+    const { data: signedUrlData, error: signedUrlError } = await supabaseAdmin.storage
       .from("brand-logos")
       .createSignedUrl(path, 3600);
+
+    if (signedUrlError || !signedUrlData?.signedUrl) {
+      console.error("Failed to generate signed URL:", signedUrlError);
+      return NextResponse.json(
+        { error: "Logo uploaded but failed to generate preview URL" },
+        { status: 500 }
+      );
+    }
 
     return NextResponse.json({
       success: true,
       logoPath: path,
-      signedUrl: signedUrlData?.signedUrl ?? null,
+      signedUrl: signedUrlData.signedUrl,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Upload failed";
