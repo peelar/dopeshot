@@ -9,7 +9,6 @@ import {
   updateUserMetadata,
 } from "@/app/api/brand/utils";
 import { compressImageBuffer } from "@/lib/image-compression";
-import { track } from "@/lib/analytics";
 
 export async function POST(request: Request) {
   try {
@@ -44,18 +43,7 @@ export async function POST(request: Request) {
     let uploadBuffer = originalBuffer;
     if (extension !== "svg") {
       const compressionResult = await compressImageBuffer(originalBuffer, 5120); // 5MB limit
-
-      if (compressionResult.didCompress) {
-        uploadBuffer = compressionResult.buffer;
-
-        // Track compression
-        track("logo_compressed", {
-          user_id: session.userId,
-          original_size_kb: Math.round(compressionResult.originalSizeKB),
-          compressed_size_kb: Math.round(compressionResult.compressedSizeKB),
-          compression_ratio: compressionResult.compressionRatio.toFixed(2),
-        });
-      }
+      uploadBuffer = compressionResult.buffer;
     }
 
     // Upload file to Supabase Storage
