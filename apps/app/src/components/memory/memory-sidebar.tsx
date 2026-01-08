@@ -16,6 +16,7 @@ import { MemoryItem } from "./memory-item";
 import { MemoryItemSkeleton } from "./memory-item-skeleton";
 import type { MemoryItemDTO } from "@/domain/memory/types";
 import { cn } from "@/lib/utils";
+import { track } from "@/lib/analytics";
 import { setMemoryState } from "@/lib/storage/memory-state";
 import { useAuth } from "@/lib/auth";
 import { buttonVariants } from "@/components/ui/button";
