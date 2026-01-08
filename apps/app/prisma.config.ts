@@ -14,4 +14,5 @@ export default defineConfig({
     // It will be validated at runtime when the Prisma client connects
     url: process.env.DATABASE_URL,
   },
+  schema: "./prisma/schema.prisma",
 });
