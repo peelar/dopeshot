@@ -87,6 +87,10 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/memory/items
  * Create a new memory item with screenshot upload
+ *
+ * Optimized for speed:
+ * 1. Parallel limit check + duplicate check
+ * 2. Parallel DB create + storage upload + signed URL generation
  */
 export async function POST(request: NextRequest) {
   const session = await verifySession();
@@ -96,7 +100,12 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const formData = await request.formData();
+    // Parse form data and prepare config hash in parallel with getting DB
+    const [formData, db] = await Promise.all([
+      request.formData(),
+      getUserDb(session.userId),
+    ]);
+
     const configJson = formData.get("configuration") as string;
     const screenshotFile = formData.get("screenshot") as File;
 
@@ -110,12 +119,24 @@ export async function POST(request: NextRequest) {
     const configuration: MemoryConfiguration = JSON.parse(configJson);
     const configHash = computeConfigHash(configuration);
 
-    const db = await getUserDb(session.userId);
-
-    // Check save limit
-    const currentSaveCount = await db.memoryItem.count({
-      where: { userId: session.userId },
-    });
+    // Parallel: Check save limit AND check for duplicate
+    const [currentSaveCount, existing] = await Promise.all([
+      db.memoryItem.count({
+        where: { userId: session.userId },
+      }),
+      db.memoryItem.findFirst({
+        where: {
+          userId: session.userId,
+          configHash,
+        },
+        select: {
+          id: true,
+          screenshotPath: true,
+          shareHash: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
     if (currentSaveCount >= SAVE_LIMIT) {
       return NextResponse.json(
@@ -125,20 +146,12 @@ export async function POST(request: NextRequest) {
           limit: SAVE_LIMIT,
           current: currentSaveCount,
         },
-        { status: 403 }, // Forbidden - quota exceeded
+        { status: 403 },
       );
     }
 
-    // Check for duplicate (same configHash for this user)
-    const existing = await db.memoryItem.findFirst({
-      where: {
-        userId: session.userId,
-        configHash,
-      },
-    });
-
     if (existing) {
-      // Return existing item instead of creating duplicate
+      // Return existing item - generate signed URL
       const screenshotUrl = await getSignedUrl(existing.screenshotPath);
       return NextResponse.json({
         item: {
@@ -154,41 +167,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate new memory item ID
+    // Generate IDs and path upfront
     const memoryItemId = nanoid(8);
     const storagePath = `${session.userId}/${memoryItemId}.png`;
 
-    // Upload screenshot to Supabase
+    // Convert file to buffer (needed for upload)
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());
-    
-    // Execute DB creation and Upload in parallel
-    // We CANNOT generate the signed URL in parallel because Supabase requires the object to exist
+
+    // Execute DB create + storage upload in parallel
     const [memoryItem] = await Promise.all([
-      // 1. Create DB record
       db.memoryItem.create({
         data: {
           id: memoryItemId,
           userId: session.userId,
           configHash,
           screenshotPath: storagePath,
-          configuration: configuration as any, // Prisma Json type
+          configuration: configuration as any,
+        },
+        select: {
+          id: true,
+          createdAt: true,
         },
       }),
-      
-      // 2. Upload screenshot (must finish before getSignedUrl)
-      uploadScreenshot(
-        session.userId,
-        memoryItemId,
-        screenshotBuffer,
-      ).catch(async (err) => {
-        // If upload fails, we need to clean up the DB record
-        console.error("Upload failed, cleaning up DB record:", err);
-        await db.memoryItem.delete({ where: { id: memoryItemId } }).catch(console.error);
-        throw err;
-      }),
+      uploadScreenshot(session.userId, memoryItemId, screenshotBuffer),
     ]);
 
-    // 3. Generate signed URL (now safe as upload is complete)
+    // Generate signed URL after upload completes
     const screenshotUrl = await getSignedUrl(storagePath);
 
     const itemDTO: MemoryItemDTO = {
