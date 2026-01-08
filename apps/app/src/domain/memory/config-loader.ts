@@ -11,6 +11,7 @@ export function deserializeEditorState(memory: MemoryConfiguration): {
   screenshotGradient: BackgroundConfig | null;
   orientation: Orientation;
   screenshotZoom: number;
+  assets: MemoryConfiguration["assets"];
 } {
   // The config already contains the gradient in background
   const screenshotGradient: BackgroundConfig | null =
@@ -21,5 +22,6 @@ export function deserializeEditorState(memory: MemoryConfiguration): {
     screenshotGradient,
     orientation: memory.orientation,
     screenshotZoom: memory.renderingFlags.screenshotZoom,
+    assets: memory.assets ?? [],
   };
 }

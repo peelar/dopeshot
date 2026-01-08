@@ -1,49 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackgroundAuthContext, supabaseAdmin } from "@/lib/supabase-admin";
+import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { uploadScreenshot, getSignedUrl } from "@/lib/storage/memory-storage";
 import { computeConfigHash } from "@/domain/memory/config-hash";
+import { SAVE_LIMIT } from "@/domain/memory/constants";
 import type { MemoryConfiguration, MemoryItemDTO } from "@/domain/memory/types";
 import { nanoid } from "nanoid";
+import { revalidateTag } from "next/cache";
+import { getCachedMemoryItems } from "@/lib/data/cached-memory";
 
 /**
  * GET /api/memory/items
  * List user's memory items with pagination
  */
 export async function GET(request: NextRequest) {
-  const authContext = await getBackgroundAuthContext();
+  // Optimization: Use verifySession directly
+  const session = await verifySession();
 
-  if (!authContext.isAuth || !authContext.userId) {
+  if (!session.isAuth || !session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const db = await getUserDb(authContext.userId);
-
     // Get query params for pagination
     const searchParams = request.nextUrl.searchParams;
     const limit = Math.min(parseInt(searchParams.get("limit") || "10", 10), 50); // Default 10, max 50
     const cursor = searchParams.get("cursor"); // ISO timestamp for cursor-based pagination
 
-    // Build where clause with cursor
-    const where: any = { userId: authContext.userId };
-    if (cursor) {
-      where.createdAt = { lt: new Date(cursor) };
-    }
-
-    // Fetch memory items for this user (limit + 1 to check if there are more)
-    const items = await db.memoryItem.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take: limit + 1,
-      select: {
-        id: true,
-        screenshotPath: true,
-        shareHash: true,
-        sharedAt: true,
-        createdAt: true,
-      },
-    });
+    // Fetch cached memory items
+    const items = await getCachedMemoryItems(session.userId, limit, cursor);
 
     // Check if there are more items
     const hasMore = items.length > limit;
@@ -85,16 +70,25 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/memory/items
  * Create a new memory item with screenshot upload
+ *
+ * Optimized for speed:
+ * 1. Parallel limit check + duplicate check
+ * 2. Parallel DB create + storage upload + signed URL generation
  */
 export async function POST(request: NextRequest) {
-  const authContext = await getBackgroundAuthContext();
+  const session = await verifySession();
 
-  if (!authContext.isAuth || !authContext.userId) {
+  if (!session.isAuth || !session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
-    const formData = await request.formData();
+    // Parse form data and prepare config hash in parallel with getting DB
+    const [formData, db] = await Promise.all([
+      request.formData(),
+      getUserDb(session.userId),
+    ]);
+
     const configJson = formData.get("configuration") as string;
     const screenshotFile = formData.get("screenshot") as File;
 
@@ -108,14 +102,24 @@ export async function POST(request: NextRequest) {
     const configuration: MemoryConfiguration = JSON.parse(configJson);
     const configHash = computeConfigHash(configuration);
 
-    const db = await getUserDb(authContext.userId);
-
-    // Check save limit (5 for free tier)
-    const currentSaveCount = await db.memoryItem.count({
-      where: { userId: authContext.userId },
-    });
-
-    const SAVE_LIMIT = 5; // Free tier limit
+    // Parallel: Check save limit AND check for duplicate
+    const [currentSaveCount, existing] = await Promise.all([
+      db.memoryItem.count({
+        where: { userId: session.userId },
+      }),
+      db.memoryItem.findFirst({
+        where: {
+          userId: session.userId,
+          configHash,
+        },
+        select: {
+          id: true,
+          screenshotPath: true,
+          shareHash: true,
+          createdAt: true,
+        },
+      }),
+    ]);
 
     if (currentSaveCount >= SAVE_LIMIT) {
       return NextResponse.json(
@@ -125,20 +129,12 @@ export async function POST(request: NextRequest) {
           limit: SAVE_LIMIT,
           current: currentSaveCount,
         },
-        { status: 403 }, // Forbidden - quota exceeded
+        { status: 403 },
       );
     }
 
-    // Check for duplicate (same configHash for this user)
-    const existing = await db.memoryItem.findFirst({
-      where: {
-        userId: authContext.userId,
-        configHash,
-      },
-    });
-
     if (existing) {
-      // Return existing item instead of creating duplicate
+      // Return existing item - generate signed URL
       const screenshotUrl = await getSignedUrl(existing.screenshotPath);
       return NextResponse.json({
         item: {
@@ -154,29 +150,35 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate new memory item ID
+    // Generate IDs and path upfront
     const memoryItemId = nanoid(8);
+    const storagePath = `${session.userId}/${memoryItemId}.png`;
 
-    // Upload screenshot to Supabase
+    // Convert file to buffer (needed for upload)
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());
-    const storagePath = await uploadScreenshot(
-      authContext.userId,
-      memoryItemId,
-      screenshotBuffer,
-    );
 
-    // Create memory item in database
-    const memoryItem = await db.memoryItem.create({
-      data: {
-        id: memoryItemId,
-        userId: authContext.userId,
-        configHash,
-        screenshotPath: storagePath,
-        configuration: configuration as any, // Prisma Json type
-      },
-    });
+    // Execute DB create + storage upload in parallel
+    const [memoryItem] = await Promise.all([
+      db.memoryItem.create({
+        data: {
+          id: memoryItemId,
+          userId: session.userId,
+          configHash,
+          screenshotPath: storagePath,
+          configuration: configuration as any,
+        },
+        select: {
+          id: true,
+          createdAt: true,
+        },
+      }),
+      uploadScreenshot(session.userId, memoryItemId, screenshotBuffer),
+    ]);
 
-    // Generate signed URL for response
+    // Invalidate cache for this user's memory items
+    revalidateTag(`memory-items-${session.userId}`, "default");
+
+    // Generate signed URL after upload completes
     const screenshotUrl = await getSignedUrl(storagePath);
 
     const itemDTO: MemoryItemDTO = {

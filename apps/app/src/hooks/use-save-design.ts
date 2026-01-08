@@ -10,6 +10,7 @@ import {
   screenshotGradientAtom,
   orientationAtom,
   screenshotZoomAtom,
+  PLACEHOLDER_ASSET_ID,
 } from "@/hooks/atoms";
 import {
   memoryItemsAtom,
@@ -44,7 +45,11 @@ export function useSaveDesign() {
   const orientation = useAtomValue(orientationAtom);
   const screenshotZoom = useAtomValue(screenshotZoomAtom);
 
-  const canSave = Boolean(session?.user?.id) && saveCount < saveLimit;
+  const isDemoDesign =
+    assets.some((asset) => asset.projectId === "demo" || asset.userId === "demo") ||
+    config.assets.screenshot === PLACEHOLDER_ASSET_ID;
+
+  const canSave = Boolean(session?.user?.id) && saveCount < saveLimit && !isDemoDesign;
   const isAtLimit = saveCount >= saveLimit;
 
   const saveDesign = useCallback(async (): Promise<boolean> => {
@@ -52,6 +57,14 @@ export function useSaveDesign() {
       setStatusMessage("Please sign in to save designs.");
       toast.error("Sign in required", {
         description: "Please sign in to save your designs.",
+      });
+      return false;
+    }
+
+    if (isDemoDesign) {
+      setStatusMessage("Demo designs can't be saved.");
+      toast.error("Demo design", {
+        description: "Start a new design or upload a screenshot to save.",
       });
       return false;
     }
@@ -181,6 +194,7 @@ export function useSaveDesign() {
     session,
     saveCount,
     saveLimit,
+    isDemoDesign,
     config,
     assets,
     screenshotGradient,

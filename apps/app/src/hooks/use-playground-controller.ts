@@ -61,7 +61,7 @@ interface ExportContext {
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
 
-export function usePlaygroundController() {
+export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean }) {
   const { theme } = useTheme();
   const isMobile = useMobileDetection();
 
@@ -83,6 +83,7 @@ export function usePlaygroundController() {
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
   useDemoPreset({
+    demoEnabled,
     hasAppliedRandomPreset,
     hasCustomScreenshot,
     setAssets,
@@ -163,12 +164,14 @@ export function usePlaygroundController() {
 }
 
 function useDemoPreset({
+  demoEnabled,
   hasAppliedRandomPreset,
   hasCustomScreenshot,
   setAssets,
   setConfig,
   setHasAppliedRandomPreset,
 }: {
+  demoEnabled: boolean;
   hasAppliedRandomPreset: boolean;
   hasCustomScreenshot: boolean;
   setAssets: Setter<Asset[]>;
@@ -176,13 +179,21 @@ function useDemoPreset({
   setHasAppliedRandomPreset: Setter<boolean>;
 }) {
   useEffect(() => {
+    if (!demoEnabled) return;
     if (hasAppliedRandomPreset || hasCustomScreenshot) return;
 
     const randomPreset = getRandomDemoPreset();
     setConfig(randomPreset.config);
     setAssets([randomPreset.asset]);
     setHasAppliedRandomPreset(true);
-  }, [hasAppliedRandomPreset, hasCustomScreenshot, setAssets, setConfig, setHasAppliedRandomPreset]);
+  }, [
+    demoEnabled,
+    hasAppliedRandomPreset,
+    hasCustomScreenshot,
+    setAssets,
+    setConfig,
+    setHasAppliedRandomPreset,
+  ]);
 }
 
 function useConfigDrawer(isMobile: boolean) {

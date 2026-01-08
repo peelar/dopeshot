@@ -145,3 +145,45 @@
 .animate-pulse-highlight {
   animation: pulse-highlight 1s ease-out 2;
 }
+
+/* Canvas Loading State - Breath Animation */
+@keyframes breath-glow {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: scale(0.9);
+    filter: blur(40px);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.1);
+    filter: blur(50px);
+  }
+}
+
+@keyframes breath-text {
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-breath-glow {
+  animation: breath-glow 4s ease-in-out infinite;
+}
+
+.animate-breath-text {
+  animation: breath-text 4s ease-in-out infinite;
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .animate-breath-glow,
+  .animate-breath-text {
+    animation: none;
+    opacity: 0.5;
+  }
+}

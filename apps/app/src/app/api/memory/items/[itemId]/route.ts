@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getBackgroundAuthContext } from "@/lib/supabase-admin";
+import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getSignedUrl, deleteScreenshot } from "@/lib/storage/memory-storage";
 import type { MemoryItemFull } from "@/domain/memory/types";
+import { revalidateTag } from "next/cache";
 
 /**
  * GET /api/memory/items/[itemId]
@@ -12,34 +13,58 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ itemId: string }> },
 ) {
-  const authContext = await getBackgroundAuthContext();
+  // Use verifySession directly to avoid overhead of fetching brand profile
+  // which getBackgroundAuthContext does by default
+  const session = await verifySession();
 
-  if (!authContext.isAuth || !authContext.userId) {
+  if (!session.isAuth || !session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { itemId } = await params;
-    const db = await getUserDb(authContext.userId);
+    const db = await getUserDb(session.userId);
 
-    // Fetch memory item - ensure it belongs to this user
-    const item = await db.memoryItem.findFirst({
-      where: {
-        id: itemId,
-        userId: authContext.userId,
-      },
-    });
+    // Optimistic path derivation to allow parallel fetching
+    const derivedScreenshotPath = `${session.userId}/${itemId}.png`;
+
+    // Fetch memory item and generate signed URL in parallel
+    const [item, eagerScreenshotUrl] = await Promise.all([
+      db.memoryItem.findFirst({
+        where: {
+          id: itemId,
+          userId: session.userId,
+        },
+        select: {
+          id: true,
+          screenshotPath: true,
+          shareHash: true,
+          createdAt: true,
+          configuration: true,
+        },
+      }),
+      // Fire off signed URL generation assuming standard path
+      getSignedUrl(derivedScreenshotPath).catch((err) => {
+        console.warn("Optimistic signed URL generation failed:", err);
+        return null;
+      }),
+    ]);
 
     if (!item) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
 
-    // Generate signed URL
-    const screenshotUrl = await getSignedUrl(item.screenshotPath);
+    // Verify we have a valid URL and the path matches
+    let screenshotUrl = eagerScreenshotUrl;
+
+    // If path mismatch or eager fetch failed, fall back to sequential fetch
+    if (item.screenshotPath !== derivedScreenshotPath || !screenshotUrl) {
+      screenshotUrl = await getSignedUrl(item.screenshotPath);
+    }
 
     const itemFull: MemoryItemFull = {
       id: item.id,
-      screenshotUrl,
+      screenshotUrl: screenshotUrl!,
       isShared: Boolean(item.shareHash),
       shareUrl: item.shareHash
         ? `${request.nextUrl.origin}/${item.shareHash}`
@@ -66,21 +91,25 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ itemId: string }> },
 ) {
-  const authContext = await getBackgroundAuthContext();
+  // Use verifySession here too for consistency and speed
+  const session = await verifySession();
 
-  if (!authContext.isAuth || !authContext.userId) {
+  if (!session.isAuth || !session.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const { itemId } = await params;
-    const db = await getUserDb(authContext.userId);
+    const db = await getUserDb(session.userId);
 
     // Fetch item to get screenshot path (for storage deletion)
     const item = await db.memoryItem.findFirst({
       where: {
         id: itemId,
-        userId: authContext.userId,
+        userId: session.userId,
+      },
+      select: {
+        screenshotPath: true,
       },
     });
 
@@ -92,6 +121,9 @@ export async function DELETE(
     await db.memoryItem.delete({
       where: { id: itemId },
     });
+
+    // Invalidate cache for this user's memory items
+    revalidateTag(`memory-items-${session.userId}`, "default");
 
     // Delete from storage (non-blocking, log errors)
     try {

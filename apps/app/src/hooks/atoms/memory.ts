@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import type { MemoryItemDTO } from "@/domain/memory/types";
+import { SAVE_LIMIT } from "@/domain/memory/constants";
 import {
   configAtom,
   assetsAtom,
@@ -139,9 +140,9 @@ export const currentDesignHashAtom = atom((get) => {
 export const saveCountAtom = atom<number>(0);
 
 /**
- * Save limit atom (default 5 for free tier)
+ * Save limit atom (uses shared constant)
  */
-export const saveLimitAtom = atom<number>(5);
+export const saveLimitAtom = atom<number>(SAVE_LIMIT);
 
 /**
  * Derived atom: Current save count from items
