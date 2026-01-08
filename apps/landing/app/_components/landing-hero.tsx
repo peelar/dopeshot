@@ -29,10 +29,8 @@ export function LandingHero() {
           {/* Left side - Content */}
           <div className="space-y-8 lg:pr-8">
             {/* Badge */}
-            <Link
-              href="/log"
-              onClick={() => track("landing_update_badge_clicked")}
-              className="group relative inline-flex items-center gap-3 rounded-full border border-[var(--accent-orange)]/30 bg-[var(--accent-orange)]/5 backdrop-blur-sm px-4 py-2 text-sm transition-all hover:border-[var(--accent-orange)]/60 hover:bg-[var(--accent-orange)]/10"
+            <div
+              className="group relative inline-flex items-center gap-3 rounded-full border border-[var(--accent-orange)]/30 bg-[var(--accent-orange)]/5 backdrop-blur-sm px-4 py-2 text-sm"
             >
               <span className="relative flex h-2.5 w-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--accent-orange)] opacity-75"></span>
@@ -40,7 +38,7 @@ export function LandingHero() {
               </span>
               <span className="font-medium text-[var(--accent-orange)]">New in dopeshot:</span>
               <span className="text-foreground">Preset backgrounds</span>
-            </Link>
+            </div>
 
             {/* Headline */}
             <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
