@@ -15,6 +15,7 @@ import {
 import { MemoryItem } from "./memory-item";
 import { MemoryItemSkeleton } from "./memory-item-skeleton";
 import type { MemoryItemDTO } from "@/domain/memory/types";
+import { SAVE_LIMIT } from "@/domain/memory/constants";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
 import { setMemoryState } from "@/lib/storage/memory-state";
@@ -80,7 +81,7 @@ export function MemorySidebar({ onLoadItem, onDeleteItem }: MemorySidebarProps) 
           </div>
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground">
-              {items.length} of 5
+              {items.length} of {SAVE_LIMIT}
             </span>
             <button
               onClick={handleClose}
