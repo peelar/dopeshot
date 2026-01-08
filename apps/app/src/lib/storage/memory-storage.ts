@@ -10,19 +10,22 @@ const SIGNED_URL_TTL = 3600; // 1 hour in seconds
  * @param userId - User ID (for folder organization)
  * @param memoryItemId - Memory item ID (for filename)
  * @param file - File buffer to upload
+ * @param contentType - MIME type (defaults to image/png, can be image/jpeg for compressed images)
  * @returns Storage path on success
  */
 export async function uploadScreenshot(
   userId: string,
   memoryItemId: string,
   file: Buffer,
+  contentType: "image/png" | "image/jpeg" = "image/png",
 ): Promise<string> {
-  const storagePath = `${userId}/${memoryItemId}.png`;
+  const extension = contentType === "image/jpeg" ? "jpg" : "png";
+  const storagePath = `${userId}/${memoryItemId}.${extension}`;
 
   const { error } = await supabaseAdmin.storage
     .from(BUCKET_NAME)
     .upload(storagePath, file, {
-      contentType: "image/png",
+      contentType,
       upsert: false, // Prevent accidental overwrites
     });
 

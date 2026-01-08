@@ -150,9 +150,11 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Generate IDs and path upfront
+    // Generate IDs and determine content type
     const memoryItemId = nanoid(8);
-    const storagePath = `${session.userId}/${memoryItemId}.png`;
+    const contentType = screenshotFile.type === "image/jpeg" ? "image/jpeg" : "image/png";
+    const extension = contentType === "image/jpeg" ? "jpg" : "png";
+    const storagePath = `${session.userId}/${memoryItemId}.${extension}`;
 
     // Convert file to buffer (needed for upload)
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());
@@ -172,7 +174,7 @@ export async function POST(request: NextRequest) {
           createdAt: true,
         },
       }),
-      uploadScreenshot(session.userId, memoryItemId, screenshotBuffer),
+      uploadScreenshot(session.userId, memoryItemId, screenshotBuffer, contentType),
     ]);
 
     // Invalidate cache for this user's memory items
