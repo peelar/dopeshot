@@ -1,7 +1,5 @@
 "use client";
 
-import { useRef } from "react";
-import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils/cn";
 
 interface ScreenshotZoomSliderProps {
@@ -19,17 +17,6 @@ export function ScreenshotZoomSlider({
   min = 0.5,
   max = 1.5,
 }: ScreenshotZoomSliderProps) {
-  const startValueRef = useRef(value);
-
-  const handleZoomEnd = () => {
-    if (Math.abs(value - startValueRef.current) > 0.05) {
-      track("screenshot_zoom_changed", {
-        zoom_level: value,
-      });
-      startValueRef.current = value;
-    }
-  };
-
   return (
     <div className={cn("flex items-center justify-center", className)}>
       <input
@@ -39,8 +26,6 @@ export function ScreenshotZoomSlider({
         step={0.05}
         value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        onMouseUp={handleZoomEnd}
-        onTouchEnd={handleZoomEnd}
         className={cn(
           "h-1.5 w-32 cursor-pointer appearance-none rounded-full",
           "bg-border transition-colors",

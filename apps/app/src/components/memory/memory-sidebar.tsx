@@ -42,15 +42,11 @@ export function MemorySidebar({ onLoadItem, onDeleteItem }: MemorySidebarProps) 
       setLastViewed(now);
       setHasUnseen(false);
       setMemoryState({ lastViewed: now });
-
-      // Track sidebar opened
-      track("saved_sidebar_opened", { authenticated: isAuthenticated });
     }
-  }, [isOpen, isAuthenticated, setLastViewed, setHasUnseen]);
+  }, [isOpen, setLastViewed, setHasUnseen]);
 
   const handleClose = () => {
     setIsOpen(false);
-    track("saved_sidebar_closed");
   };
 
   const handleItemClick = (itemId: string) => {

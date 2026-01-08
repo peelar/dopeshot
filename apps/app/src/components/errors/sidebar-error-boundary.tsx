@@ -2,7 +2,6 @@
 
 import { Component, ReactNode } from "react";
 import * as Sentry from "@sentry/nextjs";
-import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";
 
 interface SidebarErrorBoundaryProps {
@@ -34,11 +33,6 @@ export class SidebarErrorBoundary extends Component<
           componentStack: errorInfo.componentStack,
         },
       },
-    });
-
-    track("sidebar_error_boundary_triggered", {
-      error: error.message,
-      stack: error.stack?.substring(0, 200) || "",
     });
 
     console.error("Sidebar error boundary caught:", error, errorInfo);

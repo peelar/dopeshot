@@ -101,9 +101,6 @@ export function FeedbackModal({
           ? error.message
           : "Failed to submit feedback. Please try again."
       );
-      track("feedback_error", {
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
     } finally {
       setIsSubmitting(false);
     }
@@ -175,10 +172,7 @@ export function FeedbackModal({
                 <Switch
                   id="include-screenshot"
                   checked={includeScreenshot}
-                  onCheckedChange={(checked) => {
-                    setIncludeScreenshot(checked);
-                    track(checked ? "feedback_screenshot_included" : "feedback_screenshot_removed");
-                  }}
+                  onCheckedChange={setIncludeScreenshot}
                   disabled={isSubmitting}
                 />
               </div>

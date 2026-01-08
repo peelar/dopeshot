@@ -33,7 +33,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
   }, []);
 
   const handleLogout = async () => {
-    track("user_logout_clicked");
     const { error } = await signOutUser();
     if (error) {
       console.error("Logout failed:", error);
@@ -70,9 +69,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
         <DropdownMenuTrigger
           className="group inline-flex h-8 w-8 items-center justify-center rounded-full p-0 outline-hidden transition-[box-shadow,transform] duration-150 hover:scale-[1.02] hover:shadow-sm"
           aria-label={`Logged in as ${user.email}`}
-          onClick={() => {
-            track("user_menu_opened", { authenticated: true });
-          }}
         >
           <Avatar
             name={user.email}
@@ -87,7 +83,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
               href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => track("cal_link_clicked", { source: "mobile_menu" })}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label="Book a call"
             >
@@ -104,7 +99,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
               href="https://twitter.com/gaba6ool"
               target="_blank"
               rel="noopener noreferrer"
-              onClick={() => track("twitter_link_clicked", { source: "mobile_menu" })}
               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
               aria-label="Follow on Twitter"
             >
@@ -155,7 +149,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
                   closeOnClick={false}
                   onClick={() => {
                     setTheme(nextTheme.value);
-                    track("theme_changed", { theme: nextTheme.value });
                   }}
                 >
                   <CurrentIcon className="mr-2 h-4 w-4" />
@@ -183,9 +176,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
       href="/auth"
       className="inline-flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
       aria-label="Sign in"
-      onClick={() => {
-        track("user_menu_clicked", { authenticated: false });
-      }}
     >
       <LogIn className="h-4 w-4" />
     </Link>

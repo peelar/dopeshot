@@ -10,7 +10,6 @@ import {
   currentSaveCountAtom,
   saveLimitAtom,
 } from "@/hooks/atoms/memory";
-import { track } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 
 interface MemorySidebarTriggerProps {
@@ -42,13 +41,6 @@ export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
     // Clear indicator when opening sidebar
     if (newState && justSaved) {
       setJustSaved(false);
-    }
-
-    if (newState) {
-      track("saved_button_clicked");
-      track("saved_sidebar_opened");
-    } else {
-      track("saved_sidebar_closed");
     }
   };
 

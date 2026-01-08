@@ -5,7 +5,6 @@ import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import { useSession } from "@/lib/auth/auth-client";
 import { supabaseDb } from "@/lib/supabase-db";
-import { track } from "@/lib/analytics";
 import type { Asset } from "@/domain/asset/types";
 
 /**
@@ -81,10 +80,6 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load logo";
         setError(errorMessage);
-
-        track("brand_logo_auto_apply_failed", {
-          error: errorMessage,
-        });
 
         if (process.env.NODE_ENV === "development") {
           console.error("Failed to auto-apply brand logo:", error);

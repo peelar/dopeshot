@@ -22,7 +22,6 @@ import {
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
 import { setMemoryState } from "@/lib/storage/memory-state";
-import { track } from "@/lib/analytics";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
@@ -98,10 +97,6 @@ export function useMemory() {
           description: errorMessage,
         });
 
-        track("memory_fetch_failed", {
-          error: errorMessage,
-        });
-
         throw error;
       } finally {
         setIsLoading(false);
@@ -137,22 +132,12 @@ export function useMemory() {
 
         // Update URL with memory item ID
         setMemoryUrl(itemId);
-
-        // Track event
-        track("saved_loaded", {
-          item_id: itemId,
-        });
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load saved design";
         console.error("Failed to load memory item:", error);
 
         toast.error("Failed to load design", {
           description: errorMessage,
-        });
-
-        track("memory_load_failed", {
-          item_id: itemId,
-          error: errorMessage,
         });
 
         throw error;

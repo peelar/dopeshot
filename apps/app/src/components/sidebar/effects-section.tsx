@@ -2,7 +2,6 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
-import { track } from "@/lib/analytics";
 import { configAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { Switch } from "@/components/ui/switch";
@@ -35,10 +34,6 @@ export function EffectsSection() {
       const treatment = currentConfig.screenshotFrame ?? DEFAULT_SCREENSHOT_TREATMENT;
       const isSoftGlass = treatment.preset === "soft-glass";
       const newPreset = isSoftGlass ? "solid" : "soft-glass";
-      track("effect_toggled", {
-        effect: "soft_glass",
-        enabled: !isSoftGlass,
-      });
       return {
         ...currentConfig,
         screenshotFrame: {
