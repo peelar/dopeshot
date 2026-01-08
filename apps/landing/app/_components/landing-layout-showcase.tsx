@@ -41,17 +41,8 @@ interface LayoutShowcaseSectionProps {
   sectionRef: (element: HTMLDivElement | null) => void;
 }
 
-const imageMotionStyle = {
-  transform:
-    "translate3d(calc(var(--image-x) * (1 - var(--reveal-progress))), calc(var(--image-y) * (1 - var(--reveal-progress))), 0) scale(calc(0.96 + var(--reveal-progress) * 0.04))",
-  opacity: "calc(0.4 + var(--reveal-progress) * 0.6)",
-} as const;
-
-const textMotionStyle = {
-  transform:
-    "translate3d(calc(var(--text-x) * (1 - var(--reveal-progress))), calc(var(--text-y) * (1 - var(--reveal-progress))), 0)",
-  opacity: "calc(0.3 + var(--reveal-progress) * 0.7)",
-} as const;
+// Easing function for smooth cubic-bezier style animation
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
 
 function LayoutShowcaseSection({
   headline,
@@ -63,49 +54,64 @@ function LayoutShowcaseSection({
 }: LayoutShowcaseSectionProps) {
   const isCenter = variant === "peak-center";
   const isRight = variant === "peak-right";
+  const isLeft = variant === "peak-left";
+
+  // Peak sections need overflow visible to show edge-peaking
+  const sectionClasses = `relative ${isCenter ? "overflow-hidden" : "overflow-visible"}`;
 
   return (
     <div
       ref={sectionRef}
       data-variant={variant}
-      className={`relative overflow-hidden py-16 sm:py-20 [--reveal-progress:0] ${
-        isCenter
-          ? "[--image-x:0px] [--text-x:0px]"
-          : isRight
-            ? "[--image-x:110px] [--text-x:-40px] md:[--image-x:200px] md:[--text-x:-80px]"
-            : "[--image-x:-110px] [--text-x:40px] md:[--image-x:-200px] md:[--text-x:80px]"
-      } ${
-        isCenter
-          ? "[--image-y:120px] [--text-y:30px] md:[--image-y:160px] md:[--text-y:40px]"
-          : "[--image-y:40px] [--text-y:20px] md:[--image-y:60px] md:[--text-y:30px]"
-      }`}
+      className={`${sectionClasses} py-24 sm:py-32 [--reveal-progress:0] [--eased-progress:0]`}
     >
-      <div className="container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      {/* Full-width container for edge-peaking effect */}
+      <div className={`${isCenter ? "container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" : "w-full px-4 sm:px-6 lg:px-8"}`}>
         {isCenter ? (
-          <div className="relative flex flex-col items-center gap-10 text-center">
+          /* Peak Center Layout - Dramatic fade-in from bottom */
+          <div className="relative flex flex-col items-center gap-12 text-center">
+            {/* Screenshot with enhanced fade-in and scale */}
             <div
-              className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl ring-1 ring-white/5"
-              style={imageMotionStyle}
+              className="relative w-full max-w-5xl"
+              style={{
+                transform: `translate3d(0, calc(180px * (1 - var(--eased-progress))), 0) scale(calc(0.85 + var(--eased-progress) * 0.15))`,
+                opacity: `calc(var(--eased-progress) * var(--eased-progress))`, // Quadratic fade for more dramatic effect
+              }}
             >
-              <div className="relative aspect-[16/9] w-full">
-                <Image
-                  src={imageSrc}
-                  alt={imageAlt}
-                  fill
-                  className="object-cover"
-                  sizes="(min-width: 1024px) 700px, (min-width: 768px) 640px, 100vw"
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl ring-1 ring-white/5">
+                {/* Glow effect behind */}
+                <div 
+                  className="absolute -inset-4 -z-10 rounded-3xl blur-2xl"
+                  style={{
+                    background: "radial-gradient(circle, oklch(0.65 0.22 41.12 / 0.25), transparent 70%)",
+                    opacity: `var(--eased-progress)`,
+                  }}
                 />
+                <div className="relative aspect-[16/9] w-full">
+                  <Image
+                    src={imageSrc}
+                    alt={imageAlt}
+                    fill
+                    className="object-cover"
+                    sizes="(min-width: 1024px) 900px, (min-width: 768px) 700px, 100vw"
+                  />
+                </div>
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
               </div>
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
             </div>
+            
+            {/* Text content with staggered delay */}
             <div
               className="max-w-2xl space-y-4 text-center"
-              style={textMotionStyle}
+              style={{
+                transform: `translate3d(0, calc(60px * (1 - var(--eased-progress))), 0)`,
+                opacity: `calc(0.1 + var(--eased-progress) * 0.9)`,
+              }}
             >
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--accent-orange)]/80">
                 Peak Center
               </p>
-              <h3 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              <h3 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
                 {headline}
               </h3>
               <p className="text-base text-muted-foreground sm:text-lg">
@@ -114,37 +120,78 @@ function LayoutShowcaseSection({
             </div>
           </div>
         ) : (
-          <div className="grid items-center gap-10 md:grid-cols-2">
-            <div
-              className={`${isRight ? "order-2 md:order-1" : "order-1"}`}
-              style={imageMotionStyle}
-            >
-              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/40 shadow-2xl ring-1 ring-white/5">
-                <div className="relative aspect-[4/3] w-full">
-                  <Image
-                    src={imageSrc}
-                    alt={imageAlt}
-                    fill
-                    className="object-cover"
-                    sizes="(min-width: 1024px) 520px, (min-width: 768px) 420px, 100vw"
+          /* Peak Left / Peak Right Layouts with edge-peaking */
+          <div className="mx-auto max-w-7xl">
+            <div className={`grid items-center gap-8 md:gap-12 lg:gap-16 md:grid-cols-2`}>
+              {/* Image column - edge-peaking effect */}
+              <div
+                className={`
+                  ${isRight ? "order-2" : "order-1"}
+                  ${isRight ? "md:-mr-24 lg:-mr-40" : "md:-ml-24 lg:-ml-40"}
+                `}
+                style={{
+                  transform: `translate3d(
+                    calc(${isRight ? "160px" : "-160px"} * (1 - var(--eased-progress))), 
+                    calc(50px * (1 - var(--eased-progress))), 
+                    0
+                  ) 
+                  perspective(1000px) 
+                  rotateY(calc(${isRight ? "-8deg" : "8deg"} * (1 - var(--eased-progress))))`,
+                  opacity: `calc(0.2 + var(--eased-progress) * 0.8)`,
+                }}
+              >
+                <div className="relative">
+                  {/* Glow effect */}
+                  <div 
+                    className="absolute -inset-6 -z-10 rounded-3xl blur-3xl"
+                    style={{
+                      background: `radial-gradient(circle at ${isRight ? "70%" : "30%"} 50%, oklch(0.65 0.22 41.12 / 0.2), transparent 60%)`,
+                      opacity: `var(--eased-progress)`,
+                    }}
                   />
+                  {/* Glassmorphism container */}
+                  <div className="relative overflow-hidden rounded-2xl border border-white/15 bg-black/30 shadow-2xl ring-1 ring-white/10 backdrop-blur-sm">
+                    <div className="relative aspect-[4/3] w-full md:aspect-[3/2] lg:w-[140%]">
+                      <Image
+                        src={imageSrc}
+                        alt={imageAlt}
+                        fill
+                        className="object-cover"
+                        sizes="(min-width: 1024px) 700px, (min-width: 768px) 550px, 100vw"
+                      />
+                    </div>
+                    {/* Enhanced gradient overlay */}
+                    <div className={`pointer-events-none absolute inset-0 bg-gradient-to-${isRight ? "l" : "r"} from-black/60 via-transparent to-transparent`} />
+                  </div>
                 </div>
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-tr from-black/70 via-transparent to-transparent" />
               </div>
-            </div>
-            <div
-              className={`flex flex-col gap-4 ${isRight ? "order-1 md:order-2 md:text-left" : "order-2 md:order-1 md:text-left"}`}
-              style={textMotionStyle}
-            >
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--accent-orange)]/80">
-                {isRight ? "Peak Right" : "Peak Left"}
-              </p>
-              <h3 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-                {headline}
-              </h3>
-              <p className="text-base text-muted-foreground sm:text-lg">
-                {subheadline}
-              </p>
+
+              {/* Text column */}
+              <div
+                className={`
+                  flex flex-col gap-5
+                  ${isRight ? "order-1 md:pr-8 lg:pr-12" : "order-2 md:pl-8 lg:pl-12"}
+                  ${isRight ? "md:text-right" : "md:text-left"}
+                `}
+                style={{
+                  transform: `translate3d(
+                    calc(${isRight ? "-60px" : "60px"} * (1 - var(--eased-progress))), 
+                    calc(30px * (1 - var(--eased-progress))), 
+                    0
+                  )`,
+                  opacity: `calc(0.15 + var(--eased-progress) * 0.85)`,
+                }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[var(--accent-orange)]/80">
+                  {isRight ? "Peak Right" : "Peak Left"}
+                </p>
+                <h3 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
+                  {headline}
+                </h3>
+                <p className="text-base text-muted-foreground sm:text-lg lg:text-xl max-w-lg">
+                  {subheadline}
+                </p>
+              </div>
             </div>
           </div>
         )}
@@ -164,6 +211,7 @@ export function LandingLayoutShowcase() {
       sectionRefs.current.forEach((section) => {
         if (!section) return;
         section.style.setProperty("--reveal-progress", value.toString());
+        section.style.setProperty("--eased-progress", value.toString());
       });
     };
 
@@ -179,9 +227,18 @@ export function LandingLayoutShowcase() {
       sectionRefs.current.forEach((section) => {
         if (!section) return;
         const rect = section.getBoundingClientRect();
-        const rawProgress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height * 0.35);
+        const variant = section.dataset.variant;
+        
+        // Different reveal timing for center (needs earlier start for fade-in effect)
+        const triggerMultiplier = variant === "peak-center" ? 0.6 : 0.4;
+        const rawProgress = (window.innerHeight - rect.top) / (window.innerHeight + rect.height * triggerMultiplier);
         const clampedProgress = Math.min(1, Math.max(0, rawProgress));
+        
+        // Apply easing for smooth animation
+        const easedProgress = easeOutCubic(clampedProgress);
+        
         section.style.setProperty("--reveal-progress", clampedProgress.toString());
+        section.style.setProperty("--eased-progress", easedProgress.toString());
       });
     };
 
@@ -205,7 +262,8 @@ export function LandingLayoutShowcase() {
   }, []);
 
   return (
-    <section id="examples" className="relative overflow-hidden py-16 sm:py-20">
+    <section id="examples" className="relative overflow-hidden py-20 sm:py-28">
+      {/* Background accent */}
       <div className="absolute inset-0 -z-10">
         <div
           className="absolute inset-0"
@@ -214,21 +272,30 @@ export function LandingLayoutShowcase() {
               "radial-gradient(circle at 20% 20%, oklch(0.65 0.22 41.12 / 0.12), transparent 55%)",
           }}
         />
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(circle at 80% 80%, oklch(0.65 0.22 41.12 / 0.08), transparent 50%)",
+          }}
+        />
       </div>
 
-      <div className="container mx-auto mb-10 max-w-5xl px-4 text-center sm:px-6 lg:px-8">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.4em] text-[var(--accent-orange)]/80">
+      {/* Section header */}
+      <div className="container mx-auto mb-16 max-w-5xl px-4 text-center sm:px-6 lg:px-8">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.4em] text-[var(--accent-orange)]/80">
           Layout Showcase
         </p>
-        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+        <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
           Reveal-ready compositions
         </h2>
-        <p className="mx-auto mt-4 max-w-2xl text-base text-muted-foreground sm:text-lg">
+        <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg lg:text-xl">
           Three scroll-reveal patterns built for landing pages, launches, and product stories.
         </p>
       </div>
 
-      <div className="space-y-10">
+      {/* Layout sections with increased spacing */}
+      <div className="space-y-16 sm:space-y-24">
         {sections.map((section, index) => (
           <LayoutShowcaseSection
             key={section.variant}
