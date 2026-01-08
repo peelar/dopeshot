@@ -99,6 +99,10 @@ export async function sendMagicLink(email: string): Promise<AuthResult> {
 
 export async function signInWithGoogle(): Promise<AuthResult> {
   try {
+    track("auth_attempt", {
+      method: "google",
+    });
+
     await signIn.social({
       provider: "google",
       callbackURL: "/auth",
@@ -109,6 +113,10 @@ export async function signInWithGoogle(): Promise<AuthResult> {
     return {};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Failed to sign in with Google";
+    track("auth_sign_in_error", {
+      error: message,
+      method: "google",
+    });
     return { error: { message } };
   }
 }
