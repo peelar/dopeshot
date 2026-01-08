@@ -8,6 +8,8 @@ import {
   sanitizeFileExtension,
   updateUserMetadata,
 } from "@/app/api/brand/utils";
+import { compressImageBuffer } from "@/lib/image-compression";
+import { track } from "@/lib/analytics";
 
 export async function POST(request: Request) {
   try {
@@ -35,10 +37,31 @@ export async function POST(request: Request) {
     const contentType =
       fileObj.type || (extension === "svg" ? "image/svg+xml" : null);
 
-    // Upload file to Supabase Storage (unchanged)
+    // Get file buffer
+    const originalBuffer = Buffer.from(await (file as Blob).arrayBuffer());
+
+    // Compress image if needed (skip SVG files)
+    let uploadBuffer = originalBuffer;
+    if (extension !== "svg") {
+      const compressionResult = await compressImageBuffer(originalBuffer, 5120); // 5MB limit
+
+      if (compressionResult.didCompress) {
+        uploadBuffer = compressionResult.buffer;
+
+        // Track compression
+        track("logo_compressed", {
+          user_id: session.userId,
+          original_size_kb: Math.round(compressionResult.originalSizeKB),
+          compressed_size_kb: Math.round(compressionResult.compressedSizeKB),
+          compression_ratio: compressionResult.compressionRatio.toFixed(2),
+        });
+      }
+    }
+
+    // Upload file to Supabase Storage
     const { error: uploadError } = await supabaseAdmin.storage
       .from("brand-logos")
-      .upload(path, Buffer.from(await (file as Blob).arrayBuffer()), {
+      .upload(path, uploadBuffer, {
         cacheControl: "3600",
         upsert: false,
         contentType: contentType ?? undefined,

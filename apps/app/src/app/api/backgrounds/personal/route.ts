@@ -10,6 +10,8 @@ import {
 } from "@/domain/backgrounds/constants";
 import { signPersonalBackground } from "@/domain/backgrounds/background-storage";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
+import { compressImageBuffer } from "@/lib/image-compression";
+import { track } from "@/lib/analytics";
 
 const parseDimension = (value: FormDataEntryValue | null) => {
   if (!value || typeof value !== "string") return null;
@@ -119,9 +121,27 @@ export async function POST(request: Request) {
 
     const path = `${auth.userId}/background-${Date.now()}.${extension}`;
 
+    // Get file buffer and compress if needed
+    const originalBuffer = Buffer.from(await (file as Blob).arrayBuffer());
+    const compressionResult = await compressImageBuffer(originalBuffer, 5120); // 5MB limit
+    const uploadBuffer = compressionResult.buffer;
+
+    // Track compression if it occurred
+    if (compressionResult.didCompress) {
+      track("background_compressed", {
+        user_id: auth.userId,
+        original_size_kb: Math.round(compressionResult.originalSizeKB),
+        compressed_size_kb: Math.round(compressionResult.compressedSizeKB),
+        compression_ratio: compressionResult.compressionRatio.toFixed(2),
+      });
+    }
+
+    // Use compressed size for database record
+    const finalFileSizeKb = Math.round(compressionResult.compressedSizeKB);
+
     const { error: uploadError } = await supabaseAdmin.storage
       .from(PERSONAL_BACKGROUND_BUCKET)
-      .upload(path, Buffer.from(await (file as Blob).arrayBuffer()), {
+      .upload(path, uploadBuffer, {
         cacheControl: "3600",
         upsert: false,
         contentType: fileObj.type || undefined,
@@ -138,7 +158,7 @@ export async function POST(request: Request) {
         name,
         storagePath: path,
         previewUrl: path,
-        fileSizeKb,
+        fileSizeKb: finalFileSizeKb,
         widthPx,
         heightPx,
         fileFormat,
