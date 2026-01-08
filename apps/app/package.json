@@ -17,7 +17,10 @@
     "test": "pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "test:ci": "pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
-    "release": "pnpm -w changeset:version && pnpm check"
+    "release": "pnpm -w changeset:version && pnpm check",
+    "db:status": "prisma migrate status",
+    "db:deploy": "prisma migrate deploy",
+    "db:dev": "prisma migrate dev"
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",

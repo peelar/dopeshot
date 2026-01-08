@@ -1,21 +1,30 @@
-name: Deploy Production (Vercel)
+name: Deploy Production (Manual)
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm (bypasses migration check)'
+        required: true
+        type: string
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    if: "${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'chore: release') }}"
+    if: ${{ github.event.inputs.confirm == 'deploy' }}
     steps:
+      - name: Warning about manual deploy
+        run: |
+          echo "::warning::Manual deploy triggered - migrations are NOT automatically applied"
+          echo "::warning::Ensure migrations are applied before deploying if schema changes exist"
+
       - name: Trigger Vercel production deploy
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
         run: |
           if [ -z "$VERCEL_DEPLOY_HOOK" ]; then
-            echo "VERCEL_DEPLOY_HOOK secret is not set" >&2
+            echo "::error::VERCEL_DEPLOY_HOOK secret is not set"
             exit 1
           fi
           curl -X POST "$VERCEL_DEPLOY_HOOK"
+          echo "::notice::Vercel deploy triggered"
