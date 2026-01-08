@@ -4,7 +4,12 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { compressImageFile, compressDataUrlString } from "@/domain/asset/compress-image";
+import {
+  compressImageFile,
+  compressDataUrlString,
+  MAX_UPLOAD_SIZE_KB,
+  MAX_IMAGE_DIMENSION_PX,
+} from "@/domain/asset/compress-image";
 
 // Mock canvas and image APIs
 global.HTMLCanvasElement.prototype.getContext = vi.fn(() => ({

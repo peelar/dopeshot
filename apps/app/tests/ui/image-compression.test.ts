@@ -4,7 +4,12 @@
 
 import { describe, it, expect } from "vitest";
 import sharp from "sharp";
-import { compressImageBuffer, exceedsSizeLimit } from "@/lib/image-compression";
+import {
+  compressImageBuffer,
+  exceedsSizeLimit,
+  MAX_UPLOAD_SIZE_KB,
+  MAX_IMAGE_DIMENSION_PX,
+} from "@/lib/image-compression";
 
 describe("compressImageBuffer", () => {
   it("should not compress small images under the limit", async () => {

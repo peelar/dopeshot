@@ -3,6 +3,17 @@
  * Ensures uploaded images stay within size limits (5MB) while maintaining acceptable quality.
  */
 
+/**
+ * Maximum allowed file size for uploads in kilobytes (5MB).
+ * This is a hard limit enforced across all upload paths.
+ */
+export const MAX_UPLOAD_SIZE_KB = 5120; // 5MB
+
+/**
+ * Maximum dimensions for uploaded images in pixels.
+ */
+export const MAX_IMAGE_DIMENSION_PX = 4096;
+
 export interface CompressionResult {
   dataUrl: string;
   originalSizeKB: number;
@@ -27,16 +38,16 @@ function getDataUrlSizeKB(dataUrl: string): number {
  * Uses a combination of dimension resizing and quality reduction.
  *
  * @param file - The image file to compress
- * @param maxSizeKB - Maximum size in kilobytes (default: 5120 = 5MB)
- * @param maxWidth - Maximum width in pixels (default: 4096)
- * @param maxHeight - Maximum height in pixels (default: 4096)
+ * @param maxSizeKB - Maximum size in kilobytes (default: MAX_UPLOAD_SIZE_KB)
+ * @param maxWidth - Maximum width in pixels (default: MAX_IMAGE_DIMENSION_PX)
+ * @param maxHeight - Maximum height in pixels (default: MAX_IMAGE_DIMENSION_PX)
  * @returns Promise resolving to compression result with data URL
  */
 export async function compressImageFile(
   file: File,
-  maxSizeKB: number = 5120, // 5MB default
-  maxWidth: number = 4096,
-  maxHeight: number = 4096
+  maxSizeKB: number = MAX_UPLOAD_SIZE_KB,
+  maxWidth: number = MAX_IMAGE_DIMENSION_PX,
+  maxHeight: number = MAX_IMAGE_DIMENSION_PX
 ): Promise<CompressionResult> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -187,9 +198,9 @@ async function compressDataUrl(
  */
 export async function compressDataUrlString(
   dataUrl: string,
-  maxSizeKB: number = 5120,
-  maxWidth: number = 4096,
-  maxHeight: number = 4096
+  maxSizeKB: number = MAX_UPLOAD_SIZE_KB,
+  maxWidth: number = MAX_IMAGE_DIMENSION_PX,
+  maxHeight: number = MAX_IMAGE_DIMENSION_PX
 ): Promise<CompressionResult> {
   const originalSizeKB = getDataUrlSizeKB(dataUrl);
 

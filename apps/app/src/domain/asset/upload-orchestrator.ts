@@ -2,7 +2,7 @@ import { Asset } from "./types";
 import { getImageMetadataFromDataUrl } from "./get-image-metadata";
 import { getAspectCategory, AspectCategory } from "@/domain/layout/aspect";
 import { uploadPersonalBackground } from "@/domain/backgrounds/background-service";
-import { compressImageFile } from "./compress-image";
+import { compressImageFile, MAX_UPLOAD_SIZE_KB } from "./compress-image";
 
 export interface UploadResult {
   asset: Asset;
@@ -19,8 +19,8 @@ export async function processFileUpload(
   file: File,
   kind: "screenshot" | "logo" | "background",
 ): Promise<UploadResult> {
-  // Compress image to ensure it's under 5MB limit
-  const compressionResult = await compressImageFile(file, 5120); // 5MB = 5120KB
+  // Compress image to ensure it's under the upload size limit
+  const compressionResult = await compressImageFile(file, MAX_UPLOAD_SIZE_KB);
   const dataUrl = compressionResult.dataUrl;
 
   return new Promise((resolve, reject) => {

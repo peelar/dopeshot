@@ -5,6 +5,17 @@
 
 import sharp from "sharp";
 
+/**
+ * Maximum allowed file size for uploads in kilobytes (5MB).
+ * This is a hard limit enforced across all upload paths.
+ */
+export const MAX_UPLOAD_SIZE_KB = 5120; // 5MB
+
+/**
+ * Maximum dimensions for uploaded images in pixels.
+ */
+export const MAX_IMAGE_DIMENSION_PX = 4096;
+
 export interface ServerCompressionResult {
   buffer: Buffer;
   originalSizeKB: number;
@@ -19,16 +30,16 @@ export interface ServerCompressionResult {
  * Uses Sharp for high-quality server-side image processing.
  *
  * @param buffer - The image buffer to compress
- * @param maxSizeKB - Maximum size in kilobytes (default: 5120 = 5MB)
- * @param maxWidth - Maximum width in pixels (default: 4096)
- * @param maxHeight - Maximum height in pixels (default: 4096)
+ * @param maxSizeKB - Maximum size in kilobytes (default: MAX_UPLOAD_SIZE_KB)
+ * @param maxWidth - Maximum width in pixels (default: MAX_IMAGE_DIMENSION_PX)
+ * @param maxHeight - Maximum height in pixels (default: MAX_IMAGE_DIMENSION_PX)
  * @returns Promise resolving to compression result
  */
 export async function compressImageBuffer(
   buffer: Buffer,
-  maxSizeKB: number = 5120, // 5MB default
-  maxWidth: number = 4096,
-  maxHeight: number = 4096
+  maxSizeKB: number = MAX_UPLOAD_SIZE_KB,
+  maxWidth: number = MAX_IMAGE_DIMENSION_PX,
+  maxHeight: number = MAX_IMAGE_DIMENSION_PX
 ): Promise<ServerCompressionResult> {
   const originalSizeKB = buffer.length / 1024;
 
@@ -159,6 +170,6 @@ export async function compressImageBuffer(
 /**
  * Checks if an image buffer exceeds the size limit.
  */
-export function exceedsSizeLimit(buffer: Buffer, maxSizeKB: number = 5120): boolean {
+export function exceedsSizeLimit(buffer: Buffer, maxSizeKB: number = MAX_UPLOAD_SIZE_KB): boolean {
   return buffer.length / 1024 > maxSizeKB;
 }

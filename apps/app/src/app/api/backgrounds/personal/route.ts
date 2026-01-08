@@ -10,7 +10,7 @@ import {
 } from "@/domain/backgrounds/constants";
 import { signPersonalBackground } from "@/domain/backgrounds/background-storage";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
-import { compressImageBuffer } from "@/lib/image-compression";
+import { compressImageBuffer, MAX_UPLOAD_SIZE_KB } from "@/lib/image-compression";
 
 const parseDimension = (value: FormDataEntryValue | null) => {
   if (!value || typeof value !== "string") return null;
@@ -122,7 +122,7 @@ export async function POST(request: Request) {
 
     // Get file buffer and compress if needed
     const originalBuffer = Buffer.from(await (file as Blob).arrayBuffer());
-    const compressionResult = await compressImageBuffer(originalBuffer, 5120); // 5MB limit
+    const compressionResult = await compressImageBuffer(originalBuffer, MAX_UPLOAD_SIZE_KB);
     const uploadBuffer = compressionResult.buffer;
     const finalFileSizeKb = Math.round(compressionResult.compressedSizeKB);
 

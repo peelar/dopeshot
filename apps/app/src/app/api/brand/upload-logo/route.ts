@@ -8,7 +8,7 @@ import {
   sanitizeFileExtension,
   updateUserMetadata,
 } from "@/app/api/brand/utils";
-import { compressImageBuffer } from "@/lib/image-compression";
+import { compressImageBuffer, MAX_UPLOAD_SIZE_KB } from "@/lib/image-compression";
 
 export async function POST(request: Request) {
   try {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     // Compress image if needed (skip SVG files)
     let uploadBuffer = originalBuffer;
     if (extension !== "svg") {
-      const compressionResult = await compressImageBuffer(originalBuffer, 5120); // 5MB limit
+      const compressionResult = await compressImageBuffer(originalBuffer, MAX_UPLOAD_SIZE_KB);
       uploadBuffer = compressionResult.buffer;
     }
 
