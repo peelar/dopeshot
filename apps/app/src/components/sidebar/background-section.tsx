@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useSession } from "@/lib/auth/auth-client";
 import { configAtom, screenshotGradientAtom } from "@/hooks/atoms";
 import { backgroundSelectionAtom } from "@/hooks/atoms/backgrounds";
@@ -10,10 +10,7 @@ import { ShaderPicker, ShaderPickerInline } from "@/components/shaders";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import type { ShaderPreset } from "@/domain/shaders";
 import { clearBackgroundSelection } from "@/domain/backgrounds/background-service";
-import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
-
-type BackgroundTab = "gradient" | "shader";
 
 interface BackgroundSectionProps {
   variant?: "default" | "inline";
@@ -25,9 +22,6 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   const config = useAtomValue(configAtom);
   const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const [selection, setSelection] = useAtom(backgroundSelectionAtom);
-  const [activeTab, setActiveTab] = useState<BackgroundTab>(
-    config.background?.type === "shader" ? "shader" : "gradient"
-  );
 
   const isAuthenticated = Boolean(session?.user);
 
@@ -133,44 +127,24 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
 
   return (
     <div className="flex flex-col gap-4 pt-2">
-      {/* Tab switcher */}
-      <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
-        <button
-          type="button"
-          onClick={() => setActiveTab("gradient")}
-          className={cn(
-            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "gradient"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Gradients
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("shader")}
-          className={cn(
-            "flex-1 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-            activeTab === "shader"
-              ? "bg-background text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          )}
-        >
-          Shaders
-        </button>
+      {/* Gradients Section */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs text-muted-foreground uppercase tracking-wider">
+          From Screenshot
+        </span>
+        <GradientPicker onChangeAction={handleGradientChange} />
       </div>
 
-      {/* Tab content */}
-      {activeTab === "gradient" && (
-        <GradientPicker onChangeAction={handleGradientChange} />
-      )}
-      {activeTab === "shader" && (
+      {/* Shaders Section */}
+      <div className="flex flex-col gap-2">
+        <span className="text-xs text-muted-foreground uppercase tracking-wider">
+          Dynamic Shaders
+        </span>
         <ShaderPicker
           selectedPresetId={selectedShaderPresetId}
           onSelectPreset={handleShaderSelect}
         />
-      )}
+      </div>
     </div>
   );
 }
