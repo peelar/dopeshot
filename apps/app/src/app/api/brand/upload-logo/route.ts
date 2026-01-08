@@ -40,10 +40,13 @@ export async function POST(request: Request) {
     const originalBuffer = Buffer.from(await (file as Blob).arrayBuffer());
 
     // Compress image if needed (skip SVG files)
-    let uploadBuffer = originalBuffer;
+    let uploadBuffer: Buffer = originalBuffer;
     if (extension !== "svg") {
-      const compressionResult = await compressImageBuffer(originalBuffer, MAX_UPLOAD_SIZE_KB);
-      uploadBuffer = compressionResult.buffer;
+      const compressionResult = await compressImageBuffer(
+        originalBuffer,
+        MAX_UPLOAD_SIZE_KB
+      );
+      uploadBuffer = Buffer.from(compressionResult.buffer);
     }
 
     // Upload file to Supabase Storage
