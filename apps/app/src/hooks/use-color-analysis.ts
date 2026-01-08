@@ -1,6 +1,5 @@
 import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
-import { track } from "@/lib/analytics";
 import { ColorPalette } from "@/domain/asset/types";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
 import { createScreenshotColorSource } from "@/domain/layout/gradients/color-source";
@@ -49,14 +48,7 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
           await generateFromColorSource(colorSource, { autoLayoutMessage });
         }
       } catch (error) {
-        // Silent fallback: log error and track to analytics but don't show to user
-        const errorMessage = error instanceof Error ? error.message : "Color analysis failed";
-
-        track("color_analysis_failed", {
-          error: errorMessage,
-          asset_id: assetId,
-        });
-
+        // Silent fallback: log error but don't show to user
         if (process.env.NODE_ENV === "development") {
           console.error("Color analysis failed:", error);
         }

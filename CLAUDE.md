@@ -23,7 +23,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - Add a Changeset for any user-facing change or code change that should appear in the changelog; use `pnpm changeset` and commit the generated file.
 - After you are done with implementation, verify if the types & tests work via scripts in `package.json`.
 - Whenever you have "a bigger fix" in mind or a refactor, go for it. We are building for tomorrow, not today.
-- **Always add tracking events** for all new user-facing functionalities using `track()` from `@/lib/analytics`. Track user interactions, state changes, and feature usage with descriptive event names and relevant properties (e.g., `track("feature_used", { property: value })`).
+- **Always add tracking events** for all new user-facing functionalities using `track()` from `@/lib/analytics`. Only track relevant product metrics.
 - **Always add test coverage** for new features and functionality. Follow the testing strategy documented in `thoughts/research/009-export-testing-strategy.md`:
   - **Unit tests** (Vitest) for pure functions and utilities
   - **Component tests** (Vitest + React Testing Library) for UI components

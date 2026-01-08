@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "@/lib/auth/auth-client";
 import { supabaseDb } from "@/lib/supabase-db";
-import { track } from "@/lib/analytics";
 
 type UseOnboardingFlowOptions = {
   enabled?: boolean;
@@ -43,7 +42,6 @@ export function useOnboardingFlow(options?: UseOnboardingFlowOptions) {
           // PGRST116 = No rows found - this is a NEW user, show onboarding!
           if (error.code === "PGRST116") {
             setShowModal(true);
-            track("onboarding_modal_shown");
             setIsChecking(false);
             return;
           }
@@ -63,7 +61,6 @@ export function useOnboardingFlow(options?: UseOnboardingFlowOptions) {
 
         if (!hasCompleted) {
           setShowModal(true);
-          track("onboarding_modal_shown");
         }
       } catch (error) {
         console.error("Failed to check onboarding status:", error);
