@@ -109,12 +109,9 @@ model BrandProfile {
 }
 
 model UserMetadata {
-  id                 String  @id @default(cuid())
-  userId             String  @unique @map("user_id")
-  exportsThisMonth   Int     @default(0) @map("exports_this_month")
-
-  /// [OnboardingProgress]
-  onboardingProgress Json? @map("onboarding_progress")
+  id               String @id @default(cuid())
+  userId           String @unique @map("user_id")
+  exportsThisMonth Int    @default(0) @map("exports_this_month")
 
   /// [FeatureFlags]
   featureFlags Json? @map("feature_flags")

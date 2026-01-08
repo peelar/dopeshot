@@ -3,7 +3,6 @@ import invariant from "tiny-invariant";
 
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
-import { updateUserMetadata } from "@/app/api/brand/utils";
 import {
   brandColorPaletteSchema,
   brandTypographySchema,
@@ -14,8 +13,6 @@ type UpdateProfileBody = {
   color_palette?: string[];
   typography?: Record<string, string>;
   logo_path?: string | null;
-  onboardingStep?: string;
-  onboardingSteps?: string[];
 };
 
 export async function PATCH(request: Request) {
@@ -82,17 +79,6 @@ export async function PATCH(request: Request) {
         update: brandUpdates,
       });
     }
-
-    // Update user metadata
-    const onboardingSteps = [
-      ...(Array.isArray(body.onboardingSteps) ? body.onboardingSteps : []),
-      ...(body.onboardingStep ? [body.onboardingStep] : []),
-    ];
-
-    await updateUserMetadata({
-      onboardingSteps,
-      session,
-    });
 
     return NextResponse.json({ success: true });
   } catch (error) {

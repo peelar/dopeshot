@@ -4,10 +4,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
-import {
-  sanitizeFileExtension,
-  updateUserMetadata,
-} from "@/app/api/brand/utils";
+import { sanitizeFileExtension } from "@/app/api/brand/utils";
 
 export async function POST(request: Request) {
   try {
@@ -64,12 +61,6 @@ export async function POST(request: Request) {
       update: {
         logoPath: path,
       },
-    });
-
-    // Update user metadata with onboarding progress
-    await updateUserMetadata({
-      onboardingSteps: ["logo_onboarding_completed"],
-      session,
     });
 
     // Generate signed URL (Supabase Storage unchanged)

@@ -19,24 +19,16 @@ export async function GET() {
     // Get user-scoped database
     const db = await getUserDb(userId);
 
-    // Fetch brand profile and user metadata via Prisma
-    const [profile, metadata] = await Promise.all([
-      db.brandProfile.findUnique({
-        where: { userId },
-        select: {
-          name: true,
-          colorPalette: true,
-          typography: true,
-          logoPath: true,
-        },
-      }),
-      db.userMetadata.findUnique({
-        where: { userId },
-        select: {
-          onboardingProgress: true,
-        },
-      }),
-    ]);
+    // Fetch brand profile via Prisma
+    const profile = await db.brandProfile.findUnique({
+      where: { userId },
+      select: {
+        name: true,
+        colorPalette: true,
+        typography: true,
+        logoPath: true,
+      },
+    });
 
     // Generate signed URL for logo (Supabase Storage unchanged)
     let logoUrl: string | null = null;
@@ -49,7 +41,6 @@ export async function GET() {
 
     return NextResponse.json({
       profile,
-      metadata,
       logoUrl,
     });
   } catch (error) {

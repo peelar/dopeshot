@@ -9,7 +9,6 @@ import { MobileActions } from "@/components/layout/mobile-actions";
 import { PlaygroundWorkspace } from "@/app/(playground)/_components/playground-workspace";
 import { LayoutSelector } from "@/components/selectors/layout-selector";
 import { SidebarTabs } from "@/components/layout/sidebar-tabs";
-import { useOnboardingFlow } from "@/hooks/use-onboarding-flow";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
@@ -40,11 +39,6 @@ import { useDeleteDesign } from "@/hooks/use-delete-design";
 import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
-
-const OnboardingModal = dynamic(
-  () => import("@/components/onboarding/onboarding-modal").then(mod => ({ default: mod.OnboardingModal })),
-  { ssr: false }
-);
 
 const FeedbackModal = dynamic(
   () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
@@ -135,7 +129,6 @@ function PlaygroundPageInner({
 }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
-  const { showOnboardingModal, setShowOnboardingModal } = useOnboardingFlow({ enabled: showBrandExperience });
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
 
@@ -390,13 +383,6 @@ function PlaygroundPageInner({
       <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
         {statusMessage}
       </div>
-
-      {showBrandExperience ? (
-        <OnboardingModal
-          open={showOnboardingModal}
-          onOpenChange={setShowOnboardingModal}
-        />
-      ) : null}
 
       <FeedbackModal
         open={feedbackModalOpen}
