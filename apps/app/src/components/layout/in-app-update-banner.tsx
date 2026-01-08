@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { UserPlus, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
@@ -71,10 +71,11 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               <Link
                 href={update.cta.href}
                 className={cn(
-                  buttonVariants({ variant: "outline", size: "xs" }),
-                  "border-primary/25 bg-background/40 text-foreground hover:bg-background/60 hover:text-foreground"
+                  buttonVariants({ variant: "default", size: "xs" }),
+                  "shadow-none"
                 )}
               >
+                <UserPlus className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
                 {update.cta.label}
               </Link>
             ) : null}
@@ -83,7 +84,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="text-muted-foreground hover:text-foreground"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
               aria-label="Dismiss update banner"
               onClick={() => {
                 try {
