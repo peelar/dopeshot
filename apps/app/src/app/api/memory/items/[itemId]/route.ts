@@ -45,7 +45,10 @@ export async function GET(
       }),
       // Fire off signed URL generation assuming standard path
       getSignedUrl(derivedScreenshotPath).catch((err) => {
-        console.warn("Optimistic signed URL generation failed:", err);
+        // Only log unexpected errors, not "Object not found" which is common for jpgs or missing files
+        if (err.message && !err.message.includes("Object not found")) {
+          console.warn("Optimistic signed URL generation failed:", err);
+        }
         return null;
       }),
     ]);

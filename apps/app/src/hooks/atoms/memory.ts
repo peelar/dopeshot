@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import type { MemoryItemDTO } from "@/domain/memory/types";
+import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
 import { SAVE_LIMIT } from "@/domain/memory/constants";
 import {
   configAtom,
@@ -30,6 +30,15 @@ export const memoryItemsLoadingAtom = atom(false);
  * Loading state for loading a specific memory item
  */
 export const memoryLoadingAtom = atom(false);
+
+/**
+ * Cache for full memory item configurations to avoid re-fetching
+ * Key: itemId, Value: Configuration and timestamp
+ */
+export const memoryItemCacheAtom = atom<Record<string, {
+  configuration: MemoryConfiguration;
+  timestamp: number;
+}>>({});
 
 /**
  * Post-export nudge visibility (for logged-out users)

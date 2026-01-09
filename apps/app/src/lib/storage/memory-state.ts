@@ -58,6 +58,32 @@ export function setMemoryState(state: Partial<MemoryState>): void {
 }
 
 /**
+ * Clear the memory items cache for a specific user
+ * This should be called on logout to prevent stale data on next login
+ */
+export function clearMemoryItemsCache(userId?: string): void {
+  if (typeof window === "undefined") return;
+
+  try {
+    if (userId) {
+      localStorage.removeItem(`dopeshot-memory-items-${userId}`);
+    } else {
+      // Clear all memory items caches (fallback when userId not available)
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith("dopeshot-memory-items-")) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach((key) => localStorage.removeItem(key));
+    }
+  } catch (error) {
+    console.warn("Failed to clear memory items cache from localStorage:", error);
+  }
+}
+
+/**
  * Clear all memory state from localStorage
  * Useful for testing or reset flows
  */
@@ -67,6 +93,8 @@ export function clearMemoryState(): void {
   try {
     localStorage.removeItem(STORAGE_KEYS.HAS_EXPORTS);
     localStorage.removeItem(STORAGE_KEYS.LAST_VIEWED);
+    // Also clear the memory items cache
+    clearMemoryItemsCache();
   } catch (error) {
     console.warn("Failed to clear memory state from localStorage:", error);
   }
