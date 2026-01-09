@@ -80,9 +80,9 @@ export function AppHeader({
             variant="outline"
             className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
             onClick={shouldShowNewButton ? onNewClick : onUploadClick}
-            disabled={shouldShowNewButton ? false : isProcessingUpload}
+            disabled={isProcessingUpload}
             aria-label={shouldShowNewButton ? "New design" : hasCustomScreenshot ? "change screenshot" : "upload your screenshot"}
-            aria-busy={shouldShowNewButton ? undefined : isProcessingUpload}
+            aria-busy={isProcessingUpload}
           >
             <CtaIcon
               className={cn(
