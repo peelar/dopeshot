@@ -1,5 +1,11 @@
 # dopeshot
 
+## 0.5.7
+
+### Patch Changes
+
+- 3a6fc1e: feat: make organic blobs layout-aware by positioning them based on the layout variant (left/right/center) to improve visual balance
+
 ## 0.5.6
 
 ### Patch Changes
