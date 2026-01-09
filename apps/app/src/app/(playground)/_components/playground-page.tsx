@@ -283,9 +283,12 @@ function PlaygroundPageInner({
       <InAppUpdateBanner />
 
       <AppHeader
+        isLoggedIn={isLoggedIn}
+        hasSelectedSavedDesign={Boolean(loadedItemId)}
         hasCustomScreenshot={hasCustomScreenshot}
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
+        onNewClick={resetToEmptyCanvas}
         showUploadButton={requiresScreenshot}
         canExport={canExport}
         onExport={handleExport}
