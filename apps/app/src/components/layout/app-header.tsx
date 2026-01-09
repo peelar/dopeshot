@@ -54,12 +54,12 @@ export function AppHeader({
   const shouldShowCtaButton = showUploadButton || shouldShowNewButton;
 
   const ctaButtonLabel = shouldShowNewButton
-    ? "new"
+    ? "New"
     : isProcessingUpload
       ? "Uploading..."
       : hasCustomScreenshot
-        ? "change screenshot"
-        : "upload your screenshot";
+        ? "Change Screenshot"
+        : "Upload Your Screenshot";
 
   const CtaIcon = shouldShowNewButton ? Plus : isProcessingUpload ? Loader2 : hasCustomScreenshot ? RefreshCw : ImageUp;
 
@@ -81,7 +81,7 @@ export function AppHeader({
             className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
             onClick={shouldShowNewButton ? onNewClick : onUploadClick}
             disabled={isProcessingUpload}
-            aria-label={shouldShowNewButton ? "New design" : hasCustomScreenshot ? "change screenshot" : "upload your screenshot"}
+            aria-label={shouldShowNewButton ? "New Design" : hasCustomScreenshot ? "Change Screenshot" : "Upload Your Screenshot"}
             aria-busy={isProcessingUpload}
           >
             <CtaIcon
@@ -120,7 +120,7 @@ export function AppHeader({
                     onClick={onSave}
                     disabled={isSaving || !canSave || isAtSaveLimit}
                     aria-busy={isSaving}
-                    aria-label={isSaving ? "Saving design" : "Save design"}
+                    aria-label={isSaving ? "Saving Design" : "Save Design"}
                   />
                 }
               >
@@ -152,7 +152,7 @@ export function AppHeader({
             onClick={onExport}
             disabled={isExporting}
             aria-busy={isExporting}
-            aria-label={isExporting ? "Exporting image" : "Export as PNG"}
+            aria-label={isExporting ? "Exporting Image" : "Export As PNG"}
           >
             {isExporting ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
