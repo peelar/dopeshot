@@ -83,6 +83,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    // #region agent log
+    console.log('[DEBUG] POST memory item started', { userId: session.userId });
+    // #endregion
     // Parse form data and prepare config hash in parallel with getting DB
     const [formData, db] = await Promise.all([
       request.formData(),
@@ -101,6 +104,9 @@ export async function POST(request: NextRequest) {
 
     const configuration: MemoryConfiguration = JSON.parse(configJson);
     const configHash = computeConfigHash(configuration);
+    // #region agent log
+    console.log('[DEBUG] Config parsed', { configHash, configSize: configJson.length, screenshotSize: screenshotFile?.size, screenshotType: screenshotFile?.type });
+    // #endregion
 
     // Parallel: Check save limit AND check for duplicate
     const [currentSaveCount, existing] = await Promise.all([
@@ -155,13 +161,20 @@ export async function POST(request: NextRequest) {
     const contentType = screenshotFile.type === "image/jpeg" ? "image/jpeg" : "image/png";
     const extension = contentType === "image/jpeg" ? "jpg" : "png";
     const storagePath = `${session.userId}/${memoryItemId}.${extension}`;
+    // #region agent log
+    console.log('[DEBUG] IDs generated', { memoryItemId, storagePath, contentType });
+    // #endregion
 
     // Convert file to buffer (needed for upload)
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());
 
-    // Execute DB create + storage upload in parallel
-    const [memoryItem] = await Promise.all([
-      db.memoryItem.create({
+    // Execute DB create + storage upload sequentially to identify failure point
+    let dbResult;
+    try {
+      // #region agent log
+      console.log('[DEBUG] Starting DB create', { memoryItemId, configHash });
+      // #endregion
+      dbResult = await db.memoryItem.create({
         data: {
           id: memoryItemId,
           userId: session.userId,
@@ -173,9 +186,33 @@ export async function POST(request: NextRequest) {
           id: true,
           createdAt: true,
         },
-      }),
-      uploadScreenshot(session.userId, memoryItemId, screenshotBuffer, contentType),
-    ]);
+      });
+      // #region agent log
+      console.log('[DEBUG] DB create success', { id: dbResult.id });
+      // #endregion
+    } catch (dbErr) {
+      // #region agent log
+      console.error('[DEBUG] DB create FAILED', { error: String(dbErr), memoryItemId, stack: (dbErr as Error).stack });
+      // #endregion
+      throw dbErr;
+    }
+
+    try {
+      // #region agent log
+      console.log('[DEBUG] Starting upload', { storagePath, bufferSize: screenshotBuffer.length });
+      // #endregion
+      await uploadScreenshot(session.userId, memoryItemId, screenshotBuffer, contentType);
+      // #region agent log
+      console.log('[DEBUG] Upload success', { storagePath });
+      // #endregion
+    } catch (uploadErr) {
+      // #region agent log
+      console.error('[DEBUG] Upload FAILED', { error: String(uploadErr), storagePath, stack: (uploadErr as Error).stack });
+      // #endregion
+      throw uploadErr;
+    }
+
+    const memoryItem = dbResult;
 
     // Invalidate cache for this user's memory items
     revalidateTag(`memory-items-${session.userId}`, "default");

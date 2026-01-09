@@ -138,33 +138,12 @@ export function createOrganicBlobsPreviewDataUrl(options: {
     distortion: 0.24,
   });
 
-  const screenshotX = 18;
-  const screenshotY = 30;
-  const screenshotW = 64;
-  const screenshotH = 48;
-  const screenshotRx = 10;
-
   const blobBTransform = `translate(22 78) rotate(45) scale(0.92) translate(-22 -78)`;
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <defs>
-    <filter id="s" x="-30%" y="-30%" width="160%" height="160%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-color="rgba(0,0,0,0.20)"/>
-    </filter>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="rgba(255,255,255,0.95)"/>
-      <stop offset="1" stop-color="rgba(255,255,255,0.70)"/>
-    </linearGradient>
-  </defs>
   <path d="${blobA}" fill="${primary}" opacity="0.10"/>
   <path d="${blobB}" fill="${secondary}" opacity="0.20" transform="${blobBTransform}"/>
-  <g filter="url(#s)">
-    <rect x="${screenshotX}" y="${screenshotY}" width="${screenshotW}" height="${screenshotH}" rx="${screenshotRx}" fill="url(#g)"/>
-    <rect x="${screenshotX}" y="${screenshotY}" width="${screenshotW}" height="${screenshotH}" rx="${screenshotRx}" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
-    <rect x="${screenshotX + 8}" y="${screenshotY + 10}" width="${screenshotW - 16}" height="6" rx="3" fill="rgba(0,0,0,0.10)"/>
-    <rect x="${screenshotX + 8}" y="${screenshotY + 22}" width="${Math.round((screenshotW - 16) * 0.7)}" height="5" rx="2.5" fill="rgba(0,0,0,0.08)"/>
-  </g>
 </svg>`;
 
   return svgToDataUrl(svg);

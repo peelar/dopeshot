@@ -53,11 +53,6 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     [dynamicGradients, variant],
   );
 
-  const blobGradients = useMemo(() => {
-    // Render as a single row aligned with the grid columns (4 on mobile, 3 on sidebar)
-    return variant === "inline" ? dynamicGradients.slice(0, 4) : dynamicGradients.slice(0, 3);
-  }, [dynamicGradients, variant]);
-
   const matchesScreenshotGradient = useMemo(() => {
     if (!background.customGradient || !hasScreenshotGradients) return false;
     return dynamicGradients.some((gradient) =>
@@ -122,7 +117,10 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
   ]);
 
   const handleScreenshotSelect = useCallback(
-    (gradient: CustomGradient) => {
+    (
+      gradient: CustomGradient,
+      options?: { patternId?: BackgroundConfig["patternId"]; patternVariant?: string },
+    ) => {
       sourceOverrideRef.current = true;
       const textColor = getTextColorFromGradient(gradient);
       onChangeAction(
@@ -131,26 +129,9 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
           value: "custom",
           customGradient: gradient,
           gradientSource: "screenshot",
-        },
-        textColor,
-      );
-    },
-    [onChangeAction],
-  );
-
-  const handleOrganicBlobsSelect = useCallback(
-    (gradient: CustomGradient, variantKey: string) => {
-      sourceOverrideRef.current = true;
-      const textColor = getTextColorFromGradient(gradient);
-      onChangeAction(
-        {
-          type: "gradient",
-          value: "custom",
-          customGradient: gradient,
-          gradientSource: "screenshot",
-          patternId: "organic-blobs",
-          patternMode: "manual",
-          patternVariant: variantKey,
+          patternId: options?.patternId,
+          patternMode: options?.patternId ? "manual" : undefined,
+          patternVariant: options?.patternVariant,
         },
         textColor,
       );
@@ -170,19 +151,6 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
           gridClass="grid-cols-4"
           skeletonCount={4}
         />
-        {hasScreenshotGradients || isAnalyzingColors ? (
-          <OrganicBlobSwatches
-            gradients={blobGradients}
-            activeGradient={background.customGradient}
-            activePatternId={background.patternId}
-            activePatternVariant={background.patternVariant}
-            disabled={!hasScreenshotGradients}
-            onSelect={handleOrganicBlobsSelect}
-            isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
-            gridClass="grid-cols-4"
-            skeletonCount={4}
-          />
-        ) : null}
       </div>
     );
   }
@@ -200,19 +168,6 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
             gridClass="grid-cols-3"
             skeletonCount={6}
           />
-          {hasScreenshotGradients || isAnalyzingColors ? (
-            <OrganicBlobSwatches
-              gradients={blobGradients}
-              activeGradient={background.customGradient}
-              activePatternId={background.patternId}
-              activePatternVariant={background.patternVariant}
-              disabled={!hasScreenshotGradients}
-              onSelect={handleOrganicBlobsSelect}
-              isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
-              gridClass="grid-cols-3"
-              skeletonCount={3}
-            />
-          ) : null}
         </div>
       </div>
     </div>
@@ -223,7 +178,10 @@ interface ScreenshotGradientsProps {
   gradients: CustomGradient[];
   activeGradient?: CustomGradient;
   disabled: boolean;
-  onSelect: (gradient: CustomGradient) => void;
+  onSelect: (
+    gradient: CustomGradient,
+    options?: { patternId?: BackgroundConfig["patternId"]; patternVariant?: string },
+  ) => void;
   isLoading?: boolean;
   gridClass?: string;
   skeletonCount?: number;
@@ -254,78 +212,36 @@ function ScreenshotGradients({
           ))
         : gradients.map((gradient, index) => {
             const isSelected = areGradientsEqual(activeGradient, gradient);
+
+            // Integrate blobs into the last two ambient gradients (indices 4 and 5)
+            // This applies to the default variant where we show all 6 gradients
+            const isAmbientBlob = index >= 4;
+            let gradientCss = customGradientToCss(gradient);
+            let onClick = () => !disabled && onSelect(gradient);
+
+            if (isAmbientBlob) {
+              const [primary, secondary] = getTwoGradientColors(gradient);
+              // Use "v1" for the first ambient blob and "v2" for the second to add variety
+              const variantKey = index === 4 ? "v1" : "v2";
+              const seed = `organic-blobs:${variantKey}:${primary}:${secondary}`;
+              const overlayUrl = createOrganicBlobsPreviewDataUrl({ seed, primary, secondary });
+              gradientCss = `url("${overlayUrl}") center / cover no-repeat, ${customGradientToCss(gradient)}`;
+
+              onClick = () =>
+                !disabled &&
+                onSelect(gradient, { patternId: "organic-blobs", patternVariant: variantKey });
+            }
+
             return (
               <GradientSwatch
                 key={`gradient-${index}`}
-                gradientCss={customGradientToCss(gradient)}
+                gradientCss={gradientCss}
                 selected={isSelected}
-                onClick={() => !disabled && onSelect(gradient)}
+                onClick={onClick}
                 ariaLabel="Screenshot gradient"
               />
             );
           })}
-    </div>
-  );
-}
-
-interface OrganicBlobSwatchesProps {
-  gradients: CustomGradient[];
-  activeGradient?: CustomGradient;
-  activePatternId?: BackgroundConfig["patternId"];
-  activePatternVariant?: BackgroundConfig["patternVariant"];
-  disabled: boolean;
-  onSelect: (gradient: CustomGradient, variantKey: string) => void;
-  isLoading?: boolean;
-  gridClass?: string;
-  skeletonCount?: number;
-}
-
-function OrganicBlobSwatches({
-  gradients,
-  activeGradient,
-  activePatternId,
-  activePatternVariant,
-  disabled,
-  onSelect,
-  isLoading,
-  gridClass = "grid-cols-4",
-  skeletonCount = 4,
-}: OrganicBlobSwatchesProps) {
-  const showSkeletons = isLoading || !gradients.length;
-
-  return (
-    <div className="space-y-2">
-      <div className="px-0.5 text-[11px] font-medium tracking-wide text-muted-foreground/90">
-        Organic blobs
-      </div>
-      <div className={cn("grid gap-3", gridClass)}>
-        {showSkeletons
-          ? Array.from({ length: skeletonCount }).map((_, index) => (
-              <Skeleton key={`blob-skeleton-${index}`} className="h-12 w-full rounded-lg" />
-            ))
-          : gradients.map((gradient, index) => {
-              const [primary, secondary] = getTwoGradientColors(gradient);
-              const variantKey = `v${index + 1}`;
-              const seed = `organic-blobs:${variantKey}:${primary}:${secondary}`;
-              const overlayUrl = createOrganicBlobsPreviewDataUrl({ seed, primary, secondary });
-              const backgroundCss = `url("${overlayUrl}") center / cover no-repeat, ${customGradientToCss(gradient)}`;
-
-              const gradientSelected = areGradientsEqual(activeGradient, gradient);
-              const patternSelected =
-                activePatternId === "organic-blobs" && activePatternVariant === variantKey;
-              const isSelected = gradientSelected && patternSelected;
-
-              return (
-                <GradientSwatch
-                  key={`blob-${index}`}
-                  gradientCss={backgroundCss}
-                  selected={isSelected}
-                  onClick={() => !disabled && onSelect(gradient, variantKey)}
-                  ariaLabel="Organic blob background"
-                />
-              );
-            })}
-      </div>
     </div>
   );
 }
