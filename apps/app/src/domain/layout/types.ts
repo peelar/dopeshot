@@ -18,7 +18,7 @@ export type ColorToken =
   | "violet-500";
 
 export type BackgroundType = "gradient" | "image" | "solid";
-export type PatternId = "grain" | "glow" | "grid";
+export type PatternId = "grain" | "glow" | "grid" | "organic-blobs";
 export type PatternChoice = PatternId | "none";
 export type PatternMode = "auto" | "manual";
 
@@ -84,6 +84,7 @@ export type BackgroundConfig = {
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
   patternId?: PatternChoice; // explicit pattern selection
   patternMode?: PatternMode; // auto or manual selection
+  patternVariant?: string; // optional pattern-specific variant key (e.g., seed selector)
 };
 
 // Layout configuration - simple data structure
