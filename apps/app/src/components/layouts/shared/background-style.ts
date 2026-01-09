@@ -112,6 +112,8 @@ export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, A
       // Apply layout-specific geometry at render time
       return gradientToCssWithLayout(gradient, config.layoutId, config.variant);
     }
+  } else if (config.background?.type === "metric") {
+    return tokenToCssColor(config.colors.background);
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);
     if (bgAsset) {

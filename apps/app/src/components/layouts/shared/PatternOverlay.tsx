@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
+import { MetricPatternOverlay } from "@/components/layouts/shared/MetricPatternOverlay";
 import type { LayoutConfig } from "@/domain/layout/types";
 
 interface PatternOverlayProps {
@@ -14,7 +15,12 @@ function PatternOverlayComponent({
     return null;
   }
 
-  return <GrainOverlay enabled />;
+  return (
+    <>
+      <MetricPatternOverlay config={config} />
+      <GrainOverlay enabled />
+    </>
+  );
 }
 
 export const PatternOverlay = memo(PatternOverlayComponent);

@@ -60,9 +60,10 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
           currentConfig.background.customGradient === undefined &&
           currentConfig.background.value !== "custom";
         const userHasCustomGradient = currentConfig.background?.customGradient !== undefined;
-        const hasImageBackground = currentConfig.background?.type === "image";
+        const hasNonGradientBackground =
+          currentConfig.background !== undefined && currentConfig.background.type !== "gradient";
 
-        if (userSelectedPreset || userHasCustomGradient || hasImageBackground) {
+        if (userSelectedPreset || userHasCustomGradient || hasNonGradientBackground) {
           return currentConfig;
         }
 

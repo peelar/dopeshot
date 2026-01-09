@@ -1,6 +1,5 @@
 "use client";
 
-import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
 import {
   LAYOUT_DEFINITIONS,
@@ -10,7 +9,6 @@ import {
   withLayoutTextDefaults,
 } from "@/domain/layout-def/definitions";
 import {
-  assetsAtom,
   configAtom,
   orientationAtom,
   screenshotGradientAtom,
@@ -19,8 +17,8 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
+import { useCallback, useMemo } from "react";
 
 // Memoize layout default configs at module level to avoid recreation
 // Since layouts are now pre-flattened, each layout has exactly one variant baked in
@@ -45,7 +43,6 @@ type PreviewCard = {
 export function LayoutSelector({ className }: { className?: string }) {
   const orientation = useAtomValue(orientationAtom);
   const currentConfig = useAtomValue(configAtom);
-  const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
   const setConfig = useSetAtom(configAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
@@ -55,7 +52,8 @@ export function LayoutSelector({ className }: { className?: string }) {
   // BUT reset gradient when switching to non-screenshot layouts
   const previewConfigs = useMemo(() => {
     const currentLayoutSupportsScreenshots = supportsScreenshots(currentConfig.layoutId);
-    const hasImageBackground = currentConfig.background?.type === "image";
+    const hasManualBackground =
+      currentConfig.background !== undefined && currentConfig.background.type !== "gradient";
 
     // Check if we have a stored screenshot gradient (persists across layout switches)
     const hasScreenshotGradient = screenshotGradient !== null;
@@ -68,8 +66,8 @@ export function LayoutSelector({ className }: { className?: string }) {
       // 2. If both looks have same screenshot support → preserve current background
       // 3. Otherwise → use default background
       let backgroundToUse;
-      if (hasImageBackground) {
-        // Always preserve user-selected image backgrounds across layouts
+      if (hasManualBackground) {
+        // Always preserve user-selected non-gradient backgrounds across layouts
         backgroundToUse = currentConfig.background;
       } else if (targetLayoutSupportsScreenshots && hasScreenshotGradient) {
         // Always use stored screenshot gradient for screenshot-capable looks
@@ -187,7 +185,6 @@ export function LayoutSelector({ className }: { className?: string }) {
             <LayoutPreviewCard
               key={key}
               option={{ key, displayName, layoutId, previewConfig }}
-              assets={assets}
               isSelected={isSelected}
               onSelect={handleSelect}
             />
@@ -318,12 +315,10 @@ function LayoutSketch({
 
 function LayoutPreviewCard({
   option,
-  assets,
   isSelected,
   onSelect,
 }: {
   option: PreviewCard;
-  assets: Asset[];
   isSelected: boolean;
   onSelect: () => void;
 }) {
