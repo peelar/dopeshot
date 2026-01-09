@@ -18,6 +18,7 @@ import {
   saveLimitAtom,
   loadedMemoryItemIdAtom,
   justSavedAtom,
+  hasExportsAtom,
 } from "@/hooks/atoms/memory";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { track } from "@/lib/analytics";
@@ -26,6 +27,7 @@ import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import { compressImageBlob } from "@/lib/utils/image-compression";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import { setMemoryState } from "@/lib/storage/memory-state";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
 
@@ -38,6 +40,7 @@ export function useSaveDesign() {
   const saveLimit = useAtomValue(saveLimitAtom);
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
   const setJustSaved = useSetAtom(justSavedAtom);
+  const setHasExports = useSetAtom(hasExportsAtom);
 
   // Current editor state
   const config = useAtomValue(configAtom);
@@ -145,6 +148,8 @@ export function useSaveDesign() {
       if (!isDuplicate) {
         setItems((prev) => [newItem, ...prev]);
         setSaveCount((prev) => prev + 1);
+        setHasExports(true);
+        setMemoryState({ hasExports: true });
       }
 
       // Update selection

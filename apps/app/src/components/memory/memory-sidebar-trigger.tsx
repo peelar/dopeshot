@@ -51,8 +51,9 @@ export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
         "group relative flex h-8 items-center gap-2 rounded-md px-3 transition-all",
         "hover:bg-accent/50 hover:text-accent-foreground",
         isOpen && "bg-accent text-accent-foreground",
+        justSaved && "bg-primary/10 text-primary opacity-100",
         // Ghost state when no exports
-        !hasExports && "opacity-40",
+        !hasExports && !justSaved && "opacity-40",
         className,
       )}
       aria-label="Toggle saved designs sidebar"
