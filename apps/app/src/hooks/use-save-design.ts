@@ -24,6 +24,7 @@ import { track } from "@/lib/analytics";
 import type { MemoryItemDTO } from "@/domain/memory/types";
 import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
+import { compressImageBlob } from "@/lib/utils/image-compression";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
@@ -84,10 +85,19 @@ export function useSaveDesign() {
     try {
       // Generate screenshot for this save (independent of export)
       const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
-      const { blob } = await exportLayoutAsPngWithBlob("export-container", {
+      const { blob: rawBlob } = await exportLayoutAsPngWithBlob("export-container", {
         width: exportDims.width,
         height: exportDims.height,
       });
+
+      // Compress image to stay under Vercel's 4.5MB payload limit
+      const { blob, wasCompressed, originalSize, finalSize } = await compressImageBlob(rawBlob);
+
+      if (wasCompressed) {
+        console.log(
+          `Screenshot compressed: ${(originalSize / 1024).toFixed(0)}KB → ${(finalSize / 1024).toFixed(0)}KB`
+        );
+      }
 
       // Serialize current state
       const screenshotPath = `${session.user.id}/${Date.now()}.png`;
@@ -100,10 +110,11 @@ export function useSaveDesign() {
         screenshotPath,
       });
 
-      // Prepare form data
+      // Prepare form data - use correct extension based on blob type
+      const extension = blob.type === "image/jpeg" ? "jpg" : "png";
       const formData = new FormData();
       formData.append("configuration", JSON.stringify(configuration));
-      formData.append("screenshot", blob, "screenshot.png");
+      formData.append("screenshot", blob, `screenshot.${extension}`);
 
       // Send to API
       const response = await fetch("/api/memory/items", {

@@ -51,13 +51,13 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
       <section
         aria-label="Product update"
         className={cn(
-          "relative border-b border-border bg-primary/10 px-4 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-primary/10 sm:px-6",
+          "relative border-b border-primary/20 bg-primary/10 px-4 py-1.5 backdrop-blur supports-[backdrop-filter]:bg-primary/10 sm:px-6",
           className
         )}
       >
         <div className="flex items-center gap-2 pl-4">
           <div className="flex min-w-0 items-center gap-2">
-            <span className="inline-flex shrink-0 -translate-y-px items-center rounded-full border border-primary/25 bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-foreground/70 shadow-[0_1px_0_rgba(0,0,0,0.06)] dark:border-border/60 dark:bg-muted/35 dark:text-muted-foreground dark:shadow-none">
+            <span className="inline-flex shrink-0 -translate-y-px items-center rounded-full border border-primary/25 bg-primary/20 px-1.5 py-0.5 font-mono text-[9px] tracking-[0.22em] text-primary shadow-[0_1px_0_rgba(0,0,0,0.06)]">
               NEW
             </span>
             <p className="min-w-0 text-xs text-foreground/90">
