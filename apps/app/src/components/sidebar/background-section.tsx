@@ -40,6 +40,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
           grainEnabled,
           patternId: background.patternId ?? currentBackground.patternId,
           patternMode: background.patternMode ?? currentBackground.patternMode,
+          patternVariant: background.patternVariant ?? currentBackground.patternVariant,
         };
 
         // Store screenshot gradient for persistence across layout changes
