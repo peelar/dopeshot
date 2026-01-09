@@ -24,7 +24,7 @@ import { track } from "@/lib/analytics";
 import type { MemoryItemDTO } from "@/domain/memory/types";
 import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
-import { compressImageBlob } from "@/domain/layout/compress-image";
+import { compressImageBlob } from "@/lib/utils/image-compression";
 import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
