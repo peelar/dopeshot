@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth/auth-client";
 import {
   memoryItemsAtom,
   memoryLoadingAtom,
+  memoryItemCacheAtom,
   loadedMemoryItemIdAtom,
   hasExportsAtom,
   hasUnseenExportsAtom,
@@ -20,12 +21,14 @@ import {
   screenshotGradientAtom,
   orientationAtom,
   screenshotZoomAtom,
+  statusMessageAtom,
+  getEmptyCanvasConfig,
 } from "@/hooks/atoms";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
 import { setMemoryState } from "@/lib/storage/memory-state";
-import { setMemoryUrl } from "@/lib/memory/memory-url";
-import { toast } from "@/lib/utils/toast";
+import { setMemoryUrl, clearMemoryUrl } from "@/lib/memory/memory-url";
+import { track } from "@/lib/analytics";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
 
 export function useMemory() {
@@ -33,7 +36,8 @@ export function useMemory() {
   const user = session?.user;
   const [items, setItems] = useAtom(memoryItemsAtom);
   const [isLoading, setIsLoading] = useAtom(memoryLoadingAtom);
-  const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
+  const [itemCache, setItemCache] = useAtom(memoryItemCacheAtom);
+  const [loadedItemId, setLoadedItemId] = useAtom(loadedMemoryItemIdAtom);
   const [hasExports, setHasExports] = useAtom(hasExportsAtom);
   const setHasUnseenExports = useSetAtom(hasUnseenExportsAtom);
   const setLastViewed = useSetAtom(lastViewedHistoryAtom);
@@ -52,6 +56,24 @@ export function useMemory() {
   const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const setOrientation = useSetAtom(orientationAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
+  const setStatusMessage = useSetAtom(statusMessageAtom);
+
+  const resetToEmptyCanvas = useCallback(() => {
+    setConfig(getEmptyCanvasConfig());
+    setAssets([]);
+    setScreenshotGradient(null);
+    setScreenshotZoom(1.0);
+    setHasCustomScreenshot(false);
+    setLoadedItemId(null);
+    clearMemoryUrl();
+  }, [
+    setAssets,
+    setConfig,
+    setHasCustomScreenshot,
+    setLoadedItemId,
+    setScreenshotGradient,
+    setScreenshotZoom,
+  ]);
 
   // Hydrate from localStorage when user is available
   useEffect(() => {
@@ -147,13 +169,7 @@ export function useMemory() {
           nextCursor: pagination.nextCursor,
         };
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to fetch saved designs";
         console.error("Failed to fetch memory items:", error);
-
-        toast.error("Failed to load saved designs", {
-          description: errorMessage,
-        });
-
         throw error;
       } finally {
         setIsLoading(false);
@@ -167,6 +183,22 @@ export function useMemory() {
    */
   const loadMemoryItem = useCallback(
     async (itemId: string): Promise<void> => {
+      // Check cache first
+      if (itemCache[itemId]) {
+        const { configuration } = itemCache[itemId];
+        const state = deserializeEditorState(configuration);
+
+        setConfig(state.config);
+        setAssets(state.assets ?? []);
+        setHasCustomScreenshot(Boolean(state.config.assets.screenshot));
+        setScreenshotGradient(state.screenshotGradient);
+        setOrientation(state.orientation);
+        setScreenshotZoom(state.screenshotZoom);
+        setLoadedItemId(itemId);
+        setMemoryUrl(itemId);
+        return;
+      }
+
       setIsLoading(true);
       try {
         // Fetch full memory item with configuration
@@ -177,6 +209,15 @@ export function useMemory() {
 
         const data = await response.json();
         const configuration: MemoryConfiguration = data.item.configuration;
+
+        // Update cache
+        setItemCache((prev) => ({
+          ...prev,
+          [itemId]: {
+            configuration,
+            timestamp: Date.now(),
+          },
+        }));
 
         // Deserialize and hydrate editor state
         const state = deserializeEditorState(configuration);
@@ -192,19 +233,15 @@ export function useMemory() {
         // Update URL with memory item ID
         setMemoryUrl(itemId);
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Failed to load saved design";
         console.error("Failed to load memory item:", error);
-
-        toast.error("Failed to load design", {
-          description: errorMessage,
-        });
-
         throw error;
       } finally {
         setIsLoading(false);
       }
     },
     [
+      itemCache,
+      setItemCache,
       setIsLoading,
       setConfig,
       setAssets,
@@ -216,10 +253,96 @@ export function useMemory() {
     ],
   );
 
+  /**
+   * Delete a memory item and select the next available one if it was loaded
+   */
+  const deleteDesign = useCallback(
+    async (itemId: string): Promise<boolean> => {
+      // Find the item to delete (for potential rollback and next selection)
+      const itemToDelete = items.find((item) => item.id === itemId);
+      if (!itemToDelete) {
+        return false;
+      }
+
+      const wasLoaded = loadedItemId === itemId;
+      const itemIndex = items.findIndex((item) => item.id === itemId);
+      const itemsBeforeDelete = [...items];
+
+      // Optimistic update - remove immediately
+      setItems((prev) => prev.filter((item) => item.id !== itemId));
+      setSaveCount((prev) => Math.max(0, prev - 1));
+
+      // If deleting currently loaded item, select next available one
+      if (wasLoaded) {
+        const remainingItems = itemsBeforeDelete.filter((item) => item.id !== itemId);
+        if (remainingItems.length > 0) {
+          // Select item at same index (which is now the next one) or the last one
+          const nextItem = remainingItems[itemIndex] || remainingItems[remainingItems.length - 1];
+          if (nextItem) {
+            loadMemoryItem(nextItem.id).catch(console.error);
+          }
+        } else {
+          resetToEmptyCanvas();
+        }
+      }
+
+      try {
+        setStatusMessage("Deleting design...");
+
+        const response = await fetch(`/api/memory/items/${itemId}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to delete design");
+        }
+
+        setStatusMessage("Design deleted successfully");
+
+        track("design_deleted", {
+          item_id: itemId,
+          remaining_count: itemsBeforeDelete.length - 1,
+        });
+
+        return true;
+      } catch (error) {
+        console.error("Failed to delete design:", error);
+        setStatusMessage("Failed to delete design. Restoring...");
+
+        // Rollback - restore the item at its original position
+        setItems((prev) => {
+          const newItems = [...prev];
+          newItems.splice(itemIndex, 0, itemToDelete);
+          return newItems;
+        });
+        setSaveCount((prev) => prev + 1);
+
+        // Restore loaded state if it was loaded
+        if (wasLoaded) {
+          loadMemoryItem(itemId).catch(console.error);
+        }
+
+        return false;
+      }
+    },
+    [
+      items,
+      loadedItemId,
+      setItems,
+      setSaveCount,
+      loadMemoryItem,
+      resetToEmptyCanvas,
+      setStatusMessage,
+    ],
+  );
+
   return {
     items,
     isLoading,
     fetchMemoryItems,
     loadMemoryItem,
+    deleteDesign,
+    resetToEmptyCanvas,
   };
 }
+
