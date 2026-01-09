@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth, signOutUser } from "@/lib/auth";
+import { clearMemoryItemsCache } from "@/lib/storage/memory-state";
 import { track } from "@/lib/analytics";
 import { useTheme } from "next-themes";
 import { LogOut, Monitor, Moon, Sun, LogIn, MessageSquare } from "lucide-react";
@@ -33,6 +34,10 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
   }, []);
 
   const handleLogout = async () => {
+    // Clear user-specific memory cache before logout to prevent stale data on next login
+    if (user?.id) {
+      clearMemoryItemsCache(user.id);
+    }
     const { error } = await signOutUser();
     if (error) {
       console.error("Logout failed:", error);

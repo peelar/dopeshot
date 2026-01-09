@@ -35,7 +35,6 @@ import { useMemory } from "@/hooks/use-memory";
 import { useSession } from "@/lib/auth/auth-client";
 import { useSaveDesign } from "@/hooks/use-save-design";
 import { useExportStateReset } from "@/hooks/use-export-state-reset";
-import { useDeleteDesign } from "@/hooks/use-delete-design";
 import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
@@ -143,7 +142,13 @@ function PlaygroundPageInner({
     setFeedbackModalOpen(true);
   };
   // Memory hook for loading items
-  const { loadMemoryItem, fetchMemoryItems, isLoading: isMemoryLoading } = useMemory();
+  const {
+    loadMemoryItem,
+    fetchMemoryItems,
+    deleteDesign,
+    resetToEmptyCanvas,
+    isLoading: isMemoryLoading,
+  } = useMemory();
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
@@ -155,15 +160,6 @@ function PlaygroundPageInner({
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
-
-  const resetToEmptyCanvas = useCallback(() => {
-    setConfig(getEmptyCanvasConfig());
-    setAssets([]);
-    setScreenshotGradient(null);
-    setScreenshotZoom(1.0);
-    setHasCustomScreenshot(false);
-    setLoadedItemId(null);
-  }, [setAssets, setConfig, setHasCustomScreenshot, setLoadedItemId, setScreenshotGradient, setScreenshotZoom]);
 
   const hasBootstrappedRef = useRef(false);
 
@@ -262,9 +258,6 @@ function PlaygroundPageInner({
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
   const hasExported = useAtomValue(hasExportedAtom);
   useExportStateReset(); // Auto-reset on design changes
-
-  // Delete design hook
-  const { deleteDesign } = useDeleteDesign();
 
   const {
     isDragging,

@@ -75,29 +75,13 @@ export function useMemory() {
     setScreenshotZoom,
   ]);
 
-  // Hydrate from localStorage when user is available
+  // Reset state when user changes (login/logout)
   useEffect(() => {
-    if (user?.id) {
-      const key = `dopeshot-memory-items-${user.id}`;
-      const cached = localStorage.getItem(key);
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setItems(parsed);
-            setSaveCount(parsed.length);
-            setHasExports(true);
-            setMemoryState({ hasExports: true });
-          }
-        } catch (e) {
-          console.error("Failed to parse cached memory items", e);
-        }
-      }
-    } else {
+    if (!user?.id) {
       setItems([]);
       setSaveCount(0);
     }
-  }, [user?.id, setItems, setSaveCount, setHasExports]);
+  }, [user?.id, setItems, setSaveCount]);
 
   /**
    * Fetch memory items with pagination support
@@ -114,7 +98,7 @@ export function useMemory() {
           url.searchParams.set("cursor", cursor);
         }
 
-        const response = await fetch(url.toString());
+        const response = await fetch(url.toString(), { cache: "no-store" });
         if (response.status === 401 || response.status === 404) {
           if (!cursor) {
             setItems([]);
@@ -138,23 +122,11 @@ export function useMemory() {
 
         // Append or replace items
         if (cursor) {
-          setItems((prev) => {
-            const updated = [...prev, ...newItems];
-            // Update cache with accumulated items
-            if (user?.id) {
-              localStorage.setItem(`dopeshot-memory-items-${user.id}`, JSON.stringify(updated));
-            }
-            return updated;
-          });
+          setItems((prev) => [...prev, ...newItems]);
         } else {
           setItems(newItems);
           // Update save count on initial fetch
           setSaveCount(newItems.length);
-          
-          // Update cache
-          if (user?.id) {
-            localStorage.setItem(`dopeshot-memory-items-${user.id}`, JSON.stringify(newItems));
-          }
         }
 
         // Update hasExports state based on whether items exist
@@ -271,6 +243,12 @@ export function useMemory() {
       // Optimistic update - remove immediately
       setItems((prev) => prev.filter((item) => item.id !== itemId));
       setSaveCount((prev) => Math.max(0, prev - 1));
+
+      // Evict from item cache to prevent stale data when navigating to deleted item URL
+      setItemCache((prev) => {
+        const { [itemId]: _, ...rest } = prev;
+        return rest;
+      });
 
       // If deleting currently loaded item, select next available one
       if (wasLoaded) {
