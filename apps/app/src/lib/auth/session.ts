@@ -6,16 +6,20 @@ import { auth } from "./auth-server";
 // Caching would share first user's session with all subsequent requests
 export async function verifySession() {
   const cookieStore = await cookies();
-  const sessionCookie = cookieStore.get("better-auth.session_token");
+  const sessionToken =
+    cookieStore.get("better-auth.session_token") || cookieStore.get("__Secure-better-auth.session_token");
 
-  if (!sessionCookie) {
+  if (!sessionToken) {
     return { isAuth: false, userId: null };
   }
 
   try {
     const session = await auth.api.getSession({
       headers: {
-        cookie: `better-auth.session_token=${sessionCookie.value}`,
+        cookie: cookieStore
+          .getAll()
+          .map((c) => `${c.name}=${c.value}`)
+          .join("; "),
       },
     });
 
