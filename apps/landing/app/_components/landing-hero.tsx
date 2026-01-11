@@ -1,12 +1,147 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Play } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 
-export function LandingHero() {
+const HERO_VIDEO_SRC = "/videos/hero-demo.mp4"; // Replace with your video
+
+function HeroVideoPlaceholder() {
   return (
-    <section className="relative overflow-hidden min-h-[80vh] flex items-center">
+    <div className="absolute inset-0 bg-neutral-900">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(249,115,22,0.18),transparent_45%),radial-gradient(circle_at_70%_70%,rgba(255,255,255,0.06),transparent_50%)]" />
+      <div className="relative h-full w-full bg-neutral-800/50 flex flex-col items-center justify-center gap-4">
+        <div className="grid place-items-center size-16 rounded-full bg-black/30 ring-1 ring-white/10 shadow-2xl shadow-black/60">
+          <Play className="size-7 text-white/85 translate-x-[1px]" />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-semibold text-white/85">Video coming soon</p>
+          <p className="text-xs text-white/55">Drop in your MP4 at {HERO_VIDEO_SRC}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function HeroVideoShowcase() {
+  const shouldReduceMotion = useReducedMotion();
+  const [shouldRenderVideo, setShouldRenderVideo] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    fetch(HERO_VIDEO_SRC, { method: "HEAD", cache: "no-store" })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res.ok || res.status === 405) setShouldRenderVideo(true);
+      })
+      .catch(() => {
+        // Keep placeholder
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  return (
+    <div className="relative group">
+      <div className="absolute -inset-10 -z-10 blur-3xl opacity-30 bg-[radial-gradient(circle_at_30%_20%,rgba(249,115,22,0.25),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(255,255,255,0.08),transparent_45%)]" />
+
+      <div
+        className={[
+          "relative transition-transform duration-700 ease-out",
+          "lg:group-hover:translate-y-[-2px]",
+          "lg:[transform:perspective(1200px)_rotateY(-10deg)_rotateX(3deg)]",
+          "lg:group-hover:[transform:perspective(1200px)_rotateY(-7deg)_rotateX(2deg)]",
+        ].join(" ")}
+      >
+        <div className="relative rounded-2xl p-[1px] bg-gradient-to-br from-[var(--accent-orange)]/35 via-neutral-800/40 to-transparent shadow-2xl shadow-black/50">
+          <div className="rounded-2xl border border-neutral-800 bg-neutral-950/50 overflow-hidden backdrop-blur-sm">
+            {/* Minimal browser chrome */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800/80 bg-neutral-950/60">
+              <div className="flex items-center gap-2">
+                <span className="size-2.5 rounded-full bg-red-500/80" />
+                <span className="size-2.5 rounded-full bg-amber-400/80" />
+                <span className="size-2.5 rounded-full bg-emerald-500/80" />
+              </div>
+              <div className="flex-1 flex justify-center">
+                <div className="max-w-[18rem] w-full h-7 rounded-full bg-neutral-900/70 border border-neutral-800/70 px-3 flex items-center justify-center">
+                  <span className="text-[11px] text-white/60 truncate">dopeshot.app</span>
+                </div>
+              </div>
+              <div className="w-10" />
+            </div>
+
+            <div className="relative aspect-video bg-neutral-900">
+              {shouldRenderVideo ? (
+                <video
+                  className="absolute inset-0 h-full w-full object-cover"
+                  src={HERO_VIDEO_SRC}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  preload="metadata"
+                  onError={() => setShouldRenderVideo(false)}
+                />
+              ) : (
+                <HeroVideoPlaceholder />
+              )}
+
+              {!shouldReduceMotion && (
+                <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.18),transparent_30%,transparent_70%,rgba(0,0,0,0.28))]" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function LandingHero() {
+  const shouldReduceMotion = useReducedMotion();
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        staggerChildren: shouldReduceMotion ? 0 : 0.09,
+        delayChildren: shouldReduceMotion ? 0 : 0.06,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 12 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: shouldReduceMotion ? 0 : 0.6, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+
+  const videoVariants = {
+    hidden: { opacity: 0, y: shouldReduceMotion ? 0 : 18, scale: shouldReduceMotion ? 1 : 0.98 },
+    show: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: { duration: shouldReduceMotion ? 0 : 0.75, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
+
+  return (
+    <motion.section
+      initial="hidden"
+      animate="show"
+      variants={containerVariants}
+      className="relative overflow-hidden min-h-[80vh] flex items-center"
+    >
       {/* Background with subtle orange gradient */}
       <div className="absolute inset-0 -z-10">
         <div
@@ -25,11 +160,12 @@ export function LandingHero() {
       </div>
 
       <div className="container mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+        <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-12 lg:gap-16 items-center">
           {/* Left side - Content */}
           <div className="space-y-8 lg:pr-8">
             {/* Badge */}
-            <div
+            <motion.div
+              variants={itemVariants}
               className="group relative inline-flex items-center gap-3 rounded-full border border-[var(--accent-orange)]/30 bg-[var(--accent-orange)]/5 backdrop-blur-sm px-4 py-2 text-sm"
             >
               <span className="relative flex h-2.5 w-2.5">
@@ -38,20 +174,23 @@ export function LandingHero() {
               </span>
               <span className="font-medium text-[var(--accent-orange)]">New in dopeshot:</span>
               <span className="text-foreground">Preset backgrounds</span>
-            </div>
+            </motion.div>
 
             {/* Headline */}
-            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]">
+            <motion.h1
+              variants={itemVariants}
+              className="text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.1]"
+            >
               Your product is <span className="text-[var(--accent-orange)]">dope</span>, your screenshots should be too
-            </h1>
+            </motion.h1>
 
             {/* Subheadline */}
-            <p className="text-xl text-foreground/80 sm:text-2xl max-w-xl leading-relaxed">
+            <motion.p variants={itemVariants} className="text-xl text-foreground/80 sm:text-2xl max-w-xl leading-relaxed">
               Not a design tool—a finishing tool. Drop a screenshot, pick a look, ship in seconds.
-            </p>
+            </motion.p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4">
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row gap-4">
               <Link
                 href="https://app.dopeshot.io"
                 onClick={() => track("landing_primary_cta_clicked", { location: "hero" })}
@@ -63,19 +202,15 @@ export function LandingHero() {
                 </span>
                 <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[var(--accent-orange)] to-[var(--accent-orange-light)] opacity-0 transition-opacity group-hover:opacity-100" />
               </Link>
-            </div>
+            </motion.div>
           </div>
 
-          {/* Right side - Screenshot placeholder */}
-          <div className="relative lg:pl-8 order-first lg:order-last">
-            <div className="relative aspect-video rounded-xl overflow-hidden border-2 border-border bg-muted/50">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="text-muted-foreground">Screenshot placeholder</p>
-              </div>
-            </div>
-          </div>
+          {/* Right side - Video showcase */}
+          <motion.div variants={videoVariants} className="relative lg:pl-8">
+            <HeroVideoShowcase />
+          </motion.div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

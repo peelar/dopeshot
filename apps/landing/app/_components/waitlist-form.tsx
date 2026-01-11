@@ -69,9 +69,9 @@ export function WaitlistForm() {
               <Check className="w-8 h-8 text-[var(--accent-orange)]" />
             </div>
             <div className="text-center">
-              <h3 className="text-xl font-semibold mb-2">You're in!</h3>
+              <h3 className="text-xl font-semibold mb-2">You&apos;re in!</h3>
               <p className="text-sm text-muted-foreground">
-                We'll ping you when brand kits drop.
+                We&apos;ll ping you when brand kits drop.
               </p>
             </div>
           </motion.div>
