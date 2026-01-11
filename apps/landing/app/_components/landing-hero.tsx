@@ -53,7 +53,7 @@ export function LandingHero() {
             {/* CTAs */}
             <div className="flex flex-col sm:flex-row gap-4">
               <Link
-                href="https://dopeshot.io"
+                href="https://app.dopeshot.io"
                 onClick={() => track("landing_primary_cta_clicked", { location: "hero" })}
                 className="group relative inline-flex h-16 items-center justify-center gap-2 rounded-xl bg-[var(--accent-orange)] px-10 text-lg font-bold text-white transition-all hover:scale-105 active:scale-95 shadow-[0_0_30px_rgba(249,115,22,0.3)] hover:shadow-[0_0_50px_rgba(249,115,22,0.5)]"
               >
