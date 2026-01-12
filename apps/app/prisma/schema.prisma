@@ -117,6 +117,13 @@ model UserMetadata {
   subscriptionTier   String @default("free") @map("subscription_tier")
   subscriptionStatus String @default("active") @map("subscription_status")
 
+  // Billing (Polar)
+  subscriptionCancelAtPeriodEnd Boolean? @map("subscription_cancel_at_period_end")
+  subscriptionCurrentPeriodEnd DateTime? @map("subscription_current_period_end")
+  subscriptionEndsAt DateTime? @map("subscription_ends_at")
+  polarCustomerId String? @map("polar_customer_id")
+  polarSubscriptionId String? @map("polar_subscription_id")
+
   /// [FeatureFlags]
   featureFlags Json? @map("feature_flags")
 

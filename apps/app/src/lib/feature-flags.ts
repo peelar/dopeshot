@@ -23,3 +23,20 @@ export const showBrandExperienceFlag = flag({
  * Set to false to completely hide the Brand tab from the UI.
  */
 export const SHOW_BRAND_TAB = isDevelopment;
+
+/**
+ * Feature flag that gates all Polar billing codepaths.
+ *
+ * Intentionally static + disabled by default (deferred task).
+ * Flip `decide` to `true` when you are ready to launch payments.
+ */
+export const enablePolarBillingFlag = flag({
+  key: "billing.enable-polar",
+  description: "Enable Polar checkout + webhooks (deferred; keep off until ready).",
+  defaultValue: false,
+  options: [
+    { value: true, label: "Enabled" },
+    { value: false, label: "Disabled (default)" },
+  ],
+  decide: () => false,
+});
