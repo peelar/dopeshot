@@ -113,6 +113,9 @@ model UserMetadata {
   userId           String @unique @map("user_id")
   exportsThisMonth Int    @default(0) @map("exports_this_month")
 
+  subscriptionTier   String @default("free") @map("subscription_tier")
+  subscriptionStatus String @default("active") @map("subscription_status")
+
   /// [FeatureFlags]
   featureFlags Json? @map("feature_flags")
 
