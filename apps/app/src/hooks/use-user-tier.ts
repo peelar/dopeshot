@@ -21,7 +21,7 @@ async function fetchUserTier(): Promise<UserTier> {
 
 export function useUserTier() {
   const { data: session, isPending } = useSession();
-  const userId = session?.user?.id ?? null;
+  const userId = session?.session?.userId ?? null;
 
   const [tier, setTier] = useState<UserTier>("free");
   const [isLoading, setIsLoading] = useState<boolean>(true);

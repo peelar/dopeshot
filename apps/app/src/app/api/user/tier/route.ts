@@ -31,10 +31,8 @@ export async function GET() {
   }
 
   const db = await getUserDb(session.userId);
-  const metadata = await db.userMetadata.upsert({
+  const metadata = await db.userMetadata.findUnique({
     where: { userId: session.userId },
-    create: { userId: session.userId },
-    update: {},
     select: { featureFlags: true },
   });
 
