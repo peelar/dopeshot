@@ -6,12 +6,42 @@ import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
 
+function isTruthyObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function resolveIsBrandUser(featureFlags: unknown): boolean {
+  if (!isTruthyObject(featureFlags)) return false;
+
+  const flagValue = (key: string) => featureFlags[key];
+
+  return (
+    flagValue("tier.brand") === true ||
+    flagValue("tier.brand_user") === true ||
+    flagValue("brand") === true ||
+    flagValue("isBrandUser") === true
+  );
+}
+
 export async function POST(request: Request) {
   try {
     // Verify session
     const session = await verifySession();
     if (!session.isAuth || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const db = await getUserDb(session.userId);
+    const metadata = await db.userMetadata.findUnique({
+      where: { userId: session.userId },
+      select: { featureFlags: true },
+    });
+
+    if (!resolveIsBrandUser(metadata?.featureFlags)) {
+      return NextResponse.json(
+        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+        { status: 403 },
+      );
     }
 
     const formData = await request.formData().catch(() => null);
@@ -47,9 +77,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    // Get user-scoped database
-    const db = await getUserDb(session.userId);
 
     // Update brand profile with logo path via Prisma
     await db.brandProfile.upsert({

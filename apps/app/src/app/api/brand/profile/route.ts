@@ -5,6 +5,23 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 
+function isTruthyObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function resolveIsBrandUser(featureFlags: unknown): boolean {
+  if (!isTruthyObject(featureFlags)) return false;
+
+  const flagValue = (key: string) => featureFlags[key];
+
+  return (
+    flagValue("tier.brand") === true ||
+    flagValue("tier.brand_user") === true ||
+    flagValue("brand") === true ||
+    flagValue("isBrandUser") === true
+  );
+}
+
 export async function GET() {
   try {
     // Verify session
@@ -18,6 +35,17 @@ export async function GET() {
 
     // Get user-scoped database
     const db = await getUserDb(userId);
+    const metadata = await db.userMetadata.findUnique({
+      where: { userId },
+      select: { featureFlags: true },
+    });
+
+    if (!resolveIsBrandUser(metadata?.featureFlags)) {
+      return NextResponse.json(
+        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+        { status: 403 },
+      );
+    }
 
     // Fetch brand profile via Prisma
     const profile = await db.brandProfile.findUnique({

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { UpgradePrompt } from "@/components/auth/upgrade-prompt";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { useSession } from "@/lib/auth/auth-client";
@@ -11,9 +12,11 @@ import { track } from "@/lib/analytics";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import type { Asset } from "@/domain/asset/types";
+import { useUserTier } from "@/hooks/use-user-tier";
 
 export function BrandPanel() {
   const { data: session } = useSession();
+  const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({});
   const { error: autoApplyError } = useBrandLogoAutoApply();
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
@@ -22,6 +25,18 @@ export function BrandPanel() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
+
+  if (isTierLoading) {
+    return <div className="h-full w-full p-4 text-sm text-muted-foreground">Loading brand tools…</div>;
+  }
+
+  if (!isBrandUser) {
+    return (
+      <div className="h-full w-full p-4">
+        <UpgradePrompt title="Brand tools" description="Upgrade to Brand to upload a logo and apply it to screenshots." />
+      </div>
+    );
+  }
 
   // Fetch brand profile in background on mount
   useEffect(() => {

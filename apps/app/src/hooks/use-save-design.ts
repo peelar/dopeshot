@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   isSavingAtom,
@@ -30,17 +30,26 @@ import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import { setMemoryState } from "@/lib/storage/memory-state";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
+import { SAVE_LIMIT } from "@/domain/memory/constants";
+import { useUserTier } from "@/hooks/use-user-tier";
 
 export function useSaveDesign() {
   const { data: session } = useSession();
+  const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const [isSaving, setIsSaving] = useAtom(isSavingAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const [items, setItems] = useAtom(memoryItemsAtom);
   const [saveCount, setSaveCount] = useAtom(saveCountAtom);
+  const setSaveLimit = useSetAtom(saveLimitAtom);
   const saveLimit = useAtomValue(saveLimitAtom);
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
   const setJustSaved = useSetAtom(justSavedAtom);
   const setHasExports = useSetAtom(hasExportsAtom);
+
+  useEffect(() => {
+    if (isTierLoading) return;
+    setSaveLimit(isBrandUser ? Number.POSITIVE_INFINITY : SAVE_LIMIT);
+  }, [isBrandUser, isTierLoading, setSaveLimit]);
 
   // Current editor state
   const config = useAtomValue(configAtom);

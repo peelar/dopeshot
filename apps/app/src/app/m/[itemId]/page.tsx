@@ -1,5 +1,4 @@
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
-import { showBrandExperienceFlag } from "@/lib/feature-flags";
 import { verifySession } from "@/lib/auth/session";
 
 type PageProps = {
@@ -9,12 +8,10 @@ type PageProps = {
 };
 
 export default async function Page({ params }: PageProps) {
-  const [showBrandFlag, session] = await Promise.all([showBrandExperienceFlag(), verifySession()]);
-  const showBrandExperience = showBrandFlag && session.isAuth;
+  const session = await verifySession();
 
   return (
     <PlaygroundPage
-      showBrandExperience={showBrandExperience}
       initialIsAuthenticated={session.isAuth}
       initialMemoryItemId={params.itemId}
     />

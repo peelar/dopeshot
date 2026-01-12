@@ -11,6 +11,7 @@ import { LayoutSelector } from "@/components/selectors/layout-selector";
 import { SidebarTabs } from "@/components/layout/sidebar-tabs";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
+import { useUserTier } from "@/hooks/use-user-tier";
 import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
 import {
   assetsAtom,
@@ -94,7 +95,6 @@ function ExportContainer({
 }
 
 type PlaygroundPageProps = {
-  showBrandExperience: boolean;
   initialMemoryItemId?: string;
   initialIsAuthenticated?: boolean;
 };
@@ -123,7 +123,6 @@ export function PlaygroundPage(props: PlaygroundPageProps) {
 }
 
 function PlaygroundPageInner({
-  showBrandExperience,
   initialMemoryItemId,
   initialIsAuthenticated,
 }: PlaygroundPageProps) {
@@ -132,8 +131,10 @@ function PlaygroundPageInner({
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
 
+  const { isBrandUser } = useUserTier();
+
   // Auto-apply brand logo on mount if toggle is enabled
-  useBrandLogoAutoApply({ enabled: showBrandExperience });
+  useBrandLogoAutoApply({ enabled: isBrandUser });
 
   // Handle feedback button click - capture screenshot and open modal
   const handleFeedbackClick = async () => {
@@ -340,7 +341,6 @@ function PlaygroundPageInner({
         <SidebarErrorBoundary>
           <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
             <SidebarTabs
-              showBrandExperience={showBrandExperience}
               onUploadAsset={handleFileProcess}
               onFeedbackClick={handleFeedbackClick}
             />

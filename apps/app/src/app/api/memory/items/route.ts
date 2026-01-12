@@ -9,6 +9,23 @@ import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { getCachedMemoryItems } from "@/lib/data/cached-memory";
 
+function isTruthyObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function resolveIsBrandUser(featureFlags: unknown): boolean {
+  if (!isTruthyObject(featureFlags)) return false;
+
+  const flagValue = (key: string) => featureFlags[key];
+
+  return (
+    flagValue("tier.brand") === true ||
+    flagValue("tier.brand_user") === true ||
+    flagValue("brand") === true ||
+    flagValue("isBrandUser") === true
+  );
+}
+
 /**
  * GET /api/memory/items
  * List user's memory items with pagination
@@ -109,7 +126,7 @@ export async function POST(request: NextRequest) {
     // #endregion
 
     // Parallel: Check save limit AND check for duplicate
-    const [currentSaveCount, existing] = await Promise.all([
+    const [currentSaveCount, existing, metadata] = await Promise.all([
       db.memoryItem.count({
         where: { userId: session.userId },
       }),
@@ -125,9 +142,15 @@ export async function POST(request: NextRequest) {
           createdAt: true,
         },
       }),
+      db.userMetadata.findUnique({
+        where: { userId: session.userId },
+        select: { featureFlags: true },
+      }),
     ]);
 
-    if (currentSaveCount >= SAVE_LIMIT) {
+    const isBrandUser = resolveIsBrandUser(metadata?.featureFlags);
+
+    if (!isBrandUser && currentSaveCount >= SAVE_LIMIT) {
       return NextResponse.json(
         {
           error: "Save limit reached",

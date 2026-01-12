@@ -9,6 +9,23 @@ import {
   brandTypographySchema,
 } from "@/lib/types/brand";
 
+function isTruthyObject(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function resolveIsBrandUser(featureFlags: unknown): boolean {
+  if (!isTruthyObject(featureFlags)) return false;
+
+  const flagValue = (key: string) => featureFlags[key];
+
+  return (
+    flagValue("tier.brand") === true ||
+    flagValue("tier.brand_user") === true ||
+    flagValue("brand") === true ||
+    flagValue("isBrandUser") === true
+  );
+}
+
 type UpdateProfileBody = {
   name?: string | null;
   personality?: string | null;
@@ -32,6 +49,17 @@ export async function PATCH(request: Request) {
 
     // Get user-scoped database
     const db = await getUserDb(userId);
+    const metadata = await db.userMetadata.findUnique({
+      where: { userId },
+      select: { featureFlags: true },
+    });
+
+    if (!resolveIsBrandUser(metadata?.featureFlags)) {
+      return NextResponse.json(
+        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+        { status: 403 },
+      );
+    }
 
     // Build brand profile updates with validation
     const brandUpdates: Partial<{

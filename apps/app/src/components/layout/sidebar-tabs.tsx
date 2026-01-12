@@ -1,24 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
 import { BrandPanel } from "@/components/brand/brand-panel";
 import { SidebarFooter } from "@/components/layout/sidebar-footer";
+import { useUserTier } from "@/hooks/use-user-tier";
 
 type SidebarTab = "design" | "brand";
 
 interface SidebarTabsProps {
-  showBrandExperience: boolean;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   onFeedbackClick?: () => void;
 }
 
-export function SidebarTabs({ showBrandExperience, onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
+export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
+  const { isBrandUser } = useUserTier();
+
+  useEffect(() => {
+    if (!isBrandUser && activeTab === "brand") {
+      setActiveTab("design");
+    }
+  }, [activeTab, isBrandUser]);
 
   // When brand experience is off, render design sidebar directly (no tabs)
-  if (!showBrandExperience) {
+  if (!isBrandUser) {
     return (
       <div className="flex h-full min-h-0 flex-col">
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -58,4 +65,3 @@ export function SidebarTabs({ showBrandExperience, onUploadAsset, onFeedbackClic
     </div>
   );
 }
-
