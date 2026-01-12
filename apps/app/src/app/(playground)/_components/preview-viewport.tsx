@@ -2,7 +2,7 @@
 
 import { ReactNode, useLayoutEffect, useRef, useState, useCallback } from "react";
 import { cn } from "@/lib/utils/cn";
-import { Loader2 } from "lucide-react";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 interface PreviewViewportProps {
   children: ReactNode;
@@ -122,14 +122,7 @@ export function PreviewViewport({
       >
         <div className="relative overflow-hidden rounded-lg">
           {children}
-          {isLoading && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-2xl">
-              <div className="flex flex-col items-center gap-3 text-center">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-                <p className="text-sm text-muted-foreground">{loadingText}</p>
-              </div>
-            </div>
-          )}
+          {isLoading && <LoadingOverlay text={loadingText} />}
         </div>
       </div>
     );
@@ -164,14 +157,7 @@ export function PreviewViewport({
         >
           {children}
         </div>
-        {isLoading && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-2xl">
-            <div className="flex flex-col items-center gap-3 text-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" aria-hidden="true" />
-              <p className="text-sm text-muted-foreground">{loadingText}</p>
-            </div>
-          </div>
-        )}
+        {isLoading && <LoadingOverlay text={loadingText} />}
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Upload } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
 import { getLayoutComponent } from "@/components/layouts/registry";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 interface CoverPreviewProps {
   className?: string;
@@ -53,19 +54,7 @@ export function CoverPreview({
       }}
     >
       <LayoutComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
-      {showLoadingState && !isStatic ? (
-        <div className="absolute inset-0 z-30 flex items-center justify-center rounded-lg bg-muted">
-          {/* Breathing glow orb */}
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute h-72 w-72 animate-breath-glow rounded-full bg-foreground/15"
-          />
-          {/* Loading text */}
-          <p className="relative z-10 animate-breath-text text-[10px] font-semibold uppercase tracking-[0.3em] text-foreground/50">
-            Loading
-          </p>
-        </div>
-      ) : null}
+      {showLoadingState && !isStatic ? <LoadingOverlay className="z-30 rounded-lg" /> : null}
       {showEmptyState && !showLoadingState && !isStatic ? (
         <button
           type="button"

@@ -11,10 +11,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      nanoid:
-        specifier: ^5.1.6
-        version: 5.1.6
     devDependencies:
       '@changesets/cli':
         specifier: ^2.29.8
