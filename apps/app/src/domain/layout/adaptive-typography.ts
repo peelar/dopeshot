@@ -10,7 +10,8 @@ import type { FontStyle } from "./types";
  * - Founder: Balanced, neutral, max 3 lines
  * - Billboard: Bold, expressive, max 2 lines
  * - Terminal: Compact, technical, max 4 lines
- * - Editorial: Elegant, serif, max 2 lines
+ * - Friendly: Warm, rounded, max 3 lines
+ * - Premium: Display serif, max 2 lines
  */
 
 export interface TypographyScalingRules {
@@ -70,6 +71,28 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     titleLetterSpacing: -0.01,
     subtitleLetterSpacing: -0.01,
   },
+  friendly: {
+    titleMinSize: 2.25,
+    titleMaxSize: 4.25,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.4,
+    titleLineHeight: 1.12,
+    subtitleLineHeight: 1.45,
+    titleMaxLines: 3,
+    subtitleMaxLines: 3,
+    titleLetterSpacing: -0.01,
+  },
+  premium: {
+    titleMinSize: 2.5,
+    titleMaxSize: 4.75,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.35,
+    titleLineHeight: 1.02,
+    subtitleLineHeight: 1.4,
+    titleMaxLines: 2,
+    subtitleMaxLines: 2,
+    titleLetterSpacing: -0.01,
+  },
 
 };
 
@@ -92,7 +115,6 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
   const rules = FONT_STYLE_SCALING_RULES[fontStyle];
 
   const baseClasses = [
-    "font-bold",
     "text-balance",
     "overflow-wrap-anywhere",
   ];
@@ -104,9 +126,11 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
 
   // Add style-specific classes
   const styleClasses: Record<FontStyle, string[]> = {
-    founder: ["tracking-tight"],
+    founder: ["tracking-tight", "font-bold"],
     billboard: ["tracking-tighter", "font-extrabold"],
-    terminal: ["tracking-tight", "font-mono"],
+    terminal: ["tracking-tight", "font-bold", "font-mono"],
+    friendly: ["tracking-tight", "font-semibold"],
+    premium: ["tracking-tighter", "font-normal"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
@@ -136,6 +160,8 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
     founder: ["tracking-normal"],
     billboard: ["tracking-tight", "font-medium"],
     terminal: ["tracking-tight", "font-mono"],
+    friendly: ["tracking-normal", "font-normal"],
+    premium: ["tracking-tight", "font-normal"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);

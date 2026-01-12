@@ -26,6 +26,7 @@ interface MobileActionsProps {
   onUploadClick: () => void;
   isProcessingUpload: boolean;
   showUploadButton: boolean;
+  isBrandUser?: boolean;
   onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background") => void;
 }
 
@@ -38,6 +39,7 @@ export function MobileActions({
   onUploadClick,
   isProcessingUpload,
   showUploadButton,
+  isBrandUser = false,
   onUploadAsset,
 }: MobileActionsProps) {
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -200,7 +202,11 @@ export function MobileActions({
               />
             </div>
             <div className="mt-4 h-[calc(100%-48px)] overflow-y-auto">
-              <LayoutConfigPanel onUploadAsset={onUploadAsset} isMobile={true} />
+              <LayoutConfigPanel
+                onUploadAsset={onUploadAsset}
+                isMobile={true}
+                isBrandUser={isBrandUser}
+              />
             </div>
           </SheetContent>
         </Sheet>

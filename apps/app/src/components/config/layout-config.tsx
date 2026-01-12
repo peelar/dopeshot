@@ -25,9 +25,14 @@ import { track } from "@/lib/analytics";
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
   isMobile?: boolean;
+  isBrandUser?: boolean;
 }
 
-export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutConfigProps) => {
+export const LayoutConfigPanel = ({
+  onUploadAsset,
+  isMobile = false,
+  isBrandUser = false,
+}: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const assets = useAtomValue(assetsAtom);
@@ -187,7 +192,7 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Text</span>
             </div>
-            <LayoutSection />
+            <LayoutSection isBrandUser={isBrandUser} />
           </section>
         )}
 

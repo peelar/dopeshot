@@ -70,7 +70,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
       {/* Tab content - scrollable */}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
         {activeTab === "design" ? (
-          <LayoutConfigPanel onUploadAsset={onUploadAsset} />
+          <LayoutConfigPanel onUploadAsset={onUploadAsset} isBrandUser={isBrandUser} />
         ) : (
           <BrandPanel />
         )}

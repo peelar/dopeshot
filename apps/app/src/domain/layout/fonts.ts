@@ -16,7 +16,9 @@ export interface FontStyleDefinition {
 
 /**
  * Font Styles for Free Users
- * Four opinionated typographic systems that adapt automatically
+ * Opinionated typographic systems that adapt automatically.
+ *
+ * Free users can select a subset (see `FREE_FONTS`).
  */
 export const FONT_STYLES: FontStyleDefinition[] = [
   {
@@ -43,9 +45,31 @@ export const FONT_STYLES: FontStyleDefinition[] = [
     cssVariable: "--font-developer",
     description: "Monospace, technical, tool-like",
   },
+  {
+    id: "friendly",
+    name: "Friendly",
+    fontName: "Nunito",
+    foundry: "Google Fonts",
+    cssVariable: "--font-friendly",
+    description: "Rounded, upbeat, approachable",
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    fontName: "DM Serif Display",
+    foundry: "Colophon Foundry",
+    cssVariable: "--font-premium",
+    description: "High-contrast, editorial, luxury",
+  },
 ];
 
 export const DEFAULT_FONT_STYLE: FontStyle = "founder";
+
+export const FREE_FONTS: FontStyleDefinition[] = FONT_STYLES.filter(
+  (style) => style.id === "founder" || style.id === "billboard" || style.id === "terminal",
+);
+
+export const BRAND_FONTS: FontStyleDefinition[] = FONT_STYLES;
 
 /**
  * Get font style definition by ID
@@ -178,8 +202,8 @@ export const FONTS: FontDefinition[] = [
   {
     id: "friendly",
     alias: "Buddy",
-    fontName: "Rubik",
-    foundry: "Hubert & Fischer",
+    fontName: "Nunito",
+    foundry: "Google Fonts",
     cssVariable: "--font-friendly",
   },
   {
@@ -199,8 +223,8 @@ export const FONTS: FontDefinition[] = [
   {
     id: "premium",
     alias: "BlackTie",
-    fontName: "Playfair Display",
-    foundry: "Claus Eggers Sorensen",
+    fontName: "DM Serif Display",
+    foundry: "Colophon Foundry",
     cssVariable: "--font-premium",
   },
 ];
