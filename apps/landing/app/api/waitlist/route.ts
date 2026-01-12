@@ -1,8 +1,6 @@
 import { Resend } from "resend";
 import { NextResponse } from "next/server";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export async function POST(request: Request) {
   try {
     const { email } = await request.json();
@@ -23,6 +21,8 @@ export async function POST(request: Request) {
         { status: 200 }
       );
     }
+
+    const resend = new Resend(process.env.RESEND_API_KEY);
 
     // Add to Resend audience (if configured)
     if (process.env.RESEND_AUDIENCE_ID) {
