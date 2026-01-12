@@ -5,11 +5,13 @@ import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import {
   brandColorPaletteSchema,
+  brandPersonalitySchema,
   brandTypographySchema,
 } from "@/lib/types/brand";
 
 type UpdateProfileBody = {
   name?: string | null;
+  personality?: string | null;
   color_palette?: string[];
   typography?: Record<string, string>;
   logo_path?: string | null;
@@ -34,6 +36,7 @@ export async function PATCH(request: Request) {
     // Build brand profile updates with validation
     const brandUpdates: Partial<{
       name: string | null;
+      personality: string | null;
       colorPalette: unknown;
       typography: unknown;
       logoPath: string | null;
@@ -41,6 +44,16 @@ export async function PATCH(request: Request) {
 
     if ("name" in body) {
       brandUpdates.name = body.name;
+    }
+
+    if ("personality" in body) {
+      if (body.personality === null) {
+        brandUpdates.personality = null;
+      } else if (typeof body.personality === "string") {
+        brandUpdates.personality = brandPersonalitySchema.parse(
+          body.personality,
+        );
+      }
     }
 
     if ("color_palette" in body && Array.isArray(body.color_palette)) {

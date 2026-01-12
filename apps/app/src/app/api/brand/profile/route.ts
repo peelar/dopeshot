@@ -24,6 +24,7 @@ export async function GET() {
       where: { userId },
       select: {
         name: true,
+        personality: true,
         colorPalette: true,
         typography: true,
         logoPath: true,

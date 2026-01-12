@@ -1,5 +1,25 @@
 import { z } from "zod";
 
+export const brandPersonalityValues = [
+  "technical",
+  "business",
+  "creative",
+  "friendly",
+  "premium",
+] as const;
+
+export type BrandPersonality = (typeof brandPersonalityValues)[number];
+
+export const brandPersonalitySchema = z.enum(brandPersonalityValues);
+
+export const brandPersonalityLabels: Record<BrandPersonality, string> = {
+  technical: "Technical",
+  business: "Business",
+  creative: "Creative",
+  friendly: "Friendly",
+  premium: "Premium",
+};
+
 // Brand Color Palette Schema
 export const brandColorPaletteSchema = z.object({
   primary: z.string(),
