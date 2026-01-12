@@ -91,6 +91,7 @@ model BrandProfile {
   id     String  @id @default(cuid())
   userId String  @unique @map("user_id")
   name   String?
+  personality String?
 
   /// [BrandColorPalette]
   colorPalette Json? @map("color_palette")
