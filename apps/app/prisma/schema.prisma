@@ -120,6 +120,9 @@ model UserMetadata {
   /// [FeatureFlags]
   featureFlags Json? @map("feature_flags")
 
+  /// [OnboardingProgress]
+  onboardingProgress Json? @map("onboarding_progress")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

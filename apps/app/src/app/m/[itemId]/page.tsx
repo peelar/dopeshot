@@ -2,6 +2,33 @@ import { redirect } from "next/navigation";
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
+import { showBrandExperienceFlag } from "@/lib/feature-flags";
+import { getUserTier } from "@/lib/tier";
+
+const BRAND_ONBOARDING_STEP = "brand_profile";
+
+function looksCompleteFromProfile(profile: {
+  logoPath: string | null;
+  personality: string | null;
+  colorPalette: unknown;
+} | null) {
+  if (!profile?.logoPath) return false;
+  if (
+    profile.personality !== "technical" &&
+    profile.personality !== "business" &&
+    profile.personality !== "creative" &&
+    profile.personality !== "friendly" &&
+    profile.personality !== "premium"
+  ) {
+    return false;
+  }
+
+  const palette = profile.colorPalette as { accent?: unknown; mode?: unknown } | null | undefined;
+  if (typeof palette?.accent !== "string") return false;
+  if (!/^#[0-9a-fA-F]{6}$/.test(palette.accent)) return false;
+  if (palette.mode !== "light" && palette.mode !== "dark") return false;
+  return true;
+}
 
 type PageProps = {
   params: Promise<{
@@ -10,7 +37,10 @@ type PageProps = {
 };
 
 export default async function Page({ params }: PageProps) {
-  const session = await verifySession();
+  const [showBrandFlag, session] = await Promise.all([
+    showBrandExperienceFlag(),
+    verifySession(),
+  ]);
   const { itemId } = await params;
 
   if (!session.isAuth || !session.userId) {
@@ -18,20 +48,54 @@ export default async function Page({ params }: PageProps) {
   }
 
   const db = await getUserDb(session.userId);
-  const item = await db.memoryItem.findFirst({
-    where: {
-      id: itemId,
-      userId: session.userId,
-    },
-    select: { id: true },
-  });
+  const [item, tier] = await Promise.all([
+    db.memoryItem.findFirst({
+      where: {
+        id: itemId,
+        userId: session.userId,
+      },
+      select: { id: true },
+    }),
+    getUserTier(session.userId),
+  ]);
 
   if (!item) {
     redirect("/");
   }
 
+  let showBrandExperience = false;
+
+  if (tier === "brand") {
+    const [metadata, profile] = await Promise.all([
+      db.userMetadata.findUnique({
+        where: { userId: session.userId },
+        select: { onboardingProgress: true },
+      }),
+      db.brandProfile.findUnique({
+        where: { userId: session.userId },
+        select: { logoPath: true, personality: true, colorPalette: true },
+      }),
+    ]);
+
+    const progress = metadata?.onboardingProgress as
+      | { completedSteps?: unknown }
+      | null
+      | undefined;
+
+    const completedSteps = Array.isArray(progress?.completedSteps)
+      ? (progress.completedSteps as unknown[])
+      : [];
+
+    const onboardingComplete =
+      completedSteps.includes(BRAND_ONBOARDING_STEP) ||
+      looksCompleteFromProfile(profile);
+
+    showBrandExperience = showBrandFlag && onboardingComplete;
+  }
+
   return (
     <PlaygroundPage
+      showBrandExperience={showBrandExperience}
       initialIsAuthenticated={session.isAuth}
       initialMemoryItemId={itemId}
     />

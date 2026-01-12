@@ -20,8 +20,15 @@ export const brandPersonalityLabels: Record<BrandPersonality, string> = {
   premium: "Premium",
 };
 
+export const brandModeValues = ["light", "dark"] as const;
+
+export type BrandMode = (typeof brandModeValues)[number];
+
+export const brandModeSchema = z.enum(brandModeValues);
+
 // Brand Color Palette Schema
 export const brandColorPaletteSchema = z.object({
+  mode: brandModeSchema.optional(),
   primary: z.string(),
   secondary: z.string(),
   accent: z.string(),
