@@ -11,7 +11,6 @@ import {
   brandTypographySchema,
   onboardingProgressSchema,
 } from "@/lib/types/brand";
-import { isBrandUser } from "@/lib/tier";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
 

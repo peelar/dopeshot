@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Moon, Sun, Upload } from "lucide-react";
+import { Moon, Sun } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ type OnboardingFormProps = {
   initialPersonality?: BrandPersonality | null;
   embedded?: boolean;
   onCompleted?: () => void;
+  onDismiss?: () => void;
 };
 
 function normalizeHex(input: string): string {
@@ -48,6 +49,7 @@ export function OnboardingForm({
   initialPersonality,
   embedded = false,
   onCompleted,
+  onDismiss,
 }: OnboardingFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -123,20 +125,20 @@ export function OnboardingForm({
     } catch (error) {
       const message = error instanceof Error ? error.message : "Logo upload failed";
       toast.error(message);
+      onDismiss?.();
     } finally {
       setIsUploadingLogo(false);
     }
   };
 
   const canSubmit =
-    Boolean(logoPath) &&
     /^#[0-9a-fA-F]{6}$/.test(accent) &&
     brandModeValues.includes(mode) &&
     brandPersonalityValues.includes(personality);
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      toast.error("Please complete all fields to continue.");
+      toast.error("Please check your selections and try again.");
       return;
     }
 
@@ -173,6 +175,7 @@ export function OnboardingForm({
       const message =
         error instanceof Error ? error.message : "Failed to save onboarding";
       toast.error(message);
+      onDismiss?.();
     } finally {
       setIsSubmitting(false);
     }
@@ -197,32 +200,39 @@ export function OnboardingForm({
                       Upload a transparent PNG or SVG.
                     </p>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploadingLogo || isSubmitting}
-                  >
-                    <Upload className="mr-2 size-4" />
-                    {logoPath ? "Replace" : "Upload"}
-                  </Button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const next = e.target.files?.[0];
-                      if (next) void handleLogoUpload(next);
-                      e.currentTarget.value = "";
-                    }}
-                  />
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const next = e.target.files?.[0];
+                    if (next) void handleLogoUpload(next);
+                    e.currentTarget.value = "";
+                  }}
+                />
 
                 <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                  <div
-                    className="relative grid aspect-[16/9] place-items-center bg-[length:22px_22px] p-4"
+                  <button
+                    type="button"
+                    aria-label="Upload logo"
+                    onClick={() => fileInputRef.current?.click()}
+                    onDragOver={(event) => event.preventDefault()}
+                    onDrop={(event) => {
+                      event.preventDefault();
+                      if (isUploadingLogo || isSubmitting) return;
+                      const next = event.dataTransfer.files?.[0];
+                      if (next) void handleLogoUpload(next);
+                    }}
+                    disabled={isUploadingLogo || isSubmitting}
+                    className={cn(
+                      "relative grid aspect-[16/9] w-full place-items-center bg-[length:22px_22px] p-4 transition",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+                      isUploadingLogo || isSubmitting
+                        ? "cursor-not-allowed opacity-70"
+                        : "cursor-pointer hover:bg-white/5",
+                    )}
                     style={{
                       backgroundImage: `
                         linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
@@ -252,7 +262,7 @@ export function OnboardingForm({
                         </p>
                       </div>
                     )}
-                  </div>
+                  </button>
                 </div>
               </div>
             </section>
@@ -331,6 +341,7 @@ export function OnboardingForm({
                         Dark
                       </button>
                     </div>
+                    <p className="text-[11px] text-white/45">Used for composing color palettes.</p>
                   </div>
                 </div>
               </div>

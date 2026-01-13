@@ -41,7 +41,7 @@ import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
-import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
+import { OnboardingModal, type BrandProfilePayload } from "@/components/onboarding/onboarding-modal";
 
 const FeedbackModal = dynamic(
   () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
@@ -169,13 +169,48 @@ function PlaygroundPageInner({
     refresh: refreshOnboardingStatus,
   } = useOnboardingStatus({ enabled: Boolean(session?.user) });
 
-  const [onboardingOpen, setOnboardingOpen] = useState(() => Boolean(initialOnboardingOpen));
+  const [onboardingProfile, setOnboardingProfile] = useState<BrandProfilePayload | null>(null);
+  const [hasLoadedOnboardingProfile, setHasLoadedOnboardingProfile] = useState(false);
+  const [isOnboardingProfileLoading, setIsOnboardingProfileLoading] = useState(false);
+  const [hasOpenedInitialOnboarding, setHasOpenedInitialOnboarding] = useState(false);
+
+  const loadOnboardingProfile = useCallback(async () => {
+    if (!session?.user || isOnboardingProfileLoading) return;
+    setIsOnboardingProfileLoading(true);
+
+    try {
+      const response = await fetch("/api/brand/profile", { credentials: "include" });
+      const payload = (await response.json()) as BrandProfilePayload & { error?: string };
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to load brand profile");
+      }
+      setOnboardingProfile(payload);
+    } catch {
+      setOnboardingProfile(null);
+    } finally {
+      setHasLoadedOnboardingProfile(true);
+      setIsOnboardingProfileLoading(false);
+    }
+  }, [isOnboardingProfileLoading, session?.user]);
+
+  const shouldOpenFromInitial = Boolean(initialOnboardingOpen) && !hasOpenedInitialOnboarding;
+  const shouldOpenOnboarding = isLoggedIn && (shouldRedirectToOnboarding || shouldOpenFromInitial);
+
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   useEffect(() => {
-    if (shouldRedirectToOnboarding) {
-      setOnboardingOpen(true);
+    if (!shouldOpenOnboarding) return;
+    if (hasLoadedOnboardingProfile || isOnboardingProfileLoading) return;
+    void loadOnboardingProfile();
+  }, [hasLoadedOnboardingProfile, isOnboardingProfileLoading, loadOnboardingProfile, shouldOpenOnboarding]);
+
+  useEffect(() => {
+    if (!shouldOpenOnboarding || !hasLoadedOnboardingProfile) return;
+    setOnboardingOpen(true);
+    if (shouldOpenFromInitial) {
+      setHasOpenedInitialOnboarding(true);
     }
-  }, [shouldRedirectToOnboarding]);
+  }, [hasLoadedOnboardingProfile, shouldOpenFromInitial, shouldOpenOnboarding]);
 
   useEffect(() => {
     if (onboardingOpen && !isOnboardingLoading && !shouldRedirectToOnboarding) {
@@ -328,6 +363,7 @@ function PlaygroundPageInner({
 
       <OnboardingModal
         open={shouldShowOnboardingModal}
+        profile={onboardingProfile}
         onOpenChange={(next) => setOnboardingOpen(next)}
         required
         onCompleted={() => {

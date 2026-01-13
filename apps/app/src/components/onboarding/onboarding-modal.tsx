@@ -1,14 +1,26 @@
 "use client";
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { useEffect, useMemo, useState } from "react";
-import { PartyPopper } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
+import { PartyPopper, X } from "lucide-react";
 
-import { cn } from "@/lib/utils/cn";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { OnboardingForm } from "@/components/onboarding/onboarding-form";
+import { track } from "@/lib/analytics";
 import { brandPersonalityValues, type BrandPersonality } from "@/lib/types/brand";
+import { cn } from "@/lib/utils/cn";
 
-type BrandProfilePayload = {
+export type BrandProfilePayload = {
   profile?: {
     logoPath?: string | null;
     personality?: string | null;
@@ -19,6 +31,7 @@ type BrandProfilePayload = {
 
 type OnboardingModalProps = {
   open: boolean;
+  profile: BrandProfilePayload | null;
   required?: boolean;
   onOpenChange?: (open: boolean) => void;
   onCompleted: () => void;
@@ -26,39 +39,11 @@ type OnboardingModalProps = {
 
 export function OnboardingModal({
   open,
+  profile,
   required = true,
   onOpenChange,
   onCompleted,
 }: OnboardingModalProps) {
-  const [profile, setProfile] = useState<BrandProfilePayload | null>(null);
-  const [hasLoadedProfile, setHasLoadedProfile] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    let isCancelled = false;
-    setHasLoadedProfile(false);
-
-    fetch("/api/brand/profile", { credentials: "include" })
-      .then(async (res) => {
-        const payload = (await res.json()) as BrandProfilePayload & { error?: string };
-        if (!res.ok) throw new Error(payload?.error ?? "Failed to load brand profile");
-        return payload;
-      })
-      .then((payload) => {
-        if (isCancelled) return;
-        setProfile(payload);
-        setHasLoadedProfile(true);
-      })
-      .catch(() => {
-        if (isCancelled) return;
-        setProfile(null);
-        setHasLoadedProfile(true);
-      });
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [open]);
 
   const initialAccent = useMemo(() => {
     const accent = profile?.profile?.colorPalette?.accent;
@@ -77,23 +62,48 @@ export function OnboardingModal({
       : null;
   }, [profile?.profile?.personality]);
 
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleConfirmedClose = useCallback(
+    (reason: "user" | "error") => {
+      track("brand_onboarding_dismissed", {
+        reason,
+      });
+
+      onOpenChange?.(false);
+      setConfirmOpen(false);
+    },
+    [onOpenChange],
+  );
+
+  const handleUserClose = useCallback(() => {
+    if (required) {
+      setConfirmOpen(true);
+      return;
+    }
+
+    handleConfirmedClose("user");
+  }, [handleConfirmedClose, required]);
+
+  const handleErrorClose = useCallback(() => {
+    handleConfirmedClose("error");
+  }, [handleConfirmedClose]);
+
   return (
     <DialogPrimitive.Root
       open={open}
       onOpenChange={(next) => {
-        if (required && !next) return;
-        onOpenChange?.(next);
+        if (next) {
+          onOpenChange?.(true);
+          return;
+        }
+
+        handleUserClose();
       }}
     >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0" />
         <DialogPrimitive.Content
-          onEscapeKeyDown={(e) => {
-            if (required) e.preventDefault();
-          }}
-          onPointerDownOutside={(e) => {
-            if (required) e.preventDefault();
-          }}
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-[min(1040px,calc(100vw-1.5rem))] translate-x-[-50%] translate-y-[-50%]",
             "overflow-hidden rounded-2xl border border-white/10 bg-[#07070a] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_40px_120px_-60px_rgba(0,0,0,0.9)]",
@@ -114,6 +124,23 @@ export function OnboardingModal({
             <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/65" />
           </div>
 
+          <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <AlertDialogContent className="max-w-sm">
+              <AlertDialogHeader>
+                <AlertDialogTitle>Leave setup?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure? Don’t worry, you can fill it out later.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Keep editing</AlertDialogCancel>
+                <AlertDialogAction onClick={() => handleConfirmedClose("user")}>
+                  Leave anyway
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
           <div className="relative">
             <header className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
               <div className="flex items-start gap-3">
@@ -129,24 +156,29 @@ export function OnboardingModal({
                   </DialogPrimitive.Description>
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleUserClose}
+                className="text-white/70 hover:bg-white/10 hover:text-white"
+                aria-label="Close onboarding"
+              >
+                <X className="size-3.5" />
+              </Button>
             </header>
 
-            <div className="max-h-[calc(100vh-7rem)] overflow-y-auto">
-              {hasLoadedProfile ? (
-                <OnboardingForm
-                  initialLogoUrl={profile?.logoUrl ?? null}
-                  initialLogoPath={profile?.profile?.logoPath ?? null}
-                  initialAccent={initialAccent}
-                  initialMode={initialMode}
-                  initialPersonality={initialPersonality}
-                  embedded
-                  onCompleted={onCompleted}
-                />
-              ) : (
-                <div className="px-5 py-10 text-center text-sm text-white/60 sm:px-6">
-                  Loading your brand setup…
-                </div>
-              )}
+            <div className="max-h-[calc(100vh-7rem)] min-h-[520px] overflow-y-auto">
+              <OnboardingForm
+                initialLogoUrl={profile?.logoUrl ?? null}
+                initialLogoPath={profile?.profile?.logoPath ?? null}
+                initialAccent={initialAccent}
+                initialMode={initialMode}
+                initialPersonality={initialPersonality}
+                embedded
+                onCompleted={onCompleted}
+                onDismiss={handleErrorClose}
+              />
             </div>
           </div>
         </DialogPrimitive.Content>
