@@ -1,7 +1,6 @@
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
-import { showBrandExperienceFlag } from "@/lib/feature-flags";
 import { getUserTier } from "@/lib/tier";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
@@ -30,10 +29,7 @@ function looksCompleteFromProfile(profile: {
 }
 
 export default async function Page() {
-  const [showBrandFlag, session] = await Promise.all([
-    showBrandExperienceFlag(),
-    verifySession(),
-  ]);
+  const session = await verifySession();
 
   if (session.isAuth && session.userId) {
     const tier = await getUserTier(session.userId);
@@ -66,12 +62,10 @@ export default async function Page() {
         looksCompleteFromProfile(profile);
     }
 
-    const showBrandExperience = showBrandFlag && tier === "brand";
     const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
 
     return (
       <PlaygroundPage
-        showBrandExperience={showBrandExperience}
         initialIsAuthenticated={session.isAuth}
         initialOnboardingOpen={initialOnboardingOpen}
       />
@@ -80,7 +74,6 @@ export default async function Page() {
 
   return (
     <PlaygroundPage
-      showBrandExperience={false}
       initialIsAuthenticated={false}
       initialOnboardingOpen={false}
     />

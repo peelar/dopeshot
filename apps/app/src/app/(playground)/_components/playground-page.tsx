@@ -99,7 +99,6 @@ function ExportContainer({
 type PlaygroundPageProps = {
   initialMemoryItemId?: string;
   initialIsAuthenticated?: boolean;
-  showBrandExperience?: boolean;
   initialOnboardingOpen?: boolean;
 };
 
