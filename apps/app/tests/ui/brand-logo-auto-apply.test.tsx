@@ -43,6 +43,9 @@ describe("useBrandLogoAutoApply", () => {
       logoUrl: "https://cdn.test/logo.png",
       logoPath: "user-1/logo.png",
       useLogoOnScreenshots: true,
+      accent: "#6366F1",
+      mode: "dark",
+      personality: "premium",
     });
     store.set(configAtom, {
       ...getEmptyCanvasConfig(),

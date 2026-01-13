@@ -40,6 +40,8 @@ import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-bo
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
+import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
+import { OnboardingModal, type BrandProfilePayload } from "@/components/onboarding/onboarding-modal";
 
 const FeedbackModal = dynamic(
   () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
@@ -97,6 +99,7 @@ function ExportContainer({
 type PlaygroundPageProps = {
   initialMemoryItemId?: string;
   initialIsAuthenticated?: boolean;
+  initialOnboardingOpen?: boolean;
 };
 
 export function PlaygroundPage(props: PlaygroundPageProps) {
@@ -125,6 +128,7 @@ export function PlaygroundPage(props: PlaygroundPageProps) {
 function PlaygroundPageInner({
   initialMemoryItemId,
   initialIsAuthenticated,
+  initialOnboardingOpen,
 }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
@@ -157,6 +161,61 @@ function PlaygroundPageInner({
   const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(
     () => Boolean(initialIsAuthenticated) && Boolean(initialMemoryItemId),
   );
+
+  const {
+    shouldRedirectToOnboarding,
+    isLoading: isOnboardingLoading,
+    refresh: refreshOnboardingStatus,
+  } = useOnboardingStatus({ enabled: Boolean(session?.user) });
+
+  const [onboardingProfile, setOnboardingProfile] = useState<BrandProfilePayload | null>(null);
+  const [hasLoadedOnboardingProfile, setHasLoadedOnboardingProfile] = useState(false);
+  const [isOnboardingProfileLoading, setIsOnboardingProfileLoading] = useState(false);
+  const [hasOpenedInitialOnboarding, setHasOpenedInitialOnboarding] = useState(false);
+
+  const loadOnboardingProfile = useCallback(async () => {
+    if (!session?.user || isOnboardingProfileLoading) return;
+    setIsOnboardingProfileLoading(true);
+
+    try {
+      const response = await fetch("/api/brand/profile", { credentials: "include" });
+      const payload = (await response.json()) as BrandProfilePayload & { error?: string };
+      if (!response.ok) {
+        throw new Error(payload?.error ?? "Failed to load brand profile");
+      }
+      setOnboardingProfile(payload);
+    } catch {
+      setOnboardingProfile(null);
+    } finally {
+      setHasLoadedOnboardingProfile(true);
+      setIsOnboardingProfileLoading(false);
+    }
+  }, [isOnboardingProfileLoading, session?.user]);
+
+  const shouldOpenFromInitial = Boolean(initialOnboardingOpen) && !hasOpenedInitialOnboarding;
+  const shouldOpenOnboarding = isLoggedIn && (shouldRedirectToOnboarding || shouldOpenFromInitial);
+
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
+
+  useEffect(() => {
+    if (!shouldOpenOnboarding) return;
+    if (hasLoadedOnboardingProfile || isOnboardingProfileLoading) return;
+    void loadOnboardingProfile();
+  }, [hasLoadedOnboardingProfile, isOnboardingProfileLoading, loadOnboardingProfile, shouldOpenOnboarding]);
+
+  useEffect(() => {
+    if (!shouldOpenOnboarding || !hasLoadedOnboardingProfile) return;
+    setOnboardingOpen(true);
+    if (shouldOpenFromInitial) {
+      setHasOpenedInitialOnboarding(true);
+    }
+  }, [hasLoadedOnboardingProfile, shouldOpenFromInitial, shouldOpenOnboarding]);
+
+  useEffect(() => {
+    if (onboardingOpen && !isOnboardingLoading && !shouldRedirectToOnboarding) {
+      setOnboardingOpen(false);
+    }
+  }, [isOnboardingLoading, onboardingOpen, shouldRedirectToOnboarding]);
 
   const setConfig = useSetAtom(baseConfigAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -274,6 +333,10 @@ function PlaygroundPageInner({
   const hasExported = useAtomValue(hasExportedAtom);
   useExportStateReset(); // Auto-reset on design changes
 
+  // Gate first brand session with a quick setup modal.
+  // Keeps the editor accessible without a route redirect and still ensures onboarding happens.
+  const shouldShowOnboardingModal = onboardingOpen && isLoggedIn;
+
   const {
     isDragging,
     uploadInputRef,
@@ -296,6 +359,17 @@ function PlaygroundPageInner({
       <DragOverlay visible={isDragging} />
 
       <InAppUpdateBanner />
+
+      <OnboardingModal
+        open={shouldShowOnboardingModal}
+        profile={onboardingProfile}
+        onOpenChange={(next) => setOnboardingOpen(next)}
+        required
+        onCompleted={() => {
+          setOnboardingOpen(false);
+          void refreshOnboardingStatus();
+        }}
+      />
 
       <AppHeader
         isLoggedIn={isLoggedIn}

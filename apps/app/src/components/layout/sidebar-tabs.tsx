@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
+import { LayoutGrid, Palette } from "lucide-react";
 import { SegmentedControl, type SegmentedOption } from "@/components/ui/segmented-control";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
 import { BrandPanel } from "@/components/brand/brand-panel";
 import { SidebarFooter } from "@/components/layout/sidebar-footer";
 import { useUserTier } from "@/hooks/use-user-tier";
 import { SHOW_BRAND_TAB } from "@/lib/feature-flags-client";
+import { track } from "@/lib/analytics";
 
 type SidebarTab = "design" | "brand";
 
@@ -16,31 +18,36 @@ interface SidebarTabsProps {
 }
 
 export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
-  const [activeTab, setActiveTab] = useState<SidebarTab>("design");
   const { isBrandUser, isLoading } = useUserTier();
-
-  useEffect(() => {
-    if ((!SHOW_BRAND_TAB || !isBrandUser) && activeTab === "brand") {
-      setActiveTab("design");
-    }
-  }, [activeTab, isBrandUser, SHOW_BRAND_TAB]);
+  const [activeTab, setActiveTab] = useState<SidebarTab>("design");
 
   // Build tab options - only include Brand tab if feature flag is enabled
-  const tabOptions = useMemo((): SegmentedOption[] => {
-    const options: SegmentedOption[] = [{ id: "design", label: "Design" }];
+  const tabOptions: SegmentedOption[] = [
+    {
+      id: "design",
+      label: (
+        <span className="flex items-center justify-center gap-2">
+          <LayoutGrid className="size-4" aria-hidden="true" />
+          Design
+        </span>
+      ),
+    },
+  ];
 
-    if (SHOW_BRAND_TAB) {
-      options.push({
-        id: "brand",
-        label: "Brand",
-        // Disable while loading or if user is not a brand user
-        disabled: isLoading || !isBrandUser,
-        tooltip: isLoading ? undefined : "Upgrade to Brand to unlock these tools.",
-      });
-    }
-
-    return options;
-  }, [isBrandUser, isLoading, SHOW_BRAND_TAB]);
+  if (SHOW_BRAND_TAB) {
+    tabOptions.push({
+      id: "brand",
+      label: (
+        <span className="flex items-center justify-center gap-2">
+          <Palette className="size-4" aria-hidden="true" />
+          Brand
+        </span>
+      ),
+      // Disable while loading or if user is not a brand user
+      disabled: isLoading || !isBrandUser,
+      tooltip: isLoading ? undefined : "Upgrade to Brand to unlock these tools.",
+    });
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col">
@@ -50,7 +57,11 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
           <SegmentedControl
             value={activeTab}
             options={tabOptions}
-            onChange={(value) => setActiveTab(value as SidebarTab)}
+            onChange={(value) => {
+              const nextTab = value as SidebarTab;
+              setActiveTab(nextTab);
+              track("sidebar_tab_selected", { tab: nextTab });
+            }}
             ariaLabel="Sidebar tabs"
           />
         </div>

@@ -16,15 +16,15 @@ export async function POST(request: Request) {
     }
 
     if (!(await isBrandUser(session.userId))) {
-      return NextResponse.json(
-        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
-        { status: 403 },
-      );
-    }
+    return NextResponse.json(
+      { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+      { status: 403 },
+    );
+  }
 
-    const db = await getUserDb(session.userId);
+  const db = await getUserDb(session.userId);
 
-    const formData = await request.formData().catch(() => null);
+  const formData = await request.formData().catch(() => null);
     if (!formData) {
       return NextResponse.json({ error: "Missing form data" }, { status: 400 });
     }

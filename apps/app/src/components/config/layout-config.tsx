@@ -3,16 +3,23 @@
 import { useRef, type ChangeEvent, useCallback, useState } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Asset } from "@/domain/asset/types";
-import { UploadCloud, X, Trash2 } from "lucide-react";
+import { UploadCloud, X, Trash2, Star } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { configAtom, orientationAtom, brandSettingsAtom } from "@/hooks/atoms";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { configAtom, orientationAtom, brandSettingsAtom, assetsAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom, brandLogoAssetAtom } from "@/hooks/atoms/derived";
 import { ScreenshotSection } from "@/components/sidebar/screenshot-section";
 import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
+import { track } from "@/lib/analytics";
 
 
 interface LayoutConfigProps {
@@ -23,6 +30,8 @@ interface LayoutConfigProps {
 export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const assets = useAtomValue(assetsAtom);
+  const setAssets = useSetAtom(assetsAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
   const brandLogoAsset = useAtomValue(brandLogoAssetAtom);
@@ -38,6 +47,9 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
 
   // Check if brand logo is currently applied
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
+  
+  // Check if brand logo is available but not applied
+  const hasBrandLogoAvailable = !logoAsset && brandSettings.logoUrl;
 
   // Check if text is actually supported (not just hidden by layout type)
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
@@ -46,17 +58,53 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
   const hasSubtitleSupport = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
   const showTextSection = hasHeadlineSupport || hasSubtitleSupport;
 
+  const handleLogoUpload = useCallback(
+    async (file: File) => {
+      if (!onUploadAsset) return;
+      
+      // Process the file upload (this adds it to assets but doesn't apply to config)
+      await onUploadAsset(file, "logo");
+      
+      // Find the newly uploaded logo asset (it will be the last one with kind "logo")
+      // We need to wait a tick for the asset to be added
+      setTimeout(() => {
+        setAssets((currentAssets) => {
+          const logoAssets = currentAssets.filter((a) => a.kind === "logo");
+          const newLogoAsset = logoAssets[logoAssets.length - 1];
+          
+          if (newLogoAsset) {
+            // Apply it to the config
+            setConfig((currentConfig) => ({
+              ...currentConfig,
+              assets: {
+                ...currentConfig.assets,
+                logo: newLogoAsset.id,
+              },
+            }));
+          }
+          
+          return currentAssets;
+        });
+      }, 50);
+    },
+    [onUploadAsset, setAssets, setConfig],
+  );
+
   const handleHeaderFileChange = useCallback(
     (event: ChangeEvent<HTMLInputElement>, kind: "screenshot" | "logo") => {
       const file = event.target.files?.[0];
-      if (file && onUploadAsset) {
-        onUploadAsset(file, kind);
+      if (file) {
+        if (kind === "logo") {
+          handleLogoUpload(file);
+        } else if (onUploadAsset) {
+          onUploadAsset(file, kind);
+        }
       }
       if (event.target) {
         event.target.value = "";
       }
     },
-    [onUploadAsset],
+    [onUploadAsset, handleLogoUpload],
   );
 
   const handleHeaderUploadClick = useCallback(
@@ -84,6 +132,49 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
       }));
     },
     [setConfig],
+  );
+
+  const handleApplyBrandLogo = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      if (!brandSettings.logoUrl || !brandSettings.logoPath) return;
+      
+      // Check if brand logo already exists in assets
+      const existingBrandLogo = assets.find(
+        (asset) => asset.kind === "logo" && asset.url === brandSettings.logoUrl,
+      );
+
+      // Create or use existing brand logo asset
+      const brandLogoAsset: Asset = existingBrandLogo ?? {
+        id: `brand-logo-${Date.now()}`,
+        projectId: "brand",
+        userId: "brand",
+        url: brandSettings.logoUrl,
+        name: brandSettings.logoPath.split("/").pop() || "Brand logo",
+        kind: "logo",
+        createdAt: new Date().toISOString(),
+      };
+
+      // Add to assets if it's new
+      if (!existingBrandLogo) {
+        setAssets((prevAssets) => [...prevAssets, brandLogoAsset]);
+      }
+
+      // Apply logo to config (store asset ID, not the object)
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        assets: {
+          ...currentConfig.assets,
+          logo: brandLogoAsset.id,
+        },
+      }));
+
+      // Track re-application of brand logo
+      track("brand_logo_reapplied", {
+        source: "sidebar_header",
+      });
+    },
+    [brandSettings.logoUrl, brandSettings.logoPath, assets, setAssets, setConfig],
   );
 
 
@@ -183,32 +274,75 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
                   onMouseEnter={() => setIsLogoHovered(true)}
                   onMouseLeave={() => setIsLogoHovered(false)}
                 >
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="xs"
-                    disabled={!onUploadAsset || (isBrandLogoApplied && isLogoHovered)}
-                    onClick={(event) => handleHeaderUploadClick(event, "logo")}
-                    className={cn(
-                      "h-6 gap-1.5 px-2 text-xs transition-opacity",
-                      logoAsset
-                        ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                        : "text-muted-foreground hover:text-foreground",
-                      isBrandLogoApplied && isLogoHovered && "opacity-0"
-                    )}
-                  >
-                    {!logoAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
-                    {logoAsset ? (
-                      <span className="max-w-[8rem] truncate" title={isBrandLogoApplied ? "Brand logo" : logoAsset.name}>
-                        {isBrandLogoApplied ? "Brand logo" : logoAsset.name}
-                      </span>
-                    ) : (
-                      <span className="max-w-[8rem] truncate" title="Choose file">
-                        Choose file...
-                      </span>
-                    )}
-                  </Button>
-                  {isBrandLogoApplied && isLogoHovered && (
+                  {!logoAsset && hasBrandLogoAvailable ? (
+                    // Show dropdown when no logo applied but brand logo is available
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        disabled={!onUploadAsset}
+                        className={cn(
+                          "h-6 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground",
+                          "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors",
+                          "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                          "disabled:pointer-events-none disabled:opacity-50",
+                          "hover:bg-accent hover:text-accent-foreground"
+                        )}
+                      >
+                        <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
+                        <span className="max-w-[8rem] truncate" title="Add logo">
+                          Add logo...
+                        </span>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuItem
+                          onClick={(e) => {
+                            const syntheticEvent = {
+                              stopPropagation: () => {},
+                            } as React.MouseEvent;
+                            handleApplyBrandLogo(syntheticEvent);
+                          }}
+                        >
+                          <Star className="h-4 w-4" />
+                          Apply brand logo
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            logoInputRef.current?.click();
+                          }}
+                        >
+                          <UploadCloud className="h-4 w-4" />
+                          Upload new
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    // Show regular button when logo is applied or no brand logo available
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="xs"
+                      disabled={!onUploadAsset || (logoAsset && isLogoHovered)}
+                      onClick={(event) => handleHeaderUploadClick(event, "logo")}
+                      className={cn(
+                        "h-6 gap-1.5 px-2 text-xs transition-opacity",
+                        logoAsset
+                          ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                          : "text-muted-foreground hover:text-foreground",
+                        logoAsset && isLogoHovered && "opacity-0"
+                      )}
+                    >
+                      {!logoAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
+                      {logoAsset ? (
+                        <span className="max-w-[8rem] truncate" title={isBrandLogoApplied ? "Brand logo" : logoAsset.name}>
+                          {isBrandLogoApplied ? "Brand logo" : logoAsset.name}
+                        </span>
+                      ) : (
+                        <span className="max-w-[8rem] truncate" title="Add logo">
+                          Add logo...
+                        </span>
+                      )}
+                    </Button>
+                  )}
+                  {logoAsset && isLogoHovered && (
                     <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-150 rounded-md">
                       <button
                         onClick={handleRemoveBrandLogo}
@@ -218,7 +352,7 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
                           "text-white/90 hover:text-white",
                           "ring-1 ring-white/20 hover:ring-white/30",
                         )}
-                        aria-label="Remove brand logo"
+                        aria-label="Remove logo"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
