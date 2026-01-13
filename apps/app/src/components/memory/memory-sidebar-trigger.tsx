@@ -22,6 +22,7 @@ export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
   const [justSaved, setJustSaved] = useAtom(justSavedAtom);
   const saveCount = useAtomValue(currentSaveCountAtom);
   const saveLimit = useAtomValue(saveLimitAtom);
+  const saveLimitLabel = Number.isFinite(saveLimit) ? `${saveCount}/${saveLimit}` : `${saveCount}`;
 
   // Auto-clear indicator after 30 seconds
   useEffect(() => {
@@ -61,7 +62,7 @@ export function MemorySidebarTrigger({ className }: MemorySidebarTriggerProps) {
     >
       <BookmarkCheck className={cn("h-4 w-4", justSaved && "text-primary")} />
       <span className={cn("hidden text-sm font-medium sm:inline", justSaved ? "text-primary" : "text-foreground/60")}>
-        Saved {hasExports && `(${saveCount}/${saveLimit})`}
+        Saved {hasExports && `(${saveLimitLabel})`}
       </span>
     </button>
   );

@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
+import { isBrandUser } from "@/lib/tier";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
 
 export async function POST(request: Request) {
@@ -13,6 +14,15 @@ export async function POST(request: Request) {
     if (!session.isAuth || !session.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    if (!(await isBrandUser(session.userId))) {
+      return NextResponse.json(
+        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+        { status: 403 },
+      );
+    }
+
+    const db = await getUserDb(session.userId);
 
     const formData = await request.formData().catch(() => null);
     if (!formData) {
@@ -47,9 +57,6 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
-
-    // Get user-scoped database
-    const db = await getUserDb(session.userId);
 
     // Update brand profile with logo path via Prisma
     await db.brandProfile.upsert({

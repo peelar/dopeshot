@@ -5,7 +5,7 @@ import {
   getScreenshotTreatment,
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
-import { configAtom, assetsAtom, orientationAtom } from "../atoms";
+import { configAtom, assetsAtom, orientationAtom, brandSettingsAtom } from "../atoms";
 
 // Derived atoms
 export const currentLayoutAtom = atom((get) => {
@@ -65,4 +65,19 @@ export const backgroundAssetAtom = atom((get) => {
   return config.assets.background
     ? assets.find((asset) => asset.id === config.assets.background)
     : undefined;
+});
+
+// Brand logo asset from brand settings
+export const brandLogoAssetAtom = atom((get) => {
+  const brandSettings = get(brandSettingsAtom);
+  const assets = get(assetsAtom);
+
+  // Find the brand logo in assets by matching the URL
+  if (brandSettings.logoUrl) {
+    return assets.find((asset) =>
+      asset.kind === "logo" && asset.url === brandSettings.logoUrl
+    );
+  }
+
+  return undefined;
 });

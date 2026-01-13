@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useSession } from "@/lib/auth/auth-client";
 import {
@@ -17,6 +18,7 @@ import {
 import {
   configAtom,
   assetsAtom,
+  brandSettingsAtom,
   hasCustomScreenshotAtom,
   screenshotGradientAtom,
   orientationAtom,
@@ -24,14 +26,16 @@ import {
   statusMessageAtom,
   getEmptyCanvasConfig,
 } from "@/hooks/atoms";
+import type { Asset } from "@/domain/asset/types";
 import { serializeEditorState } from "@/domain/memory/config-serializer";
 import { deserializeEditorState } from "@/domain/memory/config-loader";
 import { setMemoryState } from "@/lib/storage/memory-state";
-import { setMemoryUrl, clearMemoryUrl } from "@/lib/memory/memory-url";
+import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { track } from "@/lib/analytics";
 import type { MemoryItemDTO, MemoryConfiguration } from "@/domain/memory/types";
 
 export function useMemory() {
+  const router = useRouter();
   const { data: session } = useSession();
   const user = session?.user;
   const [items, setItems] = useAtom(memoryItemsAtom);
@@ -57,6 +61,7 @@ export function useMemory() {
   const setOrientation = useSetAtom(orientationAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
+  const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
 
   const resetToEmptyCanvas = useCallback(() => {
     setConfig(getEmptyCanvasConfig());
@@ -65,7 +70,7 @@ export function useMemory() {
     setScreenshotZoom(1.0);
     setHasCustomScreenshot(false);
     setLoadedItemId(null);
-    clearMemoryUrl();
+    router.replace("/");
   }, [
     setAssets,
     setConfig,
@@ -73,7 +78,91 @@ export function useMemory() {
     setLoadedItemId,
     setScreenshotGradient,
     setScreenshotZoom,
+    router,
   ]);
+
+  /**
+   * Fetch brand logo and apply it to the current config/assets.
+   * Uses cached logo from brandSettings (localStorage) if available.
+   * Returns the updated config and assets, or null if no logo to apply.
+   */
+  const fetchAndApplyBrandLogo = useCallback(
+    async (
+      currentConfig: ReturnType<typeof deserializeEditorState>["config"],
+      currentAssets: Asset[],
+    ): Promise<{ config: typeof currentConfig; assets: Asset[] } | null> => {
+      // Check if we should apply brand logo
+      if (!brandSettings.useLogoOnScreenshots || currentConfig.assets?.logo) {
+        return null;
+      }
+
+      let logoUrl = brandSettings.logoUrl;
+      let logoPath = brandSettings.logoPath;
+
+      // If we don't have cached logo info, fetch from API
+      if (!logoUrl || !logoPath) {
+        try {
+          const response = await fetch("/api/brand/profile", {
+            credentials: "include",
+          });
+
+          if (!response.ok) {
+            return null;
+          }
+
+          const payload = await response.json();
+
+          if (!payload?.logoUrl || !payload?.profile?.logoPath) {
+            return null;
+          }
+
+          logoUrl = payload.logoUrl;
+          logoPath = payload.profile.logoPath;
+
+          // Cache the fetched data in brandSettings (localStorage)
+          setBrandSettings((prev) => ({
+            ...prev,
+            logoUrl,
+            logoPath,
+          }));
+        } catch (error) {
+          console.error("Failed to fetch brand logo:", error);
+          return null;
+        }
+      }
+
+      // Now apply the logo (either cached or freshly fetched)
+      const existingBrandLogo = currentAssets.find(
+        (asset) => asset.kind === "logo" && asset.url === logoUrl,
+      );
+
+      const brandLogoAsset: Asset =
+        existingBrandLogo ?? {
+          id: `brand-logo-${Date.now()}`,
+          projectId: "brand",
+          userId: "brand",
+          url: logoUrl!,
+          name: logoPath!.split("/").pop() || "brand-logo",
+          kind: "logo",
+          createdAt: new Date().toISOString(),
+        };
+
+      const updatedAssets = existingBrandLogo
+        ? currentAssets
+        : [...currentAssets, brandLogoAsset];
+
+      const updatedConfig = {
+        ...currentConfig,
+        assets: {
+          ...currentConfig.assets,
+          logo: brandLogoAsset.id,
+        },
+      };
+
+      return { config: updatedConfig, assets: updatedAssets };
+    },
+    [brandSettings.useLogoOnScreenshots, brandSettings.logoUrl, brandSettings.logoPath, setBrandSettings],
+  );
 
   // Reset state when user changes (login/logout)
   useEffect(() => {
@@ -158,7 +247,20 @@ export function useMemory() {
       // Check cache first
       if (itemCache[itemId]) {
         const { configuration } = itemCache[itemId];
-        const state = deserializeEditorState(configuration);
+        let state = deserializeEditorState(configuration);
+
+        // Apply brand logo if needed (before setting state)
+        const brandLogoResult = await fetchAndApplyBrandLogo(
+          state.config,
+          state.assets ?? [],
+        );
+        if (brandLogoResult) {
+          state = {
+            ...state,
+            config: brandLogoResult.config,
+            assets: brandLogoResult.assets,
+          };
+        }
 
         setConfig(state.config);
         setAssets(state.assets ?? []);
@@ -192,7 +294,20 @@ export function useMemory() {
         }));
 
         // Deserialize and hydrate editor state
-        const state = deserializeEditorState(configuration);
+        let state = deserializeEditorState(configuration);
+
+        // Apply brand logo if needed (before setting state)
+        const brandLogoResult = await fetchAndApplyBrandLogo(
+          state.config,
+          state.assets ?? [],
+        );
+        if (brandLogoResult) {
+          state = {
+            ...state,
+            config: brandLogoResult.config,
+            assets: brandLogoResult.assets,
+          };
+        }
 
         setConfig(state.config);
         setAssets(state.assets ?? []);
@@ -222,6 +337,7 @@ export function useMemory() {
       setOrientation,
       setScreenshotZoom,
       setLoadedItemId,
+      fetchAndApplyBrandLogo,
     ],
   );
 
@@ -323,4 +439,3 @@ export function useMemory() {
     resetToEmptyCanvas,
   };
 }
-

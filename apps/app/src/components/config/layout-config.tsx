@@ -1,13 +1,13 @@
 "use client";
 
-import { useRef, type ChangeEvent, useCallback } from "react";
-import { useAtomValue } from "jotai";
+import { useRef, type ChangeEvent, useCallback, useState } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Asset } from "@/domain/asset/types";
-import { UploadCloud, X } from "lucide-react";
+import { UploadCloud, X, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { configAtom, orientationAtom } from "@/hooks/atoms";
-import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom } from "@/hooks/atoms/derived";
+import { configAtom, orientationAtom, brandSettingsAtom } from "@/hooks/atoms";
+import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom, brandLogoAssetAtom } from "@/hooks/atoms/derived";
 import { ScreenshotSection } from "@/components/sidebar/screenshot-section";
 import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
@@ -22,15 +22,22 @@ interface LayoutConfigProps {
 
 export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
+  const setConfig = useSetAtom(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const logoAsset = useAtomValue(logoAssetAtom);
+  const brandLogoAsset = useAtomValue(brandLogoAssetAtom);
+  const brandSettings = useAtomValue(brandSettingsAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const orientation = useAtomValue(orientationAtom);
+  const [isLogoHovered, setIsLogoHovered] = useState(false);
 
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
+
+  // Check if brand logo is currently applied
+  const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
 
   // Check if text is actually supported (not just hidden by layout type)
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
@@ -63,6 +70,20 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
       logoInputRef.current?.click();
     },
     [onUploadAsset],
+  );
+
+  const handleRemoveBrandLogo = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        assets: {
+          ...currentConfig.assets,
+          logo: undefined,
+        },
+      }));
+    },
+    [setConfig],
   );
 
 
@@ -143,7 +164,7 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
           </section>
         )}
 
-        {showLogoSection && (
+{showLogoSection && !isMobile && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Logo</span>
@@ -157,30 +178,53 @@ export const LayoutConfigPanel = ({ onUploadAsset, isMobile = false }: LayoutCon
                   aria-hidden="true"
                   tabIndex={-1}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="xs"
-                  disabled={!onUploadAsset}
-                  onClick={(event) => handleHeaderUploadClick(event, "logo")}
-                  className={cn(
-                    "h-6 gap-1.5 px-2 text-xs",
-                    logoAsset
-                      ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
+                <div
+                  className="relative group"
+                  onMouseEnter={() => setIsLogoHovered(true)}
+                  onMouseLeave={() => setIsLogoHovered(false)}
                 >
-                  {!logoAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
-                  {logoAsset ? (
-                    <span className="max-w-[8rem] truncate" title={logoAsset.name}>
-                      {logoAsset.name}
-                    </span>
-                  ) : (
-                    <span className="max-w-[8rem] truncate" title="Choose file">
-                      Choose file...
-                    </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    disabled={!onUploadAsset || (isBrandLogoApplied && isLogoHovered)}
+                    onClick={(event) => handleHeaderUploadClick(event, "logo")}
+                    className={cn(
+                      "h-6 gap-1.5 px-2 text-xs transition-opacity",
+                      logoAsset
+                        ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
+                        : "text-muted-foreground hover:text-foreground",
+                      isBrandLogoApplied && isLogoHovered && "opacity-0"
+                    )}
+                  >
+                    {!logoAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
+                    {logoAsset ? (
+                      <span className="max-w-[8rem] truncate" title={isBrandLogoApplied ? "Brand logo" : logoAsset.name}>
+                        {isBrandLogoApplied ? "Brand logo" : logoAsset.name}
+                      </span>
+                    ) : (
+                      <span className="max-w-[8rem] truncate" title="Choose file">
+                        Choose file...
+                      </span>
+                    )}
+                  </Button>
+                  {isBrandLogoApplied && isLogoHovered && (
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-150 rounded-md">
+                      <button
+                        onClick={handleRemoveBrandLogo}
+                        className={cn(
+                          "rounded-md p-1.5 transition-all",
+                          "bg-white/10 hover:bg-white/20",
+                          "text-white/90 hover:text-white",
+                          "ring-1 ring-white/20 hover:ring-white/30",
+                        )}
+                        aria-label="Remove brand logo"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   )}
-                </Button>
+                </div>
               </div>
             </div>
             <LogoSection onUploadAsset={onUploadAsset} />

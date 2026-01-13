@@ -1,10 +1,12 @@
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export interface SegmentedOption {
   id: string;
   label: string | React.ReactNode;
   disabled?: boolean;
+  tooltip?: string;
 }
 
 interface SegmentedControlProps {
@@ -35,14 +37,14 @@ export function SegmentedControl({
     >
       {options.map((option) => {
         const isActive = value === option.id;
-        return (
+        const button = (
           <Button
-            key={option.id}
             type="button"
             role="tab"
             aria-selected={isActive}
             aria-controls={option.id}
             aria-disabled={option.disabled}
+            tabIndex={option.disabled ? -1 : undefined}
             onClick={() => {
               if (option.disabled) return;
               onChange(option.id);
@@ -50,17 +52,29 @@ export function SegmentedControl({
             variant="ghost"
             size="sm"
             className={cn(
-              "flex-1 whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+              "w-full whitespace-nowrap rounded-lg px-3 py-1.5 text-xs font-semibold transition",
               isActive
                 ? "bg-foreground text-background shadow-sm hover:bg-foreground hover:text-background dark:hover:bg-foreground dark:hover:text-background"
                 : "text-muted-foreground hover:text-foreground",
               option.disabled && "cursor-not-allowed opacity-40",
               buttonClassName,
             )}
-            disabled={option.disabled}
           >
             {option.label}
           </Button>
+        );
+
+        // Always use the same DOM structure to prevent layout shift
+        // Tooltip only shows when disabled with tooltip text
+        const showTooltip = option.disabled && option.tooltip;
+
+        return (
+          <div key={option.id} className="flex-1">
+            <Tooltip>
+              <TooltipTrigger render={<span className="flex w-full">{button}</span>} />
+              {showTooltip && <TooltipContent>{option.tooltip}</TooltipContent>}
+            </Tooltip>
+          </div>
         );
       })}
     </div>

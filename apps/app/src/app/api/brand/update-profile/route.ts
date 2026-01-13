@@ -3,6 +3,7 @@ import invariant from "tiny-invariant";
 
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
+import { isBrandUser } from "@/lib/tier";
 import {
   brandColorPaletteSchema,
   brandPersonalitySchema,
@@ -29,6 +30,13 @@ export async function PATCH(request: Request) {
     const userId = session.userId;
 
     const body: UpdateProfileBody = await request.json().catch(() => ({}));
+
+    if (!(await isBrandUser(userId))) {
+      return NextResponse.json(
+        { error: "Upgrade required", message: "Brand features require a Brand tier account." },
+        { status: 403 },
+      );
+    }
 
     // Get user-scoped database
     const db = await getUserDb(userId);

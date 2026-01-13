@@ -1,73 +1,99 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
+import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { useSession } from "@/lib/auth/auth-client";
-import { supabaseDb } from "@/lib/supabase-db";
 import type { Asset } from "@/domain/asset/types";
 
 /**
- * Automatically loads and applies brand logo on mount if toggle is enabled.
- * This ensures the logo appears on screenshots immediately, not just when Brand panel opens.
+ * Automatically loads and applies brand logo for NEW designs (not loaded from memory).
+ * For designs loaded from memory, brand logo is applied during the load process in useMemory.
  */
 export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled: true }) {
   const { data: session } = useSession();
   const [brandSettings, setBrandSettings] = useAtom(brandSettingsAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const assets = useAtomValue(assetsAtom);
   const setAssets = useSetAtom(assetsAtom);
-  const hasApplied = useRef(false);
+  const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
   const [error, setError] = useState<string | null>(null);
+  const hasAppliedRef = useRef(false);
 
   useEffect(() => {
-    // Only run once, and only if feature is enabled, toggle is on, and logo not already applied
-    if (!options.enabled || hasApplied.current || !brandSettings.useLogoOnScreenshots || config.assets?.logo || !session?.user) {
+    if (!config.assets?.logo && !loadedItemId) {
+      hasAppliedRef.current = false;
+    }
+  }, [config.assets?.logo, loadedItemId]);
+
+  useEffect(() => {
+    // Skip if:
+    // - Feature is disabled
+    // - Already applied this session
+    // - Toggle is off
+    // - Screenshot not uploaded yet
+    // - Logo already exists
+    // - User not logged in
+    // - Design was loaded from memory (brand logo handled in useMemory)
+    if (
+      !options.enabled ||
+      hasAppliedRef.current ||
+      !brandSettings.useLogoOnScreenshots ||
+      !config.assets?.screenshot ||
+      config.assets?.logo ||
+      !session?.user ||
+      loadedItemId // Skip for loaded designs - handled in useMemory
+    ) {
       return;
     }
 
     async function loadAndApplyLogo() {
       if (!session?.user) return;
+      hasAppliedRef.current = true;
 
       try {
-        const { data, error } = await supabaseDb
-          .from("brand_profiles")
-          .select("logo_path")
-          .eq("user_id", session.user.id)
-          .single();
+        // Fetch brand profile from API
+        const response = await fetch("/api/brand/profile", {
+          credentials: "include",
+        });
 
-        if (error || !data?.logo_path) {
+        if (!response.ok) {
           return;
         }
 
-        // Get signed URL
-        const { data: signedUrlData, error: urlError } = await supabaseDb.storage
-          .from("brand-logos")
-          .createSignedUrl(data.logo_path, 3600);
+        const payload = await response.json();
 
-        if (urlError || !signedUrlData?.signedUrl) {
+        if (!payload?.logoUrl || !payload?.profile?.logoPath) {
           return;
         }
 
-        // Update brand settings
+        // Update brand settings with fetched data
         setBrandSettings((prev) => ({
           ...prev,
-          logoUrl: signedUrlData.signedUrl,
-          logoPath: data.logo_path,
+          logoUrl: payload.logoUrl,
+          logoPath: payload.profile.logoPath,
         }));
 
+        const existingBrandLogo = assets.find(
+          (asset) => asset.kind === "logo" && asset.url === payload.logoUrl,
+        );
+
         // Apply logo to screenshot
-        const brandLogoAsset: Asset = {
+        const brandLogoAsset: Asset = existingBrandLogo ?? {
           id: `brand-logo-${Date.now()}`,
           projectId: "brand",
           userId: "brand",
-          url: signedUrlData.signedUrl,
-          name: data.logo_path.split("/").pop() || "brand-logo",
+          url: payload.logoUrl,
+          name: payload.profile.logoPath.split("/").pop() || "brand-logo",
           kind: "logo",
           createdAt: new Date().toISOString(),
         };
 
-        setAssets((prevAssets) => [...prevAssets, brandLogoAsset]);
+        if (!existingBrandLogo) {
+          setAssets((prevAssets) => [...prevAssets, brandLogoAsset]);
+        }
         setConfig((currentConfig) => ({
           ...currentConfig,
           assets: {
@@ -75,8 +101,6 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
             logo: brandLogoAsset.id,
           },
         }));
-
-        hasApplied.current = true;
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : "Failed to load logo";
         setError(errorMessage);
@@ -88,7 +112,17 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
     }
 
     loadAndApplyLogo();
-  }, [session?.user?.id, brandSettings.useLogoOnScreenshots, config.assets?.logo]);
+  }, [
+    assets,
+    session?.user?.id,
+    brandSettings.useLogoOnScreenshots,
+    config.assets?.logo,
+    options.enabled,
+    loadedItemId,
+    setBrandSettings,
+    setAssets,
+    setConfig,
+  ]);
 
   return { error };
 }

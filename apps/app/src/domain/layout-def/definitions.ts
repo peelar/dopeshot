@@ -79,10 +79,10 @@ function expandLayoutVariants(layoutDef: LayoutDefinition): LayoutDefinition[] {
   return layoutDef.variants.map((variant) => {
     const baseConfig = layoutDef.createConfig();
     
-    // For Peak layout, swap variant names so they reflect where the image peaks from
-    // variant "left" means text left/image right (image peaks from right) → display as "Right"
-    // variant "right" means text right/image left (image peaks from left) → display as "Left"
-    const displayVariant = layoutDef.id === "popup-gradient" && variant !== "center"
+    // Swap variant names for layouts where the screenshot side should drive the label.
+    // "left" means text left/screenshot right → display as "Right", and vice versa.
+    const shouldSwapVariantLabel = layoutDef.id === "popup-gradient" || layoutDef.id === "hero-center";
+    const displayVariant = shouldSwapVariantLabel && variant !== "center"
       ? (variant === "left" ? "right" : variant === "right" ? "left" : variant)
       : variant;
 
@@ -394,7 +394,6 @@ export function withLayoutTextDefaults(
 
   return config;
 }
-
 
 
 

@@ -29,7 +29,6 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
     async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
       // EARLY RETURN: Skip color analysis for looks that don't support screenshots
       if (!supportsScreenshots(config.layoutId)) {
-        console.log(`Skipping color analysis for ${config.layoutId} - look does not support screenshots`);
         return;
       }
 

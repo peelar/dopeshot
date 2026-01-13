@@ -232,7 +232,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             <img
               src={logo.url}
               alt="Logo"
-              className="h-8 w-auto object-contain"
+              className="h-8 w-auto max-w-[200px] object-contain"
               crossOrigin="anonymous"
             />
           ) : null}
