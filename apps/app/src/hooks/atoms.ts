@@ -4,6 +4,7 @@ import { LayoutConfig, BackgroundConfig, FontId } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import { migrateFontIdToStyle, DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
+import type { BrandMode, BrandPersonality } from "@/lib/types/brand";
 
 // Keep ID here to avoid circular dependencies
 export const PLACEHOLDER_ASSET_ID = "placeholder-screenshot";
@@ -104,6 +105,9 @@ export interface BrandSettings {
   logoUrl: string | null;
   logoPath: string | null;
   useLogoOnScreenshots: boolean;
+  accent: string | null;
+  mode: BrandMode | null;
+  personality: BrandPersonality | null;
 }
 
 export const brandSettingsAtom = atomWithStorage<BrandSettings>(
@@ -112,6 +116,9 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
     logoUrl: null,
     logoPath: null,
     useLogoOnScreenshots: false,
+    accent: null,
+    mode: null,
+    personality: null,
   }
 );
 

@@ -13,6 +13,7 @@
     "app:dev": "pnpm --filter dopeshot-app dev",
     "app:check": "pnpm --filter dopeshot-app check",
     "landing:dev": "pnpm --filter dopeshot-landing dev",
+    "status": "pnpm --filter dopeshot-status status",
     "changeset": "changeset",
     "changeset:status": "pnpm changeset status --verbose",
     "changeset:version": "pnpm changeset version && pnpm install --no-frozen-lockfile",

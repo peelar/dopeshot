@@ -49,6 +49,7 @@ Sized for Twitter and LinkedIn. High-res PNG, no watermark.
 
 - `apps/app` - product app (deploys to `app.dopeshot.io`)
 - `apps/landing` - marketing site (deploys to `dopeshot.io`)
+- `apps/status` - daily status CLI (Umami, Resend, Supabase)
 
 ## The Stack
 

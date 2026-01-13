@@ -7,5 +7,5 @@
   "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["dopeshot-landing"]
+  "ignore": ["dopeshot-landing", "dopeshot-status"]
 }
