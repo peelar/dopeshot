@@ -443,6 +443,7 @@ function PlaygroundPageInner({
           onUploadClick={openFilePicker}
           isProcessingUpload={isProcessingUpload}
           showUploadButton={requiresScreenshot}
+          isBrandUser={isBrandUser}
           onUploadAsset={handleFileProcess}
         />
       ) : null}

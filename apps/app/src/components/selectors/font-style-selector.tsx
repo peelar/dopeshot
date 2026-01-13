@@ -1,7 +1,7 @@
 "use client";
 
 import { FontStyle } from "@/domain/layout/types";
-import { FONT_STYLES } from "@/domain/layout/fonts";
+import { BRAND_FONTS, FONT_STYLES, FREE_FONTS } from "@/domain/layout/fonts";
 import {
   Select,
   SelectContent,
@@ -13,10 +13,16 @@ import {
 interface FontStyleSelectorProps {
   fontStyle: FontStyle;
   onFontStyleChange: (fontStyle: FontStyle) => void;
+  isBrandUser?: boolean;
 }
 
-export function FontStyleSelector({ fontStyle, onFontStyleChange }: FontStyleSelectorProps) {
+export function FontStyleSelector({
+  fontStyle,
+  onFontStyleChange,
+  isBrandUser = false,
+}: FontStyleSelectorProps) {
   const currentStyle = FONT_STYLES.find((s) => s.id === fontStyle);
+  const availableStyles = isBrandUser ? BRAND_FONTS : FREE_FONTS;
 
   return (
     <div className="w-full">
@@ -33,7 +39,7 @@ export function FontStyleSelector({ fontStyle, onFontStyleChange }: FontStyleSel
           </SelectValue>
         </SelectTrigger>
         <SelectContent className="min-w-48">
-          {FONT_STYLES.map((style) => (
+          {availableStyles.map((style) => (
             <SelectItem key={style.id} value={style.id} className="py-2">
               <div className="flex flex-col gap-1">
                 <span className="font-medium text-sm">{style.name}</span>

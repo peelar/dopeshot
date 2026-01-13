@@ -5,10 +5,10 @@ import {
   Commissioner,
   IBM_Plex_Mono,
   Bricolage_Grotesque,
-  Rubik,
   Chivo,
   Chakra_Petch,
-  Playfair_Display,
+  Nunito,
+  DM_Serif_Display,
 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -50,9 +50,9 @@ const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bold",
 });
 
-const rubik = Rubik({
+const nunito = Nunito({
   subsets: ["latin"],
-  weight: ["400", "600"],
+  weight: ["400", "600", "700"],
   variable: "--font-friendly",
 });
 
@@ -68,8 +68,9 @@ const chakraPetch = Chakra_Petch({
   variable: "--font-technical",
 });
 
-const playfairDisplay = Playfair_Display({
+const dmSerifDisplay = DM_Serif_Display({
   subsets: ["latin"],
+  weight: ["400"],
   variable: "--font-premium",
 });
 
@@ -80,10 +81,10 @@ const fontVariables = [
   commissioner.variable,
   ibmPlexMono.variable,
   bricolageGrotesque.variable,
-  rubik.variable,
+  nunito.variable,
   chivo.variable,
   chakraPetch.variable,
-  playfairDisplay.variable,
+  dmSerifDisplay.variable,
 ].join(" ");
 
 const siteUrl = "https://app.dopeshot.io";

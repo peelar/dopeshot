@@ -103,8 +103,9 @@ const config: Config = {
   			],
   			premium: [
   				'var(--font-premium)',
-  				'system-ui',
-  				'sans-serif'
+  				'ui-serif',
+  				'Georgia',
+  				'serif'
   			]
   		},
   		keyframes: {

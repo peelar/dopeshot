@@ -1,5 +1,6 @@
 import { TimeWindow, formatRelativeTime } from "./status-dashboard";
 import { formatCountWithGrowth, formatLatestFeedback } from "./display";
+import { SentryStats, getSentryStatsForGrowth } from "./sentry-client";
 
 export type UmamiStatsResponse = {
   pageviews?: number | { value?: number };
@@ -22,6 +23,19 @@ export interface EnhancedUserData {
   newCount: number;
   totalCount: number;
   growth: string;
+}
+
+export interface EnhancedSentryData {
+  errorCount: number;
+  errorCountGrowth: string;
+  uniqueIssues: number;
+  errorRate: number;
+  topIssues: Array<{
+    title: string;
+    count: number;
+    level: string;
+  }>;
+  hasData: boolean;
 }
 
 export async function getEnhancedUmamiData(
@@ -110,6 +124,56 @@ export function getEnhancedUserData(
     totalCount,
     growth: formatCountWithGrowth(currentNewCount, previousNewCount)
   };
+}
+
+export async function getEnhancedSentryData(
+  currentWindow: TimeWindow,
+  previousWindow: TimeWindow
+): Promise<EnhancedSentryData> {
+  const apiKey = process.env.SENTRY_API_KEY;
+  const organization = process.env.SENTRY_ORGANIZATION;
+  const project = process.env.SENTRY_PROJECT;
+
+  if (!apiKey || !organization || !project) {
+    return {
+      errorCount: 0,
+      errorCountGrowth: "",
+      uniqueIssues: 0,
+      errorRate: 0,
+      topIssues: [],
+      hasData: false,
+    };
+  }
+
+  try {
+    const { current, previous } = await getSentryStatsForGrowth(
+      currentWindow,
+      previousWindow,
+      { apiKey, organization, project }
+    );
+
+    return {
+      errorCount: current.errorCount,
+      errorCountGrowth: formatCountWithGrowth(current.errorCount, previous.errorCount),
+      uniqueIssues: current.uniqueIssues,
+      errorRate: current.errorRate,
+      topIssues: current.topIssues.map(issue => ({
+        title: issue.title,
+        count: issue.count,
+        level: issue.level,
+      })),
+      hasData: true,
+    };
+  } catch (error) {
+    return {
+      errorCount: 0,
+      errorCountGrowth: "",
+      uniqueIssues: 0,
+      errorRate: 0,
+      topIssues: [],
+      hasData: false,
+    };
+  }
 }
 
 function normalizeUmamiValue(value: UmamiStatsResponse[keyof UmamiStatsResponse]): number {

@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { FontStyleSelector } from "@/components/selectors/font-style-selector";
 import type { FontStyle } from "@/domain/layout/types";
 
-export function LayoutSection() {
+interface LayoutSectionProps {
+  isBrandUser?: boolean;
+}
+
+export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const orientation = useAtomValue(orientationAtom);
@@ -86,6 +90,7 @@ export function LayoutSection() {
           <FontStyleSelector
             fontStyle={config.fontStyle}
             onFontStyleChange={handleFontStyleChange}
+            isBrandUser={isBrandUser}
           />
         </div>
       )}
