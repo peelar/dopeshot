@@ -24,6 +24,8 @@ type OnboardingFormProps = {
   initialAccent?: string | null;
   initialMode?: BrandMode | null;
   initialPersonality?: BrandPersonality | null;
+  embedded?: boolean;
+  onCompleted?: () => void;
 };
 
 function normalizeHex(input: string): string {
@@ -50,6 +52,8 @@ export function OnboardingForm({
   initialAccent,
   initialMode,
   initialPersonality,
+  embedded = false,
+  onCompleted,
 }: OnboardingFormProps) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -169,8 +173,8 @@ export function OnboardingForm({
         has_logo: Boolean(logoPath),
       });
 
-      router.replace("/");
       router.refresh();
+      onCompleted?.();
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save onboarding";
@@ -183,7 +187,12 @@ export function OnboardingForm({
   const derived = getDerivedPalette(mode);
 
   return (
-    <div className="relative mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
+    <div
+      className={cn(
+        "relative mx-auto w-full max-w-4xl",
+        embedded ? "px-5 py-6 sm:px-6 sm:py-8" : "px-4 py-10 sm:py-14",
+      )}
+    >
       <div className="flex flex-col items-start gap-6">
         <div className="flex items-start gap-4">
           <div
@@ -441,9 +450,11 @@ export function OnboardingForm({
           </aside>
         </div>
 
-        <p className="text-xs text-white/45">
-          You can change this later in the Brand tab.
-        </p>
+        {!embedded ? (
+          <p className="text-xs text-white/45">
+            You can change this later in the Brand tab.
+          </p>
+        ) : null}
       </div>
     </div>
   );

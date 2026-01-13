@@ -63,7 +63,7 @@ export default async function Page({ params }: PageProps) {
     redirect("/");
   }
 
-  let showBrandExperience = false;
+  let onboardingComplete = true;
 
   if (tier === "brand") {
     const [metadata, profile] = await Promise.all([
@@ -86,18 +86,20 @@ export default async function Page({ params }: PageProps) {
       ? (progress.completedSteps as unknown[])
       : [];
 
-    const onboardingComplete =
+    onboardingComplete =
       completedSteps.includes(BRAND_ONBOARDING_STEP) ||
       looksCompleteFromProfile(profile);
-
-    showBrandExperience = showBrandFlag && onboardingComplete;
   }
+
+  const showBrandExperience = showBrandFlag && tier === "brand";
+  const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
 
   return (
     <PlaygroundPage
       showBrandExperience={showBrandExperience}
       initialIsAuthenticated={session.isAuth}
       initialMemoryItemId={itemId}
+      initialOnboardingOpen={initialOnboardingOpen}
     />
   );
 }

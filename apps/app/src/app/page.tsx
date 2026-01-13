@@ -37,7 +37,7 @@ export default async function Page() {
 
   if (session.isAuth && session.userId) {
     const tier = await getUserTier(session.userId);
-    let showBrandExperience = false;
+    let onboardingComplete = true;
 
     if (tier === "brand") {
       const db = await getUserDb(session.userId);
@@ -61,20 +61,28 @@ export default async function Page() {
         ? (progress.completedSteps as unknown[])
         : [];
 
-      const onboardingComplete =
+      onboardingComplete =
         completedSteps.includes(BRAND_ONBOARDING_STEP) ||
         looksCompleteFromProfile(profile);
-
-      showBrandExperience = showBrandFlag && onboardingComplete;
     }
+
+    const showBrandExperience = showBrandFlag && tier === "brand";
+    const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
 
     return (
       <PlaygroundPage
         showBrandExperience={showBrandExperience}
         initialIsAuthenticated={session.isAuth}
+        initialOnboardingOpen={initialOnboardingOpen}
       />
     );
   }
 
-  return <PlaygroundPage showBrandExperience={false} initialIsAuthenticated={false} />;
+  return (
+    <PlaygroundPage
+      showBrandExperience={false}
+      initialIsAuthenticated={false}
+      initialOnboardingOpen={false}
+    />
+  );
 }

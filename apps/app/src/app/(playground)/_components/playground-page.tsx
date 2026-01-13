@@ -40,6 +40,8 @@ import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-bo
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
+import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
+import { OnboardingModal } from "@/components/onboarding/onboarding-modal";
 
 const FeedbackModal = dynamic(
   () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
@@ -98,6 +100,7 @@ type PlaygroundPageProps = {
   initialMemoryItemId?: string;
   initialIsAuthenticated?: boolean;
   showBrandExperience?: boolean;
+  initialOnboardingOpen?: boolean;
 };
 
 export function PlaygroundPage(props: PlaygroundPageProps) {
@@ -126,6 +129,7 @@ export function PlaygroundPage(props: PlaygroundPageProps) {
 function PlaygroundPageInner({
   initialMemoryItemId,
   initialIsAuthenticated,
+  initialOnboardingOpen,
 }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
@@ -158,6 +162,26 @@ function PlaygroundPageInner({
   const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(
     () => Boolean(initialIsAuthenticated) && Boolean(initialMemoryItemId),
   );
+
+  const {
+    shouldRedirectToOnboarding,
+    isLoading: isOnboardingLoading,
+    refresh: refreshOnboardingStatus,
+  } = useOnboardingStatus({ enabled: Boolean(session?.user) });
+
+  const [onboardingOpen, setOnboardingOpen] = useState(() => Boolean(initialOnboardingOpen));
+
+  useEffect(() => {
+    if (shouldRedirectToOnboarding) {
+      setOnboardingOpen(true);
+    }
+  }, [shouldRedirectToOnboarding]);
+
+  useEffect(() => {
+    if (onboardingOpen && !isOnboardingLoading && !shouldRedirectToOnboarding) {
+      setOnboardingOpen(false);
+    }
+  }, [isOnboardingLoading, onboardingOpen, shouldRedirectToOnboarding]);
 
   const setConfig = useSetAtom(baseConfigAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -275,6 +299,10 @@ function PlaygroundPageInner({
   const hasExported = useAtomValue(hasExportedAtom);
   useExportStateReset(); // Auto-reset on design changes
 
+  // Gate first brand session with a quick setup modal.
+  // Keeps the editor accessible without a route redirect and still ensures onboarding happens.
+  const shouldShowOnboardingModal = onboardingOpen && isLoggedIn;
+
   const {
     isDragging,
     uploadInputRef,
@@ -297,6 +325,16 @@ function PlaygroundPageInner({
       <DragOverlay visible={isDragging} />
 
       <InAppUpdateBanner />
+
+      <OnboardingModal
+        open={shouldShowOnboardingModal}
+        onOpenChange={(next) => setOnboardingOpen(next)}
+        required
+        onCompleted={() => {
+          setOnboardingOpen(false);
+          void refreshOnboardingStatus();
+        }}
+      />
 
       <AppHeader
         isLoggedIn={isLoggedIn}
