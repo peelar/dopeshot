@@ -102,7 +102,6 @@ export const auth = betterAuth({
             const requestOrigin = new URL(origin).origin;
             const configuredOrigin = new URL(authEnv.betterAuthUrl).origin;
             finalUrl = url.replace(configuredOrigin, requestOrigin);
-            console.log(`[Magic Link] Adjusted URL from ${url} to ${finalUrl}`);
           }
         }
 
@@ -123,8 +122,6 @@ export const auth = betterAuth({
               </div>
             `,
           });
-
-          console.log("Magic link email sent successfully:", result);
 
           if (result.error) {
             console.error("Resend API error:", result.error);

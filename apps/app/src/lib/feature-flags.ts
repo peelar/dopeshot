@@ -16,3 +16,10 @@ export const showBrandExperienceFlag = flag({
   ],
   decide: () => isDevelopment,
 });
+
+/**
+ * Static client-side feature flag for showing the Brand tab in the sidebar.
+ * Set to true to show the Brand tab (with tier-based enable/disable).
+ * Set to false to completely hide the Brand tab from the UI.
+ */
+export const SHOW_BRAND_TAB = isDevelopment;

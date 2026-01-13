@@ -68,6 +68,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     if (background.type !== "gradient") return;
     if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
     if (matchesScreenshotGradient) return;
+    if (background.patternId || background.patternMode === "manual") return;
 
     // Skip auto-apply if user has manually selected a preset or custom gradient
     // Check legacy string format first (handles "preset", "custom", "screenshot")

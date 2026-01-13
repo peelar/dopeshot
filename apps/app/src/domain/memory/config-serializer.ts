@@ -20,9 +20,16 @@ export function serializeEditorState(params: {
   // Create a deep copy of the config to avoid mutations
   const configCopy: LayoutConfig = JSON.parse(JSON.stringify(config));
 
-  // If there's a screenshot gradient, override the background
+  // If there's a screenshot gradient, merge to avoid dropping pattern metadata
   if (screenshotGradient) {
-    configCopy.background = screenshotGradient;
+    const currentBackground = configCopy.background;
+    configCopy.background = {
+      ...currentBackground,
+      ...screenshotGradient,
+      patternId: screenshotGradient.patternId ?? currentBackground?.patternId,
+      patternMode: screenshotGradient.patternMode ?? currentBackground?.patternMode,
+      patternVariant: screenshotGradient.patternVariant ?? currentBackground?.patternVariant,
+    };
   }
 
   const referencedAssetIds = new Set(

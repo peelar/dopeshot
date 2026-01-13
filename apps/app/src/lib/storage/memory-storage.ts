@@ -22,24 +22,12 @@ export async function uploadScreenshot(
   const extension = contentType === "image/jpeg" ? "jpg" : "png";
   const storagePath = `${userId}/${memoryItemId}.${extension}`;
 
-  // #region agent log
-  console.log('[DEBUG] uploadScreenshot starting', { userId, memoryItemId, storagePath, contentType, fileSize: file.length, bucket: BUCKET_NAME });
-  // #endregion
-
-  const { error, data } = await supabaseAdmin.storage
+  const { error } = await supabaseAdmin.storage
     .from(BUCKET_NAME)
     .upload(storagePath, file, {
       contentType,
       upsert: false, // Prevent accidental overwrites
     });
-
-  // #region agent log
-  if (error) {
-    console.error('[DEBUG] Supabase storage upload error', { error: error.message, statusCode: (error as any).statusCode, bucket: BUCKET_NAME, storagePath });
-  } else {
-    console.log('[DEBUG] Supabase upload success', { data, storagePath });
-  }
-  // #endregion
 
   if (error) {
     throw new Error(`Failed to upload screenshot: ${error.message}`);

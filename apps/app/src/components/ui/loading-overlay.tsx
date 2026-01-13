@@ -10,7 +10,7 @@ export function LoadingOverlay({ text = "Loading...", className }: LoadingOverla
   return (
     <div
       className={cn(
-        "absolute inset-0 z-10 flex items-center justify-center bg-background/60 backdrop-blur-2xl",
+        "absolute inset-0 z-10 flex items-center justify-center bg-background",
         className
       )}
     >

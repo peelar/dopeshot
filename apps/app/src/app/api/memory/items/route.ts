@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
+import { isBrandUser } from "@/lib/tier";
 import { uploadScreenshot, getSignedUrl } from "@/lib/storage/memory-storage";
 import { computeConfigHash } from "@/domain/memory/config-hash";
 import { SAVE_LIMIT } from "@/domain/memory/constants";
@@ -8,23 +9,6 @@ import type { MemoryConfiguration, MemoryItemDTO } from "@/domain/memory/types";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { getCachedMemoryItems } from "@/lib/data/cached-memory";
-
-function isTruthyObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function resolveIsBrandUser(featureFlags: unknown): boolean {
-  if (!isTruthyObject(featureFlags)) return false;
-
-  const flagValue = (key: string) => featureFlags[key];
-
-  return (
-    flagValue("tier.brand") === true ||
-    flagValue("tier.brand_user") === true ||
-    flagValue("brand") === true ||
-    flagValue("isBrandUser") === true
-  );
-}
 
 /**
  * GET /api/memory/items
@@ -100,9 +84,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // #region agent log
-    console.log('[DEBUG] POST memory item started', { userId: session.userId });
-    // #endregion
     // Parse form data and prepare config hash in parallel with getting DB
     const [formData, db] = await Promise.all([
       request.formData(),
@@ -121,12 +102,9 @@ export async function POST(request: NextRequest) {
 
     const configuration: MemoryConfiguration = JSON.parse(configJson);
     const configHash = computeConfigHash(configuration);
-    // #region agent log
-    console.log('[DEBUG] Config parsed', { configHash, configSize: configJson.length, screenshotSize: screenshotFile?.size, screenshotType: screenshotFile?.type });
-    // #endregion
 
-    // Parallel: Check save limit AND check for duplicate
-    const [currentSaveCount, existing, metadata] = await Promise.all([
+    // Parallel: Check save limit AND check for duplicate AND check tier
+    const [currentSaveCount, existing, hasBrandTier] = await Promise.all([
       db.memoryItem.count({
         where: { userId: session.userId },
       }),
@@ -142,15 +120,10 @@ export async function POST(request: NextRequest) {
           createdAt: true,
         },
       }),
-      db.userMetadata.findUnique({
-        where: { userId: session.userId },
-        select: { featureFlags: true },
-      }),
+      isBrandUser(session.userId),
     ]);
 
-    const isBrandUser = resolveIsBrandUser(metadata?.featureFlags);
-
-    if (!isBrandUser && currentSaveCount >= SAVE_LIMIT) {
+    if (!hasBrandTier && currentSaveCount >= SAVE_LIMIT) {
       return NextResponse.json(
         {
           error: "Save limit reached",
@@ -184,9 +157,6 @@ export async function POST(request: NextRequest) {
     const contentType = screenshotFile.type === "image/jpeg" ? "image/jpeg" : "image/png";
     const extension = contentType === "image/jpeg" ? "jpg" : "png";
     const storagePath = `${session.userId}/${memoryItemId}.${extension}`;
-    // #region agent log
-    console.log('[DEBUG] IDs generated', { memoryItemId, storagePath, contentType });
-    // #endregion
 
     // Convert file to buffer (needed for upload)
     const screenshotBuffer = Buffer.from(await screenshotFile.arrayBuffer());
@@ -194,9 +164,6 @@ export async function POST(request: NextRequest) {
     // Execute DB create + storage upload sequentially to identify failure point
     let dbResult;
     try {
-      // #region agent log
-      console.log('[DEBUG] Starting DB create', { memoryItemId, configHash });
-      // #endregion
       dbResult = await db.memoryItem.create({
         data: {
           id: memoryItemId,
@@ -210,28 +177,13 @@ export async function POST(request: NextRequest) {
           createdAt: true,
         },
       });
-      // #region agent log
-      console.log('[DEBUG] DB create success', { id: dbResult.id });
-      // #endregion
     } catch (dbErr) {
-      // #region agent log
-      console.error('[DEBUG] DB create FAILED', { error: String(dbErr), memoryItemId, stack: (dbErr as Error).stack });
-      // #endregion
       throw dbErr;
     }
 
     try {
-      // #region agent log
-      console.log('[DEBUG] Starting upload', { storagePath, bufferSize: screenshotBuffer.length });
-      // #endregion
       await uploadScreenshot(session.userId, memoryItemId, screenshotBuffer, contentType);
-      // #region agent log
-      console.log('[DEBUG] Upload success', { storagePath });
-      // #endregion
     } catch (uploadErr) {
-      // #region agent log
-      console.error('[DEBUG] Upload FAILED', { error: String(uploadErr), storagePath, stack: (uploadErr as Error).stack });
-      // #endregion
       throw uploadErr;
     }
 

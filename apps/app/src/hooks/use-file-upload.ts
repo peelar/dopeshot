@@ -108,13 +108,16 @@ export function useFileUpload({
         }
 
         setConfig((currentConfig) => {
-          const newConfig = {
-            ...currentConfig,
-            assets: {
-              ...currentConfig.assets,
-              [kind]: asset.id,
-            },
-          };
+          // Don't auto-apply logos to canvas - user must toggle "apply to all screenshots"
+          const newConfig = kind === "logo"
+            ? currentConfig
+            : {
+                ...currentConfig,
+                assets: {
+                  ...currentConfig.assets,
+                  [kind]: asset.id,
+                },
+              };
 
           if (kind === "background") {
             newConfig.background = {

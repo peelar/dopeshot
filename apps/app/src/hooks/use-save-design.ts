@@ -103,13 +103,7 @@ export function useSaveDesign() {
       });
 
       // Compress image to stay under Vercel's 4.5MB payload limit
-      const { blob, wasCompressed, originalSize, finalSize } = await compressImageBlob(rawBlob);
-
-      if (wasCompressed) {
-        console.log(
-          `Screenshot compressed: ${(originalSize / 1024).toFixed(0)}KB → ${(finalSize / 1024).toFixed(0)}KB`
-        );
-      }
+      const { blob } = await compressImageBlob(rawBlob);
 
       // Serialize current state
       const screenshotPath = `${session.user.id}/${Date.now()}.png`;

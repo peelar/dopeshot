@@ -4,23 +4,7 @@ import invariant from "tiny-invariant";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
-
-function isTruthyObject(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
-}
-
-function resolveIsBrandUser(featureFlags: unknown): boolean {
-  if (!isTruthyObject(featureFlags)) return false;
-
-  const flagValue = (key: string) => featureFlags[key];
-
-  return (
-    flagValue("tier.brand") === true ||
-    flagValue("tier.brand_user") === true ||
-    flagValue("brand") === true ||
-    flagValue("isBrandUser") === true
-  );
-}
+import { isBrandUser } from "@/lib/tier";
 
 export async function GET() {
   try {
@@ -33,19 +17,15 @@ export async function GET() {
     invariant(session.userId, "userId must be defined when isAuth is true");
     const userId = session.userId;
 
-    // Get user-scoped database
-    const db = await getUserDb(userId);
-    const metadata = await db.userMetadata.findUnique({
-      where: { userId },
-      select: { featureFlags: true },
-    });
-
-    if (!resolveIsBrandUser(metadata?.featureFlags)) {
+    if (!(await isBrandUser(userId))) {
       return NextResponse.json(
         { error: "Upgrade required", message: "Brand features require a Brand tier account." },
         { status: 403 },
       );
     }
+
+    // Get user-scoped database
+    const db = await getUserDb(userId);
 
     // Fetch brand profile via Prisma
     const profile = await db.brandProfile.findUnique({
@@ -58,6 +38,13 @@ export async function GET() {
         logoPath: true,
       },
     });
+
+    if (!profile) {
+      return NextResponse.json(
+        { error: "Brand profile not found" },
+        { status: 404 },
+      );
+    }
 
     // Generate signed URL for logo (Supabase Storage unchanged)
     let logoUrl: string | null = null;

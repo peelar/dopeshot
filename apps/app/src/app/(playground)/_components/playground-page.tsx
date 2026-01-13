@@ -133,7 +133,8 @@ function PlaygroundPageInner({
 
   const { isBrandUser } = useUserTier();
 
-  // Auto-apply brand logo on mount if toggle is enabled
+  // Auto-apply brand logo for NEW designs (not loaded from memory)
+  // For loaded designs, brand logo is applied during the load process in useMemory
   useBrandLogoAutoApply({ enabled: isBrandUser });
 
   // Handle feedback button click - capture screenshot and open modal
@@ -153,7 +154,9 @@ function PlaygroundPageInner({
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
-  const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(() => Boolean(initialIsAuthenticated));
+  const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(
+    () => Boolean(initialIsAuthenticated) && Boolean(initialMemoryItemId),
+  );
 
   const setConfig = useSetAtom(baseConfigAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -163,6 +166,7 @@ function PlaygroundPageInner({
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
 
   const hasBootstrappedRef = useRef(false);
+  const lastInitialMemoryItemIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -209,6 +213,12 @@ function PlaygroundPageInner({
       return;
     }
 
+    if (lastInitialMemoryItemIdRef.current === initialMemoryItemId) {
+      return;
+    }
+
+    lastInitialMemoryItemIdRef.current = initialMemoryItemId;
+
     loadMemoryItem(initialMemoryItemId).catch((error) => {
       console.error("Failed to load memory item from URL:", error);
     });
@@ -236,7 +246,11 @@ function PlaygroundPageInner({
     setIsConfigDrawerOpen,
   } = usePlaygroundController({ demoEnabled: !isLoggedIn });
 
-  const showLoadingState = isLoggedIn && (isBootstrappingMemory || (isMemoryLoading && !loadedItemId));
+  const showLoadingState =
+    isLoggedIn &&
+    (isBootstrappingMemory ||
+      (isMemoryLoading && !loadedItemId) ||
+      (Boolean(initialMemoryItemId) && !loadedItemId));
 
   const showEmptyState = useMemo(() => {
     const hasText = Boolean(config.text.title?.trim() || config.text.subtitle?.trim());

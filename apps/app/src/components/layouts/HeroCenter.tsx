@@ -52,7 +52,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
         <img
           src={logo.url}
           alt="Logo"
-          className="h-9 w-auto object-contain"
+          className="h-8 w-auto max-w-[200px] object-contain"
           crossOrigin="anonymous"
         />
       );

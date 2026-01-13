@@ -13,6 +13,7 @@ import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import type { Asset } from "@/domain/asset/types";
 import { useUserTier } from "@/hooks/use-user-tier";
+import { RefreshCw, Trash2, Loader2 } from "lucide-react";
 
 export function BrandPanel() {
   const { data: session } = useSession();
@@ -26,22 +27,10 @@ export function BrandPanel() {
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
-  if (isTierLoading) {
-    return <div className="h-full w-full p-4 text-sm text-muted-foreground">Loading brand tools…</div>;
-  }
-
-  if (!isBrandUser) {
-    return (
-      <div className="h-full w-full p-4">
-        <UpgradePrompt title="Brand tools" description="Upgrade to Brand to upload a logo and apply it to screenshots." />
-      </div>
-    );
-  }
-
   // Fetch brand profile in background on mount
   useEffect(() => {
     async function loadBrandProfile() {
-      if (!session?.user) return;
+      if (!isBrandUser || !session?.user) return;
 
       try {
         const response = await fetch("/api/brand/profile", {
@@ -71,14 +60,28 @@ export function BrandPanel() {
     }
 
     loadBrandProfile();
-  }, [session?.user?.id, setBrandSettings]);
+  }, [isBrandUser, session?.user?.id, setBrandSettings]);
+
+  if (isTierLoading) {
+    return <div className="h-full w-full p-4 text-sm text-muted-foreground">Loading brand tools…</div>;
+  }
+
+  if (!isBrandUser) {
+    return (
+      <div className="h-full w-full p-4">
+        <UpgradePrompt title="Brand tools" description="Upgrade to Brand to upload a logo and apply it to screenshots." />
+      </div>
+    );
+  }
 
   const handleUpload = async (file: File) => {
     setErrorMessage(null);
 
     try {
+      // Process file locally first (creates asset but doesn't auto-apply to canvas)
       await handleFileProcess(file, "logo");
 
+      // Upload to backend
       const formData = new FormData();
       formData.append("file", file, file.name);
 
@@ -130,6 +133,17 @@ export function BrandPanel() {
 
       if (!response.ok) {
         throw new Error(payload?.error ?? "Failed to remove logo");
+      }
+
+      // Remove logo from canvas if it was being used
+      if (brandSettings.useLogoOnScreenshots) {
+        setConfig((currentConfig) => ({
+          ...currentConfig,
+          assets: {
+            ...currentConfig.assets,
+            logo: undefined,
+          },
+        }));
       }
 
       setBrandSettings({
@@ -196,23 +210,63 @@ export function BrandPanel() {
 
         {brandSettings.logoUrl ? (
           <div className="space-y-3">
-            <div
-              className="aspect-video w-full rounded-lg border border-border overflow-hidden relative bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px]"
-              style={{
-                backgroundImage: `
-                  linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
-                  linear-gradient(-45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
-                  linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.05) 75%),
-                  linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.05) 75%)
-                `,
-                backgroundColor: 'hsl(var(--muted))'
-              }}
-            >
-              <img
-                src={brandSettings.logoUrl}
-                alt="Brand logo"
-                className="w-full h-full object-contain p-4 relative z-10"
+            <div className="relative group">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) =>
+                  e.target.files?.[0] && handleUpload(e.target.files[0])
+                }
+                className="hidden"
+                id="logo-replace"
+                aria-label="Replace logo file"
+                ref={replaceInputRef}
               />
+              <div
+                className="aspect-video w-full rounded-lg border border-border overflow-hidden bg-[length:20px_20px] bg-[position:0_0,0_10px,10px_-10px,-10px_0px] relative"
+                style={{
+                  backgroundImage: `
+                    linear-gradient(45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
+                    linear-gradient(-45deg, rgba(0,0,0,0.05) 25%, transparent 25%),
+                    linear-gradient(45deg, transparent 75%, rgba(0,0,0,0.05) 75%),
+                    linear-gradient(-45deg, transparent 75%, rgba(0,0,0,0.05) 75%)
+                  `,
+                  backgroundColor: "hsl(var(--muted))",
+                }}
+              >
+                <img
+                  src={brandSettings.logoUrl}
+                  alt="Brand logo"
+                  className="w-full h-full object-contain p-4"
+                />
+                {isProcessingUpload && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+                    <Loader2 className="h-6 w-6 text-white animate-spin" />
+                  </div>
+                )}
+              </div>
+              <div className="pointer-events-none absolute inset-0 flex items-center justify-center transition duration-150 opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-hover:bg-black/60 group-hover:backdrop-blur-sm group-focus-within:pointer-events-auto group-focus-within:opacity-100 group-focus-within:bg-black/60 group-focus-within:backdrop-blur-sm">
+                <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 shadow-lg ring-1 ring-white/30 backdrop-blur">
+                  <button
+                    type="button"
+                    onClick={() => replaceInputRef.current?.click()}
+                    disabled={isProcessingUpload}
+                    className="h-9 w-9 rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                  >
+                    <span className="sr-only">Replace logo</span>
+                    <RefreshCw className="mx-auto h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleRemove}
+                    disabled={isProcessingUpload}
+                    className="h-9 w-9 rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:opacity-50"
+                  >
+                    <span className="sr-only">Remove logo</span>
+                    <Trash2 className="mx-auto h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Auto-apply error message */}
@@ -228,48 +282,13 @@ export function BrandPanel() {
                 htmlFor="use-logo"
                 className="text-sm font-normal cursor-pointer"
               >
-                Use on screenshots
+                Apply to all screenshots
               </Label>
               <Switch
                 id="use-logo"
                 checked={brandSettings.useLogoOnScreenshots}
                 onCheckedChange={handleToggleUse}
               />
-            </div>
-
-            {/* Replace/Remove buttons */}
-            <div className="flex gap-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) =>
-                  e.target.files?.[0] && handleUpload(e.target.files[0])
-                }
-                className="hidden"
-                id="logo-replace"
-                aria-label="Replace logo file"
-                ref={replaceInputRef}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isProcessingUpload}
-                className="w-full"
-                type="button"
-                aria-controls="logo-replace"
-                onClick={() => replaceInputRef.current?.click()}
-              >
-                Replace
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemove}
-                disabled={isProcessingUpload}
-                className="text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                Remove
-              </Button>
             </div>
           </div>
         ) : (
@@ -294,7 +313,14 @@ export function BrandPanel() {
               aria-controls="logo-add"
               onClick={() => addInputRef.current?.click()}
             >
-              Add logo
+              {isProcessingUpload ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Add logo"
+              )}
             </Button>
           </>
         )}

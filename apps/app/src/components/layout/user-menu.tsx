@@ -58,7 +58,6 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
 
   // Show dropdown menu with avatar when logged in
   if (isAuthenticated && user) {
-    console.log("UserMenu: Rendering authenticated menu for", user.email);
     const themeCycle = [
       { value: "system", label: "Automatic", icon: Monitor },
       { value: "light", label: "Light", icon: Sun },
