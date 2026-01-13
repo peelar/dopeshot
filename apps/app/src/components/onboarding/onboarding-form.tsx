@@ -2,13 +2,13 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Sparkles } from "lucide-react";
+import { Moon, Sun, Upload } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SegmentedControl } from "@/components/ui/segmented-control";
 import { track } from "@/lib/analytics";
+import { toast } from "@/lib/utils/toast";
 import {
   brandModeValues,
   brandPersonalityLabels,
@@ -40,12 +40,6 @@ function normalizeHex(input: string): string {
   return "#000000";
 }
 
-function getDerivedPalette(mode: BrandMode) {
-  return mode === "dark"
-    ? { background: "#0A0A0A", text: "#FAFAFA" }
-    : { background: "#FFFFFF", text: "#0A0A0A" };
-}
-
 export function OnboardingForm({
   initialLogoUrl,
   initialLogoPath,
@@ -74,7 +68,6 @@ export function OnboardingForm({
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const personalityOptions = useMemo(
     () =>
@@ -96,16 +89,18 @@ export function OnboardingForm({
     [],
   );
 
-  const modeOptions = useMemo(
-    () => [
-      { id: "light", label: "Light" },
-      { id: "dark", label: "Dark" },
-    ],
+  const personalityFontClasses: Record<BrandPersonality, string> = useMemo(
+    () => ({
+      technical: "font-technical",
+      business: "font-professional",
+      creative: "font-edgy",
+      friendly: "font-friendly",
+      premium: "font-premium",
+    }),
     [],
   );
 
   const handleLogoUpload = async (file: File) => {
-    setErrorMessage(null);
     setIsUploadingLogo(true);
 
     try {
@@ -127,7 +122,7 @@ export function OnboardingForm({
       setLogoPath(payload?.logoPath ?? null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Logo upload failed";
-      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setIsUploadingLogo(false);
     }
@@ -141,11 +136,10 @@ export function OnboardingForm({
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      setErrorMessage("Please complete all fields to continue.");
+      toast.error("Please complete all fields to continue.");
       return;
     }
 
-    setErrorMessage(null);
     setIsSubmitting(true);
 
     try {
@@ -178,13 +172,11 @@ export function OnboardingForm({
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to save onboarding";
-      setErrorMessage(message);
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const derived = getDerivedPalette(mode);
 
   return (
     <div
@@ -194,188 +186,170 @@ export function OnboardingForm({
       )}
     >
       <div className="flex flex-col items-start gap-6">
-        <div className="flex items-start gap-4">
-          <div
-            className="grid size-12 place-items-center rounded-2xl border border-white/10 bg-white/5 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_20px_60px_-30px_rgba(0,0,0,0.8)]"
-            aria-hidden="true"
-          >
-            <Sparkles className="size-5 text-white/90" />
-          </div>
-          <div className="space-y-1">
-            <h1 className="text-balance text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-              Set up your brand in under 30 seconds
-            </h1>
-            <p className="max-w-[52ch] text-pretty text-sm text-white/65">
-              We’ll use this on every export so your screenshots look like they belong to you.
-            </p>
-          </div>
-        </div>
-
-        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12">
-          <section className="lg:col-span-7">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold text-white">Logo</h2>
-                  <p className="text-xs text-white/60">
-                    Upload a transparent PNG or SVG. We’ll auto-fit it.
-                  </p>
+        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
+          <div className="flex h-full flex-col gap-4 lg:col-span-6">
+            <section>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1">
+                    <h2 className="text-sm font-semibold text-white">Start with your logo</h2>
+                    <p className="text-xs text-white/60">
+                      Upload a transparent PNG or SVG.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploadingLogo || isSubmitting}
+                  >
+                    <Upload className="mr-2 size-4" />
+                    {logoPath ? "Replace" : "Upload"}
+                  </Button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const next = e.target.files?.[0];
+                      if (next) void handleLogoUpload(next);
+                      e.currentTarget.value = "";
+                    }}
+                  />
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="border-white/15 bg-white/5 text-white hover:bg-white/10 hover:text-white"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={isUploadingLogo || isSubmitting}
-                >
-                  <Upload className="mr-2 size-4" />
-                  {logoPath ? "Replace" : "Upload"}
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const next = e.target.files?.[0];
-                    if (next) void handleLogoUpload(next);
-                    e.currentTarget.value = "";
-                  }}
-                />
-              </div>
 
-              <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
-                <div
-                  className="relative grid aspect-[16/9] place-items-center bg-[length:22px_22px] p-4"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-                      linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
-                      linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%)
-                    `,
-                    backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0px",
-                  }}
-                >
-                  {logoUrl ? (
-                    <img
-                      src={logoUrl}
-                      alt="Your logo preview"
-                      className={cn(
-                        "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]",
-                        isUploadingLogo && "opacity-60",
-                      )}
-                    />
-                  ) : (
-                    <div className="text-center">
-                      <p className="text-sm font-medium text-white/85">
-                        Drop in your logo
-                      </p>
-                      <p className="mt-1 text-xs text-white/55">
-                        Recommended: 1024px wide, transparent background
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label className="text-xs text-white/70">Accent color</Label>
-                  <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-black/25 p-3">
-                    <div className="relative">
-                      <input
-                        type="color"
-                        value={accent}
-                        onChange={(e) => setAccent(normalizeHex(e.target.value))}
-                        aria-label="Accent color picker"
-                        disabled={isSubmitting}
-                        className="h-10 w-10 cursor-pointer appearance-none rounded-lg border border-white/10 bg-transparent p-0"
+                <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                  <div
+                    className="relative grid aspect-[16/9] place-items-center bg-[length:22px_22px] p-4"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+                        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
+                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%)
+                      `,
+                      backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0px",
+                    }}
+                  >
+                    {logoUrl ? (
+                      <img
+                        src={logoUrl}
+                        alt="Your logo preview"
+                        className={cn(
+                          "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]",
+                          isUploadingLogo && "opacity-60",
+                        )}
                       />
-                      <div
-                        className="pointer-events-none absolute inset-0 rounded-lg"
-                        style={{
-                          boxShadow: `0 0 0 1px rgba(255,255,255,0.08), 0 12px 30px -20px ${accent}80`,
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <Input
-                        value={accent}
-                        onChange={(e) => setAccent(normalizeHex(e.target.value))}
-                        className="h-9 border-white/10 bg-black/20 font-mono text-xs text-white placeholder:text-white/40"
-                        placeholder="#6366F1"
-                        inputMode="text"
-                        disabled={isSubmitting}
-                      />
-                      <p className="text-[11px] text-white/45">
-                        Used for highlights, buttons, and gradients.
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="text-center">
+                        <p className="text-sm font-medium text-white/85">
+                          Drop your logo here
+                        </p>
+                        <p className="mt-1 text-xs text-white/55">
+                          Recommended: 1024px wide, transparent background
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
+              </div>
+            </section>
 
-                <div className="space-y-2">
-                  <Label className="text-xs text-white/70">Light / dark</Label>
-                  <SegmentedControl
-                    value={mode}
-                    options={modeOptions}
-                    onChange={(value) => setMode(value as BrandMode)}
-                    ariaLabel="Select brand mode"
-                    className="border-white/10 bg-black/25"
-                    buttonClassName="text-xs"
-                  />
+            <section>
+              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+                <div className="space-y-1">
+                  <h2 className="text-sm font-semibold text-white">Choose your colors</h2>
+                  <p className="text-xs text-white/60">Pick an accent and a color scheme.</p>
+                </div>
 
-                  <div className="mt-3 rounded-xl border border-white/10 bg-black/25 p-3">
-                    <div
-                      className="relative overflow-hidden rounded-lg border border-white/10 p-4"
-                      style={{
-                        background: derived.background,
-                        color: derived.text,
-                      }}
-                    >
-                      <div
-                        className="absolute inset-0 opacity-40"
-                        aria-hidden="true"
-                        style={{
-                          backgroundImage: `radial-gradient(circle at 20% 20%, ${accent}35, transparent 45%),
-                            radial-gradient(circle at 70% 40%, ${accent}22, transparent 50%),
-                            radial-gradient(circle at 35% 85%, ${accent}18, transparent 45%)`,
-                        }}
-                      />
+                <div className="mt-4 grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-white/70">What accent color feels right?</Label>
+                    <div className="flex items-center gap-3">
                       <div className="relative">
-                        <p className="text-sm font-semibold">Preview</p>
-                        <p className="mt-1 text-xs opacity-80">
-                          Your exports will default to this mode.
+                        <input
+                          type="color"
+                          value={accent}
+                          onChange={(e) => setAccent(normalizeHex(e.target.value))}
+                          aria-label="Accent color picker"
+                          disabled={isSubmitting}
+                          className="h-10 w-10 cursor-pointer appearance-none rounded-full border border-white/10 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
+                        />
+                      </div>
+                      <div className="flex-1 space-y-1">
+                        <Input
+                          value={accent}
+                          onChange={(e) => setAccent(normalizeHex(e.target.value))}
+                          className="h-9 border-white/10 bg-black/20 font-mono text-xs text-white placeholder:text-white/40"
+                          placeholder="#6366F1"
+                          inputMode="text"
+                          disabled={isSubmitting}
+                        />
+                        <p className="text-[11px] text-white/45">
+                          Used for highlights, buttons, and gradients.
                         </p>
-                        <div className="mt-3 inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold"
-                          style={{ background: `${accent}22`, color: derived.text }}
-                        >
-                          <span
-                            className="inline-block size-2 rounded-full"
-                            style={{ background: accent }}
-                          />
-                          Accent
-                        </div>
                       </div>
                     </div>
                   </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-white/70">What color scheme do you prefer?</Label>
+                    <div className="relative grid grid-cols-2 rounded-xl border border-white/10 bg-black/25 p-1">
+                      <div
+                        className={cn(
+                          "absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white/10 shadow-[0_8px_24px_-16px_rgba(255,255,255,0.45)] transition-transform duration-200",
+                          mode === "light" ? "translate-x-0" : "translate-x-full",
+                        )}
+                        aria-hidden="true"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setMode("light")}
+                        disabled={isSubmitting}
+                        className={cn(
+                          "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                          mode === "light" ? "text-white" : "text-white/55",
+                          isSubmitting && "cursor-not-allowed",
+                        )}
+                      >
+                        <Sun className="size-4" />
+                        Light
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setMode("dark")}
+                        disabled={isSubmitting}
+                        className={cn(
+                          "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                          mode === "dark" ? "text-white" : "text-white/55",
+                          isSubmitting && "cursor-not-allowed",
+                        )}
+                      >
+                        <Moon className="size-4" />
+                        Dark
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          </div>
 
-          <aside className="lg:col-span-5">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+          <aside className="lg:col-span-6 lg:h-full">
+            <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-white">Personality</h2>
+                <h2 className="text-sm font-semibold text-white">
+                  Select a personality that fits your product
+                </h2>
                 <p className="text-xs text-white/60">
-                  This tunes the default typography + tone.
+                  This sets the default typography + tone.
                 </p>
               </div>
 
-              <div className="mt-4">
-                <div role="radiogroup" aria-label="Select brand personality" className="space-y-2">
+              <div className="mt-4 flex-1">
+                <div role="radiogroup" aria-label="Which personality fits your brand" className="space-y-2">
                   {personalityOptions.map((option) => {
                     const isActive = personality === option.id;
                     return (
@@ -388,15 +362,20 @@ export function OnboardingForm({
                         disabled={isSubmitting}
                         className={cn(
                           "w-full rounded-xl border px-4 py-3 text-left transition",
-                          "border-white/10 bg-black/25 hover:bg-black/35",
-                          isActive &&
-                            "border-white/25 bg-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_14px_40px_-26px_rgba(0,0,0,0.9)]",
+                          isActive
+                            ? "border-white/25 bg-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_14px_40px_-26px_rgba(0,0,0,0.9)]"
+                            : "border-white/10 bg-black/25 hover:bg-black/35",
                           isSubmitting && "cursor-not-allowed opacity-70",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <div className="text-sm font-semibold text-white">
+                            <div
+                              className={cn(
+                                "text-sm font-semibold text-white",
+                                personalityFontClasses[option.id],
+                              )}
+                            >
                               {option.label}
                             </div>
                             <div className="mt-1 text-xs text-white/60">
@@ -417,44 +396,22 @@ export function OnboardingForm({
                 </div>
               </div>
 
-              <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-4">
-                <p className="text-xs font-semibold text-white/85">What this changes</p>
-                <ul className="mt-2 space-y-1 text-xs text-white/60">
-                  <li>• Heading font family + weight</li>
-                  <li>• Default spacing + corner radius</li>
-                  <li>• Gradient energy + contrast</li>
-                </ul>
-              </div>
-
-              {errorMessage ? (
-                <p className="mt-5 text-xs text-red-300">{errorMessage}</p>
-              ) : null}
-
-              <div className="mt-6 flex items-center gap-3">
+              <div className="mt-6 flex flex-col items-end gap-2">
                 <Button
                   type="button"
                   onClick={handleSubmit}
                   disabled={!canSubmit || isUploadingLogo || isSubmitting}
-                  className="flex-1"
+                  className="sm:min-w-[180px]"
                 >
                   {isSubmitting ? "Saving…" : "Finish setup"}
                 </Button>
-                <div className="text-right text-[11px] text-white/50">
-                  <div>~30 seconds</div>
-                  <div className={cn(!canSubmit && "text-white/35")}>
-                    {canSubmit ? "Ready" : "Missing fields"}
-                  </div>
-                </div>
+                <p className="text-[10px] text-white/45">
+                  Don’t worry, you can change these later.
+                </p>
               </div>
             </div>
           </aside>
         </div>
-
-        {!embedded ? (
-          <p className="text-xs text-white/45">
-            You can change this later in the Brand tab.
-          </p>
-        ) : null}
       </div>
     </div>
   );

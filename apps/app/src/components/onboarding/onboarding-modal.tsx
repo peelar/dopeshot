@@ -122,7 +122,7 @@ export function OnboardingModal({
                 </div>
                 <div className="space-y-0.5">
                   <DialogPrimitive.Title className="text-sm font-semibold text-white">
-                    Welcome to Brand
+                    Welcome to dopeshot
                   </DialogPrimitive.Title>
                   <DialogPrimitive.Description className="text-xs text-white/60">
                     Quick setup so your next export looks unmistakably you.
