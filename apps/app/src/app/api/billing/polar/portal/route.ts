@@ -4,8 +4,6 @@ import { verifySession } from "@/lib/auth/session";
 import { enablePolarBillingFlag } from "@/lib/feature-flags";
 import { getAppBaseUrlFromRequest, polarApiFetch } from "@/lib/billing/polar";
 
-export const runtime = "nodejs";
-
 function safeReturnPath(input: string | null): string {
   if (!input) return "/settings/billing";
   if (!input.startsWith("/")) return "/settings/billing";

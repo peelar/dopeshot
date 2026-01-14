@@ -5,8 +5,6 @@ import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { enablePolarBillingFlag } from "@/lib/feature-flags";
 
-export const runtime = "nodejs";
-
 export type BillingMeResponse = {
   tier: "free" | "brand";
   status: string | null;

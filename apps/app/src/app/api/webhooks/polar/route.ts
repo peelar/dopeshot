@@ -6,8 +6,6 @@ import { enablePolarBillingFlag } from "@/lib/feature-flags";
 import { prisma } from "@/lib/prisma";
 import { requirePolarWebhookSecret } from "@/lib/billing/polar";
 
-export const runtime = "nodejs";
-
 type PolarSubscription = {
   id: string;
   status?: string | null;

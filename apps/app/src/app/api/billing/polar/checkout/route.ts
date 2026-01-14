@@ -9,8 +9,6 @@ import {
   requirePolarProductId,
 } from "@/lib/billing/polar";
 
-export const runtime = "nodejs";
-
 function safeReturnPath(input: string | null): string {
   if (!input) return "/settings/billing";
   if (!input.startsWith("/")) return "/settings/billing";
