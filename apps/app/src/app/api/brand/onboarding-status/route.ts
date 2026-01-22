@@ -13,11 +13,10 @@ function isMode(value: unknown): value is "light" | "dark" {
 
 function isPersonality(value: unknown) {
   return (
-    value === "technical" ||
-    value === "business" ||
-    value === "creative" ||
-    value === "friendly" ||
-    value === "premium"
+    value === "hipster" ||
+    value === "founder" ||
+    value === "hacker" ||
+    value === "kawaii"
   );
 }
 

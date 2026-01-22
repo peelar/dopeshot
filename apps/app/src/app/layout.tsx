@@ -2,13 +2,9 @@ import type { Metadata } from "next";
 import { GeistSans } from "geist/font/sans";
 import {
   Inter,
-  Commissioner,
   IBM_Plex_Mono,
   Bricolage_Grotesque,
-  Chivo,
-  Chakra_Petch,
-  Nunito,
-  DM_Serif_Display,
+  Kiwi_Maru,
 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -33,12 +29,6 @@ const interUi = Inter({
   variable: "--font-ui",
 });
 
-const commissioner = Commissioner({
-  subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-professional",
-});
-
 const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "600"],
@@ -50,41 +40,19 @@ const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bold",
 });
 
-const nunito = Nunito({
+const kiwiMaru = Kiwi_Maru({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-friendly",
-});
-
-const chivo = Chivo({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  variable: "--font-edgy",
-});
-
-const chakraPetch = Chakra_Petch({
-  subsets: ["latin"],
-  weight: ["400", "600"],
-  variable: "--font-technical",
-});
-
-const dmSerifDisplay = DM_Serif_Display({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-premium",
+  weight: ["300", "400", "500"],
+  variable: "--font-ghibli",
 });
 
 // Combine all font variables
 const fontVariables = [
   geistSans.variable, // --font-geist-sans (from package)
   interUi.variable,
-  commissioner.variable,
   ibmPlexMono.variable,
   bricolageGrotesque.variable,
-  nunito.variable,
-  chivo.variable,
-  chakraPetch.variable,
-  dmSerifDisplay.variable,
+  kiwiMaru.variable,
 ].join(" ");
 
 const siteUrl = "https://app.dopeshot.io";

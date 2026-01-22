@@ -44,9 +44,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
         };
 
         // Store screenshot gradient for persistence across layout changes
-        if (background.gradientSource === "screenshot") {
-          setScreenshotGradient(newBackground);
-        }
+        setScreenshotGradient(newBackground);
 
         return {
           ...currentConfig,

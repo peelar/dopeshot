@@ -3,8 +3,7 @@ import { useSetAtom } from "jotai";
 import { configAtom, screenshotGradientAtom, statusMessageAtom } from "./atoms";
 import { generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
 import { applyPreferredAngle, getGradientColorsForContrast } from "@/domain/layout/gradient-application";
-import type { ColorSource } from "@/domain/layout/gradients/color-source";
-import { createColorSourceInfo } from "@/domain/layout/gradients/color-source";
+import type { ColorPalette } from "@/domain/asset/types";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { track } from "@/lib/analytics";
 
@@ -18,27 +17,25 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
   const setStatusMessage = useSetAtom(statusMessageAtom);
 
   /**
-   * Generates gradients from any color source and applies to config.
+   * Generates gradients from screenshot colors and applies to config.
    * Respects user's manual background choices.
    */
-  const generateFromColorSource = useCallback(
-    async (source: ColorSource, options?: { autoLayoutMessage?: string | null }) => {
+  const generateFromScreenshot = useCallback(
+    async (colors: ColorPalette, options?: { autoLayoutMessage?: string | null }) => {
       const { autoLayoutMessage } = options ?? {};
 
-      // Track color source analytics
       track("gradient_generated", {
-        colorSourceType: source.type,
-        hasProviderId: !!source.providerId,
+        hasColors: !!colors,
       });
 
-      // Generate 4 gradient options from color palette
-      const gradientOptions = generateGradientOptions(source.colors, {
+      // Generate gradient options from color palette
+      const gradientOptions = generateGradientOptions(colors, {
         aspectCategory: "landscape",
         variant: undefined,
       });
 
       if (gradientOptions.length === 0) {
-        console.warn("No gradient options generated from color source", source);
+        console.warn("No gradient options generated from colors", colors);
         return;
       }
 
@@ -55,37 +52,27 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
 
       setConfig((currentConfig) => {
         // Respect any manual background choice made during generation
-        const userSelectedPreset =
-          currentConfig.background?.type === "gradient" &&
-          currentConfig.background.customGradient === undefined &&
-          currentConfig.background.value !== "custom";
         const userHasCustomGradient = currentConfig.background?.customGradient !== undefined;
         const hasImageBackground = currentConfig.background?.type === "image";
 
-        if (userSelectedPreset || userHasCustomGradient || hasImageBackground) {
+        if (userHasCustomGradient || hasImageBackground) {
           return currentConfig;
         }
 
         appliedGradient = true;
-
-        // Create detailed gradient source info
-        const sourceInfo = createColorSourceInfo(source);
 
         const generatedBackground = {
           ...(currentConfig.background ?? { type: "gradient", value: "custom" }),
           type: "gradient" as const,
           value: "custom",
           customGradient: finalGradient,
-          gradientSource: sourceInfo, // 🎯 Detailed tracking
           grainEnabled: currentConfig.background?.grainEnabled ?? true,
           patternId: currentConfig.background?.patternId,
           patternMode: currentConfig.background?.patternMode,
         };
 
         // Store screenshot gradient separately for layout persistence
-        if (source.type === "screenshot") {
-          setScreenshotGradient(generatedBackground);
-        }
+        setScreenshotGradient(generatedBackground);
 
         return {
           ...currentConfig,
@@ -99,8 +86,8 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
 
       if (appliedGradient) {
         const gradientMessage = autoLayoutMessage
-          ? `${autoLayoutMessage} Gradient applied based on your ${source.type} colors.`
-          : `Gradient applied based on your ${source.type} colors.`;
+          ? `${autoLayoutMessage} Gradient applied from screenshot colors.`
+          : `Gradient applied from screenshot colors.`;
         setStatusMessage(gradientMessage);
       }
     },
@@ -108,6 +95,6 @@ export function useGradientGeneration({ gradientPreferences }: UseGradientGenera
   );
 
   return {
-    generateFromColorSource,
+    generateFromScreenshot,
   };
 }

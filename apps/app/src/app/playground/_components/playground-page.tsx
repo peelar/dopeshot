@@ -9,8 +9,24 @@ import { track } from "@/lib/analytics";
 
 const DEFAULT_EFFECTS: EffectState = {
   tintOverlay: false,
-  blobOverlay: false,
-  grain: false,
+  blobOverlay: {
+    enabled: false,
+    count: 2,
+    strength: 0.4,
+    softness: 0.7,
+    scale: 0.6,
+    blendMode: "screen",
+    seed: 32,
+    placement: "diagonal",
+  },
+  grain: {
+    enabled: false,
+    amount: 0.18,
+    scale: 0.35,
+    blendMode: "soft-light",
+    useSeed: true,
+    seed: 24,
+  },
   vignette: {
     enabled: false,
     strength: 0.35,
@@ -50,7 +66,7 @@ export function PlaygroundPage() {
           </div>
         </main>
 
-        <div className="w-full max-w-full lg:max-w-[320px]">
+        <div className="w-full max-w-full lg:max-w-[320px] lg:sticky lg:top-6 self-start">
           <EffectsPanel value={effects} onChange={setEffects} />
         </div>
       </div>

@@ -3,14 +3,13 @@ import type { LayoutConfig, BackgroundConfig } from "@/domain/layout/types";
 import type { Orientation } from "@/hooks/atoms";
 import type { MemoryConfiguration } from "./types";
 
+/**
+ * Infer organic-blobs pattern for legacy ambient gradients.
+ * Ambient gradients (black→accent or white→accent) should show blob overlays.
+ */
 function inferLegacyPattern(background: BackgroundConfig): BackgroundConfig | null {
   if (background.patternId) return null;
   if (background.type !== "gradient") return null;
-  const sourceType =
-    typeof background.gradientSource === "string"
-      ? background.gradientSource
-      : background.gradientSource?.type;
-  if (sourceType !== "screenshot") return null;
 
   const gradient = background.customGradient;
   if (!gradient || !isAdvancedGradient(gradient) || gradient.type !== "linear") {

@@ -6,6 +6,10 @@ import {
   isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
 import { configAtom, assetsAtom, orientationAtom, brandSettingsAtom } from "../atoms";
+import {
+  getStyleForPersonality,
+  type PersonalityStyle,
+} from "@/domain/brand/personality-mapping";
 
 // Derived atoms
 export const currentLayoutAtom = atom((get) => {
@@ -80,4 +84,14 @@ export const brandLogoAssetAtom = atom((get) => {
   }
 
   return undefined;
+});
+
+/**
+ * Derived atom that computes the personality style tokens from brand settings.
+ * Returns null if no personality is set, otherwise returns the full PersonalityStyle
+ * object containing cornerRadius, shadow, texture, and fontStyle.
+ */
+export const personalityStyleAtom = atom<PersonalityStyle | null>((get) => {
+  const brandSettings = get(brandSettingsAtom);
+  return getStyleForPersonality(brandSettings.personality);
 });

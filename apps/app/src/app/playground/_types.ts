@@ -24,10 +24,35 @@ export type VignetteEffect = {
   mode: VignetteMode;
 };
 
+export type GrainBlendMode = "soft-light" | "overlay" | "multiply" | "normal";
+
+export type GrainEffect = {
+  enabled: boolean;
+  amount: number;
+  scale: number;
+  blendMode: GrainBlendMode;
+  useSeed: boolean;
+  seed: number;
+};
+
+export type BlobBlendMode = "screen" | "soft-light" | "overlay" | "normal";
+export type BlobPlacement = "diagonal" | "corners" | "randomBalanced";
+
+export type BlobOverlayEffect = {
+  enabled: boolean;
+  count: number;
+  strength: number;
+  softness: number;
+  scale: number;
+  blendMode: BlobBlendMode;
+  seed: number;
+  placement: BlobPlacement;
+};
+
 export type EffectState = {
   tintOverlay: boolean;
-  blobOverlay: boolean;
-  grain: boolean;
+  blobOverlay: BlobOverlayEffect;
+  grain: GrainEffect;
   vignette: VignetteEffect;
   patternGrid: boolean;
   blur: boolean;

@@ -10,8 +10,7 @@ import type { FontStyle } from "./types";
  * - Founder: Balanced, neutral, max 3 lines
  * - Billboard: Bold, expressive, max 2 lines
  * - Terminal: Compact, technical, max 4 lines
- * - Friendly: Warm, rounded, max 3 lines
- * - Premium: Display serif, max 2 lines
+ * - Ghibli: Warm, rounded, Studio Ghibli feel, max 3 lines
  */
 
 export interface TypographyScalingRules {
@@ -71,29 +70,17 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     titleLetterSpacing: -0.01,
     subtitleLetterSpacing: -0.01,
   },
-  friendly: {
+  ghibli: {
     titleMinSize: 2.25,
     titleMaxSize: 4.25,
     subtitleMinSize: 1.0,
     subtitleMaxSize: 1.4,
-    titleLineHeight: 1.12,
-    subtitleLineHeight: 1.45,
+    titleLineHeight: 1.15,
+    subtitleLineHeight: 1.5,
     titleMaxLines: 3,
     subtitleMaxLines: 3,
-    titleLetterSpacing: -0.01,
+    titleLetterSpacing: 0,
   },
-  premium: {
-    titleMinSize: 2.5,
-    titleMaxSize: 4.75,
-    subtitleMinSize: 1.0,
-    subtitleMaxSize: 1.35,
-    titleLineHeight: 1.02,
-    subtitleLineHeight: 1.4,
-    titleMaxLines: 2,
-    subtitleMaxLines: 2,
-    titleLetterSpacing: -0.01,
-  },
-
 };
 
 /**
@@ -129,8 +116,7 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
     founder: ["tracking-tight", "font-bold"],
     billboard: ["tracking-tighter", "font-extrabold"],
     terminal: ["tracking-tight", "font-bold", "font-mono"],
-    friendly: ["tracking-tight", "font-semibold"],
-    premium: ["tracking-tighter", "font-normal"],
+    ghibli: ["tracking-normal", "font-medium"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
@@ -160,8 +146,7 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
     founder: ["tracking-normal"],
     billboard: ["tracking-tight", "font-medium"],
     terminal: ["tracking-tight", "font-mono"],
-    friendly: ["tracking-normal", "font-normal"],
-    premium: ["tracking-tight", "font-normal"],
+    ghibli: ["tracking-normal", "font-normal"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);

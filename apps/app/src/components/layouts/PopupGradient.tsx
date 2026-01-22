@@ -37,15 +37,15 @@ const PEAK_CORNER_RADIUS = "16px";
 const MIN_ZOOM_CENTER = 1.0; // No base scale for center variant
 const MIN_ZOOM_SIDE = 1.0 / SIDE_SCREENSHOT_ZOOM; // ≈ 0.74 for side variants
 
-function getPeakBorderRadius(placement: "left" | "right" | "center") {
+function getPeakBorderRadius(placement: "left" | "right" | "center", radius: string) {
   switch (placement) {
     case "left":
-      return `${PEAK_CORNER_RADIUS} 0 0 0`;
+      return `${radius} 0 0 0`;
     case "right":
-      return `0 ${PEAK_CORNER_RADIUS} 0 0`;
+      return `0 ${radius} 0 0`;
     case "center":
     default:
-      return `${PEAK_CORNER_RADIUS} ${PEAK_CORNER_RADIUS} 0 0`;
+      return `${radius} ${radius} 0 0`;
   }
 }
 
@@ -78,7 +78,11 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
     screenshotTreatment,
     screenshotZoom,
     text,
+    cornerRadius,
   } = useLayoutPrimitives();
+
+  // Use personality-driven corner radius if available, otherwise default
+  const peakCornerRadius = cornerRadius ? `${cornerRadius}px` : PEAK_CORNER_RADIUS;
 
   // Use layout-specific fade state, defaulting to false for Peak layout
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
@@ -140,7 +144,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             bottom: 0,
             left: insetPercentage,
             right: insetPercentage,
-            borderRadius: getPeakBorderRadius("center"),
+            borderRadius: getPeakBorderRadius("center", peakCornerRadius),
             background: "transparent",
             boxShadow: screenshotShadow,
           }}
@@ -185,7 +189,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
         )}
         style={{
           ...baseStyle,
-          borderRadius: getPeakBorderRadius(placement),
+          borderRadius: getPeakBorderRadius(placement, peakCornerRadius),
           background: "transparent",
           boxShadow: screenshotShadow,
         }}

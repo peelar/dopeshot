@@ -7,8 +7,24 @@ import { track } from "@/lib/analytics";
 
 const baseEffects: EffectState = {
   tintOverlay: false,
-  blobOverlay: false,
-  grain: false,
+  blobOverlay: {
+    enabled: false,
+    count: 2,
+    strength: 0.4,
+    softness: 0.7,
+    scale: 0.6,
+    blendMode: "screen",
+    seed: 32,
+    placement: "diagonal",
+  },
+  grain: {
+    enabled: false,
+    amount: 0.18,
+    scale: 0.35,
+    blendMode: "soft-light",
+    useSeed: true,
+    seed: 24,
+  },
   vignette: {
     enabled: false,
     strength: 0.35,
@@ -53,7 +69,7 @@ describe("GradientPreview", () => {
 
     render(<GradientPreview palette={paletteCases[0]} effects={baseEffects} />);
 
-    fireEvent.click(screen.getByRole("button", { name: "Copy debug JSON" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Copy debug JSON" })[0]);
 
     await waitFor(() => {
       expect(writeText).toHaveBeenCalled();
@@ -61,5 +77,12 @@ describe("GradientPreview", () => {
 
     const payload = JSON.parse(writeText.mock.calls[0][0]);
     expect(payload.effects).toEqual(baseEffects);
+    expect(payload.derived.grain).toEqual(
+      expect.objectContaining({
+        blendMode: baseEffects.grain.blendMode,
+        opacity: expect.any(Number),
+        backgroundSize: expect.any(String),
+      })
+    );
   });
 });

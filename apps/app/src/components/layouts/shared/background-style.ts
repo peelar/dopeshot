@@ -4,32 +4,49 @@ import {
   customGradientToCss,
   isAdvancedGradient,
   isLegacyGradient,
-  isMeshGradient,
 } from "@/domain/layout/gradients";
-import { getGradientById } from "@/domain/layout/gradient-presets";
 import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
-type LayoutGeometry =
-  | { type: "radial"; direction: string }
-  | { type: "linear"; angle: number };
+/**
+ * Check if a gradient is "simple" - meaning it's safe to override its geometry
+ * based on layout type. Simple gradients are basic 2-color linear gradients
+ * without any special rendering requirements.
+ * 
+ * Complex gradients (mesh, aurora, etc.) have their own
+ * carefully designed geometry and should NOT be modified.
+ */
+function isSimpleGradient(gradient: CustomGradient): boolean {
+  // Legacy gradients are always simple (just from/to colors)
+  if (isLegacyGradient(gradient)) {
+    return true;
+  }
+
+  if (isAdvancedGradient(gradient)) {
+    // Has mesh layers (blob effects) - never modify
+    if (gradient.meshLayers && gradient.meshLayers.length > 0) return false;
+    
+    // Aurora-style (4+ stops) - never modify
+    if (gradient.stops.length >= 4) return false;
+    
+    // Radial or conic gradients have specific geometry - don't override
+    if (gradient.type !== "linear") return false;
+    
+    // Simple 2-3 stop linear gradient - safe to adjust angle
+    return true;
+  }
+
+  return false;
+}
 
 /**
- * Get layout-specific gradient geometry based on layout type and variant.
- * This allows the same gradient colors to render differently per layout.
- *
- * Note: We use linear gradients for all layouts because the 3-stop gradient
- * structure (color → dark → color) doesn't work well with radial gradients
- * (creates a glow/ring effect instead of smooth coverage).
+ * Get layout-specific gradient angle based on layout type and variant.
+ * Only used for simple gradients where we want the gradient direction
+ * to complement the layout's visual flow.
  */
-function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
-  // Spotlight: diagonal toward screenshot side
+function getLayoutAngle(layoutId: string, variant?: string): number {
+  // Spotlight: gradient flows toward screenshot side
   if (layoutId.startsWith("hero-center")) {
-    // Left variant: text on left, screenshot on right → gradient flows left-to-right
-    // Right variant: text on right, screenshot on left → gradient flows right-to-left
-    return {
-      type: "linear",
-      angle: variant === "right" ? 270 : 90,
-    };
+    return variant === "right" ? 270 : 90;
   }
 
   // Peak: linear perpendicular to screenshot edge
@@ -39,24 +56,44 @@ function getLayoutGeometry(layoutId: string, variant?: string): LayoutGeometry {
       right: 270,
       center: 180,
     };
-    return { type: "linear", angle: angles[variant ?? "center"] ?? 180 };
+    return angles[variant ?? "center"] ?? 180;
   }
 
   // Backdrop: vertical gradient for centered screenshot
   if (layoutId === "adaptive-stage") {
-    return { type: "linear", angle: 180 };
+    return 180;
   }
 
-  // Default: diagonal linear
-  return { type: "linear", angle: 135 };
+  // Default: diagonal
+  return 135;
 }
 
 /**
- * Extract gradient stops as a CSS string from a CustomGradient
+ * Convert gradient to CSS, optionally adjusting geometry for layout context.
+ * 
+ * Simple gradients get their angle adjusted to match the layout's visual flow.
+ * Complex gradients (mesh, aurora) are rendered as-is via customGradientToCss.
  */
-function getGradientStopsString(gradient: CustomGradient): string {
+function gradientToCssWithLayout(
+  gradient: CustomGradient,
+  layoutId: string,
+  variant?: string
+): string {
+  // Complex gradients: use canonical renderer directly (no modifications)
+  if (!isSimpleGradient(gradient)) {
+    return customGradientToCss(gradient);
+  }
+
+  // Simple gradients: extract colors and apply layout-specific angle
+  const angle = getLayoutAngle(layoutId, variant);
+  
+  if (isLegacyGradient(gradient)) {
+    return `linear-gradient(${angle}deg, ${gradient.from}, ${gradient.to})`;
+  }
+
+  // Advanced but simple (2-3 stop linear)
   if (isAdvancedGradient(gradient)) {
-    return gradient.stops
+    const stops = gradient.stops
       .map((stop) => {
         if (stop.position !== undefined) {
           const position = stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
@@ -65,57 +102,23 @@ function getGradientStopsString(gradient: CustomGradient): string {
         return stop.color;
       })
       .join(", ");
+    return `linear-gradient(${angle}deg, ${stops})`;
   }
 
-  if (isLegacyGradient(gradient)) {
-    return `${gradient.from}, ${gradient.to}`;
-  }
-
-  return "#6366f1, #8b5cf6";
-}
-
-/**
- * Convert gradient to CSS with layout-specific geometry.
- * Colors come from the stored gradient; geometry is determined by layout type.
- */
-function gradientToCssWithLayout(
-  gradient: CustomGradient,
-  layoutId: string,
-  variant?: string
-): string {
-  // Mesh gradients have their own layered geometry - bypass layout adjustments
-  // They use multiple overlaid radial gradients that shouldn't be modified
-  if (isMeshGradient(gradient)) {
-    return customGradientToCss(gradient);
-  }
-
-  // Aurora gradients (4+ stops) also have specific layered structure
-  if (isAdvancedGradient(gradient) && gradient.stops.length >= 4) {
-    return customGradientToCss(gradient);
-  }
-
-  const stops = getGradientStopsString(gradient);
-  const geometry = getLayoutGeometry(layoutId, variant);
-
-  if (geometry.type === "radial") {
-    return `radial-gradient(${geometry.direction}, ${stops})`;
-  }
-  return `linear-gradient(${geometry.angle}deg, ${stops})`;
+  // Fallback (shouldn't reach here)
+  return customGradientToCss(gradient);
 }
 
 export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, Asset>): string {
   if (config.background?.type === "gradient") {
-    const gradient =
-      config.background.customGradient ?? getGradientById(config.background.value)?.gradient;
+    const gradient = config.background.customGradient;
 
     if (gradient) {
-      // Apply layout-specific geometry at render time
       return gradientToCssWithLayout(gradient, config.layoutId, config.variant);
     }
   } else if (config.background?.type === "image") {
     const bgAsset = assetMap.get(config.background.value);
     if (bgAsset) {
-      // Use full shorthand so image covers the canvas without repeating or auto sizing
       return `url(${bgAsset.url}) center center / cover no-repeat`;
     }
   } else if (config.background?.type === "solid") {

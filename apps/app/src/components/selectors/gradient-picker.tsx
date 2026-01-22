@@ -10,7 +10,6 @@ import {
   isLegacyGradient,
 } from "@/domain/layout/types";
 import { customGradientToCss, generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
-import { getColorSourceType } from "@/domain/layout/gradients/color-source";
 import { cn } from "@/lib/utils/cn";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
   const config = useAtomValue(configAtom);
   const screenshotAsset = useAtomValue(screenshotAssetAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
+  
   const background =
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const colorPalette = screenshotAsset?.colorPalette;
@@ -60,7 +60,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     );
   }, [background.customGradient, dynamicGradients, hasScreenshotGradients]);
 
-  const sourceOverrideRef = useRef(false);
+  const userSelectedRef = useRef(false);
 
   // Auto-apply first screenshot gradient when available
   useEffect(() => {
@@ -70,27 +70,8 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     if (matchesScreenshotGradient) return;
     if (background.patternId || background.patternMode === "manual") return;
 
-    // Skip auto-apply if user has manually selected a preset or custom gradient
-    // Check legacy string format first (handles "preset", "custom", "screenshot")
-    if (typeof background.gradientSource === "string") {
-      const source = background.gradientSource;
-      if (source === "preset" || source === "custom") {
-        return;
-      }
-    }
-
-    // Check new ColorSourceInfo format
-    const gradientSourceType = getColorSourceType(background.gradientSource);
-    if (
-      gradientSourceType === "preset" ||
-      gradientSourceType === "manual" ||
-      gradientSourceType === "brand"
-    ) {
-      return;
-    }
-
-    // Skip if ref indicates manual override (for backwards compatibility)
-    if (sourceOverrideRef.current) return;
+    // Skip if user manually selected a gradient
+    if (userSelectedRef.current) return;
 
     const firstGradient = dynamicGradients[0];
     if (!firstGradient) return;
@@ -102,14 +83,15 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
         type: "gradient",
         value: "custom",
         customGradient: firstGradient,
-        gradientSource: "screenshot",
         grainEnabled,
       },
       textColor,
     );
   }, [
     background.grainEnabled,
-    background.gradientSource,
+    background.patternId,
+    background.patternMode,
+    background.type,
     dynamicGradients,
     hasScreenshot,
     hasScreenshotGradients,
@@ -122,14 +104,13 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
       gradient: CustomGradient,
       options?: { patternId?: BackgroundConfig["patternId"]; patternVariant?: string },
     ) => {
-      sourceOverrideRef.current = true;
+      userSelectedRef.current = true;
       const textColor = getTextColorFromGradient(gradient);
       onChangeAction(
         {
           type: "gradient",
           value: "custom",
           customGradient: gradient,
-          gradientSource: "screenshot",
           patternId: options?.patternId,
           patternMode: options?.patternId ? "manual" : undefined,
           patternVariant: options?.patternVariant,
@@ -215,7 +196,6 @@ function ScreenshotGradients({
             const isSelected = areGradientsEqual(activeGradient, gradient);
 
             // Integrate blobs into the last two ambient gradients (indices 4 and 5)
-            // This applies to the default variant where we show all 6 gradients
             const isAmbientBlob = index >= 4;
             let gradientCss = customGradientToCss(gradient);
             let onClick = () => !disabled && onSelect(gradient);

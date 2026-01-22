@@ -12,11 +12,10 @@ function looksCompleteFromProfile(profile: {
 } | null) {
   if (!profile?.logoPath) return false;
   if (
-    profile.personality !== "technical" &&
-    profile.personality !== "business" &&
-    profile.personality !== "creative" &&
-    profile.personality !== "friendly" &&
-    profile.personality !== "premium"
+    profile.personality !== "hipster" &&
+    profile.personality !== "founder" &&
+    profile.personality !== "hacker" &&
+    profile.personality !== "kawaii"
   ) {
     return false;
   }

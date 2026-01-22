@@ -43,7 +43,7 @@ describe("OnboardingForm", () => {
         initialLogoPath="logos/test.png"
         initialAccent="#ffffff"
         initialMode="dark"
-        initialPersonality="premium"
+        initialPersonality="founder"
         embedded
         onDismiss={onDismiss}
       />,

@@ -26,6 +26,7 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     screenshotTreatment,
     screenshotZoom,
     text,
+    cornerRadius,
   } = useLayoutPrimitives();
 
   const frameAppearance = useMemo(
@@ -35,8 +36,10 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
         isFocused: false,
         shadowEnabled: screenshotTreatment.shadowEnabled ?? true,
         shape: screenshotTreatment.shape,
+        cornerRadius,
+        customShadow: screenshotShadow,
       }),
-    [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape],
+    [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape, cornerRadius, screenshotShadow],
   );
 
   const appliedShadow = useMemo(() => {

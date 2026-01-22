@@ -2,12 +2,13 @@
 
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { createScreenshotColorSource } from "@/domain/layout/gradients/color-source";
 import { applyPreferredAngle } from "@/domain/layout/gradient-application";
 import { customGradientToCss, generateGradientOptions } from "@/domain/layout/gradients";
 import type { EffectState, GeneratedGradient, PaletteInput } from "../_types";
 import { track } from "@/lib/analytics";
 import { buildVignetteGradient } from "../_lib/vignette";
+import { buildGrainStyles } from "../_lib/grain";
+import { buildBlobGradient, generateBlobs } from "../_lib/blob-overlay";
 
 const PREFERRED_ANGLE = 135;
 
@@ -37,20 +38,33 @@ interface GradientPreviewProps {
 
 export function GradientPreview({ palette, effects }: GradientPreviewProps) {
   const [generated, setGenerated] = useState(() => buildGradient(palette));
-  const colorSource = useMemo(
-    () => createScreenshotColorSource(`palette-${palette.id}`, palette.colors),
-    [palette]
+
+  const grainStyles = useMemo(() => buildGrainStyles(effects.grain), [effects.grain]);
+  const blobResult = useMemo(
+    () =>
+      generateBlobs({
+        seed: effects.blobOverlay.seed,
+        count: effects.blobOverlay.count,
+        frameW: 800,
+        frameH: 450,
+        palette: palette.colors,
+        params: effects.blobOverlay,
+      }),
+    [effects.blobOverlay, palette.colors]
   );
 
   const debugPayload = useMemo(
     () => ({
       palette,
-      colorSource,
       gradient: generated.gradient,
       gradientCss: generated.css,
       effects,
+      derived: {
+        grain: grainStyles.meta,
+        blobs: blobResult,
+      },
     }),
-    [colorSource, effects, generated.css, generated.gradient, palette]
+    [blobResult, effects, generated.css, generated.gradient, grainStyles.meta, palette]
   );
   const debugJson = useMemo(() => JSON.stringify(debugPayload, null, 2), [debugPayload]);
 
@@ -94,6 +108,36 @@ export function GradientPreview({ palette, effects }: GradientPreviewProps) {
           style={{ background: generated.css }}
           aria-label={`${palette.title} gradient preview`}
         >
+          {effects.blobOverlay.enabled ? (
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ mixBlendMode: effects.blobOverlay.blendMode }}
+              aria-hidden="true"
+            >
+              {blobResult.specs.map((blob, index) => (
+                <div
+                  key={`blob-${index}`}
+                  className="absolute"
+                  style={{
+                    left: `${blob.x * 100}%`,
+                    top: `${blob.y * 100}%`,
+                    width: `${blob.radius * 2}px`,
+                    height: `${blob.radius * 2}px`,
+                    transform: "translate(-50%, -50%)",
+                    background: buildBlobGradient(blob),
+                    filter: `blur(${blob.blurPx}px)`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
+          {effects.grain.enabled ? (
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={grainStyles.style}
+              aria-hidden="true"
+            />
+          ) : null}
           {effects.vignette.enabled ? (
             <div
               className="pointer-events-none absolute inset-0"
@@ -103,7 +147,10 @@ export function GradientPreview({ palette, effects }: GradientPreviewProps) {
           ) : null}
         </div>
 
-        <details className="group rounded-xl border border-border/40 bg-background/60 px-4 py-3">
+        <details
+          className="group rounded-xl border border-border/40 bg-background/60 px-4 py-3"
+          open={false}
+        >
           <summary className="cursor-pointer text-sm font-semibold text-foreground">
             Debug JSON
           </summary>

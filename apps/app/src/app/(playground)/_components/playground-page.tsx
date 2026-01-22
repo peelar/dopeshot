@@ -158,9 +158,6 @@ function PlaygroundPageInner({
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
-  const [isBootstrappingMemory, setIsBootstrappingMemory] = useState(
-    () => Boolean(initialIsAuthenticated) && Boolean(initialMemoryItemId),
-  );
 
   const {
     shouldRedirectToOnboarding,
@@ -230,7 +227,6 @@ function PlaygroundPageInner({
   useEffect(() => {
     if (!isLoggedIn) {
       hasBootstrappedRef.current = false;
-      setIsBootstrappingMemory(false);
       return;
     }
 
@@ -245,27 +241,12 @@ function PlaygroundPageInner({
       resetToEmptyCanvas();
     }
 
-    setIsBootstrappingMemory(true);
-
-    fetchMemoryItems()
-      .then(({ items }) => {
-        if (initialMemoryItemId || loadedItemId) return;
-        if (items.length === 0) return;
-
-        const mostRecent = items.reduce((latest, item) => {
-          if (!latest) return item;
-          return new Date(item.createdAt).getTime() > new Date(latest.createdAt).getTime() ? item : latest;
-        }, items[0]);
-
-        return loadMemoryItem(mostRecent.id);
-      })
-      .catch((error) => {
-        console.error("Failed to bootstrap memory items:", error);
-      })
-      .finally(() => {
-        setIsBootstrappingMemory(false);
-      });
-  }, [fetchMemoryItems, initialMemoryItemId, isLoggedIn, loadMemoryItem, loadedItemId, resetToEmptyCanvas]);
+    // Fetch memory items for sidebar in background (non-blocking)
+    // Users should see empty state on app open
+    fetchMemoryItems().catch((error) => {
+      console.error("Failed to bootstrap memory items:", error);
+    });
+  }, [fetchMemoryItems, initialMemoryItemId, isLoggedIn, loadedItemId, resetToEmptyCanvas]);
 
   useEffect(() => {
     if (!initialMemoryItemId || !isLoggedIn) {
@@ -305,11 +286,11 @@ function PlaygroundPageInner({
     setIsConfigDrawerOpen,
   } = usePlaygroundController({ demoEnabled: !isLoggedIn });
 
+  // Only show loading when actually loading a specific memory item from URL
   const showLoadingState =
     isLoggedIn &&
-    (isBootstrappingMemory ||
-      (isMemoryLoading && !loadedItemId) ||
-      (Boolean(initialMemoryItemId) && !loadedItemId));
+    Boolean(initialMemoryItemId) &&
+    !loadedItemId;
 
   const showEmptyState = useMemo(() => {
     const hasText = Boolean(config.text.title?.trim() || config.text.subtitle?.trim());

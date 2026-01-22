@@ -2,10 +2,11 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
-import { configAtom, orientationAtom } from "@/hooks/atoms";
-import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { configAtom, orientationAtom, brandSettingsAtom } from "@/hooks/atoms";
+import { layoutCapabilitiesAtom, personalityStyleAtom } from "@/hooks/atoms/derived";
 import { Label } from "@/components/ui/label";
 import { FontStyleSelector } from "@/components/selectors/font-style-selector";
+import { brandPersonalityLabels } from "@/lib/types/brand";
 import type { FontStyle } from "@/domain/layout/types";
 
 interface LayoutSectionProps {
@@ -17,6 +18,13 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
   const setConfig = useSetAtom(configAtom);
   const orientation = useAtomValue(orientationAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
+  const personalityStyle = useAtomValue(personalityStyleAtom);
+  const brandSettings = useAtomValue(brandSettingsAtom);
+  
+  // Get the personality label for display
+  const personalityName = brandSettings.personality 
+    ? brandPersonalityLabels[brandSettings.personality] 
+    : undefined;
 
   // Hide text inputs for Peak Left/Right on mobile orientation
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
@@ -86,11 +94,13 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
 
       {showTypographyControls && (
         <div className="flex flex-col gap-2">
-          <Label className="text-xs font-medium text-muted-foreground">Font Style</Label>
+          <Label className="text-xs font-medium text-muted-foreground">Font Name</Label>
           <FontStyleSelector
             fontStyle={config.fontStyle}
             onFontStyleChange={handleFontStyleChange}
             isBrandUser={isBrandUser}
+            brandFontStyle={personalityStyle?.fontStyle}
+            brandPersonalityName={personalityName}
           />
         </div>
       )}

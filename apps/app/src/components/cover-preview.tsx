@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue } from "jotai";
-import { Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
 import { getLayoutComponent } from "@/components/layouts/registry";
@@ -60,32 +60,48 @@ export function CoverPreview({
           type="button"
           onClick={onEmptyStateClick}
           className={cn(
-            "group absolute inset-0 z-20 flex items-center justify-center rounded-lg",
-            "text-foreground/70 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30",
+            "group absolute inset-0 z-20 flex items-center justify-center overflow-hidden",
+            "rounded-lg border border-foreground/[0.08] bg-background",
+            "transition-colors duration-300",
+            "hover:border-foreground/[0.15]",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
           )}
         >
+          {/* Animated corner blobs */}
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 rounded-lg"
-            style={{
-              background:
-                "radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(255,255,255,0) 65%)",
-            }}
+            className="animate-blob-1 pointer-events-none absolute -left-[15%] -top-[25%] h-[50%] w-[40%] rounded-full bg-gradient-to-br from-violet-500/20 to-fuchsia-500/10 blur-3xl dark:from-violet-500/40 dark:to-fuchsia-500/25"
           />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-8 rounded-2xl border border-dashed border-foreground/25 bg-white/0 transition group-hover:border-foreground/45"
+            className="animate-blob-2 pointer-events-none absolute -right-[15%] -top-[20%] h-[45%] w-[35%] rounded-full bg-gradient-to-bl from-blue-500/15 to-cyan-500/10 blur-3xl dark:from-blue-500/35 dark:to-cyan-500/20"
           />
           <span
             aria-hidden="true"
-            className="pointer-events-none absolute inset-8 rounded-2xl bg-slate-950/16"
+            className="animate-blob-3 pointer-events-none absolute -bottom-[25%] -left-[10%] h-[45%] w-[35%] rounded-full bg-gradient-to-tr from-emerald-500/15 to-teal-500/10 blur-3xl dark:from-emerald-500/35 dark:to-teal-500/20"
           />
           <span
-            className="relative z-10 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-foreground/65 transition group-hover:text-foreground/95 group-hover:drop-shadow-[0_0_18px_rgba(255,255,255,0.55)]"
-          >
-            <Upload className="h-4 w-4 opacity-80 transition group-hover:opacity-100" aria-hidden="true" />
-            <span className="border-b border-foreground/20 pb-0.5 transition group-hover:border-foreground/60">
-              upload your screenshot
+            aria-hidden="true"
+            className="animate-blob-4 pointer-events-none absolute -bottom-[20%] -right-[15%] h-[50%] w-[40%] rounded-full bg-gradient-to-tl from-orange-500/15 to-amber-500/10 blur-3xl dark:from-orange-500/35 dark:to-amber-500/20"
+          />
+
+          <span className="relative z-10 flex flex-col items-center justify-center gap-4">
+            <span
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-xl",
+                "border border-foreground/[0.1] bg-foreground/[0.03]",
+                "transition-all duration-300",
+                "group-hover:border-foreground/[0.18] group-hover:bg-foreground/[0.06]",
+              )}
+            >
+              <Plus
+                className="h-5 w-5 text-foreground/50 transition-colors duration-300 group-hover:text-foreground/70"
+                strokeWidth={1.5}
+                aria-hidden="true"
+              />
+            </span>
+            <span className="text-sm font-medium text-foreground/50 transition-colors duration-300 group-hover:text-foreground/70">
+              Drop an image to start
             </span>
           </span>
         </button>

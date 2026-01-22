@@ -11,8 +11,12 @@ const RECT_PADDING = {
   default: "6px",
 };
 
-function roundedRadius(_isFocused: boolean) {
-  return "16px";
+/** Default corner radius when no personality override is provided */
+const DEFAULT_CORNER_RADIUS = 16;
+
+function roundedRadius(customRadius?: number) {
+  const radius = customRadius ?? DEFAULT_CORNER_RADIUS;
+  return `${radius}px`;
 }
 
 export type ScreenshotFrameAppearance = {
@@ -26,14 +30,20 @@ export function getScreenshotFrameAppearance({
   isFocused = false,
   shadowEnabled = true,
   shape = "rounded",
+  cornerRadius,
+  customShadow,
 }: {
   preset?: ScreenshotFramePreset;
   isFocused?: boolean;
   shadowEnabled?: boolean;
   shape?: FrameShape;
+  /** Override corner radius (from personality style) */
+  cornerRadius?: number;
+  /** Override shadow CSS (from personality style) */
+  customShadow?: string;
 }): ScreenshotFrameAppearance {
   if (preset === "soft-glass") {
-    const radius = shape === "rounded" ? roundedRadius(isFocused) : "0px";
+    const radius = shape === "rounded" ? roundedRadius(cornerRadius) : "0px";
     const padding =
       shape === "rounded"
         ? isFocused
@@ -42,6 +52,12 @@ export function getScreenshotFrameAppearance({
         : isFocused
           ? RECT_PADDING.focused
           : RECT_PADDING.default;
+    
+    // Use custom shadow if provided, otherwise fall back to default
+    const shadow = shadowEnabled
+      ? customShadow ?? "0 18px 42px rgba(15, 23, 42, 0.35)"
+      : undefined;
+
     return {
       style: {
         background: GLASS_BACKGROUND,
@@ -51,23 +67,32 @@ export function getScreenshotFrameAppearance({
         borderRadius: radius,
         padding,
       },
-      shadow: shadowEnabled ? "0 18px 42px rgba(15, 23, 42, 0.35)" : undefined,
+      shadow,
       contentRadius: radius,
     };
   }
 
-  const radius = shape === "rounded" ? roundedRadius(isFocused) : "0px";
+  const radius = shape === "rounded" ? roundedRadius(cornerRadius) : "0px";
+  
+  // Use custom shadow if provided, otherwise fall back to defaults
+  let shadow: string | undefined;
+  if (shadowEnabled) {
+    if (customShadow) {
+      shadow = customShadow;
+    } else {
+      shadow = shape === "rounded"
+        ? "0 24px 55px rgba(15, 23, 42, 0.35)"
+        : "0 16px 36px rgba(15, 23, 42, 0.2)";
+    }
+  }
+
   return {
     style: {
       background: "transparent",
       borderRadius: radius,
       padding: "0px",
     },
-    shadow: shadowEnabled
-      ? shape === "rounded"
-        ? "0 24px 55px rgba(15, 23, 42, 0.35)"
-        : "0 16px 36px rgba(15, 23, 42, 0.2)"
-      : undefined,
+    shadow,
     contentRadius: radius,
   };
 }
