@@ -3,6 +3,7 @@ import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getUserTier } from "@/lib/tier";
+import { isBrandPersonality } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
 
@@ -12,14 +13,7 @@ function looksCompleteFromProfile(profile: {
   colorPalette: unknown;
 } | null) {
   if (!profile?.logoPath) return false;
-  if (
-    profile.personality !== "hipster" &&
-    profile.personality !== "founder" &&
-    profile.personality !== "hacker" &&
-    profile.personality !== "kawaii"
-  ) {
-    return false;
-  }
+  if (!isBrandPersonality(profile.personality)) return false;
 
   const palette = profile.colorPalette as { accent?: unknown; mode?: unknown } | null | undefined;
   if (typeof palette?.accent !== "string") return false;

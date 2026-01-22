@@ -18,6 +18,14 @@ export const brandPersonalityLabels: Record<BrandPersonality, string> = {
   kawaii: "Kawaii",
 };
 
+// Type guard to check if a value is a valid BrandPersonality
+export function isBrandPersonality(value: unknown): value is BrandPersonality {
+  return (
+    typeof value === "string" &&
+    brandPersonalityValues.includes(value as BrandPersonality)
+  );
+}
+
 export const brandModeValues = ["light", "dark"] as const;
 
 export type BrandMode = (typeof brandModeValues)[number];
