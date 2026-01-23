@@ -19,6 +19,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
     screenshotShadow,
     screenshotTreatment,
     screenshotZoom,
+    cornerRadius,
   } = useLayoutPrimitives();
 
   // Default fadeEnabled based on screenshot dimensions for Backdrop layout
@@ -42,8 +43,10 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
         isFocused: true,
         shadowEnabled: screenshotTreatment.shadowEnabled ?? true,
         shape: screenshotTreatment.shape,
+        cornerRadius,
+        customShadow: screenshotShadow,
       }),
-    [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape],
+    [screenshotTreatment.preset, screenshotTreatment.shadowEnabled, screenshotTreatment.shape, cornerRadius, screenshotShadow],
   );
 
   const appliedShadow = useMemo(() => {

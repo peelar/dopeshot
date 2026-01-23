@@ -3,7 +3,7 @@ import { atomWithStorage } from "jotai/utils";
 import { LayoutConfig, BackgroundConfig, FontId } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
-import { migrateFontIdToStyle, DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
+import { migrateFontIdToStyle } from "@/domain/layout/fonts";
 import type { BrandMode, BrandPersonality } from "@/lib/types/brand";
 
 // Keep ID here to avoid circular dependencies
@@ -37,11 +37,8 @@ function migrateLayoutConfig(config: LayoutConfig): LayoutConfig {
     } as LayoutConfig;
   }
 
-  // Fallback: add default fontStyle
-  return {
-    ...config,
-    fontStyle: DEFAULT_FONT_STYLE,
-  };
+  // No fontStyle set - leave undefined so brand personality font can be used
+  return config;
 }
 
 export type AssetType = "screenshot";
@@ -129,3 +126,5 @@ export const feedbackModalOpenAtom = atom<boolean>(false);
 export const hasExportedAtom = atom<boolean>(false); // True after successful export
 export const currentExportBlobAtom = atom<Blob | null>(null); // Store blob for save
 export const isSavingAtom = atom<boolean>(false); // Save in progress
+
+

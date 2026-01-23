@@ -72,11 +72,6 @@ const config: Config = {
   				'system-ui',
   				'sans-serif'
   			],
-  			professional: [
-  				'var(--font-professional)',
-  				'system-ui',
-  				'sans-serif'
-  			],
   			developer: [
   				'var(--font-developer)',
   				'monospace'
@@ -86,26 +81,10 @@ const config: Config = {
   				'system-ui',
   				'sans-serif'
   			],
-  			friendly: [
-  				'var(--font-friendly)',
+  			ghibli: [
+  				'var(--font-ghibli)',
   				'system-ui',
   				'sans-serif'
-  			],
-  			edgy: [
-  				'var(--font-edgy)',
-  				'system-ui',
-  				'sans-serif'
-  			],
-  			technical: [
-  				'var(--font-technical)',
-  				'system-ui',
-  				'sans-serif'
-  			],
-  			premium: [
-  				'var(--font-premium)',
-  				'ui-serif',
-  				'Georgia',
-  				'serif'
   			]
   		},
   		keyframes: {

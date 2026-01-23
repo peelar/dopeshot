@@ -4,21 +4,12 @@ import invariant from "tiny-invariant";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getUserTier, type SubscriptionTier } from "@/lib/tier";
+import { isBrandPersonality } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
 
 function isMode(value: unknown): value is "light" | "dark" {
   return value === "light" || value === "dark";
-}
-
-function isPersonality(value: unknown) {
-  return (
-    value === "technical" ||
-    value === "business" ||
-    value === "creative" ||
-    value === "friendly" ||
-    value === "premium"
-  );
 }
 
 export async function GET() {
@@ -65,7 +56,7 @@ export async function GET() {
 
     const looksCompleteFromProfile =
       Boolean(profile?.logoPath) &&
-      isPersonality(profile?.personality) &&
+      isBrandPersonality(profile?.personality) &&
       typeof palette?.accent === "string" &&
       /^#[0-9a-fA-F]{6}$/.test(palette.accent) &&
       isMode(palette?.mode);

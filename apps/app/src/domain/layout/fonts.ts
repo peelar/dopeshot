@@ -15,10 +15,13 @@ export interface FontStyleDefinition {
 }
 
 /**
- * Font Styles for Free Users
- * Opinionated typographic systems that adapt automatically.
+ * Font Styles - 4 personality-driven typographic systems
  *
- * Free users can select a subset (see `FREE_FONTS`).
+ * Each font maps to a brand personality:
+ * - Founder (Geist Sans) → Founder personality
+ * - Billboard (Bricolage Grotesque) → Hipster personality
+ * - Terminal (IBM Plex Mono) → Hacker personality
+ * - Ghibli (Kiwi Maru) → Kawaii personality
  */
 export const FONT_STYLES: FontStyleDefinition[] = [
   {
@@ -46,28 +49,18 @@ export const FONT_STYLES: FontStyleDefinition[] = [
     description: "Monospace, technical, tool-like",
   },
   {
-    id: "friendly",
-    name: "Friendly",
-    fontName: "Nunito",
-    foundry: "Google Fonts",
-    cssVariable: "--font-friendly",
-    description: "Rounded, upbeat, approachable",
-  },
-  {
-    id: "premium",
-    name: "Premium",
-    fontName: "DM Serif Display",
-    foundry: "Colophon Foundry",
-    cssVariable: "--font-premium",
-    description: "High-contrast, editorial, luxury",
+    id: "ghibli",
+    name: "Ghibli",
+    fontName: "Kiwi Maru",
+    foundry: "Hiroki-Chan",
+    cssVariable: "--font-ghibli",
+    description: "Warm, rounded, Studio Ghibli feel",
   },
 ];
 
 export const DEFAULT_FONT_STYLE: FontStyle = "founder";
 
-export const FREE_FONTS: FontStyleDefinition[] = FONT_STYLES.filter(
-  (style) => style.id === "founder" || style.id === "billboard" || style.id === "terminal",
-);
+export const FREE_FONTS: FontStyleDefinition[] = FONT_STYLES;
 
 export const BRAND_FONTS: FontStyleDefinition[] = FONT_STYLES;
 

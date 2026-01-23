@@ -2,7 +2,6 @@ import { useCallback } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ColorPalette } from "@/domain/asset/types";
 import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import { createScreenshotColorSource } from "@/domain/layout/gradients/color-source";
 import { supportsScreenshots } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
 import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
@@ -18,8 +17,8 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
   const setAssets = useSetAtom(assetsAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
 
-  // Use new gradient generation hook
-  const { generateFromColorSource } = useGradientGeneration({ gradientPreferences });
+  // Use gradient generation hook
+  const { generateFromScreenshot } = useGradientGeneration({ gradientPreferences });
 
   const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
     return analyzeImageColors(dataUrl);
@@ -42,9 +41,8 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
           // Store color palette in asset
           setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
 
-          // Create color source and generate gradients
-          const colorSource = createScreenshotColorSource(assetId, colorPalette);
-          await generateFromColorSource(colorSource, { autoLayoutMessage });
+          // Generate gradients from screenshot colors
+          await generateFromScreenshot(colorPalette, { autoLayoutMessage });
         }
       } catch (error) {
         // Silent fallback: log error but don't show to user
@@ -63,7 +61,7 @@ export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOption
       setAssets,
       setStatusMessage,
       setIsAnalyzingColors,
-      generateFromColorSource,
+      generateFromScreenshot,
     ],
   );
 

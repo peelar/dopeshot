@@ -45,7 +45,7 @@ describe("useBrandLogoAutoApply", () => {
       useLogoOnScreenshots: true,
       accent: "#6366F1",
       mode: "dark",
-      personality: "premium",
+      personality: "founder",
     });
     store.set(configAtom, {
       ...getEmptyCanvasConfig(),

@@ -284,7 +284,7 @@ function useExportHandler({
       look_name: currentLook?.name ?? "unknown",
       variant: config.variant,
       background_type: config.background?.type ?? "unknown",
-      font_style: config.fontStyle,
+      font_style: config.fontStyle ?? "default",
       orientation,
     });
     setIsExporting(true);

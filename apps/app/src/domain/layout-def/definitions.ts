@@ -1,7 +1,22 @@
-import type { LayoutConfig } from "@/domain/layout/types";
+import type { LayoutConfig, CustomGradient } from "@/domain/layout/types";
 import type { Orientation } from "@/hooks/atoms";
-import { DEFAULT_GRADIENT, GRADIENTS } from "@/domain/layout/gradient-presets";
-import { DEFAULT_FONT_STYLE } from "@/domain/layout/fonts";
+
+/**
+ * Default gradient used when no screenshot has been analyzed yet.
+ * A simple pink-to-purple gradient that works well as a placeholder.
+ */
+const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "slate-900" } = {
+  gradient: {
+    type: "linear",
+    stops: [
+      { color: "#ec4899", position: 0 },
+      { color: "#8b5cf6", position: 100 },
+    ],
+    angle: 90,
+    colorSpace: "oklch",
+  },
+  textColor: "slate-50",
+};
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -113,7 +128,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "popup-gradient",
       variant: "right",
-      fontStyle: DEFAULT_FONT_STYLE,
+      // fontStyle intentionally omitted - derived from brand personality or defaults to "founder"
       text: {
         title: "",
         subtitle: "",
@@ -125,8 +140,8 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       background: {
         type: "gradient",
-        value: DEFAULT_GRADIENT.id,
-        gradientSource: "preset",
+        value: "custom",
+        customGradient: DEFAULT_GRADIENT.gradient,
         grainEnabled: true,
         patternMode: "auto",
       },
@@ -175,7 +190,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "hero-center",
       variant: "left",
-      fontStyle: DEFAULT_FONT_STYLE,
+      // fontStyle intentionally omitted - derived from brand personality or defaults to "founder"
       text: {
         title: "Bring the heat",
         subtitle: "Keep the heat going",
@@ -187,8 +202,8 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
        },
        background: {
          type: "gradient",
-         value: "cotton-candy",
-         gradientSource: "preset",
+         value: "custom",
+         customGradient: DEFAULT_GRADIENT.gradient,
        },
        assets: {
          screenshot: undefined,
@@ -235,7 +250,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     createConfig: () => ({
       layoutId: "adaptive-stage",
       variant: "default",
-      fontStyle: DEFAULT_FONT_STYLE,
+      // fontStyle intentionally omitted - derived from brand personality or defaults to "founder"
       text: {
         title: "",
         subtitle: "",
@@ -247,8 +262,8 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
        },
        background: {
          type: "gradient",
-         value: DEFAULT_GRADIENT.id,
-         gradientSource: "preset",
+         value: "custom",
+         customGradient: DEFAULT_GRADIENT.gradient,
        },
        assets: {
          screenshot: undefined,

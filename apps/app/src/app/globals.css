@@ -187,3 +187,90 @@
     opacity: 0.5;
   }
 }
+
+/* Empty State Corner Blobs */
+@keyframes blob-drift-1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.4;
+  }
+  33% {
+    transform: translate(10%, 15%) scale(1.1);
+    opacity: 0.6;
+  }
+  66% {
+    transform: translate(-5%, 10%) scale(0.95);
+    opacity: 0.35;
+  }
+}
+
+@keyframes blob-drift-2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.35;
+  }
+  33% {
+    transform: translate(-12%, -8%) scale(0.9);
+    opacity: 0.5;
+  }
+  66% {
+    transform: translate(8%, -12%) scale(1.05);
+    opacity: 0.4;
+  }
+}
+
+@keyframes blob-drift-3 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.45;
+  }
+  33% {
+    transform: translate(8%, -10%) scale(1.08);
+    opacity: 0.55;
+  }
+  66% {
+    transform: translate(-10%, 5%) scale(0.92);
+    opacity: 0.38;
+  }
+}
+
+@keyframes blob-drift-4 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.38;
+  }
+  33% {
+    transform: translate(-8%, 12%) scale(0.95);
+    opacity: 0.52;
+  }
+  66% {
+    transform: translate(12%, 8%) scale(1.1);
+    opacity: 0.42;
+  }
+}
+
+.animate-blob-1 {
+  animation: blob-drift-1 12s ease-in-out infinite;
+}
+
+.animate-blob-2 {
+  animation: blob-drift-2 14s ease-in-out infinite;
+}
+
+.animate-blob-3 {
+  animation: blob-drift-3 16s ease-in-out infinite;
+}
+
+.animate-blob-4 {
+  animation: blob-drift-4 13s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blob-1,
+  .animate-blob-2,
+  .animate-blob-3,
+  .animate-blob-4 {
+    animation: none;
+    opacity: 0.3;
+  }
+}

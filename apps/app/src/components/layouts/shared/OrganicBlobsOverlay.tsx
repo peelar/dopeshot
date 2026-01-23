@@ -1,7 +1,6 @@
 import { memo, useMemo } from "react";
 import type { LayoutConfig } from "@/domain/layout/types";
 import { isAdvancedGradient, isLegacyGradient } from "@/domain/layout/gradients";
-import { getGradientById } from "@/domain/layout/gradient-presets";
 import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 import { generateOrganicBlobPath } from "@/domain/layout/patterns/organic-blobs";
 
@@ -12,8 +11,7 @@ function getTwoColorsFromConfig(config: LayoutConfig): [string, string] {
     return [bg, accent];
   }
 
-  const gradient =
-    config.background.customGradient ?? getGradientById(config.background.value)?.gradient;
+  const gradient = config.background.customGradient;
 
   if (!gradient) {
     const bg = tokenToCssColor(config.colors.background);

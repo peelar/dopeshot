@@ -65,7 +65,7 @@ export function OnboardingForm({
   const [personality, setPersonality] = useState<BrandPersonality>(
     initialPersonality && brandPersonalityValues.includes(initialPersonality)
       ? initialPersonality
-      : "premium",
+      : "founder",
   );
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -82,22 +82,20 @@ export function OnboardingForm({
 
   const personalityDescriptions: Record<BrandPersonality, string> = useMemo(
     () => ({
-      technical: "Crisp, high-contrast, developer energy.",
-      business: "Clear hierarchy, conservative polish.",
-      creative: "Bolder shapes, louder gradients, playful spacing.",
-      friendly: "Softer corners, warmer tone, approachable.",
-      premium: "Editorial weight, tighter rhythm, luxury feel.",
+      hipster: "Bold, expressive, announcement-oriented.",
+      founder: "Sharp, clean, precise. Modern tech vibes.",
+      hacker: "Terminal vibes, functional, no fluff.",
+      kawaii: "Warm, rounded, Studio Ghibli feel.",
     }),
     [],
   );
 
   const personalityFontClasses: Record<BrandPersonality, string> = useMemo(
     () => ({
-      technical: "font-technical",
-      business: "font-professional",
-      creative: "font-edgy",
-      friendly: "font-friendly",
-      premium: "font-premium",
+      hipster: "font-bold",
+      founder: "font-clean",
+      hacker: "font-developer",
+      kawaii: "font-ghibli",
     }),
     [],
   );

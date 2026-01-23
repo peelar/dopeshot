@@ -56,7 +56,7 @@ describe("BrandPanel", () => {
         json: async () => ({
           profile: {
             colorPalette: { accent: "#112233", mode: "light" },
-            personality: "creative",
+            personality: "hipster",
           },
         }),
       })
@@ -95,12 +95,12 @@ describe("BrandPanel", () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
       expect(track).toHaveBeenCalledWith(
         "brand_profile_saved",
-        expect.objectContaining({ mode: "light", personality: "creative" }),
+        expect.objectContaining({ mode: "light", personality: "hipster" }),
       );
     });
 
     const [, requestInit] = mockFetch.mock.calls[1];
     const body = JSON.parse(requestInit.body as string);
-    expect(body).toEqual({ accent: "#112233", mode: "light", personality: "creative" });
+    expect(body).toEqual({ accent: "#112233", mode: "light", personality: "hipster" });
   });
 });

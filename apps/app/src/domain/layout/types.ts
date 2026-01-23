@@ -22,6 +22,9 @@ export type PatternId = "grain" | "glow" | "grid" | "organic-blobs";
 export type PatternChoice = PatternId | "none";
 export type PatternMode = "auto" | "manual";
 
+// Personality-driven texture types (scanlines and dots are stubs for now)
+export type PersonalityTexture = "none" | "grain" | "noise" | "scanlines" | "dots";
+
 export type ShadowIntensity = "low" | "medium" | "high";
 
 export type ScreenshotFramePreset = "soft-glass" | "solid";
@@ -40,7 +43,7 @@ export type ScreenshotTreatment = {
 };
 
 // Font styles - semantic typographic systems for free users
-export type FontStyle = "founder" | "billboard" | "terminal" | "friendly" | "premium";
+export type FontStyle = "founder" | "billboard" | "terminal" | "ghibli";
 
 // Legacy types - kept for backward compatibility during migration
 export type FontId =
@@ -69,18 +72,10 @@ export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 import type { CustomGradient } from "./gradients/types";
 
-// Import color source types for detailed gradient tracking
-export type { ColorSourceInfo, ColorSourceType } from "./gradients/color-source";
-
-// Keep legacy type for backward compatibility
-export type GradientSource = "preset" | "screenshot" | "custom";
-
 export type BackgroundConfig = {
   type: BackgroundType;
-  value: string; // gradientId, assetId, or ColorToken
-  customGradient?: CustomGradient; // for custom/dynamic gradients
-  // Union type: accepts both string (legacy) and detailed info (new)
-  gradientSource?: GradientSource | import("./gradients/color-source").ColorSourceInfo;
+  value: string; // "custom" for gradients, assetId for images, or ColorToken for solid
+  customGradient?: CustomGradient; // gradient data (always derived from screenshot)
   grainEnabled?: boolean; // legacy toggle for grain overlay on gradient backgrounds
   patternId?: PatternChoice; // explicit pattern selection
   patternMode?: PatternMode; // auto or manual selection
@@ -91,7 +86,7 @@ export type BackgroundConfig = {
 export type LayoutConfig = {
   layoutId: string;
   variant: string; // Layout-specific variant (e.g., "left", "right", "center")
-  fontStyle: FontStyle;
+  fontStyle?: FontStyle; // Optional - when undefined, derived from brand personality or defaults to "founder"
   // Legacy fields - kept for backward compatibility during migration
   fontId?: FontId;
   fontSize?: FontSize;

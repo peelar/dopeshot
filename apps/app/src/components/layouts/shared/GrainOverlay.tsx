@@ -3,6 +3,8 @@ import { memo, useEffect, useState } from "react";
 interface GrainOverlayProps {
   enabled?: boolean;
   isStatic?: boolean; // kept for API compatibility
+  /** Intensity of the grain effect, from 0 to 1. Defaults to 0.5 (medium). */
+  intensity?: number;
 }
 
 function generateNoiseDataUrl(
@@ -51,18 +53,24 @@ function generateNoiseDataUrl(
   return canvas.toDataURL("image/png");
 }
 
-function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
+function GrainOverlayComponent({ enabled = true, intensity = 0.5 }: GrainOverlayProps) {
   const [noise, setNoise] = useState<{ coarseUrl: string; fineUrl: string } | null>(null);
+
+  // Scale noise parameters based on intensity (0-1)
+  // Low intensity: subtle grain, High intensity: heavy grain
+  const coarseAlpha = 0.2 + intensity * 0.36; // 0.2 to 0.56
+  const fineAlpha = 0.12 + intensity * 0.24; // 0.12 to 0.36
+  const overlayOpacity = 0.08 + intensity * 0.2; // 0.08 to 0.28
 
   useEffect(() => {
     if (!enabled) return;
-    const coarse = generateNoiseDataUrl(48, 0.38, 1, 118, 150);
-    const fine = generateNoiseDataUrl(24, 0.24, 2, 126, 130);
+    const coarse = generateNoiseDataUrl(48, coarseAlpha, 1, 118, 150);
+    const fine = generateNoiseDataUrl(24, fineAlpha, 2, 126, 130);
     setNoise({
       coarseUrl: coarse || "",
       fineUrl: fine || "",
     });
-  }, [enabled]);
+  }, [enabled, coarseAlpha, fineAlpha]);
 
   if (!enabled || !noise) {
     return null;
@@ -75,7 +83,7 @@ function GrainOverlayComponent({ enabled = true }: GrainOverlayProps) {
         style={{
           backgroundImage: `url("${noise.coarseUrl}"), url("${noise.fineUrl}")`,
           backgroundSize: "48px 48px, 24px 24px",
-          opacity: 0.18,
+          opacity: overlayOpacity,
           filter: "contrast(190%) brightness(1.06)",
           mixBlendMode: "normal",
           imageRendering: "pixelated",

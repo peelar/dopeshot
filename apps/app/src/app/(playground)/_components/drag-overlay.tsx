@@ -8,10 +8,14 @@ export function DragOverlay({ visible }: DragOverlayProps) {
   if (!visible) return null;
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-blue-500/15">
-      <div className="rounded-2xl border-4 border-dashed border-blue-400 bg-white/80 px-10 py-8 text-center shadow-2xl">
-        <p className="text-2xl font-semibold text-slate-900">Drop your screenshot here</p>
-        <p className="text-sm text-slate-600">PNG, JPG, WebP, or SVG · Max 10MB</p>
+    <div className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="flex flex-col items-center gap-3 rounded-2xl border border-foreground/[0.08] bg-background px-12 py-10">
+        <p className="text-[15px] font-medium tracking-[-0.01em] text-foreground/70">
+          Drop your image
+        </p>
+        <p className="text-[12px] text-foreground/40">
+          PNG, JPG, WebP, or SVG
+        </p>
       </div>
     </div>
   );
