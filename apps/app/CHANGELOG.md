@@ -1,5 +1,87 @@
 # dopeshot
 
+## 0.6.0
+
+### Minor Changes
+
+- 5589087: Refactor brand personalities with visual style tokens
+
+  Replace the existing 5 personalities (technical, business, creative, friendly, premium) with 4 new ones:
+
+  - **Hipster** — Warm, grainy, handcrafted (14px corners, warm-tinted shadow, grain texture, Bricolage Grotesque)
+  - **Founder** — Sharp, clean, precise (8px corners, crisp shadow, Geist Sans)
+  - **Hacker** — Terminal vibes, functional (2px corners, no shadow, scanlines stub, IBM Plex Mono)
+  - **Kawaii** — Soft, rounded, Studio Ghibli warmth (24px corners, soft blur shadow, Kiwi Maru)
+
+  Each personality now controls concrete visual tokens:
+
+  - Corner radius on screenshot frames
+  - Shadow style (blur, spread, offset, tint)
+  - Texture overlay (grain, scanlines stub)
+  - Typography (font family)
+
+  Added new `PersonalityStyle` type and `getStyleForPersonality()` function for retrieving style tokens.
+
+- 3f4c2ba: Restore `subscriptionTier`/`subscriptionStatus` on `UserMetadata` and add tier utility helpers.
+- b57c5e6: Add tier-aware feature gating for Brand features (sidebar Brand tab, logo tools, and save limits).
+
+### Patch Changes
+
+- 5589087: Fix brand font preselection in sidebar font dropdown
+
+  The font derived from brand personality is now automatically preselected in the sidebar dropdown, rather than just being highlighted in the options. When a user has set a brand personality, their brand-appropriate font will be the default choice until they explicitly select a different font.
+
+- c197442: Remove brand tab routing - handle tab switching purely on frontend without URL changes
+- 6743bae: Add brand onboarding modal (shown on first brand login) to collect logo, accent color, light/dark mode, and personality; persist onboarding completion in `UserMetadata.onboardingProgress` and gate editor access until complete.
+- bed3343: Redesign the empty state with animated gradient blobs
+
+  Replace the basic dashed border empty state with a more polished design featuring:
+
+  - Four animated corner blobs with subtle drift animations (violet, blue, emerald, orange)
+  - Centered plus icon in a rounded container
+  - "Drop an image to start" text prompt
+  - Smooth hover transitions on borders and colors
+  - Dark mode support with adjusted blob opacities
+  - Respects `prefers-reduced-motion` by disabling animations
+
+- ea5ab53: Add Friendly (Nunito) and Premium (DM Serif Display) font styles for brand users, including tier-aware font selection and updated adaptive typography rules.
+- b041057: **Brand Logo Improvements:**
+  - Fixed brand tier checking inconsistencies - brand users can now properly upload and delete logos
+  - Added `brand-logos` storage bucket with proper RLS policies (requires manual SQL setup)
+  - Added subtle loading state during logo upload in Brand tab
+  - Logo no longer auto-applies to canvas - user must toggle "Apply to all screenshots"
+  - Fixed "Apply to all screenshots" persistence - setting now persists across page reloads
+  - Updated auto-apply hook to use API route instead of direct Supabase client for better compatibility
+  - Improved brand logo UI in Design sidebar - when brand logo is applied, shows "Brand logo" text instead of filename
+  - Brand logo can be removed from current design by hovering over "Brand logo" text and clicking the "X Remove" button
+  - Users can opt-out of "Apply to all screenshots" for specific designs by removing the brand logo
+  - No extra UI bloat - brand logo integrates cleanly into existing Logo section header button
+  - Standardized logo sizing: max height 32px (h-8), max width 200px, maintains aspect ratio
+  - Unified all tier checks to use `isBrandUser()` checking `subscriptionTier === "brand"`
+- 409ac8c: Improve logo upload UX with dropdown menu for brand users
+
+  - Add dropdown menu when brand logo is available but not applied
+  - "Apply brand logo" option to quickly re-apply saved brand logo
+  - "Upload new" option to upload and apply a new logo to current design
+  - Show remove button on hover for all logo states (brand and custom)
+  - Change label from "Choose file" to "Add logo" for clarity
+  - Fix logo upload to automatically apply to canvas
+
+- f88a6fb: Allow dismissing the brand onboarding modal with a confirmation prompt, auto-dismiss on request errors with toast feedback, and add helper copy for color scheme selection.
+- b041057: - Ensure brand logo auto-applies again after starting a new design.
+- 5589087: Simplified gradient system by removing unused abstractions:
+
+  - Removed gradient presets (Hyper, Oceanic, Cotton Candy, etc.) - all gradients now derive from screenshot colors
+  - Removed `gradientSource` field from BackgroundConfig - no longer needed since there's only one source
+  - Removed `color-source.ts` abstraction layer - simplified gradient generation pipeline
+  - Removed brand gradient mode feature that wasn't working correctly
+
+  The gradient picker now shows 6 screenshot-derived options: 3 linear gradients, 1 mesh gradient, and 2 ambient gradients with blob overlays.
+
+- e255269: Add `BrandProfile.personality` (onboarding product personality), including API support and a personality→font mapping helper.
+- 6f08609: Scaffold Polar billing (checkout + portal + webhooks) behind a static feature flag, plus setup docs.
+- 83af07f: Add sidebar brand controls for onboarding fields, icon tabs, and brand subroutes.
+
 ## 0.5.7
 
 ### Patch Changes
