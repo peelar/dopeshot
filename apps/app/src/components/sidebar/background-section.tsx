@@ -6,6 +6,7 @@ import { useSession } from "@/lib/auth/auth-client";
 import { configAtom, screenshotGradientAtom } from "@/hooks/atoms";
 import { backgroundSelectionAtom } from "@/hooks/atoms/backgrounds";
 import { GradientPicker } from "@/components/selectors/gradient-picker";
+import { PersonalBackgroundPicker } from "@/components/selectors/personal-background-picker";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import { clearBackgroundSelection } from "@/domain/backgrounds/background-service";
 
@@ -71,6 +72,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   return (
     <div className="flex flex-col gap-4 pt-2">
       <GradientPicker onChangeAction={handleGradientChange} />
+      <PersonalBackgroundPicker />
     </div>
   );
 }

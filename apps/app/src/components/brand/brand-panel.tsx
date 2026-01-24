@@ -32,6 +32,7 @@ import {
   type BrandPersonality,
 } from "@/lib/types/brand";
 import { RefreshCw, Trash2, Loader2, Moon, Sun } from "lucide-react";
+import { BackgroundsCollection } from "./backgrounds-collection";
 
 function normalizeHex(input: string): string {
   const trimmed = input.trim();
@@ -466,6 +467,8 @@ export function BrandPanel() {
           </p>
         )}
         </section>
+
+        <BackgroundsCollection />
 
         <section className="space-y-3">
           <div className="flex w-full items-center justify-between">
