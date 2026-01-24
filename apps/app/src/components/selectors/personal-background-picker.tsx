@@ -4,11 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useAtom, useSetAtom } from "jotai";
 import { ChevronDown, ImageIcon, Check } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Collapsible,
-  CollapsibleContent,
+  CollapsiblePanel,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useUserTier } from "@/hooks/use-user-tier";
@@ -129,25 +128,21 @@ export function PersonalBackgroundPicker() {
 
   return (
     <Collapsible open={isOpen} onOpenChange={setIsOpen}>
-      <CollapsibleTrigger asChild>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-between text-xs text-muted-foreground hover:text-foreground"
-        >
-          <span className="flex items-center gap-2">
-            <ImageIcon className="h-3.5 w-3.5" />
-            Your backgrounds
-          </span>
-          <ChevronDown
-            className={cn(
-              "h-4 w-4 transition-transform duration-200",
-              isOpen && "rotate-180",
-            )}
-          />
-        </Button>
+      <CollapsibleTrigger
+        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        <span className="flex items-center gap-2">
+          <ImageIcon className="h-3.5 w-3.5" />
+          Your backgrounds
+        </span>
+        <ChevronDown
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isOpen && "rotate-180",
+          )}
+        />
       </CollapsibleTrigger>
-      <CollapsibleContent className="pt-2">
+      <CollapsiblePanel className="pt-2">
         {isLoading ? (
           <div className="grid grid-cols-3 gap-2">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -201,7 +196,7 @@ export function PersonalBackgroundPicker() {
             })}
           </div>
         )}
-      </CollapsibleContent>
+      </CollapsiblePanel>
     </Collapsible>
   );
 }
