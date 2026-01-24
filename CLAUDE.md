@@ -12,7 +12,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 ## Rules
 
 - Focus on creating a delightful front-end experience. Make sure the UI is easy to use, understan and snappy.
-- When building UI components, use shadcn/ui CLI for primitives. Style them with Tailwind.
+- When building UI components, use Base UI (`@base-ui/react`) for primitives. Style them with Tailwind.
 - Avoid new catch-all `utils.ts`; collocate helpers or use domain-specific modules.
 - Use pnpm.
 - Propose using `knip` to clean up after building a bigger feature.
