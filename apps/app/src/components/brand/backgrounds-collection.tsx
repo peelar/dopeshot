@@ -13,10 +13,11 @@ import {
   deletePersonalBackground,
 } from "@/domain/backgrounds/background-service";
 import { compressImageBlob } from "@/lib/utils/image-compression";
+import { cropImageToAspectRatio } from "@/lib/utils/image-crop";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
 import { cn } from "@/lib/utils/cn";
-import { MAX_BRAND_BACKGROUNDS } from "@/domain/backgrounds/constants";
+import { MAX_BRAND_BACKGROUNDS, TARGET_ASPECT_RATIO } from "@/domain/backgrounds/constants";
 import type { PersonalBackground } from "@/domain/backgrounds/types";
 
 export function BackgroundsCollection() {
@@ -52,15 +53,18 @@ export function BackgroundsCollection() {
       setIsUploading(true);
 
       try {
-        // Get image dimensions
-        const dimensions = await getImageDimensions(file);
+        // Step 1: Crop to 16:9 aspect ratio (center crop)
+        const cropped = await cropImageToAspectRatio(file, {
+          targetAspectRatio: TARGET_ASPECT_RATIO,
+          maxWidth: 3840, // 4K max width
+        });
 
-        // Compress the image before upload
-        const compressed = await compressImageBlob(file, {
+        // Step 2: Compress the cropped image
+        const compressed = await compressImageBlob(cropped.blob, {
           maxSizeKB: 2048, // 2MB target for backgrounds
           initialQuality: 0.92,
           minQuality: 0.7,
-          maxWidth: 3840, // 4K max width
+          maxWidth: 3840, // 4K max width (already applied in crop, but keep as safeguard)
         });
 
         const fileToUpload = new File(
@@ -72,8 +76,8 @@ export function BackgroundsCollection() {
         const result = await uploadPersonalBackground({
           file: fileToUpload,
           name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-          widthPx: dimensions.width,
-          heightPx: dimensions.height,
+          widthPx: cropped.finalWidth,
+          heightPx: cropped.finalHeight,
           fileFormat: file.name.split(".").pop()?.toLowerCase() || "jpg",
         });
 
@@ -82,10 +86,18 @@ export function BackgroundsCollection() {
         track("brand_background_uploaded", {
           file_size_kb: Math.round(compressed.finalSize / 1024),
           was_compressed: compressed.wasCompressed,
+          was_cropped: cropped.wasCropped,
           original_size_kb: Math.round(compressed.originalSize / 1024),
+          original_dimensions: `${cropped.originalWidth}x${cropped.originalHeight}`,
+          final_dimensions: `${cropped.finalWidth}x${cropped.finalHeight}`,
         });
 
-        toast.success("Background uploaded");
+        // Show helpful message if image was cropped
+        if (cropped.wasCropped) {
+          toast.success("Background uploaded and cropped to 16:9");
+        } else {
+          toast.success("Background uploaded");
+        }
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to upload background";
@@ -135,7 +147,7 @@ export function BackgroundsCollection() {
   return (
     <section className="space-y-3">
       <div className="flex w-full items-center justify-between">
-        <span className="text-sm font-semibold">Backgrounds</span>
+        <span className="text-sm font-semibold">Your backgrounds</span>
         <span className="text-xs text-muted-foreground">
           {backgrounds.length}/{MAX_BRAND_BACKGROUNDS}
         </span>
@@ -151,9 +163,9 @@ export function BackgroundsCollection() {
       />
 
       {isLoading ? (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="aspect-video rounded-md" />
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
           ))}
         </div>
       ) : backgrounds.length === 0 ? (
@@ -177,7 +189,7 @@ export function BackgroundsCollection() {
           )}
         </Button>
       ) : (
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-3 gap-3">
           {backgrounds.map((background) => (
             <BackgroundThumbnail
               key={background.id}
@@ -193,7 +205,7 @@ export function BackgroundsCollection() {
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
               className={cn(
-                "group relative flex aspect-video items-center justify-center rounded-md border-2 border-dashed border-border/60 bg-muted/20 transition hover:border-border hover:bg-muted/40",
+                "group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2 ring-1 ring-border/60 hover:ring-border",
                 isUploading && "cursor-not-allowed opacity-50",
               )}
             >
@@ -207,9 +219,11 @@ export function BackgroundsCollection() {
         </div>
       )}
 
-      <p className="text-xs text-muted-foreground">
-        Upload custom backgrounds to use in your screenshots.
-      </p>
+      {backgrounds.length === 0 && !isLoading && (
+        <p className="text-xs text-muted-foreground">
+          Upload custom backgrounds to use in your screenshots.
+        </p>
+      )}
     </section>
   );
 }
@@ -226,15 +240,19 @@ function BackgroundThumbnail({
   onDelete,
 }: BackgroundThumbnailProps) {
   return (
-    <div className="group relative aspect-video overflow-hidden rounded-md border border-border/60 bg-muted/30">
+    <div className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md bg-muted/30 p-0 text-left transition focus-within:ring-2 focus-within:ring-offset-2 ring-1 ring-border/60 hover:ring-border">
       {background.previewUrl ? (
-        <img
-          src={background.previewUrl}
-          alt={background.name || "Background"}
-          className="h-full w-full object-cover"
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `url(${background.previewUrl})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+          aria-hidden
         />
       ) : (
-        <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+        <div className="flex h-full w-full items-center justify-center text-[10px] text-muted-foreground">
           No preview
         </div>
       )}
@@ -259,23 +277,3 @@ function BackgroundThumbnail({
   );
 }
 
-async function getImageDimensions(
-  file: File,
-): Promise<{ width: number; height: number }> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-
-    img.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: img.naturalWidth, height: img.naturalHeight });
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      resolve({ width: 1920, height: 1080 }); // Default fallback
-    };
-
-    img.src = url;
-  });
-}
