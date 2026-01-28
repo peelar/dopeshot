@@ -12,13 +12,21 @@ WITH target AS (
   SELECT id FROM public."user" WHERE email = 'user@example.com'
 )
 INSERT INTO public.user_metadata (
+  id,
   user_id,
   subscription_tier,
   subscription_status,
   created_at,
   updated_at
 )
-SELECT id, 'brand', 'active', now(), now()
+SELECT
+  -- Generate a CUID-like ID (or you can use gen_random_uuid() if you prefer UUID)
+  'c' || encode(gen_random_bytes(12), 'base64')::text,
+  id,
+  'brand',
+  'active',
+  now(),
+  now()
 FROM target
 ON CONFLICT (user_id) DO UPDATE
   SET subscription_tier   = EXCLUDED.subscription_tier,

@@ -18,8 +18,6 @@
     "test:ci": "pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "check": "pnpm lint && pnpm typecheck && pnpm test:domain && pnpm test:ui && pnpm test:e2e",
     "release": "pnpm -w changeset:version && pnpm check",
-    "db:status": "sh -c 'if [ -f .env.local ]; then set -a; . ./.env.local; set +a; fi; if [ -n \"$DIRECT_DATABASE_URL\" ]; then export DATABASE_URL=\"$DIRECT_DATABASE_URL\"; fi; prisma migrate status'",
-    "db:deploy": "sh -c 'if [ -f .env.local ]; then set -a; . ./.env.local; set +a; fi; if [ -n \"$DIRECT_DATABASE_URL\" ]; then export DATABASE_URL=\"$DIRECT_DATABASE_URL\"; fi; prisma migrate deploy'",
     "db:dev": "prisma migrate dev"
   },
   "dependencies": {
