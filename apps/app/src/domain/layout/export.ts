@@ -11,8 +11,9 @@ async function waitForRender(): Promise<void> {
     requestAnimationFrame(() => {
       // Use requestIdleCallback if available, otherwise use a short timeout
       if ("requestIdleCallback" in window) {
-        (window as typeof window & { requestIdleCallback: (cb: () => void) => void })
-          .requestIdleCallback(() => resolve(), { timeout: 100 });
+        (
+          window as typeof window & { requestIdleCallback: (cb: () => void) => void }
+        ).requestIdleCallback(() => resolve(), { timeout: 100 });
       } else {
         setTimeout(resolve, 50);
       }
@@ -46,24 +47,23 @@ type ExportSizeOptions = {
  * Defaults to device pixel ratio or 2 (whichever is higher).
  * Respects maxImageScale to prevent upscaling beyond natural resolution.
  */
-export function calculatePixelRatio(options: {
-  desiredPixelRatio?: number;
-  maxImageScale?: number;
-  devicePixelRatio?: number;
-} = {}): number {
+export function calculatePixelRatio(
+  options: {
+    desiredPixelRatio?: number;
+    maxImageScale?: number;
+    devicePixelRatio?: number;
+  } = {},
+): number {
   const {
     desiredPixelRatio,
     maxImageScale,
-    devicePixelRatio = typeof window !== 'undefined' ? window.devicePixelRatio : 1,
+    devicePixelRatio = typeof window !== "undefined" ? window.devicePixelRatio : 1,
   } = options;
 
   const desired = desiredPixelRatio ?? Math.max(devicePixelRatio, 2);
   const maxScale = maxImageScale && Number.isFinite(maxImageScale) ? maxImageScale : Infinity;
 
-  return Math.min(
-    Math.max(desired, 1),
-    Math.max(Math.min(3, maxScale), 1)
-  );
+  return Math.min(Math.max(desired, 1), Math.max(Math.min(3, maxScale), 1));
 }
 
 /**
@@ -185,5 +185,36 @@ export async function exportLayoutAsPng(
     } else {
       throw new Error(`Export failed: ${String(err)}`);
     }
+  }
+}
+
+/**
+ * Generate a small thumbnail preview of the layout
+ * Used for post-export success UI
+ */
+export async function generateThumbnail(elementId: string): Promise<string> {
+  const element = document.getElementById(elementId);
+  if (!element) {
+    throw new Error(`Export target with id "${elementId}" not found`);
+  }
+
+  try {
+    await waitForRender();
+
+    // Capture full element at low resolution for thumbnail
+    // CSS handles display sizing - we just need a lightweight capture
+    const dataUrl = await toPng(element, {
+      cacheBust: true,
+      pixelRatio: 0.5, // Half resolution for smaller file size
+      style: {
+        visibility: "visible",
+        zIndex: "auto",
+      } as Partial<CSSStyleDeclaration>,
+    });
+
+    return dataUrl;
+  } catch (err) {
+    console.error("Failed to generate thumbnail:", err);
+    throw new Error("Thumbnail generation failed");
   }
 }

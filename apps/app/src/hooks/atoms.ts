@@ -127,4 +127,8 @@ export const hasExportedAtom = atom<boolean>(false); // True after successful ex
 export const currentExportBlobAtom = atom<Blob | null>(null); // Store blob for save
 export const isSavingAtom = atom<boolean>(false); // Save in progress
 
+// Export success sheet state
+export const showExportSheetAtom = atom<boolean>(false); // Show post-export sheet
+export const exportThumbnailAtom = atom<string | null>(null); // Thumbnail preview URL
+
 

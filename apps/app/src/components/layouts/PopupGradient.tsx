@@ -243,6 +243,10 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
               alt="Logo"
               className="h-8 w-auto max-w-[200px] object-contain"
               crossOrigin="anonymous"
+              onError={(e) => {
+                // Hide broken images to prevent export failures
+                e.currentTarget.style.display = 'none';
+              }}
             />
           ) : null}
           {!logo && onUploadAsset && !isStatic ? (

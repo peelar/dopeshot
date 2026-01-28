@@ -15,7 +15,12 @@ import { getPreferredGradientAngle } from "@/domain/layout/gradient-application"
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import type { LayoutDefinition } from "@/domain/layout-def/definitions";
 import type { GradientPreferences } from "@/domain/gradient-generation";
-import { exportLayoutAsPng, exportLayoutAsPngWithBlob } from "@/domain/layout/export";
+import {
+  exportLayoutAsPng,
+  exportLayoutAsPngWithBlob,
+  generateThumbnail,
+} from "@/domain/layout/export";
+import { useSession } from "@/lib/auth/auth-client";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 import {
@@ -29,6 +34,8 @@ import {
   statusMessageAtom,
   hasExportedAtom,
   currentExportBlobAtom,
+  showExportSheetAtom,
+  exportThumbnailAtom,
 } from "@/hooks/atoms";
 import {
   canvasAtom,
@@ -57,6 +64,9 @@ interface ExportContext {
   orientation: "mobile" | "desktop";
   setHasExported: Setter<boolean>;
   setCurrentExportBlob: Setter<Blob | null>;
+  setShowExportSheet: Setter<boolean>;
+  setExportThumbnail: Setter<string | null>;
+  isAuthenticated: boolean;
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -102,6 +112,13 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
   const setHasExported = useSetAtom(hasExportedAtom);
   const setCurrentExportBlob = useSetAtom(currentExportBlobAtom);
 
+  // Export sheet atoms for post-export UI
+  const setShowExportSheet = useSetAtom(showExportSheetAtom);
+  const setExportThumbnail = useSetAtom(exportThumbnailAtom);
+
+  // Auth state for conditional sheet display
+  const { data: session } = useSession();
+
   usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
@@ -121,6 +138,9 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
     orientation,
     setHasExported,
     setCurrentExportBlob,
+    setShowExportSheet,
+    setExportThumbnail,
+    isAuthenticated: Boolean(session?.session),
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -272,6 +292,9 @@ function useExportHandler({
   orientation,
   setHasExported,
   setCurrentExportBlob,
+  setShowExportSheet,
+  setExportThumbnail,
+  isAuthenticated,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -325,6 +348,29 @@ function useExportHandler({
         look_id: config.layoutId,
         orientation,
       });
+
+      // DEV FLAG: Force show modal for all users in development
+      const DEV_FORCE_SHOW_MODAL = process.env.NODE_ENV === "development" && false; // Set to true to test modal
+
+      // Show export success sheet for anonymous users (or all users if dev flag enabled)
+      if (!isAuthenticated || DEV_FORCE_SHOW_MODAL) {
+        // Generate thumbnail for the success sheet
+        try {
+          const thumbnail = await generateThumbnail("export-container");
+          setExportThumbnail(thumbnail);
+        } catch (err) {
+          console.warn("Failed to generate thumbnail:", err);
+          // Continue without thumbnail
+        }
+
+        // Show sheet after a short delay to let download complete
+        setTimeout(() => {
+          setShowExportSheet(true);
+          track("export_sheet_shown", {
+            user_type: DEV_FORCE_SHOW_MODAL ? "dev_testing" : "anonymous",
+          });
+        }, 500);
+      }
     } catch (error) {
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
@@ -360,6 +406,9 @@ function useExportHandler({
     setStatusMessage,
     setHasExported,
     setCurrentExportBlob,
+    setShowExportSheet,
+    setExportThumbnail,
+    isAuthenticated,
   ]);
 }
 
