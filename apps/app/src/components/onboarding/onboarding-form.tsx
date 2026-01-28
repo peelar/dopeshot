@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Moon, Sun } from "lucide-react";
+import { ImagePlus, Loader2, Moon, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,7 @@ import {
   type BrandPersonality,
 } from "@/lib/types/brand";
 import { cn } from "@/lib/utils/cn";
+import { useBackgroundUpload } from "@/hooks/use-background-upload";
 
 type OnboardingFormProps = {
   initialLogoUrl?: string | null;
@@ -55,6 +56,7 @@ export function OnboardingForm({
   const router = useRouter();
   const { resolvedTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const bgInputRef = useRef<HTMLInputElement>(null);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl ?? null);
   const [logoPath, setLogoPath] = useState<string | null>(initialLogoPath ?? null);
@@ -72,6 +74,14 @@ export function OnboardingForm({
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Background upload
+  const {
+    upload: uploadBackground,
+    reset: resetBackground,
+    isUploading: isUploadingBackground,
+    uploadedBackground,
+  } = useBackgroundUpload({ showToasts: true, trackAnalytics: true });
 
   const dropZonePattern = useMemo(() => {
     const isDark = resolvedTheme !== "light";
@@ -97,12 +107,13 @@ export function OnboardingForm({
     [],
   );
 
+  // Short descriptions for compact 2x2 layout
   const personalityDescriptions: Record<BrandPersonality, string> = useMemo(
     () => ({
-      hipster: "Bold, expressive, announcement-oriented.",
-      founder: "Sharp, clean, precise. Modern tech vibes.",
-      hacker: "Terminal vibes, functional, no fluff.",
-      kawaii: "Warm, rounded, Studio Ghibli feel.",
+      hipster: "Bold & expressive",
+      founder: "Sharp & modern",
+      hacker: "Terminal vibes",
+      kawaii: "Warm & rounded",
     }),
     [],
   );
@@ -182,6 +193,7 @@ export function OnboardingForm({
         mode,
         personality,
         has_logo: Boolean(logoPath),
+        has_background: Boolean(uploadedBackground),
       });
 
       router.refresh();
@@ -196,6 +208,12 @@ export function OnboardingForm({
     }
   };
 
+  const handleBgFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) void uploadBackground(file);
+    e.currentTarget.value = "";
+  };
+
   return (
     <div
       className={cn(
@@ -203,237 +221,300 @@ export function OnboardingForm({
         embedded ? "px-5 py-6 sm:px-6 sm:py-8" : "px-4 py-10 sm:py-14",
       )}
     >
-      <div className="flex flex-col items-start gap-6">
-        <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-          <div className="flex h-full flex-col gap-4 lg:col-span-6">
-            <section>
-              <div className={cn(cardSurface, "p-5 sm:p-6")}>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1">
-                    <h2 className="text-sm font-semibold text-foreground">Start with your logo</h2>
-                    <p className="text-xs text-muted-foreground">
-                      Upload a transparent PNG or SVG.
-                    </p>
-                  </div>
-                </div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={(e) => {
-                    const next = e.target.files?.[0];
-                    if (next) void handleLogoUpload(next);
-                    e.currentTarget.value = "";
-                  }}
-                />
-
-                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/40 dark:bg-black/30">
-                  <button
-                    type="button"
-                    aria-label="Upload logo"
-                    onClick={() => fileInputRef.current?.click()}
-                    onDragOver={(event) => event.preventDefault()}
-                    onDrop={(event) => {
-                      event.preventDefault();
-                      if (isUploadingLogo || isSubmitting) return;
-                      const next = event.dataTransfer.files?.[0];
-                      if (next) void handleLogoUpload(next);
-                    }}
-                    disabled={isUploadingLogo || isSubmitting}
-                    className={cn(
-                      "relative grid aspect-[16/9] w-full place-items-center bg-[length:22px_22px] p-4 transition",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                      isUploadingLogo || isSubmitting
-                        ? "cursor-not-allowed opacity-70"
-                        : "cursor-pointer hover:bg-muted/70 dark:hover:bg-white/5",
-                    )}
-                    style={{
-                      backgroundImage: dropZonePattern,
-                      backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0px",
-                    }}
-                  >
-                    {logoUrl ? (
-                      <img
-                        src={logoUrl}
-                        alt="Your logo preview"
-                        className={cn(
-                          "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]",
-                          isUploadingLogo && "opacity-60",
-                        )}
-                      />
-                    ) : (
-                      <div className="text-center">
-                        <p className="text-sm font-medium text-foreground">
-                          Drop your logo here
-                        </p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          Recommended: 1024px wide, transparent background
-                        </p>
-                      </div>
-                    )}
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <div className={cn(cardSurface, "p-5 sm:p-6")}>
-                <div className="space-y-1">
-                  <h2 className="text-sm font-semibold text-foreground">Choose your colors</h2>
-                  <p className="text-xs text-muted-foreground">Pick an accent and a color scheme.</p>
-                </div>
-
-                <div className="mt-4 grid grid-cols-1 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">What accent color feels right?</Label>
-                    <div className="flex items-center gap-3">
-                      <div className="relative">
-                        <input
-                          type="color"
-                          value={accent}
-                          onChange={(e) => setAccent(normalizeHex(e.target.value))}
-                          aria-label="Accent color picker"
-                          disabled={isSubmitting}
-                          className="h-10 w-10 cursor-pointer appearance-none rounded-full border border-border bg-transparent p-0 shadow-[0_2px_10px_-6px_rgba(0,0,0,0.3)] [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
-                        />
-                      </div>
-                      <div className="flex-1 space-y-1">
-                        <Input
-                          value={accent}
-                          onChange={(e) => setAccent(normalizeHex(e.target.value))}
-                          className="h-9 border-input bg-muted/60 font-mono text-xs text-foreground placeholder:text-muted-foreground"
-                          placeholder="#6366F1"
-                          inputMode="text"
-                          disabled={isSubmitting}
-                        />
-                        <p className="text-[11px] text-muted-foreground">
-                          Used for highlights, buttons, and gradients.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs text-muted-foreground">What color scheme do you prefer?</Label>
-                    <div className="relative grid grid-cols-2 rounded-xl border border-border bg-muted/50 p-1 dark:bg-black/25">
-                      <div
-                        className={cn(
-                          "absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-background shadow-[0_8px_24px_-16px_rgba(0,0,0,0.35)] transition-transform duration-200",
-                          "dark:bg-white/10 dark:shadow-[0_8px_24px_-16px_rgba(255,255,255,0.25)]",
-                          mode === "light" ? "translate-x-0" : "translate-x-full",
-                        )}
-                        aria-hidden="true"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setMode("light")}
-                        disabled={isSubmitting}
-                        className={cn(
-                          "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                          mode === "light" ? "text-foreground" : "text-muted-foreground",
-                          isSubmitting && "cursor-not-allowed",
-                        )}
-                      >
-                        <Sun className="size-4" />
-                        Light
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMode("dark")}
-                        disabled={isSubmitting}
-                        className={cn(
-                          "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                          mode === "dark" ? "text-foreground" : "text-muted-foreground",
-                          isSubmitting && "cursor-not-allowed",
-                        )}
-                      >
-                        <Moon className="size-4" />
-                        Dark
-                      </button>
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">Used for composing color palettes.</p>
-                  </div>
-                </div>
-              </div>
-            </section>
-          </div>
-
-          <aside className="lg:col-span-6 lg:h-full">
-            <div className={cn(cardSurface, "flex h-full flex-col p-5 sm:p-6")}>
+      <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12">
+        {/* Row 1: Logo (left) + Background (right) */}
+        <section className="lg:col-span-6">
+          <div className={cn(cardSurface, "h-full p-5 sm:p-6")}>
+            <div className="flex items-start justify-between gap-4">
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-foreground">
-                  Select a personality that fits your product
-                </h2>
+                <h2 className="text-sm font-semibold text-foreground">Start with your logo</h2>
                 <p className="text-xs text-muted-foreground">
-                  This sets the default typography + tone.
-                </p>
-              </div>
-
-              <div className="mt-4 flex-1">
-                <div role="radiogroup" aria-label="Which personality fits your brand" className="space-y-2">
-                  {personalityOptions.map((option) => {
-                    const isActive = personality === option.id;
-                    return (
-                      <button
-                        key={option.id}
-                        type="button"
-                        role="radio"
-                        aria-checked={isActive}
-                        onClick={() => setPersonality(option.id)}
-                        disabled={isSubmitting}
-                        className={cn(
-                          "w-full rounded-xl border px-4 py-3 text-left transition",
-                          isActive
-                            ? "border-primary/50 bg-primary/10 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_42px_-26px_rgba(0,0,0,0.45)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_14px_40px_-26px_rgba(0,0,0,0.7)]"
-                            : "border-border bg-muted/50 hover:bg-muted/70 dark:bg-black/25 dark:hover:bg-black/35",
-                          isSubmitting && "cursor-not-allowed opacity-70",
-                        )}
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div>
-                            <div
-                              className={cn(
-                                "text-sm font-semibold text-foreground",
-                                personalityFontClasses[option.id],
-                              )}
-                            >
-                              {option.label}
-                            </div>
-                            <div className="mt-1 text-xs text-muted-foreground">
-                              {personalityDescriptions[option.id]}
-                            </div>
-                          </div>
-                          <span
-                            className={cn(
-                              "mt-1 inline-block size-2.5 rounded-full border border-border/80",
-                              isActive ? "bg-primary" : "bg-transparent",
-                            )}
-                            aria-hidden="true"
-                          />
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="mt-6 flex flex-col items-end gap-2">
-                <Button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!canSubmit || isUploadingLogo || isSubmitting}
-                  className="sm:min-w-[180px]"
-                >
-                  {isSubmitting ? "Saving…" : "Finish setup"}
-                </Button>
-                <p className="text-[10px] text-muted-foreground">
-                  Don’t worry, you can change these later.
+                  Upload a transparent PNG or SVG.
                 </p>
               </div>
             </div>
-          </aside>
-        </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const next = e.target.files?.[0];
+                if (next) void handleLogoUpload(next);
+                e.currentTarget.value = "";
+              }}
+            />
+
+            <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/40 dark:bg-black/30">
+              <button
+                type="button"
+                aria-label="Upload logo"
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(event) => event.preventDefault()}
+                onDrop={(event) => {
+                  event.preventDefault();
+                  if (isUploadingLogo || isSubmitting) return;
+                  const next = event.dataTransfer.files?.[0];
+                  if (next) void handleLogoUpload(next);
+                }}
+                disabled={isUploadingLogo || isSubmitting}
+                className={cn(
+                  "relative grid aspect-video w-full place-items-center bg-size-[22px_22px] p-4 transition",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                  isUploadingLogo || isSubmitting
+                    ? "cursor-not-allowed opacity-70"
+                    : "cursor-pointer hover:bg-muted/70 dark:hover:bg-white/5",
+                )}
+                style={{
+                  backgroundImage: dropZonePattern,
+                  backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0px",
+                }}
+              >
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Your logo preview"
+                    className={cn(
+                      "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]",
+                      isUploadingLogo && "opacity-60",
+                    )}
+                  />
+                ) : (
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground">
+                      Drop your logo here
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Recommended: 1024px wide, transparent background
+                    </p>
+                  </div>
+                )}
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section className="lg:col-span-6">
+          <div className={cn(cardSurface, "h-full p-5 sm:p-6")}>
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-foreground">
+                Add a reusable background
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Use it across your designs.
+              </p>
+            </div>
+
+            <input
+              ref={bgInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/jpg,image/webp"
+              onChange={handleBgFileChange}
+              className="hidden"
+              aria-label="Upload background"
+            />
+
+            <div className="mt-4">
+              {uploadedBackground ? (
+                <div className="relative overflow-hidden rounded-lg border border-border">
+                  <div
+                    className="aspect-video w-full bg-cover bg-center"
+                    style={{ backgroundImage: `url(${uploadedBackground.previewUrl})` }}
+                    aria-label="Uploaded background preview"
+                  />
+                  <button
+                    type="button"
+                    onClick={resetBackground}
+                    disabled={isSubmitting}
+                    className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+                    aria-label="Remove background"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => bgInputRef.current?.click()}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    if (isUploadingBackground || isSubmitting) return;
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) void uploadBackground(file);
+                  }}
+                  disabled={isUploadingBackground || isSubmitting}
+                  className={cn(
+                    "flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/30 transition",
+                    "hover:border-border hover:bg-muted/50 dark:bg-black/20 dark:hover:bg-black/30",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                    (isUploadingBackground || isSubmitting) && "cursor-not-allowed opacity-60",
+                  )}
+                >
+                  {isUploadingBackground ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  ) : (
+                    <>
+                      <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">Drop or click to upload</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </section>
+
+        {/* Row 2: Colors (left) + Personality + Submit (right) */}
+        <section className="lg:col-span-6">
+          <div className={cn(cardSurface, "h-full p-5 sm:p-6")}>
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-foreground">Choose your colors</h2>
+              <p className="text-xs text-muted-foreground">Pick an accent and a color scheme.</p>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Accent color</Label>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <input
+                      type="color"
+                      value={accent}
+                      onChange={(e) => setAccent(normalizeHex(e.target.value))}
+                      aria-label="Accent color picker"
+                      disabled={isSubmitting}
+                      className="h-10 w-10 cursor-pointer appearance-none rounded-full border border-border bg-transparent p-0 shadow-[0_2px_10px_-6px_rgba(0,0,0,0.3)] [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <Input
+                      value={accent}
+                      onChange={(e) => setAccent(normalizeHex(e.target.value))}
+                      className="h-9 border-input bg-muted/60 font-mono text-xs text-foreground placeholder:text-muted-foreground"
+                      placeholder="#6366F1"
+                      inputMode="text"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Color scheme</Label>
+                <div className="relative grid grid-cols-2 rounded-xl border border-border bg-muted/50 p-1 dark:bg-black/25">
+                  <div
+                    className={cn(
+                      "absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-background shadow-[0_8px_24px_-16px_rgba(0,0,0,0.35)] transition-transform duration-200",
+                      "dark:bg-white/10 dark:shadow-[0_8px_24px_-16px_rgba(255,255,255,0.25)]",
+                      mode === "light" ? "translate-x-0" : "translate-x-full",
+                    )}
+                    aria-hidden="true"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMode("light")}
+                    disabled={isSubmitting}
+                    className={cn(
+                      "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                      mode === "light" ? "text-foreground" : "text-muted-foreground",
+                      isSubmitting && "cursor-not-allowed",
+                    )}
+                  >
+                    <Sun className="size-4" />
+                    Light
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMode("dark")}
+                    disabled={isSubmitting}
+                    className={cn(
+                      "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
+                      mode === "dark" ? "text-foreground" : "text-muted-foreground",
+                      isSubmitting && "cursor-not-allowed",
+                    )}
+                  >
+                    <Moon className="size-4" />
+                    Dark
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="lg:col-span-6">
+          <div className={cn(cardSurface, "h-full p-5 sm:p-6")}>
+            <div className="space-y-1">
+              <h2 className="text-sm font-semibold text-foreground">
+                Pick a personality
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Sets default typography + tone.
+              </p>
+            </div>
+
+            <div className="mt-4">
+              <div role="radiogroup" aria-label="Which personality fits your brand" className="grid grid-cols-2 gap-2">
+                {personalityOptions.map((option) => {
+                  const isActive = personality === option.id;
+                  return (
+                    <button
+                      key={option.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => setPersonality(option.id)}
+                      disabled={isSubmitting}
+                      className={cn(
+                        "rounded-lg border px-3 py-2.5 text-left transition",
+                        isActive
+                          ? "border-primary/50 bg-primary/10"
+                          : "border-border bg-muted/50 hover:bg-muted/70 dark:bg-black/25 dark:hover:bg-black/35",
+                        isSubmitting && "cursor-not-allowed opacity-70",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div
+                          className={cn(
+                            "text-xs font-semibold text-foreground",
+                            personalityFontClasses[option.id],
+                          )}
+                        >
+                          {option.label}
+                        </div>
+                        <span
+                          className={cn(
+                            "inline-block size-2 shrink-0 rounded-full border border-border/80",
+                            isActive ? "bg-primary" : "bg-transparent",
+                          )}
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-0.5 text-[10px] text-muted-foreground">
+                        {personalityDescriptions[option.id]}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div className="mt-6 flex flex-col items-end gap-2">
+        <Button
+          type="button"
+          onClick={handleSubmit}
+          disabled={!canSubmit || isUploadingLogo || isUploadingBackground || isSubmitting}
+          className="min-w-[200px]"
+        >
+          {isSubmitting ? "Saving…" : "Finish setup"}
+        </Button>
+        <p className="text-[10px] text-muted-foreground">
+          You can change these later.
+        </p>
       </div>
     </div>
   );

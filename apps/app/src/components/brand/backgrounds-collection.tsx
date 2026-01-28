@@ -7,23 +7,29 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 import {
   listPersonalBackgrounds,
-  uploadPersonalBackground,
   deletePersonalBackground,
 } from "@/domain/backgrounds/background-service";
-import { compressImageBlob } from "@/lib/utils/image-compression";
-import { cropImageToAspectRatio } from "@/lib/utils/image-crop";
+import { useBackgroundUpload } from "@/hooks/use-background-upload";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
 import { cn } from "@/lib/utils/cn";
-import { MAX_BRAND_BACKGROUNDS, TARGET_ASPECT_RATIO } from "@/domain/backgrounds/constants";
+import { MAX_BRAND_BACKGROUNDS } from "@/domain/backgrounds/constants";
 import type { PersonalBackground } from "@/domain/backgrounds/types";
 
 export function BackgroundsCollection() {
   const [backgrounds, setBackgrounds] = useAtom(personalBackgroundsAtom);
   const [isLoading, setIsLoading] = useState(true);
-  const [isUploading, setIsUploading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Use shared upload hook
+  const { upload, isUploading } = useBackgroundUpload({
+    showToasts: true,
+    trackAnalytics: true,
+    onSuccess: (result) => {
+      setBackgrounds((prev) => [result.background, ...prev]);
+    },
+  });
 
   // Load backgrounds on mount
   useEffect(() => {
@@ -47,32 +53,6 @@ export function BackgroundsCollection() {
     loadBackgrounds();
   }, [backgrounds.length, setBackgrounds]);
 
-  async function getBlobDimensions(
-    blob: Blob,
-  ): Promise<{ width: number; height: number }> {
-    if (typeof createImageBitmap !== "undefined") {
-      const bitmap = await createImageBitmap(blob);
-      return { width: bitmap.width, height: bitmap.height };
-    }
-
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(blob);
-
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        resolve({ width: img.width, height: img.height });
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("Failed to read image dimensions"));
-      };
-
-      img.src = url;
-    });
-  }
-
   const handleUpload = useCallback(
     async (file: File) => {
       if (backgrounds.length >= MAX_BRAND_BACKGROUNDS) {
@@ -80,68 +60,13 @@ export function BackgroundsCollection() {
         return;
       }
 
-      setIsUploading(true);
+      await upload(file);
 
-      try {
-        // Step 1: Crop to 16:9 aspect ratio (center crop)
-        const cropped = await cropImageToAspectRatio(file, {
-          targetAspectRatio: TARGET_ASPECT_RATIO,
-          maxWidth: 3840, // 4K max width
-        });
-
-        // Step 2: Compress the cropped image
-        const compressed = await compressImageBlob(cropped.blob, {
-          maxSizeKB: 2048, // 2MB target for backgrounds
-          initialQuality: 0.92,
-          minQuality: 0.7,
-          maxWidth: 3840, // 4K max width (already applied in crop, but keep as safeguard)
-        });
-
-        const fileToUpload = new File(
-          [compressed.blob],
-          file.name,
-          { type: compressed.blob.type || file.type },
-        );
-
-        const { width: finalWidth, height: finalHeight } = await getBlobDimensions(
-          compressed.blob,
-        ).catch(() => ({
-          width: cropped.finalWidth,
-          height: cropped.finalHeight,
-        }));
-
-        const result = await uploadPersonalBackground({
-          file: fileToUpload,
-          name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-          widthPx: finalWidth,
-          heightPx: finalHeight,
-          fileFormat: file.name.split(".").pop()?.toLowerCase() || "jpg",
-        });
-
-        setBackgrounds((prev) => [result, ...prev]);
-
-        track("brand_background_uploaded", {
-          file_size_kb: Math.round(compressed.finalSize / 1024),
-          was_compressed: compressed.wasCompressed,
-          was_cropped: cropped.wasCropped,
-          original_size_kb: Math.round(compressed.originalSize / 1024),
-          original_dimensions: `${cropped.originalWidth}x${cropped.originalHeight}`,
-          final_dimensions: `${finalWidth}x${finalHeight}`,
-        });
-
-        toast.success("Background uploaded");
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to upload background";
-        toast.error(message);
-      } finally {
-        setIsUploading(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
     },
-    [backgrounds.length, setBackgrounds],
+    [backgrounds.length, upload],
   );
 
   const handleDelete = useCallback(
