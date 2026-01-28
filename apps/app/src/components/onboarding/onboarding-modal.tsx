@@ -44,7 +44,6 @@ export function OnboardingModal({
   onOpenChange,
   onCompleted,
 }: OnboardingModalProps) {
-
   const initialAccent = useMemo(() => {
     const accent = profile?.profile?.colorPalette?.accent;
     return typeof accent === "string" ? accent : null;
@@ -106,22 +105,24 @@ export function OnboardingModal({
         <DialogPrimitive.Content
           className={cn(
             "fixed left-1/2 top-1/2 z-50 w-[min(1040px,calc(100vw-1.5rem))] translate-x-[-50%] translate-y-[-50%]",
-            "overflow-hidden rounded-2xl border border-white/10 bg-[#07070a] shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_40px_120px_-60px_rgba(0,0,0,0.9)]",
+            "overflow-hidden rounded-2xl border border-border bg-card text-card-foreground",
+            "shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_30px_120px_-60px_rgba(0,0,0,0.35)]",
+            "dark:shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_40px_120px_-60px_rgba(0,0,0,0.9)]",
             "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95 data-[state=closed]:zoom-out-95",
           )}
         >
           <div className="pointer-events-none absolute inset-0" aria-hidden="true">
             <div
-              className="absolute inset-0 opacity-70"
+              className="absolute inset-0 opacity-60 dark:opacity-70"
               style={{
                 backgroundImage: `
-                  radial-gradient(circle at 18% 22%, rgba(99,102,241,0.30), transparent 45%),
-                  radial-gradient(circle at 82% 28%, rgba(236,72,153,0.20), transparent 48%),
+                  radial-gradient(circle at 18% 22%, rgba(99,102,241,0.28), transparent 45%),
+                  radial-gradient(circle at 82% 28%, rgba(236,72,153,0.18), transparent 48%),
                   radial-gradient(circle at 40% 86%, rgba(34,211,238,0.12), transparent 45%)
                 `,
               }}
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/0 via-black/20 to-black/65" />
+            <div className="absolute inset-0 bg-gradient-to-b from-background/10 via-background/75 to-background/90 dark:from-black/0 dark:via-black/20 dark:to-black/65" />
           </div>
 
           <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
@@ -142,16 +143,16 @@ export function OnboardingModal({
           </AlertDialog>
 
           <div className="relative">
-            <header className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-6">
+            <header className="flex items-start justify-between gap-4 border-b border-border/80 px-5 py-4 sm:px-6">
               <div className="flex items-start gap-3">
-                <div className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5">
-                  <PartyPopper className="size-4 text-white/90" />
+                <div className="grid size-10 place-items-center rounded-xl border border-border/80 bg-muted/40 dark:bg-white/5">
+                  <PartyPopper className="size-4 text-primary" />
                 </div>
                 <div className="space-y-0.5">
-                  <DialogPrimitive.Title className="text-sm font-semibold text-white">
+                  <DialogPrimitive.Title className="text-sm font-semibold text-foreground">
                     Welcome to dopeshot
                   </DialogPrimitive.Title>
-                  <DialogPrimitive.Description className="text-xs text-white/60">
+                  <DialogPrimitive.Description className="text-xs text-muted-foreground">
                     Quick setup so your next export looks unmistakably you.
                   </DialogPrimitive.Description>
                 </div>
@@ -161,7 +162,7 @@ export function OnboardingModal({
                 variant="ghost"
                 size="icon-sm"
                 onClick={handleUserClose}
-                className="text-white/70 hover:bg-white/10 hover:text-white"
+                className="text-muted-foreground hover:bg-muted/50 hover:text-foreground"
                 aria-label="Close onboarding"
               >
                 <X className="size-3.5" />

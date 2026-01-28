@@ -3,6 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ export function OnboardingForm({
   onDismiss,
 }: OnboardingFormProps) {
   const router = useRouter();
+  const { resolvedTheme } = useTheme();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(initialLogoUrl ?? null);
@@ -70,6 +72,21 @@ export function OnboardingForm({
 
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const dropZonePattern = useMemo(() => {
+    const isDark = resolvedTheme !== "light";
+    const tint = isDark ? "255,255,255" : "0,0,0";
+    const opacity = isDark ? 0.06 : 0.05;
+    return `
+      linear-gradient(45deg, rgba(${tint},${opacity}) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba(${tint},${opacity}) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, rgba(${tint},${opacity}) 75%),
+      linear-gradient(-45deg, transparent 75%, rgba(${tint},${opacity}) 75%)
+    `;
+  }, [resolvedTheme]);
+
+  const cardSurface =
+    "rounded-2xl border border-border bg-card/95 shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_24px_90px_-60px_rgba(0,0,0,0.35)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.04),0_26px_110px_-70px_rgba(0,0,0,0.75)]";
 
   const personalityOptions = useMemo(
     () =>
@@ -190,11 +207,11 @@ export function OnboardingForm({
         <div className="grid w-full grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
           <div className="flex h-full flex-col gap-4 lg:col-span-6">
             <section>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+              <div className={cn(cardSurface, "p-5 sm:p-6")}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="space-y-1">
-                    <h2 className="text-sm font-semibold text-white">Start with your logo</h2>
-                    <p className="text-xs text-white/60">
+                    <h2 className="text-sm font-semibold text-foreground">Start with your logo</h2>
+                    <p className="text-xs text-muted-foreground">
                       Upload a transparent PNG or SVG.
                     </p>
                   </div>
@@ -211,7 +228,7 @@ export function OnboardingForm({
                   }}
                 />
 
-                <div className="mt-4 overflow-hidden rounded-xl border border-white/10 bg-black/30">
+                <div className="mt-4 overflow-hidden rounded-xl border border-border bg-muted/40 dark:bg-black/30">
                   <button
                     type="button"
                     aria-label="Upload logo"
@@ -226,18 +243,13 @@ export function OnboardingForm({
                     disabled={isUploadingLogo || isSubmitting}
                     className={cn(
                       "relative grid aspect-[16/9] w-full place-items-center bg-[length:22px_22px] p-4 transition",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
                       isUploadingLogo || isSubmitting
                         ? "cursor-not-allowed opacity-70"
-                        : "cursor-pointer hover:bg-white/5",
+                        : "cursor-pointer hover:bg-muted/70 dark:hover:bg-white/5",
                     )}
                     style={{
-                      backgroundImage: `
-                        linear-gradient(45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-                        linear-gradient(-45deg, rgba(255,255,255,0.06) 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, rgba(255,255,255,0.06) 75%),
-                        linear-gradient(-45deg, transparent 75%, rgba(255,255,255,0.06) 75%)
-                      `,
+                      backgroundImage: dropZonePattern,
                       backgroundPosition: "0 0, 0 11px, 11px -11px, -11px 0px",
                     }}
                   >
@@ -246,16 +258,16 @@ export function OnboardingForm({
                         src={logoUrl}
                         alt="Your logo preview"
                         className={cn(
-                          "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.55)]",
+                          "max-h-full max-w-full object-contain drop-shadow-[0_10px_30px_rgba(0,0,0,0.45)]",
                           isUploadingLogo && "opacity-60",
                         )}
                       />
                     ) : (
                       <div className="text-center">
-                        <p className="text-sm font-medium text-white/85">
+                        <p className="text-sm font-medium text-foreground">
                           Drop your logo here
                         </p>
-                        <p className="mt-1 text-xs text-white/55">
+                        <p className="mt-1 text-xs text-muted-foreground">
                           Recommended: 1024px wide, transparent background
                         </p>
                       </div>
@@ -266,15 +278,15 @@ export function OnboardingForm({
             </section>
 
             <section>
-              <div className="rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+              <div className={cn(cardSurface, "p-5 sm:p-6")}>
                 <div className="space-y-1">
-                  <h2 className="text-sm font-semibold text-white">Choose your colors</h2>
-                  <p className="text-xs text-white/60">Pick an accent and a color scheme.</p>
+                  <h2 className="text-sm font-semibold text-foreground">Choose your colors</h2>
+                  <p className="text-xs text-muted-foreground">Pick an accent and a color scheme.</p>
                 </div>
 
                 <div className="mt-4 grid grid-cols-1 gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs text-white/70">What accent color feels right?</Label>
+                    <Label className="text-xs text-muted-foreground">What accent color feels right?</Label>
                     <div className="flex items-center gap-3">
                       <div className="relative">
                         <input
@@ -283,19 +295,19 @@ export function OnboardingForm({
                           onChange={(e) => setAccent(normalizeHex(e.target.value))}
                           aria-label="Accent color picker"
                           disabled={isSubmitting}
-                          className="h-10 w-10 cursor-pointer appearance-none rounded-full border border-white/10 bg-transparent p-0 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
+                          className="h-10 w-10 cursor-pointer appearance-none rounded-full border border-border bg-transparent p-0 shadow-[0_2px_10px_-6px_rgba(0,0,0,0.3)] [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
                         />
                       </div>
                       <div className="flex-1 space-y-1">
                         <Input
                           value={accent}
                           onChange={(e) => setAccent(normalizeHex(e.target.value))}
-                          className="h-9 border-white/10 bg-black/20 font-mono text-xs text-white placeholder:text-white/40"
+                          className="h-9 border-input bg-muted/60 font-mono text-xs text-foreground placeholder:text-muted-foreground"
                           placeholder="#6366F1"
                           inputMode="text"
                           disabled={isSubmitting}
                         />
-                        <p className="text-[11px] text-white/45">
+                        <p className="text-[11px] text-muted-foreground">
                           Used for highlights, buttons, and gradients.
                         </p>
                       </div>
@@ -303,11 +315,12 @@ export function OnboardingForm({
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-white/70">What color scheme do you prefer?</Label>
-                    <div className="relative grid grid-cols-2 rounded-xl border border-white/10 bg-black/25 p-1">
+                    <Label className="text-xs text-muted-foreground">What color scheme do you prefer?</Label>
+                    <div className="relative grid grid-cols-2 rounded-xl border border-border bg-muted/50 p-1 dark:bg-black/25">
                       <div
                         className={cn(
-                          "absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-white/10 shadow-[0_8px_24px_-16px_rgba(255,255,255,0.45)] transition-transform duration-200",
+                          "absolute inset-y-1 left-1 w-[calc(50%-0.25rem)] rounded-lg bg-background shadow-[0_8px_24px_-16px_rgba(0,0,0,0.35)] transition-transform duration-200",
+                          "dark:bg-white/10 dark:shadow-[0_8px_24px_-16px_rgba(255,255,255,0.25)]",
                           mode === "light" ? "translate-x-0" : "translate-x-full",
                         )}
                         aria-hidden="true"
@@ -318,7 +331,7 @@ export function OnboardingForm({
                         disabled={isSubmitting}
                         className={cn(
                           "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                          mode === "light" ? "text-white" : "text-white/55",
+                          mode === "light" ? "text-foreground" : "text-muted-foreground",
                           isSubmitting && "cursor-not-allowed",
                         )}
                       >
@@ -331,7 +344,7 @@ export function OnboardingForm({
                         disabled={isSubmitting}
                         className={cn(
                           "relative z-10 flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition-colors",
-                          mode === "dark" ? "text-white" : "text-white/55",
+                          mode === "dark" ? "text-foreground" : "text-muted-foreground",
                           isSubmitting && "cursor-not-allowed",
                         )}
                       >
@@ -339,7 +352,7 @@ export function OnboardingForm({
                         Dark
                       </button>
                     </div>
-                    <p className="text-[11px] text-white/45">Used for composing color palettes.</p>
+                    <p className="text-[11px] text-muted-foreground">Used for composing color palettes.</p>
                   </div>
                 </div>
               </div>
@@ -347,12 +360,12 @@ export function OnboardingForm({
           </div>
 
           <aside className="lg:col-span-6 lg:h-full">
-            <div className="flex h-full flex-col rounded-2xl border border-white/10 bg-white/5 p-5 shadow-[0_0_0_1px_rgba(255,255,255,0.05)] sm:p-6">
+            <div className={cn(cardSurface, "flex h-full flex-col p-5 sm:p-6")}>
               <div className="space-y-1">
-                <h2 className="text-sm font-semibold text-white">
+                <h2 className="text-sm font-semibold text-foreground">
                   Select a personality that fits your product
                 </h2>
-                <p className="text-xs text-white/60">
+                <p className="text-xs text-muted-foreground">
                   This sets the default typography + tone.
                 </p>
               </div>
@@ -372,8 +385,8 @@ export function OnboardingForm({
                         className={cn(
                           "w-full rounded-xl border px-4 py-3 text-left transition",
                           isActive
-                            ? "border-white/25 bg-white/10 shadow-[0_0_0_1px_rgba(255,255,255,0.06),0_14px_40px_-26px_rgba(0,0,0,0.9)]"
-                            : "border-white/10 bg-black/25 hover:bg-black/35",
+                            ? "border-primary/50 bg-primary/10 shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_18px_42px_-26px_rgba(0,0,0,0.45)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.08),0_14px_40px_-26px_rgba(0,0,0,0.7)]"
+                            : "border-border bg-muted/50 hover:bg-muted/70 dark:bg-black/25 dark:hover:bg-black/35",
                           isSubmitting && "cursor-not-allowed opacity-70",
                         )}
                       >
@@ -381,20 +394,20 @@ export function OnboardingForm({
                           <div>
                             <div
                               className={cn(
-                                "text-sm font-semibold text-white",
+                                "text-sm font-semibold text-foreground",
                                 personalityFontClasses[option.id],
                               )}
                             >
                               {option.label}
                             </div>
-                            <div className="mt-1 text-xs text-white/60">
+                            <div className="mt-1 text-xs text-muted-foreground">
                               {personalityDescriptions[option.id]}
                             </div>
                           </div>
                           <span
                             className={cn(
-                              "mt-1 inline-block size-2.5 rounded-full border border-white/20",
-                              isActive ? "bg-white" : "bg-transparent",
+                              "mt-1 inline-block size-2.5 rounded-full border border-border/80",
+                              isActive ? "bg-primary" : "bg-transparent",
                             )}
                             aria-hidden="true"
                           />
@@ -414,7 +427,7 @@ export function OnboardingForm({
                 >
                   {isSubmitting ? "Saving…" : "Finish setup"}
                 </Button>
-                <p className="text-[10px] text-white/45">
+                <p className="text-[10px] text-muted-foreground">
                   Don’t worry, you can change these later.
                 </p>
               </div>
