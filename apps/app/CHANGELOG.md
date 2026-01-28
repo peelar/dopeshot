@@ -1,5 +1,45 @@
 # dopeshot
 
+## 0.7.0
+
+### Minor Changes
+
+- 62bde91: Add brand backgrounds feature for Brand tier users
+
+  - Brand users can upload up to 10 custom backgrounds in the Brand tab
+  - Backgrounds are compressed before upload to optimize storage
+  - Select uploaded backgrounds from a collapsible picker in the Design sidebar
+  - Backgrounds appear below the gradient options under "Your backgrounds"
+  - API enforces brand-only access and 10 background limit
+  - Full analytics tracking for upload, delete, and selection events
+
+- 3ae36dc: Add optional brand background upload to onboarding modal
+
+  - Reorganize onboarding into 4-card bento grid: Logo, Background, Colors, Personality
+  - Background card in position 2 explains backgrounds are reusable across designs
+  - Compact personality selector with 2x2 grid layout
+  - Dashed border on background card signals optional upload
+  - Background upload uses shared hook with auto-crop to 16:9 and compression
+  - Track has_background in onboarding completion analytics
+
+- 5ec8532: Replace collapsible brand backgrounds with paged background picker
+
+  The background section now uses a single paged grid instead of gradients + a collapsible for brand backgrounds. Page 1 shows screenshot-derived gradients, pages 2+ show uploaded brand backgrounds. Navigation via arrow buttons and clickable dots in the section header. Brand users only see the Brand Backgrounds tab when a screenshot is present; free users see only gradients. Copy updated to remove the background counter and use the “Brand Backgrounds” label.
+
+### Patch Changes
+
+- 89d47df: Auto-crop brand backgrounds to 16:9 aspect ratio
+
+  - Brand backgrounds are automatically cropped to 16:9 using center-crop
+  - Accepts any aspect ratio upload (portrait, square, ultrawide)
+  - Compression happens after cropping for optimal file size
+  - Users see a toast notification when their image is cropped
+  - Tracking includes original and final dimensions for analytics
+
+- 351d869: Preload brand logo metadata so it applies alongside screenshots without visible delay.
+- 8bab858: Allow headline and subtitle inputs to accept manual line breaks in the designer preview.
+- 334aa4b: Soften horizontal fade masks so left/right variants keep the near edge bright and fade more gently across the frame.
+
 ## 0.6.0
 
 ### Minor Changes
