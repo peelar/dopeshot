@@ -12,7 +12,10 @@ import { SidebarTabs } from "@/components/layout/sidebar-tabs";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { useUserTier } from "@/hooks/use-user-tier";
-import { EXPORT_ORIENTATION_DIMENSIONS, ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import {
+  EXPORT_ORIENTATION_DIMENSIONS,
+  ORIENTATION_DIMENSIONS,
+} from "@/domain/layout/screenshot-mode";
 import {
   assetsAtom,
   baseConfigAtom,
@@ -42,59 +45,67 @@ import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary
 import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
-import { OnboardingModal, type BrandProfilePayload } from "@/components/onboarding/onboarding-modal";
+import {
+  OnboardingModal,
+  type BrandProfilePayload,
+} from "@/components/onboarding/onboarding-modal";
 import { listPersonalBackgrounds } from "@/domain/backgrounds/background-service";
+import { ExportSuccessModal } from "@/components/post-export";
+import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
+import { useRouter } from "next/navigation";
+import { track } from "@/lib/analytics";
 
 const FeedbackModal = dynamic(
-  () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
-  { ssr: false }
+  () =>
+    import("@/components/feedback/feedback-modal").then((mod) => ({ default: mod.FeedbackModal })),
+  { ssr: false },
 );
 
-function ExportContainer({ 
-  width, 
-  height, 
-  orientation 
-}: { 
-  width: number; 
+function ExportContainer({
+  width,
+  height,
+  orientation,
+}: {
+  width: number;
   height: number;
   orientation: Orientation;
 }) {
   // Use preview dimensions as base (matching what user sees)
   const baseDims = ORIENTATION_DIMENSIONS[orientation];
   const scale = width / baseDims.width;
-  
+
   return (
+    <div
+      id="export-container"
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: `${width}px`,
+        height: `${height}px`,
+        zIndex: -100,
+        overflow: "hidden",
+        visibility: "visible",
+        background: "white",
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "grayscale",
+        textRendering: "optimizeLegibility",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       <div
-        id="export-container"
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: `${width}px`,
-          height: `${height}px`,
-          zIndex: -100,
-          overflow: "hidden",
-          visibility: "visible",
-          background: "white",
-          WebkitFontSmoothing: "antialiased",
-          MozOsxFontSmoothing: "grayscale",
-          textRendering: "optimizeLegibility",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          width: `${baseDims.width}px`,
+          height: `${baseDims.height}px`,
+          transformOrigin: "center",
+          transform: `scale(${scale})`,
         }}
       >
-        <div
-          style={{
-            width: `${baseDims.width}px`,
-            height: `${baseDims.height}px`,
-            transformOrigin: "center",
-            transform: `scale(${scale})`,
-          }}
-        >
-          <CoverPreview isStatic />
-        </div>
+        <CoverPreview isStatic />
       </div>
+    </div>
   );
 }
 
@@ -132,11 +143,17 @@ function PlaygroundPageInner({
   initialIsAuthenticated,
   initialOnboardingOpen,
 }: PlaygroundPageProps) {
+  const router = useRouter();
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
   const personalBackgrounds = useAtomValue(personalBackgroundsAtom);
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
+
+  // Export success sheet state
+  const [showExportSheet, setShowExportSheet] = useAtom(showExportSheetAtom);
+  const exportThumbnail = useAtomValue(exportThumbnailAtom);
+  const setExportThumbnail = useSetAtom(exportThumbnailAtom);
 
   const { isBrandUser } = useUserTier();
 
@@ -150,6 +167,31 @@ function PlaygroundPageInner({
     setFeedbackScreenshot(screenshot);
     setFeedbackModalOpen(true);
   };
+
+  // Handle export sheet actions
+  const handleExportSheetClose = useCallback(() => {
+    setShowExportSheet(false);
+    setExportThumbnail(null);
+    track("export_sheet_dismissed", {
+      dismiss_method: "button",
+    });
+  }, [setShowExportSheet, setExportThumbnail]);
+
+  const handleExportSheetSignup = useCallback(() => {
+    track("export_sheet_signup_clicked");
+    setShowExportSheet(false);
+    setExportThumbnail(null);
+    router.push("/auth");
+  }, [router, setShowExportSheet, setExportThumbnail]);
+
+  const handleExportSheetFeedback = useCallback(() => {
+    track("export_sheet_feedback_clicked");
+    setShowExportSheet(false);
+    setExportThumbnail(null);
+    setFeedbackScreenshot(null); // Clear stale screenshot to prevent re-sending old canvas
+    setFeedbackModalOpen(true);
+  }, [setShowExportSheet, setExportThumbnail, setFeedbackModalOpen]);
+
   // Memory hook for loading items
   const {
     loadMemoryItem,
@@ -201,7 +243,12 @@ function PlaygroundPageInner({
     if (!shouldOpenOnboarding) return;
     if (hasLoadedOnboardingProfile || isOnboardingProfileLoading) return;
     void loadOnboardingProfile();
-  }, [hasLoadedOnboardingProfile, isOnboardingProfileLoading, loadOnboardingProfile, shouldOpenOnboarding]);
+  }, [
+    hasLoadedOnboardingProfile,
+    isOnboardingProfileLoading,
+    loadOnboardingProfile,
+    shouldOpenOnboarding,
+  ]);
 
   useEffect(() => {
     if (!shouldOpenOnboarding || !hasLoadedOnboardingProfile) return;
@@ -271,7 +318,9 @@ function PlaygroundPageInner({
     if (typeof window !== "undefined") {
       const hasIdleCallback = "requestIdleCallback" in window;
       if (hasIdleCallback) {
-        prefetchBackgroundsHandleRef.current = window.requestIdleCallback(prefetch, { timeout: 3000 });
+        prefetchBackgroundsHandleRef.current = window.requestIdleCallback(prefetch, {
+          timeout: 3000,
+        });
       } else {
         // In browser context, setTimeout returns a number (not Node's Timeout object)
         prefetchBackgroundsHandleRef.current = Number(window.setTimeout(prefetch, 1200));
@@ -330,10 +379,7 @@ function PlaygroundPageInner({
   } = usePlaygroundController({ demoEnabled: !isLoggedIn });
 
   // Only show loading when actually loading a specific memory item from URL
-  const showLoadingState =
-    isLoggedIn &&
-    Boolean(initialMemoryItemId) &&
-    !loadedItemId;
+  const showLoadingState = isLoggedIn && Boolean(initialMemoryItemId) && !loadedItemId;
 
   const showEmptyState = useMemo(() => {
     const hasText = Boolean(config.text.title?.trim() || config.text.subtitle?.trim());
@@ -453,10 +499,7 @@ function PlaygroundPageInner({
         {/* Right: Sidebar - spans full height from below nav */}
         <SidebarErrorBoundary>
           <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-            <SidebarTabs
-              onUploadAsset={handleFileProcess}
-              onFeedbackClick={handleFeedbackClick}
-            />
+            <SidebarTabs onUploadAsset={handleFileProcess} onFeedbackClick={handleFeedbackClick} />
           </div>
         </SidebarErrorBoundary>
       </div>
@@ -501,6 +544,14 @@ function PlaygroundPageInner({
         open={feedbackModalOpen}
         onOpenChange={setFeedbackModalOpen}
         screenshotDataUrl={feedbackScreenshot}
+      />
+
+      <ExportSuccessModal
+        isOpen={showExportSheet}
+        onClose={handleExportSheetClose}
+        onSignup={handleExportSheetSignup}
+        onFeedback={handleExportSheetFeedback}
+        thumbnailUrl={exportThumbnail ?? undefined}
       />
     </main>
   );

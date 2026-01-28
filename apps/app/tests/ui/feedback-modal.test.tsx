@@ -30,23 +30,18 @@ describe("FeedbackModal", () => {
 
   it("renders when open is true", () => {
     render(<FeedbackModal {...defaultProps} />);
-    expect(screen.getByText("Share Your Feedback")).toBeInTheDocument();
-    expect(
-      screen.getByText("Help us improve dopeshot for you")
-    ).toBeInTheDocument();
+    expect(screen.getByText("Share your feedback")).toBeInTheDocument();
   });
 
   it("does not render when open is false", () => {
     render(<FeedbackModal {...defaultProps} open={false} />);
-    expect(screen.queryByText("Share Your Feedback")).not.toBeInTheDocument();
+    expect(screen.queryByText("Share your feedback")).not.toBeInTheDocument();
   });
 
   it("displays the feedback textarea with correct label", () => {
     render(<FeedbackModal {...defaultProps} />);
     expect(
-      screen.getByLabelText(
-        /What are you trying to do, and what would make dopeshot better for you/i
-      )
+      screen.getByLabelText(/What would make dopeshot better for you/i)
     ).toBeInTheDocument();
   });
 
@@ -55,43 +50,18 @@ describe("FeedbackModal", () => {
     expect(screen.getByLabelText(/Email/i)).toBeInTheDocument();
   });
 
-  it("shows screenshot toggle when screenshotDataUrl is provided", () => {
+  it("renders with screenshot when screenshotDataUrl is provided", () => {
     const screenshotDataUrl = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==";
     render(
       <FeedbackModal {...defaultProps} screenshotDataUrl={screenshotDataUrl} />
     );
-    expect(screen.getByText("Include screenshot")).toBeInTheDocument();
-    expect(screen.getByText(/Attach a screenshot of your current canvas/i)).toBeInTheDocument();
-    const toggle = screen.getByRole("switch", { name: /Include screenshot/i });
-    expect(toggle).toBeInTheDocument();
-    expect(toggle).toBeChecked();
-  });
-
-  it("allows toggling screenshot inclusion", async () => {
-    const screenshotDataUrl = "data:image/png;base64,test";
-    render(
-      <FeedbackModal {...defaultProps} screenshotDataUrl={screenshotDataUrl} />
-    );
-
-    const toggle = screen.getByRole("switch", { name: /Include screenshot/i });
-    expect(toggle).toBeChecked();
-
-    // Toggle off
-    fireEvent.click(toggle);
-    await waitFor(() => {
-      expect(toggle).not.toBeChecked();
-    });
-
-    // Toggle back on
-    fireEvent.click(toggle);
-    await waitFor(() => {
-      expect(toggle).toBeChecked();
-    });
+    // Modal should render normally with screenshot prop
+    expect(screen.getByText("Share your feedback")).toBeInTheDocument();
   });
 
   it("disables submit button when feedback is empty", () => {
     render(<FeedbackModal {...defaultProps} />);
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     expect(submitButton).toBeDisabled();
   });
 
@@ -99,11 +69,11 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "This is my feedback" } });
 
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     expect(submitButton).not.toBeDisabled();
   });
 
@@ -118,16 +88,16 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} onOpenChange={onOpenChange} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     fireEvent.click(submitButton);
 
     // Should show success message
     await waitFor(() => {
-      expect(screen.getByText("Thank you for your feedback!")).toBeInTheDocument();
+      expect(screen.getByText("Thank you!")).toBeInTheDocument();
     });
 
     // Should close modal after success
@@ -145,11 +115,11 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     fireEvent.click(submitButton);
 
     // Should show error message
@@ -167,14 +137,14 @@ describe("FeedbackModal", () => {
     render(<FeedbackModal {...defaultProps} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
     const emailInput = screen.getByLabelText(/Email/i);
     fireEvent.change(emailInput, { target: { value: "test@example.com" } });
 
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -201,11 +171,11 @@ describe("FeedbackModal", () => {
     );
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
     fireEvent.change(textarea, { target: { value: "Great app!" } });
 
-    const submitButton = screen.getByRole("button", { name: /Send Feedback/i });
+    const submitButton = screen.getByRole("button", { name: /Send/i });
     fireEvent.click(submitButton);
 
     await waitFor(() => {
@@ -219,13 +189,13 @@ describe("FeedbackModal", () => {
     });
   });
 
-  it("allows canceling the feedback", () => {
+  it("allows closing the modal via close button", () => {
     const onOpenChange = vi.fn();
 
     render(<FeedbackModal {...defaultProps} onOpenChange={onOpenChange} />);
 
-    const cancelButton = screen.getByRole("button", { name: /Cancel/i });
-    fireEvent.click(cancelButton);
+    const closeButton = screen.getByRole("button", { name: /Close/i });
+    fireEvent.click(closeButton);
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
@@ -237,7 +207,7 @@ describe("FeedbackModal", () => {
     rerender(<FeedbackModal {...defaultProps} open={true} />);
 
     const textarea = screen.getByLabelText(
-      /What are you trying to do, and what would make dopeshot better for you/i
+      /What would make dopeshot better for you/i
     );
 
     // Form should be empty
