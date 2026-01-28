@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 import { orientationAtom } from "@/hooks/atoms";
+import { getFadeMaskGradient, inferFadeDirection, type FadeDirection } from "@/domain/layout/fade-direction";
 
 // Desktop dimensions (16:9)
 const SIDE_CONTENT_TOP_DESKTOP = "30%";
@@ -87,6 +88,10 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   // Use layout-specific fade state, defaulting to false for Peak layout
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const fadeEnabled = layoutSpecificFadeEnabled ?? false;
+  const fadeMask = useMemo(
+    () => getFadeMaskGradient((config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] as FadeDirection | undefined) ?? inferFadeDirection(config)),
+    [config],
+  );
 
   // Responsive dimensions based on orientation
   const isMobile = orientation === "mobile";
@@ -109,8 +114,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const subtitle = shouldShowText ? text.subtitle : undefined;
 
   // Adaptive typography classes
-  const titleClassName = cn(text.titleClasses, text.textColorClass);
-  const subtitleClassName = cn(text.subtitleClasses, "mt-4", text.textColorClass);
+  const titleClassName = cn(text.titleClasses, "whitespace-pre-line", text.textColorClass);
+  const subtitleClassName = cn(text.subtitleClasses, "whitespace-pre-line", "mt-4", text.textColorClass);
 
   const screenshotFrameWidth = useMemo(() => {
     if (textVariant === "center") {
@@ -146,7 +151,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             right: insetPercentage,
             borderRadius: getPeakBorderRadius("center", peakCornerRadius),
             background: "transparent",
-            boxShadow: screenshotShadow,
+            boxShadow: fadeEnabled ? "none" : screenshotShadow,
           }}
         >
           <div className="flex h-full w-full items-start justify-center">
@@ -162,8 +167,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
                 transform: `scale(${clampedZoom})`,
                 transformOrigin: "top center",
                 ...(fadeEnabled && {
-                  maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
-                  WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                  maskImage: fadeMask,
+                  WebkitMaskImage: fadeMask,
                 }),
               }}
               crossOrigin="anonymous"
@@ -187,17 +192,17 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
           placement === "left" && "right-0",
           placement === "right" && "left-0",
         )}
-        style={{
-          ...baseStyle,
-          borderRadius: getPeakBorderRadius(placement, peakCornerRadius),
-          background: "transparent",
-          boxShadow: screenshotShadow,
-        }}
-      >
-        <img
-          src={screenshot.url}
-          alt="Screenshot"
-          data-export-element
+          style={{
+            ...baseStyle,
+            borderRadius: getPeakBorderRadius(placement, peakCornerRadius),
+            background: "transparent",
+            boxShadow: fadeEnabled ? "none" : screenshotShadow,
+          }}
+        >
+          <img
+            src={screenshot.url}
+            alt="Screenshot"
+            data-export-element
           data-element="screenshot"
           data-role="screenshot"
           className="block h-full w-full object-cover"
@@ -206,8 +211,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             transform: `scale(${SIDE_SCREENSHOT_ZOOM * clampedZoom})`,
             transformOrigin: SIDE_SCREENSHOT_TRANSFORM_ORIGINS[placement],
             ...(fadeEnabled && {
-              maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
-              WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+              maskImage: fadeMask,
+              WebkitMaskImage: fadeMask,
             }),
           }}
           crossOrigin="anonymous"

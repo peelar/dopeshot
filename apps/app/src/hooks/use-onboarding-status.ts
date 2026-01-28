@@ -9,6 +9,9 @@ type OnboardingStatusPayload = {
   onboardingComplete: boolean;
 };
 
+const FORCE_ONBOARDING_DEV =
+  process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_FORCE_ONBOARDING === "true";
+
 export function useOnboardingStatus(options?: { enabled?: boolean }) {
   const { data: session, isPending } = useSession();
   const enabled = options?.enabled ?? true;
@@ -18,6 +21,13 @@ export function useOnboardingStatus(options?: { enabled?: boolean }) {
   const [isLoading, setIsLoading] = useState(false);
 
   const refresh = useCallback(async () => {
+    if (FORCE_ONBOARDING_DEV) {
+      setStatus({ tier: "brand", onboardingComplete: false });
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     if (!enabled || !session?.user) return;
 
     setIsLoading(true);
@@ -77,4 +87,3 @@ export function useOnboardingStatus(options?: { enabled?: boolean }) {
     refresh,
   };
 }
-

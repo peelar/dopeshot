@@ -6,10 +6,12 @@ import { getBackgroundAuthContext, supabaseAdmin } from "@/lib/supabase-admin";
 import {
   ALLOWED_BACKGROUND_FORMATS,
   MAX_BACKGROUND_FILE_SIZE_KB,
+  MAX_BRAND_BACKGROUNDS,
   PERSONAL_BACKGROUND_BUCKET,
 } from "@/domain/backgrounds/constants";
 import { signPersonalBackground } from "@/domain/backgrounds/background-storage";
 import { sanitizeFileExtension } from "@/app/api/brand/utils";
+import { isBrandUser } from "@/lib/tier";
 
 const parseDimension = (value: FormDataEntryValue | null) => {
   if (!value || typeof value !== "string") return null;
@@ -88,6 +90,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check if user has brand tier access
+    const hasBrandAccess = await isBrandUser(auth.userId);
+    if (!hasBrandAccess) {
+      return NextResponse.json(
+        { error: "Custom backgrounds are a Brand feature. Upgrade to unlock." },
+        { status: 403 },
+      );
+    }
+
+    // Check if user has reached the background limit
+    const db = await getUserDb(auth.userId);
+    const existingCount = await db.personalBackground.count();
+    if (existingCount >= MAX_BRAND_BACKGROUNDS) {
+      return NextResponse.json(
+        { error: `You can upload up to ${MAX_BRAND_BACKGROUNDS} backgrounds. Delete one to add more.` },
+        { status: 400 },
+      );
+    }
+
     const formData = await request.formData().catch(() => null);
     if (!formData) {
       return NextResponse.json({ error: "Missing form data" }, { status: 400 });
@@ -131,7 +152,6 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: uploadError.message }, { status: 500 });
     }
 
-    const db = await getUserDb(auth.userId);
     const background = await db.personalBackground.create({
       data: {
         userId: auth.userId,

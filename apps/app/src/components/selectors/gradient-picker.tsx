@@ -12,7 +12,7 @@ import {
 import { customGradientToCss, generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
 import { cn } from "@/lib/utils/cn";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
+import { BackgroundSwatch } from "@/components/selectors/background-swatch";
 import { configAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { createOrganicBlobsPreviewDataUrl } from "@/domain/layout/patterns/organic-blobs";
@@ -149,6 +149,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
             isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
             gridClass="grid-cols-3"
             skeletonCount={6}
+            compactPlaceholder
           />
         </div>
       </div>
@@ -167,6 +168,7 @@ interface ScreenshotGradientsProps {
   isLoading?: boolean;
   gridClass?: string;
   skeletonCount?: number;
+  compactPlaceholder?: boolean;
 }
 
 function ScreenshotGradients({
@@ -177,10 +179,18 @@ function ScreenshotGradients({
   isLoading,
   gridClass = "grid-cols-4",
   skeletonCount = 4,
+  compactPlaceholder,
 }: ScreenshotGradientsProps) {
   if (!gradients.length && !isLoading) {
     return (
-      <div className="rounded-lg border border-dashed border-border/40 bg-background/50 px-3 py-6 text-center text-xs text-muted-foreground">
+      <div
+        className={cn(
+          "text-center text-xs text-muted-foreground",
+          compactPlaceholder
+            ? "py-4"
+            : "rounded-lg border border-dashed border-border/40 px-3 py-6",
+        )}
+      >
         Upload a screenshot to reveal curated gradients.
       </div>
     );
@@ -236,22 +246,14 @@ interface GradientSwatchProps {
 
 function GradientSwatch({ gradientCss, selected, onClick, ariaLabel }: GradientSwatchProps) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      aria-pressed={selected}
-      aria-label={ariaLabel}
+    <BackgroundSwatch
+      selected={selected}
       onClick={onClick}
-      className={cn(
-        "group relative flex h-12 w-full items-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2",
-        selected
-          ? "shadow-sm ring-2 ring-foreground/50 ring-offset-1 ring-offset-background"
-          : "ring-1 ring-white/15",
-      )}
+      ariaLabel={ariaLabel}
       style={{ background: gradientCss }}
     >
       <span className="sr-only">Gradient swatch</span>
-    </Button>
+    </BackgroundSwatch>
   );
 }
 

@@ -1,5 +1,10 @@
 import type { BackgroundSelection, PersonalBackground } from "./types";
 
+// Cache personal backgrounds for a short window to avoid repeated fetches
+const PERSONAL_BACKGROUNDS_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let personalBackgroundsCache: { items: PersonalBackground[]; timestamp: number } | null = null;
+let personalBackgroundsPromise: Promise<ListResponse<PersonalBackground>> | null = null;
+
 type ListResponse<T> = {
   items: T[];
 };
@@ -31,11 +36,41 @@ async function parseResponse<T>(response: Response): Promise<T> {
   return payload as T;
 }
 
-export async function listPersonalBackgrounds(): Promise<ListResponse<PersonalBackground>> {
-  const response = await fetch("/api/backgrounds/personal", {
+export async function listPersonalBackgrounds(
+  options: { forceRefresh?: boolean } = {},
+): Promise<ListResponse<PersonalBackground>> {
+  const { forceRefresh = false } = options;
+  const now = Date.now();
+
+  // Return warm cache when fresh
+  if (
+    !forceRefresh &&
+    personalBackgroundsCache &&
+    now - personalBackgroundsCache.timestamp < PERSONAL_BACKGROUNDS_TTL_MS
+  ) {
+    return personalBackgroundsCache;
+  }
+
+  // Deduplicate concurrent requests
+  if (!forceRefresh && personalBackgroundsPromise) {
+    return personalBackgroundsPromise;
+  }
+
+  personalBackgroundsPromise = fetch("/api/backgrounds/personal", {
     method: "GET",
-  });
-  return parseResponse<ListResponse<PersonalBackground>>(response);
+  })
+    .then((response) => parseResponse<ListResponse<PersonalBackground>>(response))
+    .then((payload) => {
+      personalBackgroundsCache = { items: payload.items, timestamp: Date.now() };
+      personalBackgroundsPromise = null;
+      return payload;
+    })
+    .catch((error) => {
+      personalBackgroundsPromise = null;
+      throw error;
+    });
+
+  return personalBackgroundsPromise;
 }
 
 export async function getBackgroundSelection(): Promise<SelectionResponse | null> {
@@ -86,7 +121,19 @@ export async function uploadPersonalBackground(options: {
     method: "POST",
     body: formData,
   });
-  return parseResponse<UploadResponse>(response);
+  const payload = await parseResponse<UploadResponse>(response);
+
+  // Update cache with new item (or invalidate if missing)
+  if (personalBackgroundsCache) {
+    personalBackgroundsCache = {
+      items: [payload, ...personalBackgroundsCache.items],
+      timestamp: Date.now(),
+    };
+  } else {
+    personalBackgroundsCache = { items: [payload], timestamp: Date.now() };
+  }
+
+  return payload;
 }
 
 export async function deletePersonalBackground(backgroundId: string): Promise<void> {
@@ -95,5 +142,13 @@ export async function deletePersonalBackground(backgroundId: string): Promise<vo
   });
   if (!response.ok && response.status !== 204) {
     await parseResponse(response);
+  }
+
+  // Remove from cache when present
+  if (personalBackgroundsCache) {
+    personalBackgroundsCache = {
+      items: personalBackgroundsCache.items.filter((b) => b.id !== backgroundId),
+      timestamp: Date.now(),
+    };
   }
 }

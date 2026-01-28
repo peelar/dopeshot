@@ -63,6 +63,8 @@ Want to add a look or typography preset? Check out the [authoring guide](./apps/
 
 All PRs should include a Changeset (`pnpm changeset`) describing user-facing changes for the app; see [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) for the flow.
 
+**Database migrations:** follow [docs/development/migrations.md](./docs/development/migrations.md). Local: `pnpm db:dev`. Staging: `pnpm db:deploy:staging` (uses `DIRECT_DATABASE_URL` in `apps/app/.env.local`; Supabase session pooler on 5432 is OK). Prod: `DIRECT_DATABASE_URL=<direct> pnpm db:deploy` (never `migrate dev` in prod). `pnpm dev` runs a DB status check and auto-applies to staging by default; set `DEV_AUTO_MIGRATE=0` to disable or `DEV_SKIP_DB_CHECK=1` to skip.
+
 ---
 
 Built by indie hackers, for indie hackers. Ship fast, post faster.

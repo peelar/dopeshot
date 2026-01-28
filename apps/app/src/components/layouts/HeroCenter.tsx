@@ -84,12 +84,12 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
     return (
       <div className={cn("space-y-4", alignmentClass, text.containerClasses)}>
         {title ? (
-          <h1 className={cn(text.titleClasses, text.textColorClass)} style={text.titleStyle}>
+          <h1 className={cn(text.titleClasses, "whitespace-pre-line", text.textColorClass)} style={text.titleStyle}>
             {title}
           </h1>
         ) : null}
         {subtitle ? (
-          <p className={cn(text.subtitleClasses, text.textColorClass)} style={text.subtitleStyle}>
+          <p className={cn(text.subtitleClasses, "whitespace-pre-line", text.textColorClass)} style={text.subtitleStyle}>
             {subtitle}
           </p>
         ) : null}

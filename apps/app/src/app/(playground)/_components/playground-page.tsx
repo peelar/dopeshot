@@ -26,6 +26,7 @@ import {
   screenshotZoomAtom,
   type Orientation,
 } from "@/hooks/atoms";
+import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { getDefaultDemoPreset } from "@/domain/demo/presets";
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -42,6 +43,7 @@ import { MemoryErrorBoundary } from "@/components/errors/memory-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
 import { useOnboardingStatus } from "@/hooks/use-onboarding-status";
 import { OnboardingModal, type BrandProfilePayload } from "@/components/onboarding/onboarding-modal";
+import { listPersonalBackgrounds } from "@/domain/backgrounds/background-service";
 
 const FeedbackModal = dynamic(
   () => import("@/components/feedback/feedback-modal").then(mod => ({ default: mod.FeedbackModal })),
@@ -132,6 +134,7 @@ function PlaygroundPageInner({
 }: PlaygroundPageProps) {
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
+  const personalBackgrounds = useAtomValue(personalBackgroundsAtom);
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
 
@@ -220,9 +223,11 @@ function PlaygroundPageInner({
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
   const setHasCustomScreenshot = useSetAtom(hasCustomScreenshotAtom);
   const setLoadedItemId = useSetAtom(loadedMemoryItemIdAtom);
+  const setPersonalBackgrounds = useSetAtom(personalBackgroundsAtom);
 
   const hasBootstrappedRef = useRef(false);
   const lastInitialMemoryItemIdRef = useRef<string | null>(null);
+  const prefetchBackgroundsHandleRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn) {
@@ -247,6 +252,44 @@ function PlaygroundPageInner({
       console.error("Failed to bootstrap memory items:", error);
     });
   }, [fetchMemoryItems, initialMemoryItemId, isLoggedIn, loadedItemId, resetToEmptyCanvas]);
+
+  // Prefetch personal backgrounds after critical bootstraps finish.
+  // Runs only for logged-in brand users and schedules on idle/timeout to stay out of the critical path.
+  useEffect(() => {
+    if (!isLoggedIn || !isBrandUser) return;
+    if (personalBackgrounds.length > 0) return;
+
+    const prefetch = () => {
+      listPersonalBackgrounds()
+        .then((response) => setPersonalBackgrounds(response.items))
+        .catch((error) => {
+          // Non-blocking; log for diagnostics only.
+          console.error("Background prefetch failed:", error);
+        });
+    };
+
+    if (typeof window !== "undefined") {
+      const hasIdleCallback = "requestIdleCallback" in window;
+      if (hasIdleCallback) {
+        prefetchBackgroundsHandleRef.current = window.requestIdleCallback(prefetch, { timeout: 3000 });
+      } else {
+        // In browser context, setTimeout returns a number (not Node's Timeout object)
+        prefetchBackgroundsHandleRef.current = Number(window.setTimeout(prefetch, 1200));
+      }
+    }
+
+    return () => {
+      if (prefetchBackgroundsHandleRef.current === null) return;
+      if (typeof window !== "undefined") {
+        const hasIdleCallback = "cancelIdleCallback" in window;
+        if (hasIdleCallback) {
+          window.cancelIdleCallback(prefetchBackgroundsHandleRef.current);
+        } else {
+          window.clearTimeout(prefetchBackgroundsHandleRef.current);
+        }
+      }
+    };
+  }, [isBrandUser, isLoggedIn, personalBackgrounds.length, setPersonalBackgrounds]);
 
   useEffect(() => {
     if (!initialMemoryItemId || !isLoggedIn) {
@@ -401,6 +444,7 @@ function PlaygroundPageInner({
                 canvasWidth={canvas.width}
                 isAnalyzingColors={isAnalyzingColors}
                 showFocusHint={showFocusHint}
+                hasScreenshot={hasScreenshot}
               />
             </div>
           </div>

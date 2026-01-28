@@ -4,6 +4,7 @@
   "private": true,
   "packageManager": "pnpm@9.15.0",
   "scripts": {
+    "predev": "scripts/check-dev-db.sh",
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -17,7 +18,12 @@
     "changeset": "changeset",
     "changeset:status": "pnpm changeset status --verbose",
     "changeset:version": "pnpm changeset version && pnpm install --no-frozen-lockfile",
-    "release": "pnpm --filter dopeshot-app release"
+    "release": "pnpm --filter dopeshot-app release",
+    "db:dev": "pnpm --filter dopeshot-app db:dev",
+    "db:deploy": "pnpm --filter dopeshot-app db:deploy",
+    "db:status": "pnpm --filter dopeshot-app db:status",
+    "db:deploy:staging": "./scripts/migrate-staging.sh",
+    "db:status:staging": "AUTO_APPLY=0 ./scripts/migrate-staging.sh"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

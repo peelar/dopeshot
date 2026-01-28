@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { Provider, createStore } from "jotai";
 import { BrandPanel } from "@/components/brand/brand-panel";
 import { brandSettingsAtom } from "@/hooks/atoms";
+import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 import { track } from "@/lib/analytics";
 
 vi.mock("@/lib/auth/auth-client", () => ({
@@ -33,6 +34,16 @@ vi.mock("@/lib/utils/toast", () => ({
     warning: vi.fn(),
     dismiss: vi.fn(),
   },
+}));
+
+vi.mock("@/domain/backgrounds/background-service", () => ({
+  listPersonalBackgrounds: vi.fn().mockResolvedValue({ items: [] }),
+  uploadPersonalBackground: vi.fn(),
+  deletePersonalBackground: vi.fn(),
+  getBackgroundSelection: vi.fn().mockResolvedValue(null),
+  saveBackgroundSelection: vi.fn(),
+  clearBackgroundSelection: vi.fn(),
+  BackgroundApiError: class extends Error {},
 }));
 
 const mockFetch = vi.fn();
@@ -74,6 +85,7 @@ describe("BrandPanel", () => {
       mode: null,
       personality: null,
     });
+    store.set(personalBackgroundsAtom, []);
 
     render(
       <Provider store={store}>

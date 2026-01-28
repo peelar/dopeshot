@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils/cn";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/layouts/shared/screenshot-frame";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
+import { getFadeMaskGradient, inferFadeDirection, type FadeDirection } from "@/domain/layout/fade-direction";
 
 interface AdaptiveScreenshotProps {
   className?: string;
@@ -35,6 +36,10 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
   // Use layout-specific fade state
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const fadeEnabled = layoutSpecificFadeEnabled ?? shouldAutoEnableFade;
+  const fadeMask = useMemo(
+    () => getFadeMaskGradient((config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] as FadeDirection | undefined) ?? inferFadeDirection(config)),
+    [config],
+  );
 
   const frameAppearance = useMemo(
     () =>
@@ -77,7 +82,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
             className="relative flex w-full items-center justify-center overflow-hidden"
             style={{
               ...frameAppearance.style,
-              boxShadow: appliedShadow,
+              boxShadow: fadeEnabled ? "none" : appliedShadow,
               width: "100%",
               maxWidth: "100%",
               maxHeight: frameMaxHeight,
@@ -97,8 +102,8 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
                   borderRadius: frameAppearance.contentRadius,
                   objectPosition: "top",
                   ...(fadeEnabled && {
-                    maskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
-                    WebkitMaskImage: "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.05) 100%)",
+                    maskImage: fadeMask,
+                    WebkitMaskImage: fadeMask,
                   }),
                 }}
                 crossOrigin="anonymous"
