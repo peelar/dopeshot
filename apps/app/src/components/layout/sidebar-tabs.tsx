@@ -7,7 +7,7 @@ import { LayoutConfigPanel } from "@/components/config/layout-config";
 import { BrandPanel } from "@/components/brand/brand-panel";
 import { SidebarFooter } from "@/components/layout/sidebar-footer";
 import { useUserTier } from "@/hooks/use-user-tier";
-import { SHOW_BRAND_TAB } from "@/lib/feature-flags-client";
+import { SHOW_LOCKED_BRAND_TAB } from "@/lib/feature-flags-client";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
 
@@ -24,8 +24,10 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
   const { data: session } = useSession();
   const hasSession = Boolean(session?.session?.userId);
 
-  // Don't render Brand tab for logged-out users so it disappears on sign-out
-  const showBrandTab = SHOW_BRAND_TAB && hasSession;
+  // Show Brand tab if:
+  // 1. User is logged in AND is a brand user (always show for brand users)
+  // 2. OR: User is logged in AND the locked brand tab feature flag is enabled (show locked tab for non-brand users)
+  const showBrandTab = hasSession && (isBrandUser || SHOW_LOCKED_BRAND_TAB);
 
   // Always render Design content if Brand tab is hidden
   const currentTab: SidebarTab = showBrandTab ? activeTab : "design";
@@ -37,7 +39,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
     }
   }, [activeTab, showBrandTab]);
 
-  // Build tab options - only include Brand tab if feature flag is enabled
+  // Build tab options - only include Brand tab if it should be shown
   const tabOptions: SegmentedOption[] = [
     {
       id: "design",
@@ -61,7 +63,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
       ),
       // Disable while loading or if user is not a brand user
       disabled: isLoading || !isBrandUser,
-      tooltip: isLoading ? undefined : "Upgrade to Brand to unlock these tools.",
+      tooltip: isLoading || isBrandUser ? undefined : "Upgrade to Brand to unlock these tools.",
     });
   }
 

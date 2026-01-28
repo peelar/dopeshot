@@ -19,6 +19,7 @@ import {
 } from "@/lib/types/brand";
 import { cn } from "@/lib/utils/cn";
 import { useBackgroundUpload } from "@/hooks/use-background-upload";
+import { invalidateTierCache } from "@/hooks/use-user-tier";
 
 type OnboardingFormProps = {
   initialLogoUrl?: string | null;
@@ -195,6 +196,9 @@ export function OnboardingForm({
         has_logo: Boolean(logoPath),
         has_background: Boolean(uploadedBackground),
       });
+
+      // Invalidate tier cache in case user was upgraded during onboarding
+      invalidateTierCache();
 
       router.refresh();
       onCompleted?.();

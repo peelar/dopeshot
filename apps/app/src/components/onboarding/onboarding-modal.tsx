@@ -130,10 +130,10 @@ export function OnboardingModal({
               <AlertDialogHeader>
                 <AlertDialogTitle>Leave setup?</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure? Don’t worry, you can fill it out later.
+                  Are you sure? Don't worry, you can fill it out later.
                 </AlertDialogDescription>
               </AlertDialogHeader>
-              <AlertDialogFooter>
+              <AlertDialogFooter className="mt-6">
                 <AlertDialogCancel>Keep editing</AlertDialogCancel>
                 <AlertDialogAction onClick={() => handleConfirmedClose("user")}>
                   Leave anyway

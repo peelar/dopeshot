@@ -96,8 +96,8 @@ if [[ "$AUTO_MIGRATE" == "1" ]]; then
 fi
 
 cat <<'EOF'
-Run staging migrations now so dev uses the latest schema:
-  pnpm db:deploy:staging
+Run migrations now so dev uses the latest schema:
+  pnpm db:dev
 
 Auto-apply is ON by default. To disable, set DEV_AUTO_MIGRATE=0.
 EOF

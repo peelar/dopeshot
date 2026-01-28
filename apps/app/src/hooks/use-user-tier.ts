@@ -19,6 +19,18 @@ async function fetchUserTier(): Promise<UserTier> {
   return data.tier === "brand" ? "brand" : "free";
 }
 
+/**
+ * Invalidate the tier cache for a specific user or all users.
+ * Useful after tier upgrades/downgrades.
+ */
+export function invalidateTierCache(userId?: string) {
+  if (userId) {
+    tierCache.delete(userId);
+  } else {
+    tierCache.clear();
+  }
+}
+
 export function useUserTier() {
   const { data: session, isPending } = useSession();
   const userId = session?.session?.userId ?? null;

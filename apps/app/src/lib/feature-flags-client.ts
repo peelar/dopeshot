@@ -6,8 +6,9 @@
 const isDevelopment = process.env.NODE_ENV === "development";
 
 /**
- * Static client-side feature flag for showing the Brand tab in the sidebar.
- * Set to true to show the Brand tab (with tier-based enable/disable).
- * Set to false to completely hide the Brand tab from the UI.
+ * Feature flag to show locked Brand tab UI for non-brand users.
+ * When true: non-brand users see a disabled Brand tab with upgrade tooltip.
+ * When false: non-brand users don't see the Brand tab at all.
+ * Brand users always see the Brand tab regardless of this flag.
  */
-export const SHOW_BRAND_TAB = isDevelopment;
+export const SHOW_LOCKED_BRAND_TAB = isDevelopment;

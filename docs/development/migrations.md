@@ -1,55 +1,137 @@
 # Database migrations: quick runbook
 
-This makes Prisma + Supabase migrations “one-button” for local and prod.
+This makes Prisma + Supabase migrations "one-button" for local, staging, and prod.
+
+## Quick Commands
+
+```bash
+# Development (staging database)
+pnpm db:dev                    # Create and apply migrations
+
+# Production (requires PROD_DIRECT_DATABASE_URL)
+pnpm db:status:prod            # Check pending migrations (safe, always run first!)
+pnpm db:deploy:prod            # Apply migrations to prod (with safety confirmation)
+```
 
 ## Cheat sheet
 
-- Local dev: `pnpm db:dev` (runs `prisma migrate dev`, updates your local DB + generates client).
-- Staging (uses `apps/app/.env.local`): `pnpm db:deploy:staging` to apply pending migrations, `pnpm db:status:staging` to just check. Supabase session pooler on port 5432 is OK; avoid the transaction pooler on 6543.
-- Prod: `DIRECT_DATABASE_URL='<direct-connection>' pnpm db:deploy`.
-- `pnpm dev` auto-checks Prisma status and auto-applies staging migrations by default. Disable with `DEV_AUTO_MIGRATE=0 pnpm dev`. Skip entirely with `DEV_SKIP_DB_CHECK=1` if you're only working on non-app parts.
-- Status: `pnpm db:status` (add `DATABASE_URL=...` to point at non-local DB).
+- **Development**: `pnpm db:dev` (runs `prisma migrate dev`, creates and applies migrations to staging DB).
+  - Uses `DATABASE_URL` from `apps/app/.env.local` (points to staging/dev Supabase)
+- **Production**:
+  - Check: `pnpm db:status:prod` (dry run, safe - always run this first!)
+  - Deploy: `pnpm db:deploy:prod` (applies pending migrations with safety confirmation)
+  - Uses `PROD_DIRECT_DATABASE_URL` env var
+- `pnpm dev` auto-checks Prisma status and auto-applies migrations by default. Disable with `DEV_AUTO_MIGRATE=0`. Skip entirely with `DEV_SKIP_DB_CHECK=1`.
 - Never run `prisma migrate dev` against prod.
-- Always use the **direct** (non-pooled) `DATABASE_URL` when deploying migrations.
+- Always use the **direct** (non-pooled) connection string on port 5432.
 
 ## Env setup
 
-- Runtime (app): use `DATABASE_URL` (pooled or standard connection). Keep prod URL out of git; set in hosting env.
-- Migrations: prefer `DIRECT_DATABASE_URL` (Supabase direct / non-pooled). The scripts set `DATABASE_URL=${DIRECT_DATABASE_URL:-$DATABASE_URL}` before running Prisma CLI.
+**Runtime (app)**: Use `DATABASE_URL` (pooled connection is fine). Keep prod URL out of git; set in hosting env.
 
-- Local/staging: put your staging URL in `apps/app/.env.local` as `DATABASE_URL=...` (pooled) and `DIRECT_DATABASE_URL=...` (direct **or session pooler** on 5432). Prisma reads it automatically. The staging helper also respects `STAGING_ENV_FILE=/path/to/.env` if you keep a separate file.
-- Do not wrap URLs in quotes in `.env` files; use `KEY=postgresql://...`.
-- Prod/staging: set `DIRECT_DATABASE_URL` for deploy/status; pooled `DATABASE_URL` can remain for runtime. Use Supabase “direct connection string” for direct.
-- Supabase direct URL shape: `postgresql://postgres:<pw>@db.<project-ref>.supabase.co:5432/postgres?sslmode=require` (no `pooler` in host). Pooled URL (`...pooler...:6543?...pgbouncer=true`) is for runtime only.
-- Shadow DB: Prisma creates/uses it automatically for `migrate dev`.
+**Migrations**: Use direct connection strings. The migration scripts handle this automatically.
+
+### Development (staging database)
+Add your staging Supabase connection to `apps/app/.env.local`:
+```bash
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+```
+
+Then run:
+```bash
+pnpm db:dev  # Create and apply migrations
+```
+
+### Production
+- **Always export as environment variable** (never commit prod secrets!)
+  ```bash
+  export PROD_DIRECT_DATABASE_URL='postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres'
+  pnpm db:status:prod   # always check first!
+  pnpm db:deploy:prod   # apply (requires confirmation)
+  ```
+
+### Connection string formats
+
+Supabase provides three types of connection strings. For migrations, use either **direct** or **session pooler**.
+
+**Direct Connection (preferred for migrations)**
+```
+postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:5432/postgres
+```
+- Port: 5432
+- IPv6 by default (IPv4 requires add-on)
+- Best for: Persistent backend services, migrations, database tools
+- Example: `postgresql://postgres:your_pw@db.abcdefghij.supabase.co:5432/postgres`
+
+**Session Pooler (IPv4-compatible alternative)**
+```
+postgresql://postgres.[PROJECT]:[YOUR-PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres
+```
+- Port: 5432
+- IPv4 and IPv6 compatible
+- Supports prepared statements (required for Prisma migrations)
+- Best for: When direct IPv6 connection isn't available
+- Example: `postgresql://postgres.abcdefghij:your_pw@aws-0-us-east-1.pooler.supabase.com:5432/postgres`
+
+**Transaction Pooler (NOT supported for migrations)**
+```
+postgresql://postgres:[YOUR-PASSWORD]@db.[PROJECT-REF].supabase.co:6543/postgres
+```
+- Port: 6543
+- Does NOT support prepared statements
+- Best for: Serverless/edge functions with transient connections
+- ⚠️ **Will be rejected** by migration scripts
+
+**Important notes:**
+- Don't wrap URLs in quotes in `.env` files: `KEY=postgresql://...` (not `KEY="postgresql://..."`)
+- Get connection strings from Supabase Dashboard → Settings → Database → Connection string
+- Migration scripts automatically detect and reject port 6543 connections
+
+### Shadow DB
+Prisma creates and uses a shadow database automatically for `migrate dev` (local only).
 
 ## Standard workflow
 
 1) Edit `apps/app/prisma/schema.prisma`.
-2) Create migration locally: `pnpm db:dev --name <change>`.
-3) Verify locally (app + tests as needed).
+2) Create migration: `pnpm db:dev --name <change>` (applies to staging DB immediately).
+3) Test in your local app (connected to staging DB).
 4) Commit the migration files.
-5) Push/merge to `main`. CI will run `prisma migrate deploy` on prod.
-6) If CI fails, fix forward (never rewrite past migrations), or run the recovery steps below.
+5) Push/merge to `main`.
+6) Deploy to prod: `pnpm db:deploy:prod`.
+7) If deployment fails, fix forward (never rewrite past migrations), or run the recovery steps below.
 
-## Staging helper (local)
+## Quick migration workflows
 
-- Apply: `pnpm db:deploy:staging` (uses `DIRECT_DATABASE_URL` from `.env.local` by default).
-- Check only: `pnpm db:status:staging` (same URL resolution, but `AUTO_APPLY=0` under the hood).
-- Guard rails: refuses to run with the transaction pooler on port 6543. Session pooler on 5432 is allowed (Prisma migrate supports it), though direct `db.<ref>.supabase.co:5432` also works. Override the env file with `STAGING_ENV_FILE=~/secrets/.env.staging`.
-- Auto on dev start: set `DEV_AUTO_MIGRATE=1 pnpm dev` to apply staging migrations automatically when `predev` runs. Set `DEV_SKIP_DB_CHECK=1` to bypass entirely.
-
-## Prod deployment (manual)
-
+### Development workflow
 ```bash
-cd apps/app
-DIRECT_DATABASE_URL='<direct-connection>' pnpm prisma migrate deploy
+# 1. Edit schema
+vim apps/app/prisma/schema.prisma
+
+# 2. Create and apply migration
+pnpm db:dev
+
+# 3. Commit
+git add apps/app/prisma/migrations/
+git commit -m "Add migration"
 ```
 
-To check first:
+### Production deployment
 ```bash
-DIRECT_DATABASE_URL='<direct-connection>' pnpm prisma migrate status
+# 1. Export prod connection string
+export PROD_DIRECT_DATABASE_URL='postgresql://postgres:[PASSWORD]@db.[PROD-REF].supabase.co:5432/postgres'
+
+# 2. Always check first! (safe, no changes)
+pnpm db:status:prod
+
+# 3. Apply migrations (requires explicit confirmation)
+pnpm db:deploy:prod
 ```
+
+### Safety features
+- Transaction pooler (port 6543) is automatically blocked
+- Prod deploys require `PROD_MIGRATE_CONFIRMED=yes` (set automatically by the script)
+- Dry-run mode (`--dry-run`) checks status without applying
+- All migrations are logged with clear environment indicators
 
 ## Recovery when a migration fails
 
