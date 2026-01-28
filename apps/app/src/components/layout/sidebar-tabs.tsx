@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutGrid, Palette } from "lucide-react";
 import { SegmentedControl, type SegmentedOption } from "@/components/ui/segmented-control";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
@@ -9,6 +9,7 @@ import { SidebarFooter } from "@/components/layout/sidebar-footer";
 import { useUserTier } from "@/hooks/use-user-tier";
 import { SHOW_BRAND_TAB } from "@/lib/feature-flags-client";
 import { track } from "@/lib/analytics";
+import { useSession } from "@/lib/auth/auth-client";
 
 type SidebarTab = "design" | "brand";
 
@@ -20,6 +21,21 @@ interface SidebarTabsProps {
 export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
   const { isBrandUser, isLoading } = useUserTier();
   const [activeTab, setActiveTab] = useState<SidebarTab>("design");
+  const { data: session } = useSession();
+  const hasSession = Boolean(session?.session?.userId);
+
+  // Don't render Brand tab for logged-out users so it disappears on sign-out
+  const showBrandTab = SHOW_BRAND_TAB && hasSession;
+
+  // Always render Design content if Brand tab is hidden
+  const currentTab: SidebarTab = showBrandTab ? activeTab : "design";
+
+  // If the user logs out while on the Brand tab, snap back to Design
+  useEffect(() => {
+    if (!showBrandTab && activeTab === "brand") {
+      setActiveTab("design");
+    }
+  }, [activeTab, showBrandTab]);
 
   // Build tab options - only include Brand tab if feature flag is enabled
   const tabOptions: SegmentedOption[] = [
@@ -34,7 +50,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
     },
   ];
 
-  if (SHOW_BRAND_TAB) {
+  if (showBrandTab) {
     tabOptions.push({
       id: "brand",
       label: (
@@ -55,7 +71,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
       {tabOptions.length > 1 && (
         <div className="flex-shrink-0 border-b border-border px-4 py-3">
           <SegmentedControl
-            value={activeTab}
+            value={currentTab}
             options={tabOptions}
             onChange={(value) => {
               const nextTab = value as SidebarTab;
@@ -69,7 +85,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
 
       {/* Tab content - scrollable */}
       <div className="flex-1 min-h-0 min-w-0 overflow-y-auto overflow-x-hidden">
-        {activeTab === "design" ? (
+        {currentTab === "design" ? (
           <LayoutConfigPanel onUploadAsset={onUploadAsset} isBrandUser={isBrandUser} />
         ) : (
           <BrandPanel />

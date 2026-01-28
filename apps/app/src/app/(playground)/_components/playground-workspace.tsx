@@ -44,6 +44,7 @@ interface PlaygroundWorkspaceProps {
   canvasHeight: number;
   isAnalyzingColors: boolean;
   showFocusHint: boolean;
+  hasScreenshot: boolean;
 }
 
 export function PlaygroundWorkspace({
@@ -57,6 +58,7 @@ export function PlaygroundWorkspace({
   canvasWidth,
   isAnalyzingColors,
   showFocusHint,
+  hasScreenshot,
 }: PlaygroundWorkspaceProps) {
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
   const [orientation, setOrientation] = useAtom(orientationAtom);
@@ -260,17 +262,23 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative z-10">
-          <div
-            style={
-              bottomWhitespace
-                ? { transform: `translateY(-${bottomWhitespace}px)` }
-                : undefined
-            }
-          >
-            <ScreenshotZoomSlider value={screenshotZoom} onChange={setScreenshotZoom} max={isBackdropLayout ? 1 : 1.5} />
+        {hasScreenshot ? (
+          <div className="relative z-10">
+            <div
+              style={
+                bottomWhitespace
+                  ? { transform: `translateY(-${bottomWhitespace}px)` }
+                  : undefined
+              }
+            >
+              <ScreenshotZoomSlider
+                value={screenshotZoom}
+                onChange={setScreenshotZoom}
+                max={isBackdropLayout ? 1 : 1.5}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
       </div>
     </div>
   );

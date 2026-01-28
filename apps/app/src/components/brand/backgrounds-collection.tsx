@@ -30,6 +30,12 @@ export function BackgroundsCollection() {
   // Load backgrounds on mount
   useEffect(() => {
     async function loadBackgrounds() {
+      // Use existing cache if already populated (e.g., from Design tab)
+      if (backgrounds.length > 0) {
+        setIsLoading(false);
+        return;
+      }
+
       try {
         const response = await listPersonalBackgrounds();
         setBackgrounds(response.items);
@@ -92,12 +98,7 @@ export function BackgroundsCollection() {
           final_dimensions: `${cropped.finalWidth}x${cropped.finalHeight}`,
         });
 
-        // Show helpful message if image was cropped
-        if (cropped.wasCropped) {
-          toast.success("Background uploaded and cropped to 16:9");
-        } else {
-          toast.success("Background uploaded");
-        }
+        toast.success("Background uploaded");
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to upload background";
@@ -146,11 +147,11 @@ export function BackgroundsCollection() {
 
   return (
     <section className="space-y-3">
-      <div className="flex w-full items-center justify-between">
-        <span className="text-sm font-semibold">Your backgrounds</span>
-        <span className="text-xs text-muted-foreground">
-          {backgrounds.length}/{MAX_BRAND_BACKGROUNDS}
-        </span>
+      <div className="space-y-1">
+        <div className="flex w-full items-center justify-between">
+          <span className="text-sm font-semibold">Brand Backgrounds</span>
+        </div>
+        <p className="text-xs text-muted-foreground">Custom backgrounds to match your brand.</p>
       </div>
 
       <input
@@ -162,68 +163,56 @@ export function BackgroundsCollection() {
         aria-label="Upload background"
       />
 
-      {isLoading ? (
-        <div className="grid grid-cols-3 gap-3">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full rounded-lg" />
-          ))}
-        </div>
-      ) : backgrounds.length === 0 ? (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={isUploading}
-          className="w-full"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {isUploading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Plus className="mr-2 h-4 w-4" />
-              Add background
-            </>
-          )}
-        </Button>
-      ) : (
-        <div className="grid grid-cols-3 gap-3">
-          {backgrounds.map((background) => (
-            <BackgroundThumbnail
-              key={background.id}
-              background={background}
-              isDeleting={deletingId === background.id}
-              onDelete={() => handleDelete(background)}
-            />
-          ))}
+      <div className="grid grid-cols-3 gap-3">
+        {isLoading ? (
+          <Skeleton className="h-12 w-full rounded-md" />
+        ) : backgrounds.length === 0 ? (
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isUploading}
+            className={cn(
+              "group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md p-0 transition focus-visible:ring-2 focus-visible:ring-offset-2 ring-1 ring-border/60 hover:ring-border",
+              isUploading && "cursor-not-allowed opacity-50",
+            )}
+          >
+            {isUploading ? (
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            ) : (
+              <Plus className="h-5 w-5 text-muted-foreground transition group-hover:text-foreground" />
+            )}
+          </button>
+        ) : (
+          <>
+            {backgrounds.map((background) => (
+              <BackgroundThumbnail
+                key={background.id}
+                background={background}
+                isDeleting={deletingId === background.id}
+                onDelete={() => handleDelete(background)}
+              />
+            ))}
 
-          {canUpload && (
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className={cn(
-                "group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2 ring-1 ring-border/60 hover:ring-border",
-                isUploading && "cursor-not-allowed opacity-50",
-              )}
-            >
-              {isUploading ? (
-                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-              ) : (
-                <Plus className="h-5 w-5 text-muted-foreground transition group-hover:text-foreground" />
-              )}
-            </button>
-          )}
-        </div>
-      )}
-
-      {backgrounds.length === 0 && !isLoading && (
-        <p className="text-xs text-muted-foreground">
-          Upload custom backgrounds to use in your screenshots.
-        </p>
-      )}
+            {canUpload && (
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className={cn(
+                  "group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md p-0 text-left transition focus-visible:ring-2 focus-visible:ring-offset-2 ring-1 ring-border/60 hover:ring-border",
+                  isUploading && "cursor-not-allowed opacity-50",
+                )}
+              >
+                {isUploading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                ) : (
+                  <Plus className="h-5 w-5 text-muted-foreground transition group-hover:text-foreground" />
+                )}
+              </button>
+            )}
+          </>
+        )}
+      </div>
     </section>
   );
 }
@@ -276,4 +265,3 @@ function BackgroundThumbnail({
     </div>
   );
 }
-

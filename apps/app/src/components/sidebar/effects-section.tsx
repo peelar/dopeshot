@@ -6,6 +6,7 @@ import { configAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
 import { Switch } from "@/components/ui/switch";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
+import { inferFadeDirection } from "@/domain/layout/fade-direction";
 
 const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
   preset: "soft-glass" as const,
@@ -27,6 +28,8 @@ export function EffectsSection() {
 
   // Fade is disabled by default, only enabled if explicitly set by user
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
+  const layoutSpecificFadeDirection =
+    config.layoutSpecificSettings?.fadeDirection?.[config.layoutId];
   const currentFadeState = layoutSpecificFadeEnabled ?? false;
 
   const toggleSoftGlass = useCallback(() => {
@@ -53,6 +56,8 @@ export function EffectsSection() {
         currentConfig.layoutSpecificSettings?.fadeEnabled?.[currentConfig.layoutId];
       const currentState = layoutSpecificFadeEnabled ?? false;
 
+      const inferredDirection = inferFadeDirection(currentConfig);
+
       return {
         ...currentConfig,
         layoutSpecificSettings: {
@@ -61,10 +66,16 @@ export function EffectsSection() {
             ...currentConfig.layoutSpecificSettings?.fadeEnabled,
             [currentConfig.layoutId]: !currentState,
           },
+          fadeDirection: {
+            ...currentConfig.layoutSpecificSettings?.fadeDirection,
+            ...(currentState
+              ? {}
+              : { [currentConfig.layoutId]: layoutSpecificFadeDirection ?? inferredDirection }),
+          },
         },
       };
     });
-  }, [setConfig]);
+  }, [setConfig, layoutSpecificFadeDirection]);
 
   const showOutlineSection =
     outlineControls.softGlass ||

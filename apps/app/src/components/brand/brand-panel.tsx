@@ -497,7 +497,7 @@ export function BrandPanel() {
           </div>
 
           <div className="space-y-2 pt-3">
-            <Label className="text-xs text-muted-foreground">Mode</Label>
+            <Label className="text-xs text-muted-foreground">Preferred Mode</Label>
             <div className="relative grid grid-cols-2 rounded-lg border border-border bg-muted/20 p-1">
               <div
                 className={cn(

@@ -109,5 +109,6 @@ export type LayoutConfig = {
   screenshotFrame?: ScreenshotTreatment;
   layoutSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-layout fade state
+    fadeDirection?: Record<string, string>; // Per-layout fade direction override
   };
 };

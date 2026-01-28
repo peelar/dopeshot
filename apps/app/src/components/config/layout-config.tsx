@@ -12,6 +12,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { configAtom, orientationAtom, brandSettingsAtom, assetsAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom, logoAssetAtom, brandLogoAssetAtom } from "@/hooks/atoms/derived";
 import { ScreenshotSection } from "@/components/sidebar/screenshot-section";
@@ -207,14 +217,7 @@ export const LayoutConfigPanel = ({
         )}
 
         {/* Hide background section on mobile - now shown inline beneath canvas */}
-        {!isMobile && (
-          <section className="space-y-3 px-4">
-            <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Background</span>
-            </div>
-            <BackgroundSection />
-          </section>
-        )}
+        {!isMobile && <BackgroundSection />}
 
         {/* Hide screenshot section on mobile - upload available via Upload button in bottom menu */}
         {!isMobile && (
@@ -393,6 +396,7 @@ export const AssetDropzone = ({
   variant = "default",
 }: AssetDropzoneProps) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleFile = useCallback(
     (file?: File) => {
@@ -421,7 +425,8 @@ export const AssetDropzone = ({
   const handleRemove = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      onRemove?.();
+      if (!onRemove) return;
+      setConfirmOpen(true);
     },
     [onRemove],
   );
@@ -511,6 +516,32 @@ export const AssetDropzone = ({
           {asset ? "Click to replace" : "PNG, JPG"}
         </span>
       </div>
+
+      {onRemove && (
+        <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <AlertDialogContent className="max-w-sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Are you sure you want to remove this {label.toLowerCase()}?
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                This will clear the uploaded {label.toLowerCase()} from your design. You can re-upload anytime.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  onRemove();
+                  setConfirmOpen(false);
+                }}
+              >
+                Remove
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
     </Button>
   );
 };
