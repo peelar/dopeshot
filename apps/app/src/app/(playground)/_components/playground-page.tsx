@@ -188,6 +188,7 @@ function PlaygroundPageInner({
     track("export_sheet_feedback_clicked");
     setShowExportSheet(false);
     setExportThumbnail(null);
+    setFeedbackScreenshot(null); // Clear stale screenshot to prevent re-sending old canvas
     setFeedbackModalOpen(true);
   }, [setShowExportSheet, setExportThumbnail, setFeedbackModalOpen]);
 
