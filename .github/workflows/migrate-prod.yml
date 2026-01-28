@@ -1,9 +1,8 @@
 name: Production Database Migration
 
 on:
-  pull_request:
+  push:
     branches: [main]
-    types: [closed]
   workflow_dispatch:
     inputs:
       skip_vercel_deploy:
@@ -14,11 +13,6 @@ on:
 
 jobs:
   migrate:
-    # Only run when changeset release PR is merged OR manual trigger
-    if: >-
-      ${{ github.event_name == 'workflow_dispatch' ||
-          (github.event.pull_request.merged == true &&
-           startsWith(github.event.pull_request.head.ref, 'changeset-release/')) }}
     runs-on: ubuntu-latest
 
     steps:

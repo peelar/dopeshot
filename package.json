@@ -17,7 +17,10 @@
     "changeset": "changeset",
     "changeset:status": "pnpm changeset status --verbose",
     "changeset:version": "pnpm changeset version && pnpm install --no-frozen-lockfile",
-    "release": "pnpm --filter dopeshot-app release"
+    "release": "pnpm --filter dopeshot-app release",
+    "db:dev": "pnpm --filter dopeshot-app db:dev",
+    "db:deploy": "pnpm --filter dopeshot-app db:deploy",
+    "db:status": "pnpm --filter dopeshot-app db:status"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
