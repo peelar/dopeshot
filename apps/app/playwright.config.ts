@@ -30,6 +30,7 @@ export default defineConfig({
         process.env.DATABASE_URL ||
         'postgresql://playwright:playwright@localhost:5432/postgres?pgbouncer=true',
       DIRECT_URL:
+        process.env.DIRECT_DATABASE_URL ||
         process.env.DIRECT_URL ||
         'postgresql://playwright:playwright@localhost:5432/postgres',
       BETTER_AUTH_SECRET:

@@ -2,9 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom } from "jotai";
-import { Loader2, Plus, Trash2, X } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
+import { Loader2, Plus, Trash2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 import {
@@ -47,7 +45,33 @@ export function BackgroundsCollection() {
     }
 
     loadBackgrounds();
-  }, [setBackgrounds]);
+  }, [backgrounds.length, setBackgrounds]);
+
+  async function getBlobDimensions(
+    blob: Blob,
+  ): Promise<{ width: number; height: number }> {
+    if (typeof createImageBitmap !== "undefined") {
+      const bitmap = await createImageBitmap(blob);
+      return { width: bitmap.width, height: bitmap.height };
+    }
+
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(blob);
+
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve({ width: img.width, height: img.height });
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Failed to read image dimensions"));
+      };
+
+      img.src = url;
+    });
+  }
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -79,11 +103,18 @@ export function BackgroundsCollection() {
           { type: compressed.blob.type || file.type },
         );
 
+        const { width: finalWidth, height: finalHeight } = await getBlobDimensions(
+          compressed.blob,
+        ).catch(() => ({
+          width: cropped.finalWidth,
+          height: cropped.finalHeight,
+        }));
+
         const result = await uploadPersonalBackground({
           file: fileToUpload,
           name: file.name.replace(/\.[^/.]+$/, ""), // Remove extension
-          widthPx: cropped.finalWidth,
-          heightPx: cropped.finalHeight,
+          widthPx: finalWidth,
+          heightPx: finalHeight,
           fileFormat: file.name.split(".").pop()?.toLowerCase() || "jpg",
         });
 
@@ -95,7 +126,7 @@ export function BackgroundsCollection() {
           was_cropped: cropped.wasCropped,
           original_size_kb: Math.round(compressed.originalSize / 1024),
           original_dimensions: `${cropped.originalWidth}x${cropped.originalHeight}`,
-          final_dimensions: `${cropped.finalWidth}x${cropped.finalHeight}`,
+          final_dimensions: `${finalWidth}x${finalHeight}`,
         });
 
         toast.success("Background uploaded");

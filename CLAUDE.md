@@ -16,7 +16,7 @@ dopeshot is the visual identity toolkit for indie hackers and small builders. As
 - When building UI components, use Base UI (`@base-ui/react`) for primitives. Style them with Tailwind.
 - Avoid new catch-all `utils.ts`; collocate helpers or use domain-specific modules.
 - Use pnpm.
-- Migrations: follow `docs/development/migrations.md`. Local = `pnpm db:dev`; prod/staging = `DATABASE_URL=<direct> pnpm db:deploy`; never run `migrate dev` on prod; prefer expand/contract; use `migrate resolve` if a deploy partially fails.
+- Migrations: follow `docs/development/migrations.md`. Local = `pnpm db:dev`; prod/staging = `DIRECT_DATABASE_URL=<direct> pnpm db:deploy`; never run `migrate dev` on prod; prefer expand/contract; use `migrate resolve` if a deploy partially fails; `pnpm dev` checks DB status and will auto-skip if no DB URL is set.
 - Propose using `knip` to clean up after building a bigger feature.
 - Use Jotai for state management, especially for global state. Prefer atoms over prop drilling and callback chains.
 - Keep the Design sidebar for styling; look/variant switching stays in the rail/toggle above the canvas.
