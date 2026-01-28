@@ -114,8 +114,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const subtitle = shouldShowText ? text.subtitle : undefined;
 
   // Adaptive typography classes
-  const titleClassName = cn(text.titleClasses, text.textColorClass);
-  const subtitleClassName = cn(text.subtitleClasses, "mt-4", text.textColorClass);
+  const titleClassName = cn(text.titleClasses, "whitespace-pre-line", text.textColorClass);
+  const subtitleClassName = cn(text.subtitleClasses, "whitespace-pre-line", "mt-4", text.textColorClass);
 
   const screenshotFrameWidth = useMemo(() => {
     if (textVariant === "center") {

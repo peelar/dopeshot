@@ -64,11 +64,12 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
           <Label htmlFor="look-headline" className="text-xs font-medium text-muted-foreground">
             Headline
           </Label>
-          <input
+          <textarea
             id="look-headline"
             value={config.text.title ?? ""}
             onChange={(event) => handleTextInputChange("title", event.target.value)}
             placeholder="Bring the heat"
+            rows={2}
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
           />
