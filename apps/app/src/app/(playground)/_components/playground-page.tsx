@@ -268,18 +268,25 @@ function PlaygroundPageInner({
         });
     };
 
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      prefetchBackgroundsHandleRef.current = window.requestIdleCallback(prefetch, { timeout: 3000 });
-    } else {
-      prefetchBackgroundsHandleRef.current = window.setTimeout(prefetch, 1200);
+    if (typeof window !== "undefined") {
+      const hasIdleCallback = "requestIdleCallback" in window;
+      if (hasIdleCallback) {
+        prefetchBackgroundsHandleRef.current = window.requestIdleCallback(prefetch, { timeout: 3000 });
+      } else {
+        // In browser context, setTimeout returns a number (not Node's Timeout object)
+        prefetchBackgroundsHandleRef.current = Number(window.setTimeout(prefetch, 1200));
+      }
     }
 
     return () => {
       if (prefetchBackgroundsHandleRef.current === null) return;
-      if (typeof window !== "undefined" && "cancelIdleCallback" in window) {
-        window.cancelIdleCallback(prefetchBackgroundsHandleRef.current);
-      } else {
-        window.clearTimeout(prefetchBackgroundsHandleRef.current);
+      if (typeof window !== "undefined") {
+        const hasIdleCallback = "cancelIdleCallback" in window;
+        if (hasIdleCallback) {
+          window.cancelIdleCallback(prefetchBackgroundsHandleRef.current);
+        } else {
+          window.clearTimeout(prefetchBackgroundsHandleRef.current);
+        }
       }
     };
   }, [isBrandUser, isLoggedIn, personalBackgrounds.length, setPersonalBackgrounds]);

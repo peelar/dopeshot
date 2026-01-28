@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 import { orientationAtom } from "@/hooks/atoms";
-import { getFadeMaskGradient, inferFadeDirection } from "@/domain/layout/fade-direction";
+import { getFadeMaskGradient, inferFadeDirection, type FadeDirection } from "@/domain/layout/fade-direction";
 
 // Desktop dimensions (16:9)
 const SIDE_CONTENT_TOP_DESKTOP = "30%";
@@ -89,7 +89,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const fadeEnabled = layoutSpecificFadeEnabled ?? false;
   const fadeMask = useMemo(
-    () => getFadeMaskGradient(config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] ?? inferFadeDirection(config)),
+    () => getFadeMaskGradient((config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] as FadeDirection | undefined) ?? inferFadeDirection(config)),
     [config],
   );
 

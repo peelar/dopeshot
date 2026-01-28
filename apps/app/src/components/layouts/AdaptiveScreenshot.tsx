@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils/cn";
 import { DEFAULT_LOCKED_ASPECT_RATIO } from "@/domain/layout/screenshot-mode";
 import { getScreenshotFrameAppearance } from "@/components/layouts/shared/screenshot-frame";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
-import { getFadeMaskGradient, inferFadeDirection } from "@/domain/layout/fade-direction";
+import { getFadeMaskGradient, inferFadeDirection, type FadeDirection } from "@/domain/layout/fade-direction";
 
 interface AdaptiveScreenshotProps {
   className?: string;
@@ -37,7 +37,7 @@ function AdaptiveScreenshotComponent({ className, isStatic = false }: AdaptiveSc
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const fadeEnabled = layoutSpecificFadeEnabled ?? shouldAutoEnableFade;
   const fadeMask = useMemo(
-    () => getFadeMaskGradient(config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] ?? inferFadeDirection(config)),
+    () => getFadeMaskGradient((config.layoutSpecificSettings?.fadeDirection?.[config.layoutId] as FadeDirection | undefined) ?? inferFadeDirection(config)),
     [config],
   );
 
