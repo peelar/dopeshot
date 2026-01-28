@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useAtom, useSetAtom, useAtomValue } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
@@ -21,12 +21,71 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
   const [error, setError] = useState<string | null>(null);
   const hasAppliedRef = useRef(false);
+  const prefetchPromiseRef = useRef<Promise<{ logoUrl: string; logoPath: string } | null> | null>(
+    null,
+  );
+
+  const fetchBrandProfile = useCallback(async () => {
+    try {
+      const response = await fetch("/api/brand/profile", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const payload = await response.json();
+
+      if (!payload?.logoUrl || !payload?.profile?.logoPath) {
+        return null;
+      }
+
+      const logoUrl = payload.logoUrl as string;
+      const logoPath = payload.profile.logoPath as string;
+
+      setBrandSettings((prev) => ({
+        ...prev,
+        logoUrl,
+        logoPath,
+      }));
+
+      return { logoUrl, logoPath };
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") {
+        console.error("Failed to fetch brand logo:", error);
+      }
+      return null;
+    }
+  }, [setBrandSettings]);
 
   useEffect(() => {
     if (!config.assets?.logo && !loadedItemId) {
       hasAppliedRef.current = false;
     }
   }, [config.assets?.logo, loadedItemId]);
+
+  // Prefetch brand profile as soon as possible so logo data is ready before uploads
+  useEffect(() => {
+    if (!options.enabled || !session?.user || !brandSettings.useLogoOnScreenshots) {
+      return;
+    }
+
+    if ((brandSettings.logoUrl && brandSettings.logoPath) || prefetchPromiseRef.current) {
+      return;
+    }
+
+    prefetchPromiseRef.current = fetchBrandProfile().finally(() => {
+      prefetchPromiseRef.current = null;
+    });
+  }, [
+    brandSettings.logoPath,
+    brandSettings.logoUrl,
+    brandSettings.useLogoOnScreenshots,
+    fetchBrandProfile,
+    options.enabled,
+    session?.user,
+  ]);
 
   useEffect(() => {
     // Skip if:
@@ -54,30 +113,22 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
       hasAppliedRef.current = true;
 
       try {
-        // Fetch brand profile from API
-        const response = await fetch("/api/brand/profile", {
-          credentials: "include",
-        });
+        // Use cached logo if available; otherwise wait for the prefetch (or fetch once).
+        let logoUrl = brandSettings.logoUrl;
+        let logoPath = brandSettings.logoPath;
 
-        if (!response.ok) {
-          return;
+        if (!logoUrl || !logoPath) {
+          const prefetchResult = await (prefetchPromiseRef.current ?? fetchBrandProfile());
+          logoUrl = prefetchResult?.logoUrl ?? logoUrl;
+          logoPath = prefetchResult?.logoPath ?? logoPath;
         }
 
-        const payload = await response.json();
-
-        if (!payload?.logoUrl || !payload?.profile?.logoPath) {
+        if (!logoUrl || !logoPath) {
           return;
         }
-
-        // Update brand settings with fetched data
-        setBrandSettings((prev) => ({
-          ...prev,
-          logoUrl: payload.logoUrl,
-          logoPath: payload.profile.logoPath,
-        }));
 
         const existingBrandLogo = assets.find(
-          (asset) => asset.kind === "logo" && asset.url === payload.logoUrl,
+          (asset) => asset.kind === "logo" && asset.url === logoUrl,
         );
 
         // Apply logo to screenshot
@@ -85,8 +136,8 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
           id: `brand-logo-${Date.now()}`,
           projectId: "brand",
           userId: "brand",
-          url: payload.logoUrl,
-          name: payload.profile.logoPath.split("/").pop() || "brand-logo",
+          url: logoUrl,
+          name: logoPath.split("/").pop() || "brand-logo",
           kind: "logo",
           createdAt: new Date().toISOString(),
         };
