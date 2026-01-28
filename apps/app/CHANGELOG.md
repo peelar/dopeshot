@@ -1,5 +1,11 @@
 # dopeshot
 
+## 0.7.1
+
+### Patch Changes
+
+- dce16e3: Fixed the brand tab being invisible for brand users.
+
 ## 0.7.0
 
 ### Minor Changes
