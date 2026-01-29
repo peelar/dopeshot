@@ -62,9 +62,9 @@ export const LayoutConfigPanel = ({
 
   // Check if brand logo is currently applied
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
-  
-  // Check if brand logo is available but not applied
-  const hasBrandLogoAvailable = !logoAsset && brandSettings.logoUrl;
+
+  // Check if brand logo is available but not applied (only for brand users)
+  const hasBrandLogoAvailable = isBrandUser && !logoAsset && brandSettings.logoUrl;
 
   // Check if text is actually supported (not just hidden by layout type)
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
