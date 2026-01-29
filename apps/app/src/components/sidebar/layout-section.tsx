@@ -100,8 +100,8 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
             fontStyle={config.fontStyle}
             onFontStyleChange={handleFontStyleChange}
             isBrandUser={isBrandUser}
-            brandFontStyle={personalityStyle?.fontStyle}
-            brandPersonalityName={personalityName}
+            brandFontStyle={isBrandUser ? personalityStyle?.fontStyle : undefined}
+            brandPersonalityName={isBrandUser ? personalityName : undefined}
           />
         </div>
       )}
