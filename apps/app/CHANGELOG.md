@@ -1,5 +1,12 @@
 # dopeshot
 
+## 0.8.1
+
+### Patch Changes
+
+- 4ef1a7b: Fix logo button showing dropdown menu for logged out users instead of direct file picker
+- 03e6151: Hide brand personality indicator in font selector for logged out users
+
 ## 0.8.0
 
 ### Minor Changes
