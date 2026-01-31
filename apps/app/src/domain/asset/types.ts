@@ -4,6 +4,8 @@ export type ColorPalette = {
   accent: string; // hex color
   muted?: string; // hex color
   vibrant?: string; // hex color
+  /** True average lightness of the source image (0-1). Used to detect dark screenshots. */
+  sourceImageLightness?: number;
 };
 
 // Asset represents uploaded files (screenshots, logos, icons, backgrounds, etc.)

@@ -1,34 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useTheme } from "next-themes";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
   EXPORT_ORIENTATION_DIMENSIONS,
   getScreenshotTreatment,
-  isScreenshotFocused,
 } from "@/domain/layout/screenshot-mode";
-import { getPreferredGradientAngle } from "@/domain/layout/gradient-application";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import type { LayoutDefinition } from "@/domain/layout-def/definitions";
-import type { GradientPreferences } from "@/domain/gradient-generation";
-import {
-  exportLayoutAsPng,
-  exportLayoutAsPngWithBlob,
-  generateThumbnail,
-} from "@/domain/layout/export";
+import { exportLayoutAsPngWithBlob, generateThumbnail } from "@/domain/layout/export";
 import { useSession } from "@/lib/auth/auth-client";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 import {
-  PLACEHOLDER_ASSET_ID,
   assetsAtom,
   configAtom,
   hasCustomScreenshotAtom,
-  isAnalyzingColorsAtom,
   isExportingAtom,
   orientationAtom,
   statusMessageAtom,
@@ -72,16 +62,14 @@ interface ExportContext {
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
 
 export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean }) {
-  const { theme } = useTheme();
   const isMobile = useMobileDetection();
 
   const [config, setConfig] = useAtom(configAtom);
-  const [assets, setAssets] = useAtom(assetsAtom);
+  const setAssets = useSetAtom(assetsAtom);
   const orientation = useAtomValue(orientationAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
   const [isExporting, setIsExporting] = useAtom(isExportingAtom);
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
-  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const currentLook = useAtomValue(currentLayoutAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const canvas = useAtomValue(canvasAtom);
@@ -103,9 +91,8 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
 
   const { isConfigDrawerOpen, setIsConfigDrawerOpen } = useConfigDrawer(isMobile);
 
-  const gradientPreferences = useGradientPreferences(config, theme);
-
-  const { processColorAnalysis } = useColorAnalysis({ gradientPreferences });
+  // Color analysis is disabled - static gradients are used instead
+  const { processColorAnalysis } = useColorAnalysis();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
 
   // Export state atoms for voluntary save
@@ -118,8 +105,6 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
 
   // Auth state for conditional sheet display
   const { data: session } = useSession();
-
-  usePlaceholderGradientBootstrap({ assets, config, processColorAnalysis });
 
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);
@@ -165,7 +150,6 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
     statusMessage,
     hasCustomScreenshot,
     isProcessingUpload,
-    isAnalyzingColors,
     showFocusHint,
     hasScreenshot,
     canExport,
@@ -239,45 +223,6 @@ function useConfigDrawer(isMobile: boolean) {
   }, [isConfigDrawerOpen, isMobile]);
 
   return { isConfigDrawerOpen, setIsConfigDrawerOpen };
-}
-
-function useGradientPreferences(config: LayoutConfig, theme?: string | null) {
-  return useMemo<GradientPreferences>(() => {
-    return {
-      angle: getPreferredGradientAngle(config),
-      temperature: theme === "dark" ? "cool" : "warm",
-      intensity: isScreenshotFocused(config) ? "bold" : "balanced",
-    };
-  }, [config, theme]);
-}
-
-function usePlaceholderGradientBootstrap({
-  assets,
-  config,
-  processColorAnalysis,
-}: {
-  assets: Asset[];
-  config: LayoutConfig;
-  processColorAnalysis: (url: string, id: string, gradientId: string | null) => Promise<void>;
-}) {
-  useEffect(() => {
-    const placeholderAsset = assets.find((asset) => asset.id === PLACEHOLDER_ASSET_ID);
-    const hasGradientSet = config.background?.customGradient !== undefined;
-    const usingCustomGradientSlot =
-      config.background?.type === "gradient" && config.background?.value === "custom";
-
-    if (!placeholderAsset || hasGradientSet || !usingCustomGradientSlot) {
-      return;
-    }
-
-    void processColorAnalysis(placeholderAsset.url, placeholderAsset.id, null);
-  }, [
-    assets,
-    config.background?.customGradient,
-    config.background?.type,
-    config.background?.value,
-    processColorAnalysis,
-  ]);
 }
 
 function useExportHandler({

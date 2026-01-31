@@ -1,9 +1,8 @@
 /**
  * Gradient Data Models
- * 
+ *
  * This module defines the shape of gradient data used throughout layouts.
- * It does NOT contain generation/extraction logic - see domain/gradient-generation.
- * 
+ *
  * Purpose: Pure data types and type guards for gradient configurations
  * Layer: Domain Model (data structures only)
  * Dependencies: None
@@ -103,7 +102,3 @@ export function isAuroraGradient(gradient: CustomGradient): boolean {
     !gradient.meshLayers
   );
 }
-
-
-
-

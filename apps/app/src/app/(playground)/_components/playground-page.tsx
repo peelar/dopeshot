@@ -362,7 +362,6 @@ function PlaygroundPageInner({
     statusMessage,
     hasCustomScreenshot,
     isProcessingUpload,
-    isAnalyzingColors,
     showFocusHint,
     hasScreenshot,
     canExport,
@@ -488,7 +487,6 @@ function PlaygroundPageInner({
                 onEmptyStateClick={openFilePicker}
                 canvasHeight={canvas.height}
                 canvasWidth={canvas.width}
-                isAnalyzingColors={isAnalyzingColors}
                 showFocusHint={showFocusHint}
                 hasScreenshot={hasScreenshot}
               />

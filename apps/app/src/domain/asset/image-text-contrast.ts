@@ -1,24 +1,16 @@
-import { analyzeColors } from "./analyze-colors";
-import { getImageDataUrl } from "./image-data-url";
 import { ColorPalette } from "./types";
-import { getContrastTextColorFromPalette } from "@/domain/layout/gradients";
 import { ColorToken } from "@/domain/layout/types";
 
+/**
+ * Stub for image text contrast analysis - color extraction is disabled.
+ *
+ * TODO: Re-implement when palette-based gradient system is built.
+ * See thoughts/plans/09-palette-based-gradient-system.md
+ */
 export async function analyzeImageTextContrast(
-  src: string,
+  _src: string,
 ): Promise<{ palette?: ColorPalette; textColor?: ColorToken }> {
-  const dataUrl = await getImageDataUrl(src);
-  if (!dataUrl) {
-    return {};
-  }
-
-  const palette = await analyzeColors(dataUrl);
-  if (!palette) {
-    return {};
-  }
-
-  return {
-    palette,
-    textColor: getContrastTextColorFromPalette(palette),
-  };
+  // Color analysis disabled - return empty result
+  // Static gradients are used instead
+  return {};
 }

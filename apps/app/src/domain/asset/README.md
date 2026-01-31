@@ -2,21 +2,21 @@
 
 ## Purpose
 
-Handles file upload orchestration and metadata extraction for images. Processes uploaded files (screenshots, logos, backgrounds) through browser FileReader API, extracts color palettes and image dimensions, and produces Asset objects with complete metadata.
+Handles file upload orchestration and metadata extraction for images. Processes uploaded files (screenshots, logos, backgrounds) through browser FileReader API, extracts image dimensions, and produces Asset objects with complete metadata.
 
 ## File Structure
 
 - `types.ts` - Data models for Asset, ColorPalette, and ImageMetadata
 - `upload-orchestrator.ts` - Main upload flow orchestration with `processFileUpload()`
-- `analyze-colors.ts` - Color palette extraction from images
 - `get-image-metadata.ts` - Extracts dimensions, aspect ratio, and orientation
 - `data-url.ts` - Utilities for data URL conversions and manipulation
+- `image-text-contrast.ts` - Stub for future color analysis (disabled)
 
 ## Key Exports
 
 - `processFileUpload(file: File, kind)` - Main entry point that returns `UploadResult` with Asset and metadata
 - `Asset` - Core data type with id, url, kind, colorPalette, metadata
-- `ColorPalette` - Extracted colors (dominant, accent, muted, vibrant)
+- `ColorPalette` - Color data type (currently unused, reserved for future palette system)
 - `ImageMetadata` - Dimensions, aspect ratio, orientation
 - `UploadResult` - Complete upload result with asset and computed aspect category
 
@@ -42,3 +42,4 @@ Handles file upload orchestration and metadata extraction for images. Processes 
 - **Playground mode**: Currently generates local IDs and uses "playground" project/user
 - **Conditional metadata**: Only extracts full metadata for screenshots (not logos/backgrounds)
 - **Data URL storage**: Images stored as data URLs (base64) for client-side playground mode
+- **Color analysis disabled**: Dynamic gradient generation removed; static gradients used until palette system is built (see thoughts/plans/09-palette-based-gradient-system.md)

@@ -1,72 +1,22 @@
 import { useCallback } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { ColorPalette } from "@/domain/asset/types";
-import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import { supportsScreenshots } from "@/domain/layout-def/definitions";
-import type { GradientPreferences } from "@/domain/gradient-generation";
-import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
-import { useGradientGeneration } from "./use-gradient-generation";
 
-export interface UseColorAnalysisOptions {
-  gradientPreferences: GradientPreferences;
-}
-
-export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOptions) {
-  const [isAnalyzingColors, setIsAnalyzingColors] = useAtom(isAnalyzingColorsAtom);
-  const [config] = useAtom(configAtom);
-  const setAssets = useSetAtom(assetsAtom);
-  const setStatusMessage = useSetAtom(statusMessageAtom);
-
-  // Use gradient generation hook
-  const { generateFromScreenshot } = useGradientGeneration({ gradientPreferences });
-
-  const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
-    return analyzeImageColors(dataUrl);
-  }, []);
-
+/**
+ * Stub for color analysis - no longer extracts colors from images.
+ *
+ * TODO: This will be re-implemented when we build the palette-based gradient system.
+ * See thoughts/plans/09-palette-based-gradient-system.md
+ */
+export function useColorAnalysis() {
+  // No-op: color analysis is disabled until palette system is built
   const processColorAnalysis = useCallback(
-    async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
-      // EARLY RETURN: Skip color analysis for looks that don't support screenshots
-      if (!supportsScreenshots(config.layoutId)) {
-        return;
-      }
-
-      setIsAnalyzingColors(true);
-      setStatusMessage("Analyzing colors from screenshot...");
-
-      try {
-        const colorPalette = await analyzeColors(dataUrl);
-
-        if (colorPalette) {
-          // Store color palette in asset
-          setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
-
-          // Generate gradients from screenshot colors
-          await generateFromScreenshot(colorPalette, { autoLayoutMessage });
-        }
-      } catch (error) {
-        // Silent fallback: log error but don't show to user
-        if (process.env.NODE_ENV === "development") {
-          console.error("Color analysis failed:", error);
-        }
-
-        // Continue without color analysis - defaults will be used
-      } finally {
-        setIsAnalyzingColors(false);
-      }
+    async (_dataUrl: string, _assetId: string, _autoLayoutMessage: string | null) => {
+      // Intentionally empty - static gradients are used instead
     },
-    [
-      analyzeColors,
-      config.layoutId,
-      setAssets,
-      setStatusMessage,
-      setIsAnalyzingColors,
-      generateFromScreenshot,
-    ],
+    [],
   );
 
   return {
     processColorAnalysis,
-    isAnalyzingColors,
+    isAnalyzingColors: false,
   };
 }

@@ -6,12 +6,7 @@ import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
-import {
-  screenshotZoomAtom,
-  configAtom,
-  orientationAtom,
-  type Orientation,
-} from "@/hooks/atoms";
+import { screenshotZoomAtom, configAtom, orientationAtom, type Orientation } from "@/hooks/atoms";
 import {
   LAYOUT_DEFINITIONS,
   getLayoutDefinition,
@@ -42,7 +37,6 @@ interface PlaygroundWorkspaceProps {
   onEmptyStateClick: () => void;
   canvasWidth: number;
   canvasHeight: number;
-  isAnalyzingColors: boolean;
   showFocusHint: boolean;
   hasScreenshot: boolean;
 }
@@ -56,7 +50,6 @@ export function PlaygroundWorkspace({
   onEmptyStateClick,
   canvasHeight,
   canvasWidth,
-  isAnalyzingColors,
   showFocusHint,
   hasScreenshot,
 }: PlaygroundWorkspaceProps) {
@@ -68,7 +61,8 @@ export function PlaygroundWorkspace({
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
 
-  const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+  const isBackdropLayout =
+    config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
 
   // Set mobile as default orientation on mobile devices
   useEffect(() => {
@@ -81,15 +75,12 @@ export function PlaygroundWorkspace({
     hasAutoSetOrientation.current = true;
   }, [isMobile, orientation, setOrientation]);
 
-  const handleViewportMetricsChange = useCallback(
-    (metrics: { bottomWhitespace: number }) => {
-      const nextValue = Math.round(metrics.bottomWhitespace);
-      setBottomWhitespace((previousValue) =>
-        previousValue === nextValue ? previousValue : nextValue
-      );
-    },
-    []
-  );
+  const handleViewportMetricsChange = useCallback((metrics: { bottomWhitespace: number }) => {
+    const nextValue = Math.round(metrics.bottomWhitespace);
+    setBottomWhitespace((previousValue) =>
+      previousValue === nextValue ? previousValue : nextValue,
+    );
+  }, []);
 
   const handleOrientationChange = (newOrientation: Orientation) => {
     // Check if current layout supports new orientation
@@ -125,8 +116,8 @@ export function PlaygroundWorkspace({
               fontSize: config.fontSize,
               screenshotFrame: config.screenshotFrame,
             },
-            { preserveEmptyText: true }
-          )
+            { preserveEmptyText: true },
+          ),
         );
         layoutChanged = compatibleLayout.id !== previousLayoutId;
         newLayoutId = compatibleLayout.id;
@@ -156,7 +147,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "mobile"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Smartphone className="h-3.5 w-3.5" />
@@ -172,7 +163,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "desktop"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -191,7 +182,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "desktop"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -207,7 +198,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "mobile"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Smartphone className="h-3.5 w-3.5" />
@@ -231,8 +222,8 @@ export function PlaygroundWorkspace({
                   : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
               )}
             >
-              {isAspectLocked 
-                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}` 
+              {isAspectLocked
+                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}`
                 : `Lock to ${orientation === "mobile" ? "Mobile" : "16:9"}`}
             </Button>
           ) : null}
@@ -243,8 +234,6 @@ export function PlaygroundWorkspace({
             className={orientation === "mobile" ? "max-h-[85%]" : undefined}
             surfaceWidth={canvasWidth}
             surfaceHeight={canvasHeight}
-            isLoading={isAnalyzingColors}
-            loadingText="Analyzing colors..."
             onViewportMetricsChange={handleViewportMetricsChange}
           >
             <CoverPreview
@@ -266,9 +255,7 @@ export function PlaygroundWorkspace({
           <div className="relative z-10">
             <div
               style={
-                bottomWhitespace
-                  ? { transform: `translateY(-${bottomWhitespace}px)` }
-                  : undefined
+                bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
               }
             >
               <ScreenshotZoomSlider
