@@ -101,8 +101,8 @@ function buildMutedWashGradient(colors: PaletteColors, brightness: ColorSignatur
   const washAlpha = brightness === "dark" ? 0.45 : brightness === "light" ? 0.55 : 0.5;
   const layers: MeshLayer[] = [
     { color: hexToRgba(colors.neutral, washAlpha + 0.05), position: { x: 20, y: 25 }, size: 90 },
-    { color: hexToRgba(colors.primary, washAlpha), position: { x: 78, y: 18 }, size: 78 },
-    { color: hexToRgba(colors.secondary, washAlpha - 0.08), position: { x: 62, y: 80 }, size: 92 },
+    { color: hexToRgba(colors.secondary, washAlpha), position: { x: 78, y: 18 }, size: 78 },
+    { color: hexToRgba(colors.primary, washAlpha - 0.08), position: { x: 62, y: 80 }, size: 92 },
     { color: hexToRgba(colors.glow, washAlpha - 0.12), position: { x: 22, y: 72 }, size: 70 },
   ];
 
@@ -110,6 +110,7 @@ function buildMutedWashGradient(colors: PaletteColors, brightness: ColorSignatur
     type: "linear",
     stops: [
       { color: colors.neutral, position: 0 },
+      { color: colors.secondary, position: 55 },
       { color: colors.primary, position: 100 },
     ],
     meshLayers: layers,

@@ -14,11 +14,14 @@ type SampleStats = {
   avgLightness: number;
   avgSaturation: number;
   dominantHueAngle: number;
+  accentHueAngle: number;
+  accentSaturation: number;
 };
 
 const MAX_SAMPLE_SIZE = 64;
 const MIN_ALPHA = 16;
 const NEUTRAL_SATURATION = 0.12;
+const ACCENT_SATURATION = 0.18;
 
 function clamp(value: number, min: number, max: number): number {
   return Math.min(Math.max(value, min), max);
@@ -57,6 +60,11 @@ function rgbToHsl(r: number, g: number, b: number): Hsl {
   const s = delta === 0 ? 0 : delta / (1 - Math.abs(2 * l - 1));
 
   return { h, s, l };
+}
+
+function hueDistance(a: number, b: number): number {
+  const diff = Math.abs(a - b) % 360;
+  return diff > 180 ? 360 - diff : diff;
 }
 
 function hueToBucket(hue: number): HueBucket {
@@ -155,7 +163,7 @@ async function sampleImageColors(src: string): Promise<SampleStats | null> {
       sumSaturation += hsl.s;
       count += 1;
 
-      if (hsl.s > 0.18) {
+      if (hsl.s > 0.12) {
         const bucket = Math.floor(hsl.h / 30) % bucketCount;
         const weight = hsl.s * (0.6 + 0.4 * (1 - Math.abs(hsl.l - 0.5) * 2));
         buckets[bucket].weight += weight;
@@ -215,6 +223,7 @@ async function sampleImageColors(src: string): Promise<SampleStats | null> {
 
     const accent = vibrantColor ?? dominantColor;
     const dominantHsl = rgbToHsl(dominantColor.r, dominantColor.g, dominantColor.b);
+    const accentHsl = rgbToHsl(accent.r, accent.g, accent.b);
 
     const palette: ColorPalette = {
       dominant: rgbToHex(dominantColor),
@@ -231,6 +240,8 @@ async function sampleImageColors(src: string): Promise<SampleStats | null> {
       avgLightness,
       avgSaturation,
       dominantHueAngle: dominantHsl.h,
+      accentHueAngle: accentHsl.h,
+      accentSaturation: accentHsl.s,
     };
   } catch (error) {
     console.warn("Color sampling failed:", error);
@@ -262,12 +273,26 @@ export async function extractColorSignatureFromImage(src: string): Promise<{
   const dominantHue = dominantHsl.s < NEUTRAL_SATURATION
     ? "neutral"
     : hueToBucket(dominantHsl.h);
+  const accentHue = stats.accentSaturation > ACCENT_SATURATION
+    ? hueToBucket(stats.accentHueAngle)
+    : undefined;
+
+  const accentDominant =
+    stats.accentSaturation > ACCENT_SATURATION &&
+    (dominantHue === "neutral" || hueDistance(stats.accentHueAngle, dominantHsl.h) > 35);
+
+  const primaryHue = accentDominant ? (accentHue ?? dominantHue) : dominantHue;
+  const primaryHueAngle = accentDominant ? stats.accentHueAngle : dominantHsl.h;
+
+  const strengthSample = Math.max(stats.avgSaturation, stats.accentSaturation * 0.8);
 
   const signature: ColorSignature = {
-    dominantHue,
-    dominantHueAngle: stats.dominantHueAngle,
+    dominantHue: primaryHue,
+    dominantHueAngle: primaryHueAngle,
+    accentHue,
+    accentHueAngle: stats.accentHueAngle,
     brightness: classifyBrightness(stats.avgLightness),
-    accentStrength: classifyStrength(stats.avgSaturation),
+    accentStrength: classifyStrength(strengthSample),
     dominantColor: stats.palette.dominant,
     accentColor: stats.palette.accent,
   };

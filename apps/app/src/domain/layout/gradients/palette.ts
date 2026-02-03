@@ -15,6 +15,8 @@ export type AccentStrength = "vibrant" | "muted" | "grayscale";
 export type ColorSignature = {
   dominantHue: HueBucket;
   dominantHueAngle: number;
+  accentHue?: HueBucket;
+  accentHueAngle?: number;
   brightness: Brightness;
   accentStrength: AccentStrength;
   dominantColor: string;
@@ -124,6 +126,16 @@ const STEP_BY_BRIGHTNESS: Record<Brightness, StepMap> = {
 };
 
 const WARM_BUCKETS = new Set<HueBucket>(["red", "orange", "yellow", "pink"]);
+const HUE_BUCKETS: HueBucket[] = [
+  "red",
+  "orange",
+  "yellow",
+  "green",
+  "teal",
+  "blue",
+  "purple",
+  "pink",
+];
 
 export type GradientPalette = {
   id: string;
@@ -142,6 +154,40 @@ export type GradientPalette = {
 function hueDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
+}
+
+function normalizeHue(angle: number): number {
+  if (!Number.isFinite(angle)) return 0;
+  const normalized = angle % 360;
+  return normalized < 0 ? normalized + 360 : normalized;
+}
+
+function hueToBucket(angle: number): HueBucket {
+  const hue = normalizeHue(angle);
+  if (hue >= 345 || hue < 15) return "red";
+  if (hue < 45) return "orange";
+  if (hue < 75) return "yellow";
+  if (hue < 165) return "green";
+  if (hue < 195) return "teal";
+  if (hue < 255) return "blue";
+  if (hue < 285) return "purple";
+  if (hue < 345) return "pink";
+  return "neutral";
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) % 1_000_000;
+  }
+  return hash;
+}
+
+function fallbackAccentBucket(signature: ColorSignature): HueBucket {
+  const seed = `${signature.dominantColor}:${signature.brightness}:${signature.accentStrength}`;
+  const hash = hashString(seed);
+  const index = hash % HUE_BUCKETS.length;
+  return HUE_BUCKETS[index] ?? "blue";
 }
 
 function resolveVariant(signature: ColorSignature): HueVariant {
@@ -166,12 +212,77 @@ function pickScale(scale: ScaleName, step: ScaleKey): string {
   return COLOR_SCALES[scale][step];
 }
 
+function resolveSecondaryHue(signature: ColorSignature): { hue: HueBucket; angle: number } {
+  const baseAngle = normalizeHue(signature.dominantHueAngle);
+  const accentAngle = signature.accentHueAngle;
+  if (
+    signature.accentHue &&
+    typeof accentAngle === "number" &&
+    (signature.dominantHue === "neutral" || hueDistance(baseAngle, accentAngle) >= 35)
+  ) {
+    return { hue: signature.accentHue, angle: accentAngle };
+  }
+
+  if (signature.dominantHue === "neutral") {
+    const fallbackHue = fallbackAccentBucket(signature);
+    const anchor = HUE_VARIANTS[fallbackHue]?.[0]?.anchor ?? 0;
+    return { hue: fallbackHue, angle: anchor };
+  }
+
+  const complementAngle = normalizeHue(baseAngle + 180);
+  return { hue: hueToBucket(complementAngle), angle: complementAngle };
+}
+
+function resolveAccentVariant(signature: ColorSignature): HueVariant | null {
+  if (signature.accentHue) {
+    return resolveVariant({
+      ...signature,
+      dominantHue: signature.accentHue,
+      dominantHueAngle:
+        signature.accentHueAngle ??
+        HUE_VARIANTS[signature.accentHue]?.[0]?.anchor ??
+        0,
+    });
+  }
+
+  const fallback = fallbackAccentBucket(signature);
+  return resolveVariant({
+    ...signature,
+    dominantHue: fallback,
+    dominantHueAngle: HUE_VARIANTS[fallback]?.[0]?.anchor ?? 0,
+  });
+}
+
+export function createComplementSignature(signature: ColorSignature): ColorSignature {
+  const baseAngle = signature.dominantHue !== "neutral" || !signature.accentHueAngle
+    ? signature.dominantHueAngle
+    : signature.accentHueAngle;
+  const complementAngle = normalizeHue(baseAngle + 180);
+  const complementHue = hueToBucket(complementAngle);
+
+  return {
+    ...signature,
+    dominantHue: complementHue,
+    dominantHueAngle: complementAngle,
+    accentHue: signature.dominantHue,
+    accentHueAngle: signature.dominantHueAngle,
+    accentStrength: signature.accentStrength === "vibrant" ? "muted" : signature.accentStrength,
+  };
+}
+
 export function buildGradientPalette(signature: ColorSignature): GradientPalette {
   const steps = STEP_BY_BRIGHTNESS[signature.brightness];
   const variant = resolveVariant(signature);
+  const secondaryHue = resolveSecondaryHue(signature);
+  const secondaryVariant = resolveVariant({
+    ...signature,
+    dominantHue: secondaryHue.hue,
+    dominantHueAngle: secondaryHue.angle,
+  });
   const neutralScale: ScaleName = WARM_BUCKETS.has(signature.dominantHue) ? "stone" : "slate";
 
   if (signature.accentStrength === "grayscale") {
+    const accentVariant = resolveAccentVariant(signature) ?? secondaryVariant;
     return {
       id: `neutral-${signature.brightness}`,
       hue: "neutral",
@@ -179,27 +290,29 @@ export function buildGradientPalette(signature: ColorSignature): GradientPalette
       strength: signature.accentStrength,
       colors: {
         primary: pickScale("slate", steps.primary),
-        secondary: pickScale("zinc", steps.secondary),
-        tertiary: pickScale("slate", steps.tertiary),
-        glow: pickScale("slate", steps.glow),
+        secondary: pickScale(accentVariant.primary, "base"),
+        tertiary: pickScale(accentVariant.secondary, "soft"),
+        glow: pickScale(accentVariant.accent, "base"),
         neutral: pickScale("slate", steps.neutral),
       },
     };
   }
 
-  const secondaryScale = signature.accentStrength === "muted" ? neutralScale : variant.secondary;
-  const accentScale = signature.accentStrength === "muted" ? variant.primary : variant.accent;
+  const accentIsMuted = signature.accentStrength !== "vibrant";
+  const accentSecondaryStep = accentIsMuted ? "soft" : (signature.brightness === "dark" ? "rich" : steps.secondary);
+  const accentTertiaryStep = accentIsMuted ? "soft" : (signature.brightness === "dark" ? "base" : steps.tertiary);
+  const accentGlowStep = accentIsMuted ? "base" : (signature.brightness === "dark" ? "base" : steps.glow);
 
   return {
-    id: `${variant.primary}-${variant.secondary}-${signature.brightness}-${signature.accentStrength}`,
+    id: `${variant.primary}-${secondaryVariant.primary}-${signature.brightness}-${signature.accentStrength}`,
     hue: signature.dominantHue,
     brightness: signature.brightness,
     strength: signature.accentStrength,
     colors: {
       primary: pickScale(variant.primary, steps.primary),
-      secondary: pickScale(secondaryScale, steps.secondary),
-      tertiary: pickScale(accentScale, steps.tertiary),
-      glow: pickScale(accentScale, steps.glow),
+      secondary: pickScale(secondaryVariant.primary, accentSecondaryStep),
+      tertiary: pickScale(secondaryVariant.secondary, accentTertiaryStep),
+      glow: pickScale(secondaryVariant.accent, accentGlowStep),
       neutral: pickScale(neutralScale, steps.neutral),
     },
   };
