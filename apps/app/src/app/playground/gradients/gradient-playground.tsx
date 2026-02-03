@@ -187,12 +187,22 @@ function FilterSelect<T extends string>({
   onChange: (value: FilterValue<T>) => void;
   options: T[];
 }) {
+  const displayValue =
+    value === "all" ? `All ${label.toLowerCase()}` : titleCase(value);
+
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <Select value={value} onValueChange={(next) => onChange(next as FilterValue<T>)}>
+      <Select<FilterValue<T>>
+        value={value}
+        onValueChange={(next) => onChange((next ?? "all") as FilterValue<T>)}
+      >
         <SelectTrigger className="min-w-[140px]">
-          <SelectValue placeholder={`All ${label.toLowerCase()}`} />
+          <SelectValue
+            className={value === "all" ? "text-muted-foreground" : undefined}
+          >
+            {displayValue}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="all">All</SelectItem>
