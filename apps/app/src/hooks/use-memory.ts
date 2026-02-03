@@ -12,7 +12,6 @@ import {
   hasExportsAtom,
   hasUnseenExportsAtom,
   lastViewedHistoryAtom,
-  memorySidebarOpenAtom,
   saveCountAtom,
 } from "@/hooks/atoms/memory";
 import {
@@ -45,7 +44,6 @@ export function useMemory() {
   const [hasExports, setHasExports] = useAtom(hasExportsAtom);
   const setHasUnseenExports = useSetAtom(hasUnseenExportsAtom);
   const setLastViewed = useSetAtom(lastViewedHistoryAtom);
-  const isOpen = useAtomValue(memorySidebarOpenAtom);
   const setSaveCount = useSetAtom(saveCountAtom);
 
   const config = useAtomValue(configAtom);

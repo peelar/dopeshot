@@ -4,10 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, Plus, RefreshCw, Save } from "lucide-react";
-import { track } from "@/lib/analytics";
+import { Download, ImageUp, Loader2, Plus, RefreshCw, Save, PanelLeft } from "lucide-react";
 import { UserMenu } from "./user-menu";
-import { MemorySidebarTrigger } from "@/components/memory/memory-sidebar-trigger";
 
 interface AppHeaderProps {
   isLoggedIn: boolean;
@@ -26,8 +24,9 @@ interface AppHeaderProps {
   isAtSaveLimit: boolean;
   saveCount: number;
   saveLimit: number;
-  onBrandClick?: () => void;
   onFeedbackClick?: () => void;
+  onLeftSidebarToggle?: () => void;
+  leftSidebarOpen?: boolean;
 }
 
 export function AppHeader({
@@ -47,8 +46,9 @@ export function AppHeader({
   isAtSaveLimit,
   saveCount,
   saveLimit,
-  onBrandClick,
   onFeedbackClick,
+  onLeftSidebarToggle,
+  leftSidebarOpen,
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
   const shouldShowCtaButton = showUploadButton || shouldShowNewButton;
@@ -69,8 +69,22 @@ export function AppHeader({
         <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
           <Logo />
         </a>
-        <div className="relative h-6 w-px bg-border/60" aria-hidden="true" />
-        <MemorySidebarTrigger />
+        {onLeftSidebarToggle ? (
+          <>
+            <div className="relative h-6 w-px bg-border/60" aria-hidden="true" />
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              className="h-8 w-8 rounded-md p-0 sm:hidden"
+              onClick={onLeftSidebarToggle}
+              aria-label="Toggle account sidebar"
+              aria-pressed={leftSidebarOpen}
+            >
+              <PanelLeft className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </>
+        ) : null}
       </div>
       <div className="flex items-center gap-3">
         {shouldShowCtaButton ? (
@@ -92,19 +106,6 @@ export function AppHeader({
               aria-hidden="true"
             />
             <span>{ctaButtonLabel}</span>
-          </Button>
-        ) : null}
-        {onBrandClick ? (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              onBrandClick();
-              track("brand_panel_opened");
-            }}
-            className="text-foreground hover:bg-muted hover:text-foreground"
-          >
-            <span className="hidden md:inline">Brand</span>
           </Button>
         ) : null}
         {/* Save button - independent of export */}
