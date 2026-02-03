@@ -10,6 +10,8 @@ import {
   screenshotZoomAtom,
   configAtom,
   orientationAtom,
+  gradientOptionsAtom,
+  isAnalyzingColorsAtom,
   type Orientation,
 } from "@/hooks/atoms";
 import {
@@ -42,7 +44,6 @@ interface PlaygroundWorkspaceProps {
   onEmptyStateClick: () => void;
   canvasWidth: number;
   canvasHeight: number;
-  isAnalyzingColors: boolean;
   showFocusHint: boolean;
   hasScreenshot: boolean;
 }
@@ -56,7 +57,6 @@ export function PlaygroundWorkspace({
   onEmptyStateClick,
   canvasHeight,
   canvasWidth,
-  isAnalyzingColors,
   showFocusHint,
   hasScreenshot,
 }: PlaygroundWorkspaceProps) {
@@ -64,11 +64,15 @@ export function PlaygroundWorkspace({
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const gradientOptions = useAtomValue(gradientOptionsAtom);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
 
-  const isBackdropLayout = config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+  const isBackdropLayout =
+    config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+  const shouldHoldCanvas = hasScreenshot && (isAnalyzingColors || gradientOptions.length === 0);
 
   // Set mobile as default orientation on mobile devices
   useEffect(() => {
@@ -81,15 +85,12 @@ export function PlaygroundWorkspace({
     hasAutoSetOrientation.current = true;
   }, [isMobile, orientation, setOrientation]);
 
-  const handleViewportMetricsChange = useCallback(
-    (metrics: { bottomWhitespace: number }) => {
-      const nextValue = Math.round(metrics.bottomWhitespace);
-      setBottomWhitespace((previousValue) =>
-        previousValue === nextValue ? previousValue : nextValue
-      );
-    },
-    []
-  );
+  const handleViewportMetricsChange = useCallback((metrics: { bottomWhitespace: number }) => {
+    const nextValue = Math.round(metrics.bottomWhitespace);
+    setBottomWhitespace((previousValue) =>
+      previousValue === nextValue ? previousValue : nextValue,
+    );
+  }, []);
 
   const handleOrientationChange = (newOrientation: Orientation) => {
     // Check if current layout supports new orientation
@@ -125,8 +126,8 @@ export function PlaygroundWorkspace({
               fontSize: config.fontSize,
               screenshotFrame: config.screenshotFrame,
             },
-            { preserveEmptyText: true }
-          )
+            { preserveEmptyText: true },
+          ),
         );
         layoutChanged = compatibleLayout.id !== previousLayoutId;
         newLayoutId = compatibleLayout.id;
@@ -156,7 +157,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "mobile"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Smartphone className="h-3.5 w-3.5" />
@@ -172,7 +173,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "desktop"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -191,7 +192,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "desktop"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Monitor className="h-3.5 w-3.5" />
@@ -207,7 +208,7 @@ export function PlaygroundWorkspace({
                     "h-7 w-7 rounded transition-colors",
                     orientation === "mobile"
                       ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   <Smartphone className="h-3.5 w-3.5" />
@@ -231,8 +232,8 @@ export function PlaygroundWorkspace({
                   : "border-border text-muted-foreground hover:border-foreground/50 hover:text-foreground",
               )}
             >
-              {isAspectLocked 
-                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}` 
+              {isAspectLocked
+                ? `Locked · ${orientation === "mobile" ? "Mobile" : "16:9"}`
                 : `Lock to ${orientation === "mobile" ? "Mobile" : "16:9"}`}
             </Button>
           ) : null}
@@ -243,15 +244,20 @@ export function PlaygroundWorkspace({
             className={orientation === "mobile" ? "max-h-[85%]" : undefined}
             surfaceWidth={canvasWidth}
             surfaceHeight={canvasHeight}
-            isLoading={isAnalyzingColors}
-            loadingText="Analyzing colors..."
             onViewportMetricsChange={handleViewportMetricsChange}
           >
-            <CoverPreview
-              showEmptyState={showEmptyState}
-              showLoadingState={showLoadingState}
-              onEmptyStateClick={onEmptyStateClick}
-            />
+            <div
+              className={cn(
+                "transition-opacity duration-300",
+                shouldHoldCanvas ? "opacity-0 pointer-events-none" : "opacity-100",
+              )}
+            >
+              <CoverPreview
+                showEmptyState={showEmptyState}
+                showLoadingState={showLoadingState}
+                onEmptyStateClick={onEmptyStateClick}
+              />
+            </div>
           </PreviewViewport>
           {showFocusHint ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
@@ -262,13 +268,11 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        {hasScreenshot ? (
+        {hasScreenshot && !shouldHoldCanvas ? (
           <div className="relative z-10">
             <div
               style={
-                bottomWhitespace
-                  ? { transform: `translateY(-${bottomWhitespace}px)` }
-                  : undefined
+                bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
               }
             >
               <ScreenshotZoomSlider

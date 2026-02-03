@@ -1,9 +1,8 @@
 /**
  * Gradient Data Models
- * 
+ *
  * This module defines the shape of gradient data used throughout layouts.
- * It does NOT contain generation/extraction logic - see domain/gradient-generation.
- * 
+ *
  * Purpose: Pure data types and type guards for gradient configurations
  * Layer: Domain Model (data structures only)
  * Dependencies: None
@@ -50,6 +49,7 @@ export type AdvancedGradient = {
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
   angle?: number; // for linear gradients in degrees (0-360)
   meshLayers?: MeshLayer[]; // For mesh gradients - overlaid radial blob layers
+  layoutHint?: "beam"; // Optional layout-aware hint for positioning
 };
 
 /**
@@ -103,7 +103,3 @@ export function isAuroraGradient(gradient: CustomGradient): boolean {
     !gradient.meshLayers
   );
 }
-
-
-
-

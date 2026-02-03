@@ -1,68 +1,85 @@
 import { useCallback } from "react";
-import { useAtom, useSetAtom } from "jotai";
-import { ColorPalette } from "@/domain/asset/types";
-import { analyzeColors as analyzeImageColors } from "@/domain/asset/analyze-colors";
-import { supportsScreenshots } from "@/domain/layout-def/definitions";
-import type { GradientPreferences } from "@/domain/gradient-generation";
-import { configAtom, assetsAtom, statusMessageAtom, isAnalyzingColorsAtom } from "./atoms";
-import { useGradientGeneration } from "./use-gradient-generation";
+import { useAtomValue, useSetAtom } from "jotai";
+import {
+  assetsAtom,
+  configAtom,
+  gradientOptionsAtom,
+  isAnalyzingColorsAtom,
+  screenshotGradientAtom,
+} from "@/hooks/atoms";
+import { extractColorSignatureFromImage } from "@/domain/asset/color-analysis";
+import { generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
+import { getGradientColorsForContrast } from "@/domain/layout/gradient-application";
+import type { BackgroundConfig } from "@/domain/layout/types";
 
-export interface UseColorAnalysisOptions {
-  gradientPreferences: GradientPreferences;
-}
-
-export function useColorAnalysis({ gradientPreferences }: UseColorAnalysisOptions) {
-  const [isAnalyzingColors, setIsAnalyzingColors] = useAtom(isAnalyzingColorsAtom);
-  const [config] = useAtom(configAtom);
+export function useColorAnalysis() {
   const setAssets = useSetAtom(assetsAtom);
-  const setStatusMessage = useSetAtom(statusMessageAtom);
-
-  // Use gradient generation hook
-  const { generateFromScreenshot } = useGradientGeneration({ gradientPreferences });
-
-  const analyzeColors = useCallback(async (dataUrl: string): Promise<ColorPalette | undefined> => {
-    return analyzeImageColors(dataUrl);
-  }, []);
+  const setConfig = useSetAtom(configAtom);
+  const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
+  const setGradientOptions = useSetAtom(gradientOptionsAtom);
+  const setIsAnalyzingColors = useSetAtom(isAnalyzingColorsAtom);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
 
   const processColorAnalysis = useCallback(
-    async (dataUrl: string, assetId: string, autoLayoutMessage: string | null) => {
-      // EARLY RETURN: Skip color analysis for looks that don't support screenshots
-      if (!supportsScreenshots(config.layoutId)) {
-        return;
-      }
-
+    async (dataUrl: string, assetId: string, _autoLayoutMessage: string | null) => {
       setIsAnalyzingColors(true);
-      setStatusMessage("Analyzing colors from screenshot...");
+      setGradientOptions([]);
 
       try {
-        const colorPalette = await analyzeColors(dataUrl);
+        const analysis = await extractColorSignatureFromImage(dataUrl);
+        if (!analysis) return;
 
-        if (colorPalette) {
-          // Store color palette in asset
-          setAssets((prev) => prev.map((a) => (a.id === assetId ? { ...a, colorPalette } : a)));
+        const { palette, signature } = analysis;
+        setAssets((prev) =>
+          prev.map((asset) =>
+            asset.id === assetId ? { ...asset, colorPalette: palette } : asset,
+          ),
+        );
 
-          // Generate gradients from screenshot colors
-          await generateFromScreenshot(colorPalette, { autoLayoutMessage });
-        }
-      } catch (error) {
-        // Silent fallback: log error but don't show to user
-        if (process.env.NODE_ENV === "development") {
-          console.error("Color analysis failed:", error);
-        }
+        const gradients = generateGradientOptions(signature);
+        setGradientOptions(gradients);
 
-        // Continue without color analysis - defaults will be used
+        const firstGradient = gradients[0];
+        if (!firstGradient) return;
+
+        const textColor = getContrastTextColor(getGradientColorsForContrast(firstGradient));
+
+        setConfig((currentConfig) => {
+          if (currentConfig.background?.type === "image") {
+            return currentConfig;
+          }
+          if (currentConfig.background?.customGradient) {
+            return currentConfig;
+          }
+
+          const currentBackground =
+            currentConfig.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
+          const grainEnabled = currentBackground.grainEnabled ?? true;
+
+          const nextBackground: BackgroundConfig = {
+            ...currentBackground,
+            type: "gradient",
+            value: "custom",
+            customGradient: firstGradient,
+            grainEnabled,
+          };
+
+          setScreenshotGradient(nextBackground);
+
+          return {
+            ...currentConfig,
+            background: nextBackground,
+            colors: {
+              ...currentConfig.colors,
+              text: textColor,
+            },
+          };
+        });
       } finally {
         setIsAnalyzingColors(false);
       }
     },
-    [
-      analyzeColors,
-      config.layoutId,
-      setAssets,
-      setStatusMessage,
-      setIsAnalyzingColors,
-      generateFromScreenshot,
-    ],
+    [setAssets, setConfig, setGradientOptions, setIsAnalyzingColors, setScreenshotGradient],
   );
 
   return {

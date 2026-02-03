@@ -9,12 +9,15 @@ import {
   isAdvancedGradient,
   isLegacyGradient,
 } from "@/domain/layout/types";
-import { customGradientToCss, generateGradientOptions, getContrastTextColor } from "@/domain/layout/gradients";
+import {
+  customGradientToCss,
+  generateGradientOptions,
+  getContrastTextColor,
+} from "@/domain/layout/gradients";
 import { cn } from "@/lib/utils/cn";
-import { Skeleton } from "@/components/ui/skeleton";
 import { BackgroundSwatch } from "@/components/selectors/background-swatch";
-import { configAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
-import { screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { configAtom, gradientOptionsAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createOrganicBlobsPreviewDataUrl } from "@/domain/layout/patterns/organic-blobs";
 
 interface GradientPickerProps {
@@ -24,56 +27,50 @@ interface GradientPickerProps {
 
 export function GradientPicker({ onChangeAction, variant = "default" }: GradientPickerProps) {
   const config = useAtomValue(configAtom);
-  const screenshotAsset = useAtomValue(screenshotAssetAtom);
-  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
-  
+
   const background =
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
-  const colorPalette = screenshotAsset?.colorPalette;
   const hasScreenshot = Boolean(config.assets?.screenshot);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
 
-  // Generate multi-stop gradients from screenshot colors
-  const dynamicGradients = useMemo((): CustomGradient[] => {
-    if (!colorPalette) return [];
+  const generatedGradients = useAtomValue(gradientOptionsAtom);
+  const fallbackGradients = useMemo((): CustomGradient[] => generateGradientOptions(), []);
+  const availableGradients = hasScreenshot
+    ? generatedGradients
+    : generatedGradients.length > 0
+      ? generatedGradients
+      : fallbackGradients;
+  const hasGradients = availableGradients.length > 0;
+  const displayGradients = useMemo(() => {
+    // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
+    // Default variant (sidebar): show all 6 gradients
+    return variant === "inline" ? availableGradients.slice(0, 4) : availableGradients.slice(0, 6);
+  }, [availableGradients, variant]);
 
-    // Use landscape as default aspect for picker (actual gradient uses correct aspect from page.tsx)
-    return generateGradientOptions(colorPalette, {
-      aspectCategory: "landscape",
-      variant: undefined,
-    });
-  }, [colorPalette]);
-
-  const hasScreenshotGradients = dynamicGradients.length > 0;
-  const displayGradients = useMemo(
-    () => {
-      // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
-      // Default variant (sidebar): show all 6 gradients
-      return variant === "inline" ? dynamicGradients.slice(0, 4) : dynamicGradients.slice(0, 6);
-    },
-    [dynamicGradients, variant],
-  );
-
-  const matchesScreenshotGradient = useMemo(() => {
-    if (!background.customGradient || !hasScreenshotGradients) return false;
-    return dynamicGradients.some((gradient) =>
+  const matchesStaticGradient = useMemo(() => {
+    if (!background.customGradient || !hasGradients) return false;
+    return availableGradients.some((gradient) =>
       areGradientsEqual(gradient, background.customGradient),
     );
-  }, [background.customGradient, dynamicGradients, hasScreenshotGradients]);
+  }, [availableGradients, background.customGradient, hasGradients]);
 
   const userSelectedRef = useRef(false);
 
-  // Auto-apply first screenshot gradient when available
+  // Auto-apply first gradient when screenshot is uploaded and no gradient is set
   useEffect(() => {
     if (!hasScreenshot) return;
     if (background.type !== "gradient") return;
-    if (!hasScreenshotGradients || dynamicGradients.length === 0) return;
-    if (matchesScreenshotGradient) return;
+    if (!hasGradients || availableGradients.length === 0) return;
+    if (matchesStaticGradient) return;
     if (background.patternId || background.patternMode === "manual") return;
 
     // Skip if user manually selected a gradient
     if (userSelectedRef.current) return;
 
-    const firstGradient = dynamicGradients[0];
+    // Skip if a custom gradient is already set
+    if (background.customGradient) return;
+
+    const firstGradient = availableGradients[0];
     if (!firstGradient) return;
 
     const textColor = getTextColorFromGradient(firstGradient);
@@ -92,10 +89,11 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     background.patternId,
     background.patternMode,
     background.type,
-    dynamicGradients,
+    background.customGradient,
+    availableGradients,
     hasScreenshot,
-    hasScreenshotGradients,
-    matchesScreenshotGradient,
+    hasGradients,
+    matchesStaticGradient,
     onChangeAction,
   ]);
 
@@ -121,17 +119,29 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     [onChangeAction],
   );
 
+  if (hasScreenshot && (isAnalyzingColors || generatedGradients.length === 0)) {
+    const gridClass = variant === "inline" ? "grid-cols-4" : "grid-cols-3";
+    const items = variant === "inline" ? 4 : 6;
+    return (
+      <div className="space-y-3">
+        <div className={cn("grid gap-3", gridClass)}>
+          {Array.from({ length: items }).map((_, index) => (
+            <Skeleton key={`gradient-skeleton-${index}`} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   if (variant === "inline") {
     return (
       <div className="space-y-3">
-        <ScreenshotGradients
+        <GradientSwatches
           gradients={displayGradients}
           activeGradient={background.customGradient}
-          disabled={!hasScreenshotGradients}
+          disabled={false}
           onSelect={handleScreenshotSelect}
-          isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
           gridClass="grid-cols-4"
-          skeletonCount={4}
         />
       </div>
     );
@@ -141,15 +151,12 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     <div className="space-y-5">
       <div className="rounded-lg border border-border/60 bg-muted/30">
         <div className="space-y-3 px-3 pb-3 pt-3">
-          <ScreenshotGradients
+          <GradientSwatches
             gradients={displayGradients}
             activeGradient={background.customGradient}
-            disabled={!hasScreenshotGradients}
+            disabled={false}
             onSelect={handleScreenshotSelect}
-            isLoading={isAnalyzingColors || (!hasScreenshotGradients && hasScreenshot)}
             gridClass="grid-cols-3"
-            skeletonCount={6}
-            compactPlaceholder
           />
         </div>
       </div>
@@ -157,7 +164,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
   );
 }
 
-interface ScreenshotGradientsProps {
+interface GradientSwatchesProps {
   gradients: CustomGradient[];
   activeGradient?: CustomGradient;
   disabled: boolean;
@@ -165,74 +172,51 @@ interface ScreenshotGradientsProps {
     gradient: CustomGradient,
     options?: { patternId?: BackgroundConfig["patternId"]; patternVariant?: string },
   ) => void;
-  isLoading?: boolean;
   gridClass?: string;
-  skeletonCount?: number;
-  compactPlaceholder?: boolean;
 }
 
-function ScreenshotGradients({
+function GradientSwatches({
   gradients,
   activeGradient,
   disabled,
   onSelect,
-  isLoading,
   gridClass = "grid-cols-4",
-  skeletonCount = 4,
-  compactPlaceholder,
-}: ScreenshotGradientsProps) {
-  if (!gradients.length && !isLoading) {
-    return (
-      <div
-        className={cn(
-          "text-center text-xs text-muted-foreground",
-          compactPlaceholder
-            ? "py-4"
-            : "rounded-lg border border-dashed border-border/40 px-3 py-6",
-        )}
-      >
-        Upload a screenshot to reveal curated gradients.
-      </div>
-    );
-  }
-
+}: GradientSwatchesProps) {
   return (
     <div className={cn("grid gap-3", gridClass)}>
-      {isLoading
-        ? Array.from({ length: skeletonCount }).map((_, index) => (
-            <Skeleton key={`skeleton-${index}`} className="h-12 w-full rounded-lg" />
-          ))
-        : gradients.map((gradient, index) => {
-            const isSelected = areGradientsEqual(activeGradient, gradient);
+      {gradients.map((gradient, index) => {
+        const isSelected = areGradientsEqual(activeGradient, gradient);
 
-            // Integrate blobs into the last two ambient gradients (indices 4 and 5)
-            const isAmbientBlob = index >= 4;
-            let gradientCss = customGradientToCss(gradient);
-            let onClick = () => !disabled && onSelect(gradient);
+        // Integrate blobs into the last two ambient gradients (indices 4 and 5)
+        const isAmbientBlob = index >= 4;
+        let gradientCss = customGradientToCss(gradient);
+        let onClick = () => !disabled && onSelect(gradient);
 
-            if (isAmbientBlob) {
-              const [primary, secondary] = getTwoGradientColors(gradient);
-              // Use "v1" for the first ambient blob and "v2" for the second to add variety
-              const variantKey = index === 4 ? "v1" : "v2";
-              const seed = `organic-blobs:${variantKey}:${primary}:${secondary}`;
-              const overlayUrl = createOrganicBlobsPreviewDataUrl({ seed, primary, secondary });
-              gradientCss = `url("${overlayUrl}") center / cover no-repeat, ${customGradientToCss(gradient)}`;
+        if (isAmbientBlob) {
+          const [primary, secondary] = getTwoGradientColors(gradient);
+          // Use "v1" for the first ambient blob and "v2" for the second to add variety
+          const variantKey = index === 4 ? "v1" : "v2";
+          const seed = `organic-blobs:${variantKey}:${primary}:${secondary}`;
+          const overlayUrl = createOrganicBlobsPreviewDataUrl({ seed, primary, secondary });
+          gradientCss = `url("${overlayUrl}") center / cover no-repeat, ${customGradientToCss(
+            gradient,
+          )}`;
 
-              onClick = () =>
-                !disabled &&
-                onSelect(gradient, { patternId: "organic-blobs", patternVariant: variantKey });
-            }
+          onClick = () =>
+            !disabled &&
+            onSelect(gradient, { patternId: "organic-blobs", patternVariant: variantKey });
+        }
 
-            return (
-              <GradientSwatch
-                key={`gradient-${index}`}
-                gradientCss={gradientCss}
-                selected={isSelected}
-                onClick={onClick}
-                ariaLabel="Screenshot gradient"
-              />
-            );
-          })}
+        return (
+          <GradientSwatch
+            key={`gradient-${index}`}
+            gradientCss={gradientCss}
+            selected={isSelected}
+            onClick={onClick}
+            ariaLabel="Gradient option"
+          />
+        );
+      })}
     </div>
   );
 }

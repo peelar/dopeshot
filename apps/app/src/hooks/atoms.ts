@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
-import { LayoutConfig, BackgroundConfig, FontId } from "@/domain/layout/types";
+import { LayoutConfig, BackgroundConfig, FontId, CustomGradient } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 import { migrateFontIdToStyle } from "@/domain/layout/fonts";
@@ -82,6 +82,8 @@ export const screenshotZoomAtom = atom<number>(1.0);
 
 // Store the last screenshot-derived gradient to preserve it across layout switches
 export const screenshotGradientAtom = atom<BackgroundConfig | null>(null);
+// Store gradient options derived from screenshot analysis
+export const gradientOptionsAtom = atom<CustomGradient[]>([]);
 
 export const assetTypeAtom = atomWithStorage<AssetType>("dopeshot:assetType", "screenshot");
 
@@ -130,5 +132,4 @@ export const isSavingAtom = atom<boolean>(false); // Save in progress
 // Export success sheet state
 export const showExportSheetAtom = atom<boolean>(false); // Show post-export sheet
 export const exportThumbnailAtom = atom<string | null>(null); // Thumbnail preview URL
-
 

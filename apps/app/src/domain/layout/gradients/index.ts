@@ -3,8 +3,7 @@
  *
  * This module contains all gradient-related functionality:
  * - Types and type guards
- * - Color space conversion and palette enhancement
- * - Gradient generation algorithms
+ * - Palette-matched gradients
  * - CSS rendering utilities
  */
 
@@ -19,18 +18,19 @@ export type {
   MeshLayer,
 } from "./types";
 
-export {
-  isLegacyGradient,
-  isAdvancedGradient,
-  isMeshGradient,
-  isAuroraGradient,
-} from "./types";
+export { isLegacyGradient, isAdvancedGradient, isMeshGradient, isAuroraGradient } from "./types";
 
-// Color space and palette enhancement
-export type { EnhancedColorPalette } from "./colors";
+export type {
+  HueBucket,
+  Brightness,
+  AccentStrength,
+  ColorSignature,
+  GradientPalette,
+  SecondaryHue,
+} from "./palette";
+export { buildGradientPalette, createComplementSignature, getSecondaryHueCandidates } from "./palette";
 
-// Gradient generation
-export type { GradientContext } from "./generator";
+// Gradient generation (palette-matched)
 export { generateGradientOptions } from "./generator";
 
 // Utilities

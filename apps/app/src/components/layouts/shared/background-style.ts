@@ -79,6 +79,14 @@ function gradientToCssWithLayout(
   layoutId: string,
   variant?: string
 ): string {
+  if (isAdvancedGradient(gradient) && gradient.type === "radial" && gradient.layoutHint === "beam") {
+    const adjusted = {
+      ...gradient,
+      direction: getBeamDirection(layoutId, variant),
+    };
+    return customGradientToCss(adjusted);
+  }
+
   // Complex gradients: use canonical renderer directly (no modifications)
   if (!isSimpleGradient(gradient)) {
     return customGradientToCss(gradient);
@@ -107,6 +115,21 @@ function gradientToCssWithLayout(
 
   // Fallback (shouldn't reach here)
   return customGradientToCss(gradient);
+}
+
+function getBeamDirection(layoutId: string, variant?: string): string {
+  const y = 45; // Move beam 10% down from the default 35%
+
+  if (layoutId.startsWith("popup-gradient")) {
+    const internalVariant = (variant as "left" | "right" | "center" | undefined) ?? "center";
+    const screenshotSide =
+      internalVariant === "left" ? "right" : internalVariant === "right" ? "left" : "center";
+
+    const x = screenshotSide === "left" ? 30 : screenshotSide === "right" ? 70 : 50;
+    return `circle at ${x}% ${y}%`;
+  }
+
+  return `circle at 50% ${y}%`;
 }
 
 export function getBackgroundStyle(config: LayoutConfig, assetMap: Map<string, Asset>): string {
