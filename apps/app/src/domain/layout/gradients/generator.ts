@@ -12,7 +12,7 @@
 
 import { AdvancedGradient, MeshLayer } from "./types";
 import { hexToRgba } from "./utils";
-import { buildGradientPalette, ColorSignature } from "./palette";
+import { buildGradientPalette, ColorSignature, getSecondaryHueCandidates } from "./palette";
 
 const DEFAULT_SIGNATURE: ColorSignature = {
   dominantHue: "purple",
@@ -81,6 +81,7 @@ function buildRadialGlowGradient(colors: PaletteColors): AdvancedGradient {
       { color: colors.primary, position: 45 },
       { color: colors.secondary, position: 100 },
     ],
+    layoutHint: "beam",
     colorSpace: "oklch",
   };
 }
@@ -119,14 +120,17 @@ function buildMutedWashGradient(colors: PaletteColors, brightness: ColorSignatur
 }
 
 export function generateGradientOptions(signature: ColorSignature = DEFAULT_SIGNATURE): AdvancedGradient[] {
-  const palette = buildGradientPalette(signature);
+  const [baseSecondary, altSecondaryA, altSecondaryB] = getSecondaryHueCandidates(signature);
+  const palette = buildGradientPalette(signature, baseSecondary);
+  const paletteAltA = altSecondaryA ? buildGradientPalette(signature, altSecondaryA) : palette;
+  const paletteAltB = altSecondaryB ? buildGradientPalette(signature, altSecondaryB) : palette;
 
   return [
     buildMeshGradient(palette.colors, signature.brightness),
-    buildAuroraGradient(palette.colors),
+    buildAuroraGradient(paletteAltA.colors),
     buildLinearBoldGradient(palette.colors),
-    buildRadialGlowGradient(palette.colors),
+    buildRadialGlowGradient(paletteAltB.colors),
     buildLinearSoftGradient(palette.colors),
-    buildMutedWashGradient(palette.colors, signature.brightness),
+    buildMutedWashGradient(paletteAltA.colors, signature.brightness),
   ];
 }

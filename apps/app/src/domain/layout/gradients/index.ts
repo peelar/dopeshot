@@ -20,8 +20,15 @@ export type {
 
 export { isLegacyGradient, isAdvancedGradient, isMeshGradient, isAuroraGradient } from "./types";
 
-export type { HueBucket, Brightness, AccentStrength, ColorSignature, GradientPalette } from "./palette";
-export { buildGradientPalette, createComplementSignature } from "./palette";
+export type {
+  HueBucket,
+  Brightness,
+  AccentStrength,
+  ColorSignature,
+  GradientPalette,
+  SecondaryHue,
+} from "./palette";
+export { buildGradientPalette, createComplementSignature, getSecondaryHueCandidates } from "./palette";
 
 // Gradient generation (palette-matched)
 export { generateGradientOptions } from "./generator";

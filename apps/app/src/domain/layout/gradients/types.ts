@@ -49,6 +49,7 @@ export type AdvancedGradient = {
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
   angle?: number; // for linear gradients in degrees (0-360)
   meshLayers?: MeshLayer[]; // For mesh gradients - overlaid radial blob layers
+  layoutHint?: "beam"; // Optional layout-aware hint for positioning
 };
 
 /**

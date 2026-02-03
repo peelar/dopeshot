@@ -80,6 +80,11 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
   const setStatusMessage = useSetAtom(statusMessageAtom);
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
+  const { isConfigDrawerOpen, setIsConfigDrawerOpen } = useConfigDrawer(isMobile);
+
+  const { processColorAnalysis } = useColorAnalysis();
+  const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
+
   useDemoPreset({
     demoEnabled,
     hasAppliedRandomPreset,
@@ -87,13 +92,8 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
     setAssets,
     setConfig,
     setHasAppliedRandomPreset,
+    processColorAnalysis,
   });
-
-  const { isConfigDrawerOpen, setIsConfigDrawerOpen } = useConfigDrawer(isMobile);
-
-  // Color analysis is disabled - static gradients are used instead
-  const { processColorAnalysis } = useColorAnalysis();
-  const { handleFileProcess, isProcessingUpload } = useFileUpload({ processColorAnalysis });
 
   // Export state atoms for voluntary save
   const setHasExported = useSetAtom(hasExportedAtom);
@@ -174,6 +174,7 @@ function useDemoPreset({
   setAssets,
   setConfig,
   setHasAppliedRandomPreset,
+  processColorAnalysis,
 }: {
   demoEnabled: boolean;
   hasAppliedRandomPreset: boolean;
@@ -181,6 +182,11 @@ function useDemoPreset({
   setAssets: Setter<Asset[]>;
   setConfig: Setter<LayoutConfig>;
   setHasAppliedRandomPreset: Setter<boolean>;
+  processColorAnalysis: (
+    dataUrl: string,
+    assetId: string,
+    autoLayoutMessage: string | null,
+  ) => Promise<void>;
 }) {
   useEffect(() => {
     if (!demoEnabled) return;
@@ -190,6 +196,7 @@ function useDemoPreset({
     setConfig(randomPreset.config);
     setAssets([randomPreset.asset]);
     setHasAppliedRandomPreset(true);
+    void processColorAnalysis(randomPreset.asset.url, randomPreset.asset.id, null);
   }, [
     demoEnabled,
     hasAppliedRandomPreset,
@@ -197,6 +204,7 @@ function useDemoPreset({
     setAssets,
     setConfig,
     setHasAppliedRandomPreset,
+    processColorAnalysis,
   ]);
 }
 

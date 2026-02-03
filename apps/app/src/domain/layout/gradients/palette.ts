@@ -151,6 +151,11 @@ export type GradientPalette = {
   };
 };
 
+export type SecondaryHue = {
+  hue: HueBucket;
+  angle: number;
+};
+
 function hueDistance(a: number, b: number): number {
   const diff = Math.abs(a - b) % 360;
   return diff > 180 ? 360 - diff : diff;
@@ -233,6 +238,54 @@ function resolveSecondaryHue(signature: ColorSignature): { hue: HueBucket; angle
   return { hue: hueToBucket(complementAngle), angle: complementAngle };
 }
 
+function uniqueByHueDistance(candidates: SecondaryHue[], threshold: number): SecondaryHue[] {
+  const results: SecondaryHue[] = [];
+  for (const candidate of candidates) {
+    if (
+      results.some((existing) => hueDistance(existing.angle, candidate.angle) < threshold)
+    ) {
+      continue;
+    }
+    results.push(candidate);
+  }
+  return results;
+}
+
+export function getSecondaryHueCandidates(signature: ColorSignature): SecondaryHue[] {
+  const base = resolveSecondaryHue(signature);
+  const baseAngle = (() => {
+    if (signature.dominantHue !== "neutral" && Number.isFinite(signature.dominantHueAngle)) {
+      return signature.dominantHueAngle;
+    }
+    if (typeof signature.accentHueAngle === "number") {
+      return signature.accentHueAngle;
+    }
+    return base.angle;
+  })();
+
+  const altAngles = [
+    normalizeHue(baseAngle + 140),
+    normalizeHue(baseAngle + 220),
+  ];
+
+  const altCandidates: SecondaryHue[] = altAngles.map((angle) => ({
+    hue: hueToBucket(angle),
+    angle,
+  }));
+
+  let candidates = uniqueByHueDistance([base, ...altCandidates], 24);
+
+  if (candidates.length < 3) {
+    const fallbackAngles = [
+      normalizeHue(baseAngle + 90),
+      normalizeHue(baseAngle + 270),
+    ].map((angle) => ({ hue: hueToBucket(angle), angle }));
+    candidates = uniqueByHueDistance([...candidates, ...fallbackAngles], 24);
+  }
+
+  return candidates.slice(0, 3);
+}
+
 function resolveAccentVariant(signature: ColorSignature): HueVariant | null {
   if (signature.accentHue) {
     return resolveVariant({
@@ -270,10 +323,13 @@ export function createComplementSignature(signature: ColorSignature): ColorSigna
   };
 }
 
-export function buildGradientPalette(signature: ColorSignature): GradientPalette {
+export function buildGradientPalette(
+  signature: ColorSignature,
+  secondaryOverride?: SecondaryHue,
+): GradientPalette {
   const steps = STEP_BY_BRIGHTNESS[signature.brightness];
   const variant = resolveVariant(signature);
-  const secondaryHue = resolveSecondaryHue(signature);
+  const secondaryHue = secondaryOverride ?? resolveSecondaryHue(signature);
   const secondaryVariant = resolveVariant({
     ...signature,
     dominantHue: secondaryHue.hue,

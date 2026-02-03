@@ -6,7 +6,14 @@ import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
-import { screenshotZoomAtom, configAtom, orientationAtom, type Orientation } from "@/hooks/atoms";
+import {
+  screenshotZoomAtom,
+  configAtom,
+  orientationAtom,
+  gradientOptionsAtom,
+  isAnalyzingColorsAtom,
+  type Orientation,
+} from "@/hooks/atoms";
 import {
   LAYOUT_DEFINITIONS,
   getLayoutDefinition,
@@ -57,12 +64,15 @@ export function PlaygroundWorkspace({
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const gradientOptions = useAtomValue(gradientOptionsAtom);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
+  const shouldHoldCanvas = hasScreenshot && (isAnalyzingColors || gradientOptions.length === 0);
 
   // Set mobile as default orientation on mobile devices
   useEffect(() => {
@@ -236,11 +246,18 @@ export function PlaygroundWorkspace({
             surfaceHeight={canvasHeight}
             onViewportMetricsChange={handleViewportMetricsChange}
           >
-            <CoverPreview
-              showEmptyState={showEmptyState}
-              showLoadingState={showLoadingState}
-              onEmptyStateClick={onEmptyStateClick}
-            />
+            <div
+              className={cn(
+                "transition-opacity duration-300",
+                shouldHoldCanvas ? "opacity-0 pointer-events-none" : "opacity-100",
+              )}
+            >
+              <CoverPreview
+                showEmptyState={showEmptyState}
+                showLoadingState={showLoadingState}
+                onEmptyStateClick={onEmptyStateClick}
+              />
+            </div>
           </PreviewViewport>
           {showFocusHint ? (
             <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
@@ -251,7 +268,7 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        {hasScreenshot ? (
+        {hasScreenshot && !shouldHoldCanvas ? (
           <div className="relative z-10">
             <div
               style={

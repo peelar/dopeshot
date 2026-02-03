@@ -198,11 +198,37 @@ async function sampleImageColors(src: string): Promise<SampleStats | null> {
       }
     }
 
-    if (bestBucket.weight > 0) {
+    const sortedBuckets = [...buckets]
+      .map((bucket, index) => ({ ...bucket, index }))
+      .sort((a, b) => b.weight - a.weight);
+
+    const primaryBucket = sortedBuckets[0];
+    const secondaryBucket = sortedBuckets.find((bucket, idx) => {
+      if (idx === 0) return false;
+      if (bucket.weight <= 0 || !primaryBucket || primaryBucket.weight === 0) return false;
+
+      const primaryColor = {
+        r: Math.round(primaryBucket.r / primaryBucket.weight),
+        g: Math.round(primaryBucket.g / primaryBucket.weight),
+        b: Math.round(primaryBucket.b / primaryBucket.weight),
+      };
+      const secondaryColor = {
+        r: Math.round(bucket.r / bucket.weight),
+        g: Math.round(bucket.g / bucket.weight),
+        b: Math.round(bucket.b / bucket.weight),
+      };
+      const primaryHsl = rgbToHsl(primaryColor.r, primaryColor.g, primaryColor.b);
+      const secondaryHsl = rgbToHsl(secondaryColor.r, secondaryColor.g, secondaryColor.b);
+      const hueGap = hueDistance(primaryHsl.h, secondaryHsl.h);
+      const ratio = bucket.weight / primaryBucket.weight;
+      return hueGap >= 20 && ratio >= 0.12;
+    });
+
+    if (primaryBucket && primaryBucket.weight > 0) {
       dominant = {
-        r: Math.round(bestBucket.r / bestBucket.weight),
-        g: Math.round(bestBucket.g / bestBucket.weight),
-        b: Math.round(bestBucket.b / bestBucket.weight),
+        r: Math.round(primaryBucket.r / primaryBucket.weight),
+        g: Math.round(primaryBucket.g / primaryBucket.weight),
+        b: Math.round(primaryBucket.b / primaryBucket.weight),
       };
     } else {
       dominant = {
@@ -221,7 +247,15 @@ async function sampleImageColors(src: string): Promise<SampleStats | null> {
         }
       : dominantColor;
 
-    const accent = vibrantColor ?? dominantColor;
+    const secondaryColor = secondaryBucket && secondaryBucket.weight > 0
+      ? {
+          r: Math.round(secondaryBucket.r / secondaryBucket.weight),
+          g: Math.round(secondaryBucket.g / secondaryBucket.weight),
+          b: Math.round(secondaryBucket.b / secondaryBucket.weight),
+        }
+      : null;
+
+    const accent = secondaryColor ?? vibrantColor ?? dominantColor;
     const dominantHsl = rgbToHsl(dominantColor.r, dominantColor.g, dominantColor.b);
     const accentHsl = rgbToHsl(accent.r, accent.g, accent.b);
 

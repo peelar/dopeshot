@@ -16,7 +16,8 @@ import {
 } from "@/domain/layout/gradients";
 import { cn } from "@/lib/utils/cn";
 import { BackgroundSwatch } from "@/components/selectors/background-swatch";
-import { configAtom, gradientOptionsAtom } from "@/hooks/atoms";
+import { configAtom, gradientOptionsAtom, isAnalyzingColorsAtom } from "@/hooks/atoms";
+import { Skeleton } from "@/components/ui/skeleton";
 import { createOrganicBlobsPreviewDataUrl } from "@/domain/layout/patterns/organic-blobs";
 
 interface GradientPickerProps {
@@ -30,10 +31,15 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
   const background =
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const hasScreenshot = Boolean(config.assets?.screenshot);
+  const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
 
   const generatedGradients = useAtomValue(gradientOptionsAtom);
   const fallbackGradients = useMemo((): CustomGradient[] => generateGradientOptions(), []);
-  const availableGradients = generatedGradients.length > 0 ? generatedGradients : fallbackGradients;
+  const availableGradients = hasScreenshot
+    ? generatedGradients
+    : generatedGradients.length > 0
+      ? generatedGradients
+      : fallbackGradients;
   const hasGradients = availableGradients.length > 0;
   const displayGradients = useMemo(() => {
     // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
@@ -112,6 +118,20 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     },
     [onChangeAction],
   );
+
+  if (hasScreenshot && (isAnalyzingColors || generatedGradients.length === 0)) {
+    const gridClass = variant === "inline" ? "grid-cols-4" : "grid-cols-3";
+    const items = variant === "inline" ? 4 : 6;
+    return (
+      <div className="space-y-3">
+        <div className={cn("grid gap-3", gridClass)}>
+          {Array.from({ length: items }).map((_, index) => (
+            <Skeleton key={`gradient-skeleton-${index}`} className="h-12 w-full rounded-lg" />
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   if (variant === "inline") {
     return (
