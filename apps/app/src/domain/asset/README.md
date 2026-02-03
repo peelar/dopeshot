@@ -10,13 +10,14 @@ Handles file upload orchestration and metadata extraction for images. Processes 
 - `upload-orchestrator.ts` - Main upload flow orchestration with `processFileUpload()`
 - `get-image-metadata.ts` - Extracts dimensions, aspect ratio, and orientation
 - `data-url.ts` - Utilities for data URL conversions and manipulation
-- `image-text-contrast.ts` - Stub for future color analysis (disabled)
+- `image-text-contrast.ts` - Image color analysis for text contrast
+- `color-analysis.ts` - Palette extraction + signature helpers
 
 ## Key Exports
 
 - `processFileUpload(file: File, kind)` - Main entry point that returns `UploadResult` with Asset and metadata
 - `Asset` - Core data type with id, url, kind, colorPalette, metadata
-- `ColorPalette` - Color data type (currently unused, reserved for future palette system)
+- `ColorPalette` - Extracted palette used for gradients and text contrast
 - `ImageMetadata` - Dimensions, aspect ratio, orientation
 - `UploadResult` - Complete upload result with asset and computed aspect category
 
@@ -42,4 +43,4 @@ Handles file upload orchestration and metadata extraction for images. Processes 
 - **Playground mode**: Currently generates local IDs and uses "playground" project/user
 - **Conditional metadata**: Only extracts full metadata for screenshots (not logos/backgrounds)
 - **Data URL storage**: Images stored as data URLs (base64) for client-side playground mode
-- **Color analysis disabled**: Dynamic gradient generation removed; static gradients used until palette system is built (see thoughts/plans/09-palette-based-gradient-system.md)
+- **Color analysis enabled**: Palette extraction powers gradient matching + text contrast

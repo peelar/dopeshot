@@ -1,101 +1,131 @@
 /**
- * Gradient Generator - Static Placeholder Gradients
+ * Gradient Generator - Palette-Matched Gradients
  *
- * Provides 6 curated placeholder gradients until the palette-based
- * gradient system is implemented.
- *
- * TODO: Replace with palette-matching system per plan in
- * thoughts/plans/09-palette-based-gradient-system.md
+ * Produces a consistent set of gradients from a color signature:
+ * - Mesh (bold, expressive)
+ * - Aurora (flowing, high-impact)
+ * - Linear bold (clean, directional)
+ * - Radial glow (focused highlight)
+ * - Linear soft (ambient, directional)
+ * - Muted wash (soft soup, non-directional)
  */
 
 import { AdvancedGradient, MeshLayer } from "./types";
 import { hexToRgba } from "./utils";
+import { buildGradientPalette, ColorSignature } from "./palette";
 
-/**
- * 6 static placeholder gradients - curated to look good
- * These will be replaced by palette-matched gradients
- */
-const PLACEHOLDER_GRADIENTS: AdvancedGradient[] = [
-  // 1. Mesh gradient - purple/pink/blue organic blobs
-  {
+const DEFAULT_SIGNATURE: ColorSignature = {
+  dominantHue: "purple",
+  dominantHueAngle: 278,
+  brightness: "medium",
+  accentStrength: "vibrant",
+  dominantColor: "#a855f7",
+  accentColor: "#8b5cf6",
+};
+
+type PaletteColors = ReturnType<typeof buildGradientPalette>["colors"];
+
+function buildMeshGradient(colors: PaletteColors, brightness: ColorSignature["brightness"]): AdvancedGradient {
+  const alphaBase = brightness === "dark" ? 0.62 : brightness === "light" ? 0.8 : 0.72;
+  const layers: MeshLayer[] = [
+    { color: hexToRgba(colors.primary, alphaBase + 0.08), position: { x: 12, y: 18 }, size: 74 },
+    { color: hexToRgba(colors.secondary, alphaBase + 0.04), position: { x: 86, y: 20 }, size: 68 },
+    { color: hexToRgba(colors.tertiary, alphaBase - 0.08), position: { x: 58, y: 78 }, size: 86 },
+    { color: hexToRgba(colors.glow, alphaBase - 0.16), position: { x: 18, y: 74 }, size: 62 },
+    { color: hexToRgba(colors.primary, alphaBase - 0.2), position: { x: 50, y: 50 }, size: 96 },
+    { color: hexToRgba(colors.secondary, alphaBase - 0.28), position: { x: 74, y: 56 }, size: 72 },
+  ];
+
+  return {
     type: "linear",
     stops: [
-      { color: "#7c3aed", position: 0 },
-      { color: "#db2777", position: 100 },
+      { color: colors.primary, position: 0 },
+      { color: colors.secondary, position: 100 },
     ],
-    meshLayers: [
-      { color: hexToRgba("#7c3aed", 0.8), position: { x: 10, y: 15 }, size: 75 },
-      { color: hexToRgba("#db2777", 0.7), position: { x: 90, y: 85 }, size: 80 },
-      { color: hexToRgba("#6366f1", 0.65), position: { x: 50, y: 50 }, size: 95 },
-      { color: hexToRgba("#ec4899", 0.6), position: { x: 85, y: 20 }, size: 65 },
-      { color: hexToRgba("#8b5cf6", 0.55), position: { x: 15, y: 80 }, size: 70 },
-      { color: hexToRgba("#a855f7", 0.5), position: { x: 40, y: 25 }, size: 60 },
-    ],
+    meshLayers: layers,
     colorSpace: "oklch",
-  },
+  };
+}
 
-  // 2. Linear diagonal - indigo to purple
-  {
+function buildAuroraGradient(colors: PaletteColors): AdvancedGradient {
+  return {
     type: "linear",
-    stops: [
-      { color: "#6366f1", position: 0 },
-      { color: "#a855f7", position: 100 },
-    ],
     angle: 135,
+    stops: [
+      { color: colors.primary, position: 0 },
+      { color: colors.secondary, position: 40 },
+      { color: colors.tertiary, position: 72 },
+      { color: colors.glow, position: 100 },
+    ],
     colorSpace: "oklch",
-  },
+  };
+}
 
-  // 3. Radial - teal center fading to blue
-  {
+function buildLinearBoldGradient(colors: PaletteColors): AdvancedGradient {
+  return {
+    type: "linear",
+    stops: [
+      { color: colors.primary, position: 0 },
+      { color: colors.secondary, position: 100 },
+    ],
+    colorSpace: "oklch",
+  };
+}
+
+function buildRadialGlowGradient(colors: PaletteColors): AdvancedGradient {
+  return {
     type: "radial",
+    direction: "circle at 30% 35%",
     stops: [
-      { color: "#14b8a6", position: 0 },
-      { color: "#3b82f6", position: 100 },
+      { color: colors.glow, position: 0 },
+      { color: colors.primary, position: 45 },
+      { color: colors.secondary, position: 100 },
     ],
-    direction: "circle at 50% 50%",
     colorSpace: "oklch",
-  },
+  };
+}
 
-  // 4. Multi-stop diagonal - sunset orange/pink/purple
-  {
+function buildLinearSoftGradient(colors: PaletteColors): AdvancedGradient {
+  return {
     type: "linear",
     stops: [
-      { color: "#f97316", position: 0 },
-      { color: "#ec4899", position: 50 },
-      { color: "#8b5cf6", position: 100 },
+      { color: colors.secondary, position: 0 },
+      { color: colors.neutral, position: 55 },
+      { color: colors.primary, position: 100 },
     ],
-    angle: 135,
     colorSpace: "oklch",
-  },
+  };
+}
 
-  // 5. Linear cool - cyan to indigo
-  {
+function buildMutedWashGradient(colors: PaletteColors, brightness: ColorSignature["brightness"]): AdvancedGradient {
+  const washAlpha = brightness === "dark" ? 0.45 : brightness === "light" ? 0.55 : 0.5;
+  const layers: MeshLayer[] = [
+    { color: hexToRgba(colors.neutral, washAlpha + 0.05), position: { x: 20, y: 25 }, size: 90 },
+    { color: hexToRgba(colors.primary, washAlpha), position: { x: 78, y: 18 }, size: 78 },
+    { color: hexToRgba(colors.secondary, washAlpha - 0.08), position: { x: 62, y: 80 }, size: 92 },
+    { color: hexToRgba(colors.glow, washAlpha - 0.12), position: { x: 22, y: 72 }, size: 70 },
+  ];
+
+  return {
     type: "linear",
     stops: [
-      { color: "#22d3ee", position: 0 },
-      { color: "#6366f1", position: 100 },
+      { color: colors.neutral, position: 0 },
+      { color: colors.primary, position: 100 },
     ],
-    angle: 225,
+    meshLayers: layers,
     colorSpace: "oklch",
-  },
+  };
+}
 
-  // 6. Linear warm - orange to rose
-  {
-    type: "linear",
-    stops: [
-      { color: "#fb923c", position: 0 },
-      { color: "#f43f5e", position: 100 },
-    ],
-    angle: 135,
-    colorSpace: "oklch",
-  },
-];
+export function generateGradientOptions(signature: ColorSignature = DEFAULT_SIGNATURE): AdvancedGradient[] {
+  const palette = buildGradientPalette(signature);
 
-/**
- * Returns 6 static placeholder gradients
- *
- * @deprecated This will be replaced by palette-matched gradients
- */
-export function generateGradientOptions(): AdvancedGradient[] {
-  return PLACEHOLDER_GRADIENTS;
+  return [
+    buildMeshGradient(palette.colors, signature.brightness),
+    buildAuroraGradient(palette.colors),
+    buildLinearBoldGradient(palette.colors),
+    buildRadialGlowGradient(palette.colors),
+    buildLinearSoftGradient(palette.colors),
+    buildMutedWashGradient(palette.colors, signature.brightness),
+  ];
 }

@@ -6,6 +6,10 @@ export type ColorPalette = {
   vibrant?: string; // hex color
   /** True average lightness of the source image (0-1). Used to detect dark screenshots. */
   sourceImageLightness?: number;
+  /** Average saturation of the source image (0-1). */
+  sourceImageSaturation?: number;
+  /** Dominant hue angle (0-360) for the source image. */
+  dominantHue?: number;
 };
 
 // Asset represents uploaded files (screenshots, logos, icons, backgrounds, etc.)

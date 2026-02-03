@@ -16,7 +16,7 @@ import {
 } from "@/domain/layout/gradients";
 import { cn } from "@/lib/utils/cn";
 import { BackgroundSwatch } from "@/components/selectors/background-swatch";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, gradientOptionsAtom } from "@/hooks/atoms";
 import { createOrganicBlobsPreviewDataUrl } from "@/domain/layout/patterns/organic-blobs";
 
 interface GradientPickerProps {
@@ -31,24 +31,22 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     config.background ?? ({ type: "gradient", value: "custom" } as BackgroundConfig);
   const hasScreenshot = Boolean(config.assets?.screenshot);
 
-  // Static placeholder gradients (will be palette-matched in the future)
-  const staticGradients = useMemo((): CustomGradient[] => {
-    return generateGradientOptions();
-  }, []);
-
-  const hasGradients = staticGradients.length > 0;
+  const generatedGradients = useAtomValue(gradientOptionsAtom);
+  const fallbackGradients = useMemo((): CustomGradient[] => generateGradientOptions(), []);
+  const availableGradients = generatedGradients.length > 0 ? generatedGradients : fallbackGradients;
+  const hasGradients = availableGradients.length > 0;
   const displayGradients = useMemo(() => {
     // Inline variant (mobile): show first 4 gradients (3 linear + mesh), exclude ambient
     // Default variant (sidebar): show all 6 gradients
-    return variant === "inline" ? staticGradients.slice(0, 4) : staticGradients.slice(0, 6);
-  }, [staticGradients, variant]);
+    return variant === "inline" ? availableGradients.slice(0, 4) : availableGradients.slice(0, 6);
+  }, [availableGradients, variant]);
 
   const matchesStaticGradient = useMemo(() => {
     if (!background.customGradient || !hasGradients) return false;
-    return staticGradients.some((gradient) =>
+    return availableGradients.some((gradient) =>
       areGradientsEqual(gradient, background.customGradient),
     );
-  }, [background.customGradient, staticGradients, hasGradients]);
+  }, [availableGradients, background.customGradient, hasGradients]);
 
   const userSelectedRef = useRef(false);
 
@@ -56,7 +54,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
   useEffect(() => {
     if (!hasScreenshot) return;
     if (background.type !== "gradient") return;
-    if (!hasGradients || staticGradients.length === 0) return;
+    if (!hasGradients || availableGradients.length === 0) return;
     if (matchesStaticGradient) return;
     if (background.patternId || background.patternMode === "manual") return;
 
@@ -66,7 +64,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     // Skip if a custom gradient is already set
     if (background.customGradient) return;
 
-    const firstGradient = staticGradients[0];
+    const firstGradient = availableGradients[0];
     if (!firstGradient) return;
 
     const textColor = getTextColorFromGradient(firstGradient);
@@ -86,7 +84,7 @@ export function GradientPicker({ onChangeAction, variant = "default" }: Gradient
     background.patternMode,
     background.type,
     background.customGradient,
-    staticGradients,
+    availableGradients,
     hasScreenshot,
     hasGradients,
     matchesStaticGradient,

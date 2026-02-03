@@ -14,7 +14,7 @@ Each subdirectory contains a README.md documenting its current architecture:
 
 - [asset/](./asset/README.md) - Asset upload and metadata extraction
 - [layout/](./layout/README.md) - Layout configuration and models
-- [layout/gradients/](./layout/gradients/README.md) - Gradient type definitions and static gradients
+- [layout/gradients/](./layout/gradients/README.md) - Gradient type definitions and palette-matched gradients
 - [look/](./look/README.md) - Look definitions (visual templates)
 
 **For Claude Code**: Always read module READMEs first before exploring code. They document the current state and are updated with code changes.
@@ -37,9 +37,7 @@ Layout models, configuration, and data structures. See [layout/README.md](./layo
 
 #### `layout/gradients/`
 
-**Model Layer**: Gradient type definitions and static placeholder gradients. See [layout/gradients/README.md](./layout/gradients/README.md) for details.
-
-Note: Dynamic gradient generation has been removed. Static gradients are used until the palette-based system is implemented. See `thoughts/plans/09-palette-based-gradient-system.md`.
+**Model Layer**: Gradient type definitions and palette-matched gradients. See [layout/gradients/README.md](./layout/gradients/README.md) for details.
 
 ### `look/`
 
@@ -50,7 +48,7 @@ Note: Look React components live in `components/looks/` to avoid circular depend
 ## Dependencies Flow
 
 ```
-layout/gradients (model types + static gradients)
+layout/gradients (model types + palette-matched gradients)
        ⬇️
 layout (configuration)
        ⬇️

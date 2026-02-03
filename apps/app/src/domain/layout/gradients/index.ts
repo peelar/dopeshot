@@ -3,7 +3,7 @@
  *
  * This module contains all gradient-related functionality:
  * - Types and type guards
- * - Static placeholder gradients (until palette system is built)
+ * - Palette-matched gradients
  * - CSS rendering utilities
  */
 
@@ -20,7 +20,10 @@ export type {
 
 export { isLegacyGradient, isAdvancedGradient, isMeshGradient, isAuroraGradient } from "./types";
 
-// Gradient generation (static placeholders for now)
+export type { HueBucket, Brightness, AccentStrength, ColorSignature, GradientPalette } from "./palette";
+export { buildGradientPalette } from "./palette";
+
+// Gradient generation (palette-matched)
 export { generateGradientOptions } from "./generator";
 
 // Utilities

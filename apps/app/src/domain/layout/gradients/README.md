@@ -2,15 +2,14 @@
 
 ## Purpose
 
-Defines gradient data models and CSS generation utilities. This is the **data/model layer** for gradients used in layouts. Provides type definitions, CSS conversion, and static placeholder gradients.
-
-**Note:** Dynamic gradient generation from screenshot colors has been removed. Static placeholder gradients are used until the palette-based gradient system is implemented. See `thoughts/plans/09-palette-based-gradient-system.md`.
+Defines gradient data models and CSS generation utilities. This is the **data/model layer** for gradients used in layouts. Provides type definitions, CSS conversion, and palette-matched gradient generation.
 
 ## File Structure
 
 - `types.ts` - Gradient type definitions (GradientStop, AdvancedGradient, LegacyGradient, CustomGradient)
 - `utils.ts` - CSS gradient generation, type guards, and gradient conversions
-- `generator.ts` - Static placeholder gradients (6 curated options)
+- `generator.ts` - Palette-matched gradients (6 curated options)
+- `palette.ts` - Color signature types + palette mapping
 - `index.ts` - Public API exports
 
 ## Key Exports
@@ -32,22 +31,22 @@ Defines gradient data models and CSS generation utilities. This is the **data/mo
 - `isLegacyGradient(gradient)` - Type guard for LegacyGradient
 - `isMeshGradient(gradient)` - Type guard for mesh gradients
 - `getContrastTextColor(colors)` - Returns appropriate text color for contrast
-- `generateGradientOptions()` - Returns 6 static placeholder gradients
+- `generateGradientOptions()` - Returns 6 palette-matched gradients
 
 ## Dependencies
 
 - Used by: `domain/layout` (parent module), `components/selectors/gradient-picker`
 
-## Static Gradients
+## Gradient Set
 
-Currently provides 6 curated placeholder gradients:
+Provides a consistent 6-option set, with palette-matched colors:
 
-1. **Mesh Gradient** - Purple/pink/blue organic blobs
-2. **Linear Diagonal** - Indigo to purple
-3. **Radial** - Teal center fading to blue
-4. **Multi-Stop Diagonal** - Sunset orange/pink/purple
-5. **Linear Cool** - Cyan to indigo
-6. **Linear Warm** - Orange to rose
+1. **Mesh Gradient** - expressive, organic blobs
+2. **Aurora** - flowing multi-stop layers
+3. **Linear Bold** - clean 2-stop directional
+4. **Radial Glow** - focused highlight
+5. **Linear Soft** - ambient directional wash
+6. **Muted Wash** - soft soup + low-contrast blobs
 
 ## CSS Generation
 
@@ -59,17 +58,6 @@ Currently provides 6 curated placeholder gradients:
 
 ## Design Notes
 
-- **Static for now**: Dynamic generation disabled pending palette system implementation
+- **Palette-matched**: Colors are snapped to curated Tailwind scales
 - **Type safety**: Type guards enable safe runtime type checking
 - **Backward compatible**: Supports legacy 2-color gradients from old saved configs
-
-## Future: Palette-Based System
-
-The plan is to replace static gradients with a palette-matching system:
-
-1. Pre-define validated gradient palettes
-2. Extract color signature from screenshots
-3. Match to closest validated palette
-4. Apply palette to various gradient layouts
-
-See `thoughts/plans/09-palette-based-gradient-system.md` for details.
