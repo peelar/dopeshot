@@ -7,6 +7,7 @@ import { getUserTier, type SubscriptionTier } from "@/lib/tier";
 import { isBrandPersonality } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
+const BRAND_ONBOARDING_DISMISSED_STEP = "brand_profile_dismissed";
 
 function isMode(value: unknown): value is "light" | "dark" {
   return value === "light" || value === "dark";
@@ -62,7 +63,9 @@ export async function GET() {
       isMode(palette?.mode);
 
     const onboardingComplete =
-      completedSteps.includes(BRAND_ONBOARDING_STEP) || looksCompleteFromProfile;
+      completedSteps.includes(BRAND_ONBOARDING_STEP) ||
+      completedSteps.includes(BRAND_ONBOARDING_DISMISSED_STEP) ||
+      looksCompleteFromProfile;
 
     return NextResponse.json({ tier, onboardingComplete });
   } catch (error) {
@@ -71,4 +74,3 @@ export async function GET() {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

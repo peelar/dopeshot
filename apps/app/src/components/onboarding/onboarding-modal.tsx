@@ -63,16 +63,33 @@ export function OnboardingModal({
 
   const [confirmOpen, setConfirmOpen] = useState(false);
 
+  const persistDismissal = useCallback(async () => {
+    try {
+      await fetch("/api/brand/update-profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ onboarding_dismissed: true }),
+      });
+    } catch {
+      // Non-blocking: dismissal should not trap the user.
+    }
+  }, []);
+
   const handleConfirmedClose = useCallback(
     (reason: "user" | "error") => {
       track("brand_onboarding_dismissed", {
         reason,
       });
 
+      if (reason === "user") {
+        void persistDismissal();
+      }
+
       onOpenChange?.(false);
       setConfirmOpen(false);
     },
-    [onOpenChange],
+    [onOpenChange, persistDismissal],
   );
 
   const handleUserClose = useCallback(() => {

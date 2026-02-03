@@ -251,7 +251,7 @@ export function ExportSuccessModal({
                           <button
                             type="button"
                             onClick={onFeedback}
-                            className="inline-flex h-7 cursor-default items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
+                            className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
                           >
                             <MessageSquare className="h-3.5 w-3.5" />
                             Feedback
@@ -295,7 +295,7 @@ function ContactLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className="inline-flex h-7 cursor-default items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
+      className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
     >
       {icon}
       {label}
@@ -328,7 +328,7 @@ function CopyEmailButton({ email }: { email: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="inline-flex h-7 cursor-default items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
+      className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Mail className="h-3.5 w-3.5" />}
       Email

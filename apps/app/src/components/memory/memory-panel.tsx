@@ -26,6 +26,7 @@ interface MemoryPanelProps {
   onClose?: () => void;
   isVisible?: boolean;
   className?: string;
+  showHeader?: boolean;
 }
 
 export function MemoryPanel({
@@ -34,6 +35,7 @@ export function MemoryPanel({
   onClose,
   isVisible = true,
   className,
+  showHeader = true,
 }: MemoryPanelProps) {
   const { isAuthenticated } = useAuth();
   const items = useAtomValue(memoryItemsAtom);
@@ -59,26 +61,26 @@ export function MemoryPanel({
 
   return (
     <div className={cn("flex h-full min-h-0 flex-col", className)}>
-      <div className="flex h-14 items-center justify-between border-b bg-muted/50 px-4">
-        <div className="flex items-center gap-2">
-          <BookmarkCheck className="h-5 w-5 text-muted-foreground" />
-          <h2 className="font-semibold text-muted-foreground">Saved</h2>
+      {showHeader ? (
+        <div className="flex h-14 items-center justify-between border-b bg-muted/50 px-4">
+          <div className="flex items-center gap-2">
+            <BookmarkCheck className="h-5 w-5 text-muted-foreground" />
+            <h2 className="font-semibold text-muted-foreground">Saved</h2>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-muted-foreground">{saveLimitLabel}</span>
+            {onClose ? (
+              <button
+                onClick={onClose}
+                className="rounded-md p-1 hover:bg-accent"
+                aria-label="Close saved panel"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            ) : null}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground">
-            {saveLimitLabel}
-          </span>
-          {onClose ? (
-            <button
-              onClick={onClose}
-              className="rounded-md p-1 hover:bg-accent"
-              aria-label="Close saved panel"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          ) : null}
-        </div>
-      </div>
+      ) : null}
 
       <div className="flex-1 overflow-y-auto p-4">
         {isLoadingItems && items.length === 0 ? (

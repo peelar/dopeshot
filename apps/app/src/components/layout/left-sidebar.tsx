@@ -5,19 +5,23 @@ import { useAtom, useAtomValue } from "jotai";
 import Link from "next/link";
 import { BookmarkCheck, Palette, CreditCard, User, X, PanelLeft } from "lucide-react";
 import { useUserTier } from "@/hooks/use-user-tier";
-import { SHOW_LOCKED_BRAND_TAB } from "@/lib/feature-flags-client";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { MemoryPanel } from "@/components/memory/memory-panel";
+import { Button } from "@/components/ui/button";
 import {
   currentSaveCountAtom,
   saveLimitAtom,
+  memoryItemsAtom,
   hasExportsAtom,
   hasUnseenExportsAtom,
   justSavedAtom,
 } from "@/hooks/atoms/memory";
 import { BrandPanel } from "@/components/brand/brand-panel";
+import { InAppHint } from "@/components/hints/in-app-hint";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
+const isDevelopment = process.env.NODE_ENV === "development";
 
 export type LeftSidebarView = "saved" | "brand" | "account";
 
@@ -44,14 +48,19 @@ export function LeftSidebar({
   const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const saveCount = useAtomValue(currentSaveCountAtom);
   const saveLimit = useAtomValue(saveLimitAtom);
+  const savedItems = useAtomValue(memoryItemsAtom);
   const hasExports = useAtomValue(hasExportsAtom);
   const hasUnseenExports = useAtomValue(hasUnseenExportsAtom);
   const [justSaved, setJustSaved] = useAtom(justSavedAtom);
 
-  const showBrandTab = isBrandUser || SHOW_LOCKED_BRAND_TAB;
-  const brandDisabled = isTierLoading || !isBrandUser;
+  const isLoggedIn = Boolean(user);
+  const showBrandTab = isLoggedIn;
+  const brandDisabled = isTierLoading && isLoggedIn;
 
   const saveLimitLabel = Number.isFinite(saveLimit) ? `${saveCount}/${saveLimit}` : `${saveCount}`;
+  const savedHeaderLabel = Number.isFinite(saveLimit)
+    ? `${savedItems.length} of ${saveLimit}`
+    : `${savedItems.length} saved`;
   const savedTooltip = `Saved (${saveLimitLabel})`;
   const showSavedIndicator = justSaved || hasUnseenExports;
 
@@ -83,24 +92,28 @@ export function LeftSidebar({
             label: "Brand",
             icon: Palette,
             disabled: brandDisabled,
-            tooltip: brandDisabled ? "Upgrade to Brand to unlock these tools." : "Brand",
+            tooltip: isBrandUser ? "Brand" : "Learn about Brand",
           }
         : null,
-      {
-        id: "billing",
-        label: "Billing",
-        icon: CreditCard,
-        href: "/settings/billing",
-        tooltip: "Billing",
-      },
-      {
-        id: "account",
-        label: "Account",
-        icon: User,
-        tooltip: "Account",
-      },
+      isDevelopment
+        ? {
+            id: "billing",
+            label: "Billing",
+            icon: CreditCard,
+            href: "/billing",
+            tooltip: "Billing",
+          }
+        : null,
+      isDevelopment
+        ? {
+            id: "account",
+            label: "Account",
+            icon: User,
+            tooltip: "Account",
+          }
+        : null,
     ],
-    [brandDisabled, savedTooltip, showBrandTab],
+    [brandDisabled, isBrandUser, savedTooltip, showBrandTab],
   );
 
   const handleSelect = (view: LeftSidebarView) => {
@@ -119,7 +132,7 @@ export function LeftSidebar({
             <Link
               href={item.href}
               className={cn(
-                "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-muted-foreground transition-colors",
+                "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-foreground/70 transition-colors",
                 "hover:border-border hover:bg-muted/60 hover:text-foreground",
               )}
               aria-label={item.label}
@@ -136,36 +149,67 @@ export function LeftSidebar({
     const isSaved = item.id === "saved";
     const isDisabled = "disabled" in item && item.disabled;
 
+    const navButton = (
+      <button
+        type="button"
+        onClick={() => handleSelect(item.id as LeftSidebarView)}
+        className={cn(
+          "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-foreground/70 transition-colors",
+          "hover:border-border hover:bg-muted/60 hover:text-foreground",
+          isActive && "border-border bg-muted text-foreground",
+          isDisabled && "cursor-not-allowed opacity-40",
+        )}
+        aria-label={item.label}
+        aria-pressed={isActive}
+        disabled={isDisabled}
+      >
+        <item.icon
+          className={cn("h-5 w-5", isSaved && showSavedIndicator && "text-primary")}
+          aria-hidden="true"
+        />
+        {isSaved && showSavedIndicator ? (
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
+        ) : null}
+      </button>
+    );
+
+    if (item.id === "brand" && isBrandUser && !isDisabled) {
+      return (
+        <InAppHint
+          key={item.id}
+          hintText="Your brand settings live here"
+          fallbackText="Brand"
+          side="right"
+          persistKey="hint:brand-settings"
+        >
+          {navButton}
+        </InAppHint>
+      );
+    }
+
     return (
       <Tooltip key={item.id}>
-        <TooltipTrigger asChild>
-          <button
-            type="button"
-            onClick={() => handleSelect(item.id as LeftSidebarView)}
-            className={cn(
-              "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent transition-colors",
-              "hover:border-border hover:bg-muted/60 hover:text-foreground",
-              isActive && "border-border bg-muted text-foreground",
-              isSaved && !hasExports && !justSaved && "opacity-40",
-              isDisabled && "cursor-not-allowed opacity-40",
-            )}
-            aria-label={item.label}
-            aria-pressed={isActive}
-            disabled={isDisabled}
-          >
-            <item.icon
-              className={cn("h-5 w-5", isSaved && showSavedIndicator && "text-primary")}
-              aria-hidden="true"
-            />
-            {isSaved && showSavedIndicator ? (
-              <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-primary" />
-            ) : null}
-          </button>
-        </TooltipTrigger>
+        <TooltipTrigger asChild>{navButton}</TooltipTrigger>
         <TooltipContent side="right">{item.tooltip}</TooltipContent>
       </Tooltip>
     );
   };
+
+  const renderPanelHeader = (title: string, meta?: string) => (
+    <div className="flex h-14 items-center justify-between border-b bg-muted/40 px-4">
+      <div className="text-sm font-semibold text-foreground">{title}</div>
+      <div className="flex items-center gap-3">
+        {meta ? <span className="text-sm text-muted-foreground">{meta}</span> : null}
+        <button
+          onClick={() => onOpenChange(false)}
+          className="rounded-md p-1 hover:bg-accent"
+          aria-label={`Close ${title.toLowerCase()} panel`}
+        >
+          <X className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
+  );
 
   if (isMobile) {
     return isOpen ? (
@@ -195,14 +239,14 @@ export function LeftSidebar({
               onDeleteItem={onDeleteItem}
               onClose={() => onOpenChange(false)}
               isVisible={isOpen && activeView === "saved"}
+              showHeader={false}
             />
           ) : activeView === "brand" ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
-              <BrandPanel />
+              {isBrandUser ? <BrandPanel /> : <BrandTeaser />}
             </div>
           ) : (
             <div className="flex h-full w-full flex-col px-4 py-6">
-              <h2 className="text-sm font-semibold text-foreground">Account</h2>
               <p className="mt-1 text-xs text-muted-foreground">
                 Lightweight account controls are coming soon.
               </p>
@@ -233,39 +277,78 @@ export function LeftSidebar({
           aria-label="Account sidebar"
         >
           {activeView === "saved" ? (
-            <MemoryPanel
-              onLoadItem={onLoadItem}
-              onDeleteItem={onDeleteItem}
-              onClose={() => onOpenChange(false)}
-              isVisible={isOpen && activeView === "saved"}
-            />
+            <div className="flex h-full min-h-0 flex-col">
+              {renderPanelHeader("Saved", savedHeaderLabel)}
+              <MemoryPanel
+                onLoadItem={onLoadItem}
+                onDeleteItem={onDeleteItem}
+                onClose={() => onOpenChange(false)}
+                isVisible={isOpen && activeView === "saved"}
+                showHeader={false}
+                className="flex-1"
+              />
+            </div>
           ) : activeView === "brand" ? (
             <div className="flex h-full w-full flex-col overflow-y-auto">
-              <BrandPanel />
+              {renderPanelHeader("Brand")}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                {isBrandUser ? <BrandPanel /> : <BrandTeaser />}
+              </div>
             </div>
           ) : (
-            <div className="flex h-full w-full flex-col px-4 py-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground">Account</h2>
-                <button
-                  onClick={() => onOpenChange(false)}
-                  className="rounded-md p-1 hover:bg-accent"
-                  aria-label="Close account panel"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Lightweight account controls are coming soon.
-              </p>
-              <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">Signed in as</p>
-                <p className="text-sm font-medium text-foreground">{user?.email ?? "Unknown user"}</p>
+            <div className="flex h-full w-full flex-col">
+              {renderPanelHeader("Account")}
+              <div className="px-4 py-6">
+                <p className="text-xs text-muted-foreground">
+                  Lightweight account controls are coming soon.
+                </p>
+                <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
+                  <p className="text-xs text-muted-foreground">Signed in as</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {user?.email ?? "Unknown user"}
+                  </p>
+                </div>
               </div>
             </div>
           )}
         </aside>
       ) : null}
     </TooltipProvider>
+  );
+}
+
+function BrandTeaser() {
+  return (
+    <div className="flex h-full w-full flex-col px-4 py-6">
+      <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+        <span className="h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden="true" />
+        Early access
+      </div>
+      <div className="mt-3 space-y-2">
+        <p className="text-sm font-semibold text-foreground">Brand is in the works</p>
+        <p className="text-sm text-muted-foreground">
+          Brand will let you save a logo, palette, and typography so every export looks
+          consistent.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          It&apos;s for indie hackers and small teams who want a repeatable look without extra
+          design work. If that sounds useful, I&apos;d love your perspective while I build it.
+        </p>
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <Button size="sm" asChild>
+          <a href="mailto:feedback@dopeshot.io?subject=Brand%20early%20access">Email me</a>
+        </Button>
+        <Button size="sm" variant="outline" asChild>
+          <a
+            href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Book a call
+          </a>
+        </Button>
+      </div>
+    </div>
   );
 }

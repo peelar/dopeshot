@@ -72,7 +72,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
                 href={update.cta.href}
                 className={cn(
                   buttonVariants({ variant: "default", size: "xs" }),
-                  "cursor-default shadow-none"
+                  "shadow-none"
                 )}
               >
                 <User className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
@@ -84,7 +84,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="cursor-default text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
               aria-label="Dismiss update banner"
               onClick={() => {
                 try {

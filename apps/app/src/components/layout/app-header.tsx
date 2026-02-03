@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageUp, Loader2, Plus, RefreshCw, Save, PanelLeft } from "lucide-react";
+import { Download, Loader2, Plus, RefreshCw, Save, PanelLeft } from "lucide-react";
 import { UserMenu } from "./user-menu";
 
 interface AppHeaderProps {
@@ -14,7 +14,6 @@ interface AppHeaderProps {
   isProcessingUpload: boolean;
   onUploadClick: () => void;
   onNewClick: () => void;
-  showUploadButton: boolean;
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
@@ -36,7 +35,6 @@ export function AppHeader({
   isProcessingUpload,
   onUploadClick,
   onNewClick,
-  showUploadButton,
   canExport,
   onExport,
   isExporting,
@@ -51,17 +49,16 @@ export function AppHeader({
   leftSidebarOpen,
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
-  const shouldShowCtaButton = showUploadButton || shouldShowNewButton;
+  const shouldShowCtaButton = shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
+  const shouldShowSaveButton = hasCustomScreenshot && (canSave || isAtSaveLimit);
 
   const ctaButtonLabel = shouldShowNewButton
     ? "New"
     : isProcessingUpload
       ? "Uploading..."
-      : hasCustomScreenshot
-        ? "Change Screenshot"
-        : "Upload Your Screenshot";
+      : "Change Screenshot";
 
-  const CtaIcon = shouldShowNewButton ? Plus : isProcessingUpload ? Loader2 : hasCustomScreenshot ? RefreshCw : ImageUp;
+  const CtaIcon = shouldShowNewButton ? Plus : isProcessingUpload ? Loader2 : RefreshCw;
 
   return (
     <header className="relative sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-primary/30 after:via-primary/10 after:to-transparent after:opacity-40 sm:px-6">
@@ -95,7 +92,9 @@ export function AppHeader({
             className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
             onClick={shouldShowNewButton ? onNewClick : onUploadClick}
             disabled={isProcessingUpload}
-            aria-label={shouldShowNewButton ? "New Design" : hasCustomScreenshot ? "Change Screenshot" : "Upload Your Screenshot"}
+            aria-label={
+              shouldShowNewButton ? "New Design" : isProcessingUpload ? "Uploading Screenshot" : "Change Screenshot"
+            }
             aria-busy={isProcessingUpload}
           >
             <CtaIcon
@@ -109,7 +108,7 @@ export function AppHeader({
           </Button>
         ) : null}
         {/* Save button - independent of export */}
-        {canSave || isAtSaveLimit ? (
+        {shouldShowSaveButton ? (
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger

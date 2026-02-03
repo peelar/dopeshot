@@ -13,6 +13,7 @@ import {
 } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
+const BRAND_ONBOARDING_DISMISSED_STEP = "brand_profile_dismissed";
 
 function normalizeHexColor(value: string) {
   const trimmed = value.trim();
@@ -41,6 +42,7 @@ type UpdateProfileBody = {
   accent?: string | null;
   mode?: string | null;
   onboarding_completed?: boolean | null;
+  onboarding_dismissed?: boolean | null;
 };
 
 export async function PATCH(request: Request) {
@@ -182,9 +184,13 @@ export async function PATCH(request: Request) {
       });
     }
 
-    if (body.onboarding_completed) {
+    if (body.onboarding_completed || body.onboarding_dismissed) {
+      const completedSteps = body.onboarding_completed
+        ? [BRAND_ONBOARDING_STEP]
+        : [BRAND_ONBOARDING_DISMISSED_STEP];
+
       const onboardingProgress = onboardingProgressSchema.parse({
-        completedSteps: [BRAND_ONBOARDING_STEP],
+        completedSteps,
       });
 
       await db.userMetadata.upsert({

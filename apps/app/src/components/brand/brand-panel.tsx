@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ function normalizeHex(input: string): string {
 }
 
 export function BrandPanel() {
+  const router = useRouter();
   const { data: session } = useSession();
   const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const { resolvedTheme } = useTheme();
@@ -151,7 +153,11 @@ export function BrandPanel() {
   if (!isBrandUser) {
     return (
       <div className="h-full w-full px-4 py-6">
-        <UpgradePrompt title="Brand tools" description="Upgrade to Brand to upload a logo and apply it to screenshots." />
+        <UpgradePrompt
+          title="Brand tools"
+          description="Upgrade to Brand to upload a logo and apply it to screenshots."
+          onUpgradeClick={() => router.push("/billing")}
+        />
       </div>
     );
   }

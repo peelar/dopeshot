@@ -208,7 +208,7 @@ function PlaygroundPageInner({
     initialLeftSidebarView ?? "saved",
   );
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(
-    initialLeftSidebarView === "brand",
+    initialLeftSidebarView === "brand" || initialLeftSidebarView === "account",
   );
 
   const {
@@ -408,13 +408,17 @@ function PlaygroundPageInner({
   const handleLeftSidebarViewChange = useCallback((view: LeftSidebarView) => {
     setLeftSidebarView(view);
     if (typeof window === "undefined") return;
+    const routeForView: Record<LeftSidebarView, string> = {
+      saved: "/",
+      brand: "/brand",
+      account: "/account",
+    };
     const currentPath = window.location.pathname;
-    if (view === "brand" && currentPath === "/") {
-      window.history.replaceState(null, "", "/brand");
-      return;
-    }
-    if (view === "saved" && currentPath === "/brand") {
-      window.history.replaceState(null, "", "/");
+    const allowedRoutes = new Set(Object.values(routeForView));
+    if (!allowedRoutes.has(currentPath)) return;
+    const nextPath = routeForView[view];
+    if (currentPath !== nextPath) {
+      window.history.replaceState(null, "", nextPath);
     }
   }, []);
 
@@ -468,7 +472,6 @@ function PlaygroundPageInner({
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
         onNewClick={resetToEmptyCanvas}
-        showUploadButton={requiresScreenshot}
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}

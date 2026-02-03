@@ -6,6 +6,7 @@ import { getUserTier } from "@/lib/tier";
 import { isBrandPersonality } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
+const BRAND_ONBOARDING_DISMISSED_STEP = "brand_profile_dismissed";
 const isPlaygroundEnabled = process.env.NODE_ENV !== "production";
 
 function looksCompleteFromProfile(profile: {
@@ -58,6 +59,7 @@ export default async function Page() {
 
       onboardingComplete =
         completedSteps.includes(BRAND_ONBOARDING_STEP) ||
+        completedSteps.includes(BRAND_ONBOARDING_DISMISSED_STEP) ||
         looksCompleteFromProfile(profile);
     }
 
