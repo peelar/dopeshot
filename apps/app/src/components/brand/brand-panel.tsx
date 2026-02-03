@@ -33,6 +33,7 @@ import {
 } from "@/lib/types/brand";
 import { RefreshCw, Trash2, Loader2, Moon, Sun } from "lucide-react";
 import { BackgroundsCollection } from "./backgrounds-collection";
+import { AiBackgroundsCollection } from "./ai-backgrounds-collection";
 
 function normalizeHex(input: string): string {
   const trimmed = input.trim();
@@ -468,6 +469,7 @@ export function BrandPanel() {
         )}
         </section>
 
+        <AiBackgroundsCollection personality={personality} />
         <BackgroundsCollection />
 
         <section className="space-y-3">

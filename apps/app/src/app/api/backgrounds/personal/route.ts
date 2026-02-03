@@ -38,6 +38,8 @@ export async function GET() {
         widthPx: true,
         heightPx: true,
         fileFormat: true,
+        sourceType: true,
+        sourceId: true,
       },
     });
 
@@ -53,6 +55,8 @@ export async function GET() {
           widthPx: background.widthPx,
           heightPx: background.heightPx,
           fileFormat: background.fileFormat,
+          sourceType: background.sourceType,
+          sourceId: background.sourceId,
         };
       }),
     );
@@ -172,6 +176,8 @@ export async function POST(request: Request) {
         widthPx: true,
         heightPx: true,
         fileFormat: true,
+        sourceType: true,
+        sourceId: true,
       },
     });
 
@@ -186,6 +192,8 @@ export async function POST(request: Request) {
         widthPx: background.widthPx,
         heightPx: background.heightPx,
         fileFormat: background.fileFormat,
+        sourceType: background.sourceType,
+        sourceId: background.sourceId,
       },
       { status: 201 },
     );
