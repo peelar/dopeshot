@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { redirect } from "next/navigation";
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
@@ -7,8 +7,6 @@ import { isBrandPersonality } from "@/lib/types/brand";
 
 const BRAND_ONBOARDING_STEP = "brand_profile";
 const BRAND_ONBOARDING_DISMISSED_STEP = "brand_profile_dismissed";
-const isPlaygroundEnabled = process.env.NODE_ENV !== "production";
-
 function looksCompleteFromProfile(profile: {
   logoPath: string | null;
   personality: string | null;
@@ -25,59 +23,49 @@ function looksCompleteFromProfile(profile: {
 }
 
 export default async function Page() {
-  if (!isPlaygroundEnabled) {
-    notFound();
-  }
-
   const session = await verifySession();
 
-  if (session.isAuth && session.userId) {
-    const tier = await getUserTier(session.userId);
-    let onboardingComplete = true;
-
-    if (tier === "brand") {
-      const db = await getUserDb(session.userId);
-      const [metadata, profile] = await Promise.all([
-        db.userMetadata.findUnique({
-          where: { userId: session.userId },
-          select: { onboardingProgress: true },
-        }),
-        db.brandProfile.findUnique({
-          where: { userId: session.userId },
-          select: { logoPath: true, personality: true, colorPalette: true },
-        }),
-      ]);
-
-      const progress = metadata?.onboardingProgress as
-        | { completedSteps?: unknown }
-        | null
-        | undefined;
-
-      const completedSteps = Array.isArray(progress?.completedSteps)
-        ? (progress.completedSteps as unknown[])
-        : [];
-
-      onboardingComplete =
-        completedSteps.includes(BRAND_ONBOARDING_STEP) ||
-        completedSteps.includes(BRAND_ONBOARDING_DISMISSED_STEP) ||
-        looksCompleteFromProfile(profile);
-    }
-
-    const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
-
-    return (
-      <PlaygroundPage
-        initialIsAuthenticated={session.isAuth}
-        initialOnboardingOpen={initialOnboardingOpen}
-        initialLeftSidebarView="brand"
-      />
-    );
+  if (!session.isAuth || !session.userId) {
+    redirect("/auth");
   }
+
+  const tier = await getUserTier(session.userId);
+  let onboardingComplete = true;
+
+  if (tier === "brand") {
+    const db = await getUserDb(session.userId);
+    const [metadata, profile] = await Promise.all([
+      db.userMetadata.findUnique({
+        where: { userId: session.userId },
+        select: { onboardingProgress: true },
+      }),
+      db.brandProfile.findUnique({
+        where: { userId: session.userId },
+        select: { logoPath: true, personality: true, colorPalette: true },
+      }),
+    ]);
+
+    const progress = metadata?.onboardingProgress as
+      | { completedSteps?: unknown }
+      | null
+      | undefined;
+
+    const completedSteps = Array.isArray(progress?.completedSteps)
+      ? (progress.completedSteps as unknown[])
+      : [];
+
+    onboardingComplete =
+      completedSteps.includes(BRAND_ONBOARDING_STEP) ||
+      completedSteps.includes(BRAND_ONBOARDING_DISMISSED_STEP) ||
+      looksCompleteFromProfile(profile);
+  }
+
+  const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
 
   return (
     <PlaygroundPage
-      initialIsAuthenticated={false}
-      initialOnboardingOpen={false}
+      initialIsAuthenticated={session.isAuth}
+      initialOnboardingOpen={initialOnboardingOpen}
       initialLeftSidebarView="brand"
     />
   );

@@ -247,12 +247,11 @@ export function LeftSidebar({
             </div>
           ) : (
             <div className="flex h-full w-full flex-col px-4 py-6">
-              <p className="mt-1 text-xs text-muted-foreground">
-                Lightweight account controls are coming soon.
-              </p>
               <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
                 <p className="text-xs text-muted-foreground">Signed in as</p>
-                <p className="text-sm font-medium text-foreground">{user?.email ?? "Unknown user"}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {user?.email ?? "Unknown user"}
+                </p>
               </div>
             </div>
           )}
@@ -299,9 +298,6 @@ export function LeftSidebar({
             <div className="flex h-full w-full flex-col">
               {renderPanelHeader("Account")}
               <div className="px-4 py-6">
-                <p className="text-xs text-muted-foreground">
-                  Lightweight account controls are coming soon.
-                </p>
                 <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
                   <p className="text-xs text-muted-foreground">Signed in as</p>
                   <p className="text-sm font-medium text-foreground">
@@ -327,7 +323,11 @@ function BrandTeaser() {
       <div className="mt-3 space-y-2">
         <p className="text-sm font-semibold text-foreground">Brand features in progress</p>
         <p className="text-sm text-muted-foreground">
-          I&apos;m working on brand features. Let me know if you want to provide feedback.
+          I&apos;m working on brand kits so your designs stay consistent: saved logos, colors,
+          fonts, and templates.
+          <br />
+          <br /> If you&apos;re building a product or company, this one&apos;s for you. Want to help
+          shape it?
         </p>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
