@@ -42,6 +42,22 @@ type ExportSizeOptions = {
   maxImageScale?: number;
 };
 
+function isSignedUrl(url: string): boolean {
+  if (!url) return false;
+  return (
+    url.includes("token=") ||
+    url.includes("X-Amz-Signature=") ||
+    url.includes("X-Amz-Algorithm=") ||
+    url.includes("X-Amz-Credential=") ||
+    url.includes("X-Amz-Date=")
+  );
+}
+
+function elementHasSignedUrlImages(element: HTMLElement): boolean {
+  const images = Array.from(element.querySelectorAll("img"));
+  return images.some((img) => isSignedUrl(img.currentSrc || img.src));
+}
+
 /**
  * Calculate the pixel ratio for export, clamped to [1, 3].
  * Defaults to device pixel ratio or 2 (whichever is higher).
@@ -100,6 +116,7 @@ export async function exportLayoutAsPngWithBlob(
   try {
     await waitForRender();
 
+    const hasSignedUrlImages = elementHasSignedUrlImages(element);
     const resolvedPixelRatio = calculatePixelRatio({
       desiredPixelRatio: pixelRatio,
       maxImageScale,
@@ -107,7 +124,8 @@ export async function exportLayoutAsPngWithBlob(
     });
 
     const dataUrl = await toPng(element, {
-      cacheBust: true,
+      // Signed URLs become invalid if we append cache-busting query params.
+      cacheBust: !hasSignedUrlImages,
       pixelRatio: resolvedPixelRatio,
       width,
       height,
@@ -201,10 +219,11 @@ export async function generateThumbnail(elementId: string): Promise<string> {
   try {
     await waitForRender();
 
+    const hasSignedUrlImages = elementHasSignedUrlImages(element);
     // Capture full element at low resolution for thumbnail
     // CSS handles display sizing - we just need a lightweight capture
     const dataUrl = await toPng(element, {
-      cacheBust: true,
+      cacheBust: !hasSignedUrlImages,
       pixelRatio: 0.5, // Half resolution for smaller file size
       style: {
         visibility: "visible",
