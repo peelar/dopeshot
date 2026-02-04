@@ -25,6 +25,7 @@ import { invalidateTierCache } from "@/hooks/use-user-tier";
 import { addCatalogBackground, listCatalogBackgrounds } from "@/domain/backgrounds/background-service";
 import { BACKGROUNDS_PER_PAGE } from "@/domain/backgrounds/constants";
 import type { CatalogBackground, PersonalBackground } from "@/domain/backgrounds/types";
+import { SHOW_AI_BACKGROUNDS } from "@/lib/feature-flags-client";
 
 type OnboardingFormProps = {
   initialLogoUrl?: string | null;
@@ -89,7 +90,9 @@ export function OnboardingForm({
     uploadedBackground,
   } = useBackgroundUpload({ showToasts: true, trackAnalytics: true });
 
-  const [backgroundMode, setBackgroundMode] = useState<"upload" | "ai">("ai");
+  const [backgroundMode, setBackgroundMode] = useState<"upload" | "ai">(
+    SHOW_AI_BACKGROUNDS ? "ai" : "upload",
+  );
   const [catalogBackgrounds, setCatalogBackgrounds] = useState<CatalogBackground[]>([]);
   const [isCatalogLoading, setIsCatalogLoading] = useState(false);
   const [isCatalogShuffling, setIsCatalogShuffling] = useState(false);
@@ -142,17 +145,17 @@ export function OnboardingForm({
     [],
   );
 
-  const backgroundModeOptions = useMemo(
-    () => [
-      { id: "upload", label: "Upload" },
-      { id: "ai", label: "AI suggestions" },
-    ],
-    [],
-  );
+  const backgroundModeOptions = useMemo(() => {
+    const options = [{ id: "upload", label: "Upload" }];
+    if (SHOW_AI_BACKGROUNDS) {
+      options.push({ id: "ai", label: "AI suggestions" });
+    }
+    return options;
+  }, []);
 
   const loadCatalogSuggestions = useCallback(
     async ({ offset = 0, shuffle = false }: { offset?: number; shuffle?: boolean } = {}) => {
-      if (backgroundMode !== "ai") return;
+      if (!SHOW_AI_BACKGROUNDS || backgroundMode !== "ai") return;
       setIsCatalogLoading(!shuffle);
       setIsCatalogShuffling(shuffle);
 
@@ -206,7 +209,7 @@ export function OnboardingForm({
   );
 
   useEffect(() => {
-    if (backgroundMode !== "ai") return;
+    if (!SHOW_AI_BACKGROUNDS || backgroundMode !== "ai") return;
     void loadCatalogSuggestions({ offset: 0 });
   }, [backgroundMode, loadCatalogSuggestions, personality]);
 
@@ -410,12 +413,14 @@ export function OnboardingForm({
             />
 
             <div className="mt-4 space-y-3">
-              <SegmentedControl
-                value={backgroundMode}
-                options={backgroundModeOptions}
-                onChange={(value) => setBackgroundMode(value as "upload" | "ai")}
-                ariaLabel="Background source"
-              />
+              {SHOW_AI_BACKGROUNDS ? (
+                <SegmentedControl
+                  value={backgroundMode}
+                  options={backgroundModeOptions}
+                  onChange={(value) => setBackgroundMode(value as "upload" | "ai")}
+                  ariaLabel="Background source"
+                />
+              ) : null}
 
               {backgroundMode === "upload" ? (
                 <>
