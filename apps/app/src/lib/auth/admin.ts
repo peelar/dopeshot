@@ -1,6 +1,7 @@
 import "server-only";
 
 import { verifySession } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
 
 export type AdminCheckResult =
   | { ok: true; userId: string; email: string | null }
@@ -12,19 +13,20 @@ export async function requireAdmin(): Promise<AdminCheckResult> {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
 
-  const email = session.session?.user?.email ?? null;
-  const allowed = (process.env.DOPESHOT_ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (allowed.length === 0) {
-    return { ok: false, status: 403, error: "Admin access not configured" };
+  if (process.env.NODE_ENV !== "production") {
+    const email = session.session?.user?.email ?? null;
+    return { ok: true, userId: session.userId, email };
   }
 
-  if (!email || !allowed.includes(email)) {
+  const metadata = await prisma.userMetadata.findUnique({
+    where: { userId: session.userId },
+    select: { isAdmin: true },
+  });
+
+  if (!metadata?.isAdmin) {
     return { ok: false, status: 403, error: "Forbidden" };
   }
 
+  const email = session.session?.user?.email ?? null;
   return { ok: true, userId: session.userId, email };
 }
