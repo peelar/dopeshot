@@ -1,0 +1,148 @@
+{
+  "version": 1,
+  "widthPx": 1920,
+  "heightPx": 1080,
+  "basePrompt": "abstract background, low detail, soft shapes, high negative space, overlay-friendly, no text, no logos, no people, no faces, no readable symbols, avoid photographic realism, matte finish, low contrast, gentle gradients, no hard edges",
+  "negativePrompt": "text, logo, watermark, signature, people, faces, words, letters, numbers, photo realism",
+  "repeatAvoidance": {
+    "enabled": true,
+    "lookback": 200,
+    "maxRetries": 8
+  },
+  "variantsPerPrompt": 3,
+  "promptVariants": [
+    "soft radial gradient",
+    "subtle vignette",
+    "diffuse bloom",
+    "airbrushed transitions",
+    "misty color wash",
+    "soft bokeh haze",
+    "gentle diagonal flow",
+    "horizontal banding",
+    "quiet center glow",
+    "soft gradient mesh",
+    "low-contrast glow",
+    "feathered edges",
+    "light falloff",
+    "delicate color drift",
+    "calm tonal shifts",
+    "subtle noise field",
+    "smooth diffusion",
+    "soft edge lighting"
+  ],
+  "personalityVariants": {
+    "kawaii": [
+      "pastel peach blush",
+      "lavender mint haze",
+      "sparkle dust",
+      "opalescent mist",
+      "cotton candy haze"
+    ],
+    "hacker": [
+      "cyan edge glow",
+      "faint scanline hint",
+      "deep indigo wash",
+      "neon edge glints",
+      "cool blue pulse",
+      "faint grid traces"
+    ],
+    "hipster": [
+      "screenprint grain",
+      "matte paper texture",
+      "sun-faded edges",
+      "dusty film grain",
+      "sun-bleached paper"
+    ],
+    "founder": [
+      "cool neutral wash",
+      "warm accent glow",
+      "foggy bay light",
+      "cool glass sheen",
+      "soft neutral wash"
+    ]
+  },
+  "orchestration": {
+    "version": 1,
+    "countPerPersonality": 3,
+    "underrepresented": {
+      "enabled": true,
+      "topN": 2,
+      "bonusPerPersonality": 2,
+      "fallbackPersonalities": ["hipster"]
+    },
+    "models": [
+      {
+        "provider": "replicate",
+        "model": "aolaru/abstract-flux-backgrounds",
+        "countPerPersonality": 4,
+        "widthPx": 1440,
+        "heightPx": 810
+      },
+      {
+        "provider": "replicate",
+        "model": "prunaai/p-image",
+        "countPerPersonality": 4,
+        "widthPx": 1440,
+        "heightPx": 816
+      },
+      {
+        "provider": "replicate",
+        "model": "prunaai/z-image-turbo",
+        "countPerPersonality": 3,
+        "widthPx": 1920,
+        "heightPx": 1088
+      },
+      {
+        "provider": "replicate",
+        "model": "black-forest-labs/flux-schnell",
+        "countPerPersonality": 3
+      },
+      {
+        "provider": "replicate",
+        "model": "black-forest-labs/flux-2-pro",
+        "countPerPersonality": 2
+      }
+    ]
+  },
+  "personalityPrompts": {
+    "kawaii": [
+      "dreamy pastel clouds, plush bubble shapes, candy colors, airbrushed texture, gentle glow",
+      "anime-inspired bokeh haze, soft star confetti, pastel pink lavender mint, misty soft shapes",
+      "cute abstract blobs, jelly texture, light sparkles, soft focus, minimal contrast",
+      "cotton candy cloud swirls, pearlescent haze, soft sunrise palette, smooth diffusion",
+      "opalescent bokeh mist, pastel confetti dust, airy gradients, soft glow",
+      "soft plush gradients, pastel mochi haze, gentle sparkle dust, airy softness",
+      "pearly cloud veil, pastel glow, soft diffusion, minimal contrast"
+    ],
+    "hacker": [
+      "dark abstract background with neon circuitry fragments, cyan magenta accents, subtle scanlines, soft glow",
+      "soft glitchy data blocks, diffused neon haze, deep charcoal base, low contrast, subtle noise texture",
+      "digital lattice abstraction, green cyan highlights, blurred edges, moody tech vibe",
+      "midnight indigo fog, thin electric linework, teal accents, soft bloom, low detail",
+      "graphite noise field, faint grid traces, cool blue pulse, gentle haze",
+      "deep charcoal gradient, neon edge glints, soft diffusion, minimal detail",
+      "deep graphite fog, faint grid traces, sparse cyan glints, low contrast",
+      "dim neon edge glints on dark matte field, cool blue pulse, soft diffusion"
+    ],
+    "hipster": [
+      "mid-century abstract shapes, muted earth tones, paper cutout texture, soft shadows, screenprint grain",
+      "retro geometric blobs, warm ochre teal palette, matte paper texture, soft edges",
+      "sun-faded colorfield wash, muted terracotta sage palette, soft paper fibers, gentle gradient bands, matte finish",
+      "vintage print wash, dusty palette, subtle grain, layered shapes, calm composition",
+      "muted colorfield wash, broad soft gradients, low texture, calm composition",
+      "dusty pastel planes, subtle light falloff, airy negative space",
+      "soft geometric overlays, desaturated palette, gentle haze, minimal texture",
+      "painterly landscape wash, soft horizon bands, muted earth blues, gentle paper texture, low detail"
+    ],
+    "founder": [
+      "clean minimal abstract waves, cool neutral palette with single accent, soft lighting, subtle noise",
+      "soft glassy panels, light gray blue base, gentle depth, minimal texture",
+      "modern geometric layers, desaturated palette, soft edges, minimal detail",
+      "bay area morning fog, soft cloudy gradients, muted blue gray palette, airy negative space",
+      "minimal cloud wash, cool neutrals with one warm accent, gentle glow, low detail",
+      "silvery fog wash, cool neutral palette, subtle glow, minimal texture",
+      "clean glass gradient panels, cool gray base, subtle depth, minimal detail",
+      "painterly landscape wash, soft horizon bands, muted blue lavender, airy gradients, low detail"
+    ]
+  }
+}
