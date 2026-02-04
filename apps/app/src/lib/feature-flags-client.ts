@@ -12,3 +12,9 @@ const isDevelopment = process.env.NODE_ENV === "development";
  * Brand users always see the Brand tab regardless of this flag.
  */
 export const SHOW_LOCKED_BRAND_TAB = isDevelopment;
+
+/**
+ * Client-side feature flag for AI background UI.
+ * Enabled only in local development builds.
+ */
+export const SHOW_AI_BACKGROUNDS = isDevelopment;

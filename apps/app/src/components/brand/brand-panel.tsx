@@ -32,6 +32,7 @@ import {
   type BrandMode,
   type BrandPersonality,
 } from "@/lib/types/brand";
+import { SHOW_AI_BACKGROUNDS } from "@/lib/feature-flags-client";
 import { RefreshCw, Trash2, Loader2, Moon, Sun } from "lucide-react";
 import { BackgroundsCollection } from "./backgrounds-collection";
 import { AiBackgroundsCollection } from "./ai-backgrounds-collection";
@@ -475,7 +476,7 @@ export function BrandPanel() {
         )}
         </section>
 
-        <AiBackgroundsCollection personality={personality} />
+        {SHOW_AI_BACKGROUNDS ? <AiBackgroundsCollection personality={personality} /> : null}
         <BackgroundsCollection />
 
         <section className="space-y-3">
