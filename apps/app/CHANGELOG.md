@@ -1,5 +1,11 @@
 # dopeshot
 
+## 0.9.1
+
+### Patch Changes
+
+- 2411115: Fix image export failures when layouts include signed logo URLs by avoiding cache-busting on signed assets.
+
 ## 0.9.0
 
 ### Minor Changes
