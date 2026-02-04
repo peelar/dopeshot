@@ -51,6 +51,21 @@ export async function deleteScreenshot(storagePath: string): Promise<void> {
 }
 
 /**
+ * Copy a screenshot from one storage path to another
+ * @param sourcePath - Existing storage path
+ * @param targetPath - New storage path
+ */
+export async function copyScreenshot(sourcePath: string, targetPath: string): Promise<void> {
+  const { error } = await supabaseAdmin.storage
+    .from(BUCKET_NAME)
+    .copy(sourcePath, targetPath);
+
+  if (error) {
+    throw new Error(`Failed to copy screenshot: ${error.message}`);
+  }
+}
+
+/**
  * Get a signed URL for accessing a screenshot
  * @param storagePath - Full storage path (userId/memoryItemId.png)
  * @param expiresIn - TTL in seconds (default: 3600)

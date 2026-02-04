@@ -2,6 +2,10 @@ export function buildMemoryPath(itemId: string) {
   return `/m/${itemId}`;
 }
 
+export function buildSharePath(shareHash: string) {
+  return `/share/${shareHash}`;
+}
+
 export function setMemoryUrl(itemId: string) {
   if (typeof window === "undefined") {
     return;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ type AuthMode = "sign-in" | "sign-up";
 
 export function AuthForm() {
   const { user, isLoading } = useAuth();
+  const searchParams = useSearchParams();
+  const redirectTarget = searchParams.get("redirect") ?? "/";
   const [mode, setMode] = useState<AuthMode>("sign-in");
   const [useMagicLink, setUseMagicLink] = useState(true); // Default to magic link
   const [form, setForm] = useState({ email: "", password: "", confirmPassword: "" });
@@ -22,9 +25,9 @@ export function AuthForm() {
   useEffect(() => {
     if (user && !isLoading) {
       // Hard navigation ensures all JS state (including Jotai atoms) resets
-      window.location.replace("/");
+      window.location.replace(redirectTarget);
     }
-  }, [user, isLoading]);
+  }, [user, isLoading, redirectTarget]);
 
   const handleFormChange =
     (field: "email" | "password" | "confirmPassword") => (event: ChangeEvent<HTMLInputElement>) => {

@@ -9,6 +9,7 @@ import type { MemoryConfiguration, MemoryItemDTO } from "@/domain/memory/types";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { getCachedMemoryItems } from "@/lib/data/cached-memory";
+import { buildSharePath } from "@/lib/memory/memory-url";
 
 /**
  * GET /api/memory/items
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
           screenshotUrl,
           isShared: Boolean(item.shareHash),
           shareUrl: item.shareHash
-            ? `${request.nextUrl.origin}/${item.shareHash}`
+            ? `${request.nextUrl.origin}${buildSharePath(item.shareHash)}`
             : null,
           createdAt: item.createdAt.toISOString(),
         };
@@ -136,15 +137,27 @@ export async function POST(request: NextRequest) {
     }
 
     if (existing) {
+      let shareHash = existing.shareHash;
+      if (!shareHash) {
+        shareHash = nanoid(12);
+        await db.memoryItem.update({
+          where: { id: existing.id },
+          data: {
+            shareHash,
+            sharedAt: new Date(),
+          },
+        });
+      }
+
       // Return existing item - generate signed URL
       const screenshotUrl = await getSignedUrl(existing.screenshotPath);
       return NextResponse.json({
         item: {
           id: existing.id,
           screenshotUrl,
-          isShared: Boolean(existing.shareHash),
-          shareUrl: existing.shareHash
-            ? `${request.nextUrl.origin}/${existing.shareHash}`
+          isShared: Boolean(shareHash),
+          shareUrl: shareHash
+            ? `${request.nextUrl.origin}${buildSharePath(shareHash)}`
             : null,
           createdAt: existing.createdAt.toISOString(),
         },
@@ -171,10 +184,13 @@ export async function POST(request: NextRequest) {
           configHash,
           screenshotPath: storagePath,
           configuration: configuration as any,
+          shareHash: nanoid(12),
+          sharedAt: new Date(),
         },
         select: {
           id: true,
           createdAt: true,
+          shareHash: true,
         },
       });
     } catch (dbErr) {
@@ -198,8 +214,10 @@ export async function POST(request: NextRequest) {
     const itemDTO: MemoryItemDTO = {
       id: memoryItem.id,
       screenshotUrl,
-      isShared: false,
-      shareUrl: null,
+      isShared: Boolean(memoryItem.shareHash),
+      shareUrl: memoryItem.shareHash
+        ? `${request.nextUrl.origin}${buildSharePath(memoryItem.shareHash)}`
+        : null,
       createdAt: memoryItem.createdAt.toISOString(),
     };
 

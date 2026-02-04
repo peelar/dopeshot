@@ -4,6 +4,7 @@ import { getUserDb } from "@/lib/data/dal";
 import { getSignedUrl, deleteScreenshot } from "@/lib/storage/memory-storage";
 import type { MemoryItemFull } from "@/domain/memory/types";
 import { revalidateTag } from "next/cache";
+import { buildSharePath } from "@/lib/memory/memory-url";
 
 /**
  * GET /api/memory/items/[itemId]
@@ -70,7 +71,7 @@ export async function GET(
       screenshotUrl: screenshotUrl!,
       isShared: Boolean(item.shareHash),
       shareUrl: item.shareHash
-        ? `${request.nextUrl.origin}/${item.shareHash}`
+        ? `${request.nextUrl.origin}${buildSharePath(item.shareHash)}`
         : null,
       createdAt: item.createdAt.toISOString(),
       configuration: item.configuration as any, // Prisma Json type
