@@ -501,15 +501,16 @@ async function runOrchestration({
     } else {
       publishedCounts = await loadPublishedCounts(personalities);
       if (publishedCounts) {
+        const counts = publishedCounts;
         underrepresented = resolveUnderrepresented({
           personalities,
-          counts: publishedCounts,
+          counts,
           config: underrepresentedConfig,
         });
 
         if (underrepresented.size > 0) {
           const summary = personalities
-            .map((personality) => `${personality}:${publishedCounts.get(personality) ?? 0}`)
+            .map((personality) => `${personality}:${counts.get(personality) ?? 0}`)
             .join(", ");
           console.log(`Published counts: ${summary}`);
           console.log(`Underrepresented boost: ${Array.from(underrepresented).join(", ")}`);

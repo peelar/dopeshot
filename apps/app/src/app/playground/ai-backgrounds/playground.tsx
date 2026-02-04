@@ -272,21 +272,21 @@ export function AiBackgroundPlayground() {
           <FilterSelect
             label="Source"
             value={sourceFilter}
-            onChange={(value) => setSourceFilter(value as SourceFilter)}
+            onChange={(value) => setSourceFilter((value ?? "catalog") as SourceFilter)}
             options={sourceOptions}
           />
           {sourceFilter === "catalog" ? (
             <FilterSelect
               label="Status"
               value={statusFilter}
-              onChange={setStatusFilter}
+              onChange={(value) => setStatusFilter((value ?? "all") as StatusFilter)}
               options={statusOptions}
             />
           ) : null}
           <FilterSelect
             label="Personality"
             value={personalityFilter}
-            onChange={setPersonalityFilter}
+            onChange={(value) => setPersonalityFilter((value ?? "all") as string)}
             options={["all", ...brandPersonalityValues]}
           />
           <Button
@@ -547,15 +547,24 @@ function FilterSelect({
 }: {
   label: string;
   value: string;
-  onChange: (value: string) => void;
+  onChange: (value: string | null) => void;
   options: string[];
 }) {
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={(next) => onChange(next)}>
         <SelectTrigger className="min-w-[140px]">
-          <SelectValue placeholder={`All ${label.toLowerCase()}`} />
+          <SelectValue>
+            {(selected) => {
+              if (!selected) return `All ${label.toLowerCase()}`;
+              if (selected === "all") return "All";
+              return (
+                brandPersonalityLabels[selected as keyof typeof brandPersonalityLabels] ??
+                selected.charAt(0).toUpperCase() + selected.slice(1)
+              );
+            }}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (

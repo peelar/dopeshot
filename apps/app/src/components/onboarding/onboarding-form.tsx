@@ -528,7 +528,9 @@ export function OnboardingForm({
                       </div>
                     ) : (
                       catalogBackgrounds.map((item) => {
-                        const isSelected = selectedCatalogBackground?.sourceId === item.id;
+                        const selectedCatalogId =
+                          (selectedCatalogBackground as PersonalBackground | null)?.sourceId ?? null;
+                        const isSelected = selectedCatalogId === item.id;
                         return (
                           <button
                             key={item.id}

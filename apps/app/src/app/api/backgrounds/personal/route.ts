@@ -62,23 +62,13 @@ export async function GET() {
     );
 
     // Filter out failed items and log failures
-    const items = results
-      .filter((result): result is PromiseFulfilledResult<{
-        id: string;
-        name: string | null;
-        previewUrl: string | null;
-        fileSizeKb: number;
-        widthPx: number;
-        heightPx: number;
-        fileFormat: string;
-      }> => {
-        if (result.status === "rejected") {
-          console.error("Failed to generate signed URL for background:", result.reason);
-          return false;
-        }
-        return true;
-      })
-      .map((result) => result.value);
+    const items = results.flatMap((result) => {
+      if (result.status === "rejected") {
+        console.error("Failed to generate signed URL for background:", result.reason);
+        return [];
+      }
+      return [result.value];
+    });
 
     return NextResponse.json({ items });
   } catch (error) {

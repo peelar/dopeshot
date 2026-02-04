@@ -197,7 +197,7 @@ export function AuthForm() {
               type="button"
               onClick={handleGoogleSignIn}
               disabled={isLoading}
-              className="h-12 w-full rounded-lg border border-border/50 bg-muted/40 text-foreground hover:bg-muted/60 hover:text-foreground"
+              className="h-12 w-full rounded-lg border border-border/70 bg-white/90 text-foreground shadow-sm hover:bg-white hover:text-foreground dark:bg-muted/40 dark:hover:bg-muted/60"
               variant="outline"
             >
               <svg className="mr-2 h-5 w-5" viewBox="0 0 24 24">

@@ -128,18 +128,22 @@ export function LeftSidebar({
     if ("href" in item && item.href) {
       return (
         <Tooltip key={item.id}>
-          <TooltipTrigger asChild>
-            <Link
-              href={item.href}
-              className={cn(
-                "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-foreground/70 transition-colors",
-                "hover:border-border hover:bg-muted/60 hover:text-foreground",
-              )}
-              aria-label={item.label}
-            >
-              <item.icon className="h-5 w-5" aria-hidden="true" />
-            </Link>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={(props) => (
+              <span {...props}>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "group relative flex h-11 w-11 items-center justify-center rounded-xl border border-transparent text-foreground/70 transition-colors",
+                    "hover:border-border hover:bg-muted/60 hover:text-foreground",
+                  )}
+                  aria-label={item.label}
+                >
+                  <item.icon className="h-5 w-5" aria-hidden="true" />
+                </Link>
+              </span>
+            )}
+          />
           <TooltipContent side="right">{item.tooltip}</TooltipContent>
         </Tooltip>
       );
@@ -189,7 +193,7 @@ export function LeftSidebar({
 
     return (
       <Tooltip key={item.id}>
-        <TooltipTrigger asChild>{navButton}</TooltipTrigger>
+        <TooltipTrigger render={(props) => <span {...props}>{navButton}</span>} />
         <TooltipContent side="right">{item.tooltip}</TooltipContent>
       </Tooltip>
     );
@@ -331,18 +335,30 @@ function BrandTeaser() {
         </p>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button size="sm" asChild>
-          <a href="mailto:feedback@dopeshot.io?subject=Brand%20early%20access">Email me</a>
-        </Button>
-        <Button size="sm" variant="outline" asChild>
-          <a
-            href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Book a call
-          </a>
-        </Button>
+        <Button
+          size="sm"
+          nativeButton={false}
+          render={(props) => (
+            <a {...props} href="mailto:feedback@dopeshot.io?subject=Brand%20early%20access">
+              Email me
+            </a>
+          )}
+        />
+        <Button
+          size="sm"
+          variant="outline"
+          nativeButton={false}
+          render={(props) => (
+            <a
+              {...props}
+              href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Book a call
+            </a>
+          )}
+        />
       </div>
     </div>
   );

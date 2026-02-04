@@ -13,7 +13,7 @@ export async function requireAdmin(): Promise<AdminCheckResult> {
     return { ok: false, status: 401, error: "Unauthorized" };
   }
 
-  if (process.env.NODE_ENV !== "production") {
+  if (process.env.NODE_ENV === "development") {
     const email = session.session?.user?.email ?? null;
     return { ok: true, userId: session.userId, email };
   }

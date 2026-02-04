@@ -47,7 +47,7 @@ export function InAppHint({
   if (hintOpen) {
     return (
       <Tooltip open onOpenChange={handleHintOpenChange}>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger render={(props) => <span {...props}>{children}</span>} />
         <TooltipContent side={side} align={align}>
           {hintText}
         </TooltipContent>
@@ -58,7 +58,7 @@ export function InAppHint({
   if (fallbackText) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild>{children}</TooltipTrigger>
+        <TooltipTrigger render={(props) => <span {...props}>{children}</span>} />
         <TooltipContent side={side} align={align}>
           {fallbackText}
         </TooltipContent>

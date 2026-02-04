@@ -134,6 +134,7 @@ export async function POST(request: Request) {
 
     const background = await db.personalBackground.create({
       data: {
+        userId: auth.userId,
         name: `AI ${catalogItem.personality} background`,
         storagePath: uploadPath,
         previewUrl: uploadPath,
