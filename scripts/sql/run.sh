@@ -93,6 +93,17 @@ strip_quotes() {
   echo "$s"
 }
 
+set_sql_url() {
+  local value="$1"
+  local label="$2"
+  local cleaned
+  cleaned="$(strip_quotes "$value")"
+  if [[ -z "$SQL_URL" && -n "$cleaned" ]]; then
+    SQL_URL="$cleaned"
+    SQL_URL_SOURCE="$label"
+  fi
+}
+
 read_env_value() {
   local key="$1"
   local file="$2"
@@ -102,10 +113,13 @@ read_env_value() {
 }
 
 SQL_URL=""
+SQL_URL_SOURCE=""
 ENV_FILE=""
+ENVIRONMENT_UPPER="$(echo "${ENVIRONMENT:-}" | tr '[:lower:]' '[:upper:]')"
 
 if [[ -n "$URL_OVERRIDE" ]]; then
   SQL_URL="$(strip_quotes "$URL_OVERRIDE")"
+  SQL_URL_SOURCE="--url"
   ENV_FILE="(override: --url)"
 else
   if [[ "$ENVIRONMENT" != "staging" && "$ENVIRONMENT" != "prod" && "$ENVIRONMENT" != "local" ]]; then
@@ -115,22 +129,57 @@ else
 
   if [[ "$ENVIRONMENT" == "staging" ]]; then
     ENV_FILE="${STAGING_ENV_FILE:-${ENV_FILE:-$APP_DIR/.env.local}}"
+    ENV_DIRECT_FROM_FILE="$(read_env_value "STAGING_DIRECT_DATABASE_URL" "$ENV_FILE")"
     DIRECT_FROM_FILE="$(read_env_value "DIRECT_DATABASE_URL" "$ENV_FILE")"
     DIRECT_ALT_FROM_FILE="$(read_env_value "DIRECT_URL" "$ENV_FILE")"
-    SQL_URL="${STAGING_DIRECT_DATABASE_URL:-${DIRECT_DATABASE_URL:-${DIRECT_URL:-${DIRECT_FROM_FILE:-$DIRECT_ALT_FROM_FILE}}}}"
+    set_sql_url "${STAGING_DIRECT_DATABASE_URL:-}" "STAGING_DIRECT_DATABASE_URL (env)"
+    set_sql_url "${DIRECT_DATABASE_URL:-}" "DIRECT_DATABASE_URL (env)"
+    set_sql_url "${DIRECT_URL:-}" "DIRECT_URL (env)"
+    set_sql_url "${ENV_DIRECT_FROM_FILE:-}" "STAGING_DIRECT_DATABASE_URL ($ENV_FILE)"
+    set_sql_url "${DIRECT_FROM_FILE:-}" "DIRECT_DATABASE_URL ($ENV_FILE)"
+    set_sql_url "${DIRECT_ALT_FROM_FILE:-}" "DIRECT_URL ($ENV_FILE)"
   elif [[ "$ENVIRONMENT" == "prod" ]]; then
     ENV_FILE="${PROD_ENV_FILE:-$APP_DIR/.env.prod}"
+    if [[ ! -f "$ENV_FILE" && -z "${PROD_DIRECT_DATABASE_URL:-}" && -z "${DIRECT_DATABASE_URL:-}" && -z "${DIRECT_URL:-}" ]]; then
+      cat <<EOF
+Error: prod env file not found: $ENV_FILE
+
+Set one of the following:
+  - Create $ENV_FILE (recommended)
+  - Set PROD_ENV_FILE=/path/to/env
+  - Export PROD_DIRECT_DATABASE_URL in your shell
+  - Use --url 'postgresql://...'
+EOF
+      exit 1
+    fi
+    ALLOW_PROD_URL=0
+    if [[ "${PROD_SQL_CONFIRMED:-}" == "yes" || "${npm_lifecycle_event:-}" == "sql:prod" ]]; then
+      ALLOW_PROD_URL=1
+    fi
+    if [[ "$ALLOW_PROD_URL" -eq 1 ]]; then
+      ENV_DIRECT_FROM_FILE="$(read_env_value "PROD_DIRECT_DATABASE_URL" "$ENV_FILE")"
+      PROD_DIRECT_FROM_ENV="${PROD_DIRECT_DATABASE_URL:-}"
+    else
+      ENV_DIRECT_FROM_FILE=""
+      PROD_DIRECT_FROM_ENV=""
+    fi
     DIRECT_FROM_FILE="$(read_env_value "DIRECT_DATABASE_URL" "$ENV_FILE")"
     DIRECT_ALT_FROM_FILE="$(read_env_value "DIRECT_URL" "$ENV_FILE")"
-    SQL_URL="${PROD_DIRECT_DATABASE_URL:-${DIRECT_DATABASE_URL:-${DIRECT_URL:-${DIRECT_FROM_FILE:-$DIRECT_ALT_FROM_FILE}}}}"
+    set_sql_url "${PROD_DIRECT_FROM_ENV:-}" "PROD_DIRECT_DATABASE_URL (env)"
+    set_sql_url "${DIRECT_DATABASE_URL:-}" "DIRECT_DATABASE_URL (env)"
+    set_sql_url "${DIRECT_URL:-}" "DIRECT_URL (env)"
+    set_sql_url "${ENV_DIRECT_FROM_FILE:-}" "PROD_DIRECT_DATABASE_URL ($ENV_FILE)"
+    set_sql_url "${DIRECT_FROM_FILE:-}" "DIRECT_DATABASE_URL ($ENV_FILE)"
+    set_sql_url "${DIRECT_ALT_FROM_FILE:-}" "DIRECT_URL ($ENV_FILE)"
   else
     ENV_FILE="${LOCAL_ENV_FILE:-${ENV_FILE:-$APP_DIR/.env.local}}"
     DIRECT_FROM_FILE="$(read_env_value "DIRECT_DATABASE_URL" "$ENV_FILE")"
     DIRECT_ALT_FROM_FILE="$(read_env_value "DIRECT_URL" "$ENV_FILE")"
-    SQL_URL="${DIRECT_DATABASE_URL:-${DIRECT_URL:-${DIRECT_FROM_FILE:-$DIRECT_ALT_FROM_FILE}}}"
+    set_sql_url "${DIRECT_DATABASE_URL:-}" "DIRECT_DATABASE_URL (env)"
+    set_sql_url "${DIRECT_URL:-}" "DIRECT_URL (env)"
+    set_sql_url "${DIRECT_FROM_FILE:-}" "DIRECT_DATABASE_URL ($ENV_FILE)"
+    set_sql_url "${DIRECT_ALT_FROM_FILE:-}" "DIRECT_URL ($ENV_FILE)"
   fi
-
-  SQL_URL="$(strip_quotes "${SQL_URL:-}")"
 fi
 
 if [[ -z "$SQL_URL" ]]; then
@@ -138,13 +187,37 @@ if [[ -z "$SQL_URL" ]]; then
 No database URL found.
 
 Set one of the following:
+  - ${ENVIRONMENT_UPPER}_DIRECT_DATABASE_URL in $ENV_FILE
   - DIRECT_DATABASE_URL in $ENV_FILE
   - DIRECT_URL in $ENV_FILE
-  - ${ENVIRONMENT^^}_DIRECT_DATABASE_URL in your shell
+  - ${ENVIRONMENT_UPPER}_DIRECT_DATABASE_URL in your shell
   - Use --url 'postgresql://...'
 EOF
+  if [[ "$ENVIRONMENT" == "prod" && "${ALLOW_PROD_URL:-0}" -eq 0 ]]; then
+    echo
+    echo "Note: PROD_DIRECT_DATABASE_URL is only read when running via 'pnpm sql:prod' (or with PROD_SQL_CONFIRMED=yes)."
+  fi
   exit 1
 fi
+
+if [[ "$SQL_URL" == =* ]]; then
+  echo "Error: invalid database URL (starts with '='). Check for a double '=' in your env file."
+  exit 1
+fi
+
+if [[ "$SQL_URL" =~ [[:space:]] ]]; then
+  echo "Error: invalid database URL (contains whitespace)."
+  exit 1
+fi
+
+case "$SQL_URL" in
+  postgres://*|postgresql://*)
+    ;;
+  *)
+    echo "Error: invalid database URL (expected postgres:// or postgresql://)."
+    exit 1
+    ;;
+esac
 
 if [[ "$ENVIRONMENT" == "prod" && "$DRY_RUN" -eq 0 ]]; then
   if [[ "${PROD_SQL_CONFIRMED:-}" != "yes" ]]; then
@@ -193,6 +266,11 @@ if [[ "$DRY_RUN" -eq 1 ]]; then
   echo "  Environment: $ENVIRONMENT"
   echo "  Script: $SCRIPT_PATH"
   echo "  Env file: $ENV_FILE"
+  if [[ -n "$SQL_URL_SOURCE" ]]; then
+    echo "  URL source: $SQL_URL_SOURCE"
+  else
+    echo "  URL source: (unknown)"
+  fi
   if [[ "${VAR_KEYS[*]-}" != "" ]]; then
     echo "  Vars: ${VAR_KEYS[*]}"
   else

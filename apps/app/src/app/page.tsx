@@ -1,6 +1,7 @@
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
+import { FORCE_ONBOARDING_DEV } from "@/lib/dev-flags";
 import { getUserTier } from "@/lib/tier";
 import { isBrandPersonality } from "@/lib/types/brand";
 
@@ -57,7 +58,7 @@ export default async function Page() {
         looksCompleteFromProfile(profile);
     }
 
-    const initialOnboardingOpen = tier === "brand" && !onboardingComplete;
+    const initialOnboardingOpen = FORCE_ONBOARDING_DEV || (tier === "brand" && !onboardingComplete);
 
     return (
       <PlaygroundPage

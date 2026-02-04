@@ -3,14 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { useSession } from "@/lib/auth/auth-client";
+import { FORCE_ONBOARDING_DEV } from "@/lib/dev-flags";
 
 type OnboardingStatusPayload = {
   tier: "free" | "brand";
   onboardingComplete: boolean;
 };
-
-const FORCE_ONBOARDING_DEV =
-  process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_FORCE_ONBOARDING === "true";
 
 export function useOnboardingStatus(options?: { enabled?: boolean }) {
   const { data: session, isPending } = useSession();
