@@ -1,13 +1,11 @@
-import { notFound } from "next/navigation";
 import { PlaygroundPage } from "@/app/(playground)/_components/playground-page";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getUserTier } from "@/lib/tier";
 import { isBrandPersonality } from "@/lib/types/brand";
 
-const isPlaygroundEnabled = process.env.NODE_ENV !== "production";
-
 const BRAND_ONBOARDING_STEP = "brand_profile";
+const BRAND_ONBOARDING_DISMISSED_STEP = "brand_profile_dismissed";
 
 function looksCompleteFromProfile(profile: {
   logoPath: string | null;
@@ -25,10 +23,6 @@ function looksCompleteFromProfile(profile: {
 }
 
 export default async function Page() {
-  if (!isPlaygroundEnabled) {
-    notFound();
-  }
-
   const session = await verifySession();
 
   if (session.isAuth && session.userId) {
@@ -59,6 +53,7 @@ export default async function Page() {
 
       onboardingComplete =
         completedSteps.includes(BRAND_ONBOARDING_STEP) ||
+        completedSteps.includes(BRAND_ONBOARDING_DISMISSED_STEP) ||
         looksCompleteFromProfile(profile);
     }
 

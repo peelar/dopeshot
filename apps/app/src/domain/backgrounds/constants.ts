@@ -1,4 +1,5 @@
 export const PERSONAL_BACKGROUND_BUCKET = "user-backgrounds";
+export const AI_BACKGROUND_BUCKET = "ai-backgrounds";
 
 export const MAX_BACKGROUND_FILE_SIZE_KB = 10240;
 export const MAX_BRAND_BACKGROUNDS = 10;

@@ -38,6 +38,8 @@ export async function GET() {
         widthPx: true,
         heightPx: true,
         fileFormat: true,
+        sourceType: true,
+        sourceId: true,
       },
     });
 
@@ -53,28 +55,20 @@ export async function GET() {
           widthPx: background.widthPx,
           heightPx: background.heightPx,
           fileFormat: background.fileFormat,
+          sourceType: background.sourceType,
+          sourceId: background.sourceId,
         };
       }),
     );
 
     // Filter out failed items and log failures
-    const items = results
-      .filter((result): result is PromiseFulfilledResult<{
-        id: string;
-        name: string | null;
-        previewUrl: string | null;
-        fileSizeKb: number;
-        widthPx: number;
-        heightPx: number;
-        fileFormat: string;
-      }> => {
-        if (result.status === "rejected") {
-          console.error("Failed to generate signed URL for background:", result.reason);
-          return false;
-        }
-        return true;
-      })
-      .map((result) => result.value);
+    const items = results.flatMap((result) => {
+      if (result.status === "rejected") {
+        console.error("Failed to generate signed URL for background:", result.reason);
+        return [];
+      }
+      return [result.value];
+    });
 
     return NextResponse.json({ items });
   } catch (error) {
@@ -172,6 +166,8 @@ export async function POST(request: Request) {
         widthPx: true,
         heightPx: true,
         fileFormat: true,
+        sourceType: true,
+        sourceId: true,
       },
     });
 
@@ -186,6 +182,8 @@ export async function POST(request: Request) {
         widthPx: background.widthPx,
         heightPx: background.heightPx,
         fileFormat: background.fileFormat,
+        sourceType: background.sourceType,
+        sourceId: background.sourceId,
       },
       { status: 201 },
     );

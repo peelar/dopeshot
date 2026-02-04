@@ -1,5 +1,5 @@
 -- Upgrade a user to the "brand" tier by email (PostgreSQL).
--- Supabase SQL Editor: replace the email literal in the target CTE and run.
+-- Run with psql vars: ./scripts/sql/run.sh <env> upgrade-brand-user.sql --email user@example.com
 -- Safe to run repeatedly: adds missing columns if they aren't present yet.
 
 -- Ensure required columns exist (no-op if already present)
@@ -8,8 +8,8 @@ ALTER TABLE public.user_metadata
   ADD COLUMN IF NOT EXISTS subscription_status text NOT NULL DEFAULT 'active';
 
 WITH target AS (
-  -- Replace this email before running
-  SELECT id FROM public."user" WHERE email = 'user@example.com'
+  -- Email is provided via psql variable: :email
+  SELECT id FROM public."user" WHERE email = :'email'
 )
 INSERT INTO public.user_metadata (
   id,

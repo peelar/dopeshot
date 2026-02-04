@@ -204,6 +204,18 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
     [totalPages],
   );
 
+  const emptyState = (
+    <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-3">
+      <div className="text-xs text-muted-foreground">
+        Upload a screenshot to generate backgrounds.
+      </div>
+    </div>
+  );
+
+  if (!hasScreenshot && variant === "inline") {
+    return emptyState;
+  }
+
   // Inline variant: just gradients, no pagination
   if (variant === "inline") {
     return <GradientPicker onChangeAction={handleGradientChange} variant="inline" />;
@@ -237,16 +249,18 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
         )}
       </div>
 
-      {activePage === 0 ? (
-        <GradientPicker onChangeAction={handleGradientChange} />
-      ) : (
-        <BrandBackgroundGrid
-          backgrounds={brandPageBackgrounds}
-          selection={selection}
-          onSelect={handleBrandBackgroundSelect}
-          isLoading={isLoadingBackgrounds}
-        />
-      )}
+      {!hasScreenshot ? (
+        emptyState
+      ) : activePage === 0 ? (
+          <GradientPicker onChangeAction={handleGradientChange} />
+        ) : (
+          <BrandBackgroundGrid
+            backgrounds={brandPageBackgrounds}
+            selection={selection}
+            onSelect={handleBrandBackgroundSelect}
+            isLoading={isLoadingBackgrounds}
+          />
+        )}
     </section>
   );
 }

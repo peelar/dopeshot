@@ -1,4 +1,4 @@
-import type { BackgroundSelection, PersonalBackground } from "./types";
+import type { BackgroundSelection, CatalogBackground, PersonalBackground } from "./types";
 
 // Cache personal backgrounds for a short window to avoid repeated fetches
 const PERSONAL_BACKGROUNDS_TTL_MS = 5 * 60 * 1000; // 5 minutes
@@ -12,6 +12,7 @@ type ListResponse<T> = {
 type SelectionResponse = BackgroundSelection;
 
 type UploadResponse = PersonalBackground;
+type CatalogListResponse = ListResponse<CatalogBackground>;
 
 export class BackgroundApiError extends Error {
   status: number;
@@ -71,6 +72,31 @@ export async function listPersonalBackgrounds(
     });
 
   return personalBackgroundsPromise;
+}
+
+export async function listCatalogBackgrounds(options: {
+  personality: string;
+  limit?: number;
+  offset?: number;
+}): Promise<CatalogListResponse> {
+  const params = new URLSearchParams();
+  params.set("personality", options.personality);
+  if (options.limit) params.set("limit", String(options.limit));
+  if (options.offset) params.set("offset", String(options.offset));
+
+  const response = await fetch(`/api/backgrounds/catalog?${params.toString()}`, {
+    method: "GET",
+  });
+  return parseResponse<CatalogListResponse>(response);
+}
+
+export async function addCatalogBackground(catalogId: string): Promise<PersonalBackground> {
+  const response = await fetch("/api/backgrounds/catalog/add", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ catalogId }),
+  });
+  return parseResponse<PersonalBackground>(response);
 }
 
 export async function getBackgroundSelection(): Promise<SelectionResponse | null> {

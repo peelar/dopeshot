@@ -1,13 +1,15 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, Loader2, Moon, Sun, X } from "lucide-react";
+import { Check, ImagePlus, Loader2, Moon, RefreshCw, Sun, X } from "lucide-react";
 import { useTheme } from "next-themes";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Skeleton } from "@/components/ui/skeleton";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
 import {
@@ -20,6 +22,10 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { useBackgroundUpload } from "@/hooks/use-background-upload";
 import { invalidateTierCache } from "@/hooks/use-user-tier";
+import { addCatalogBackground, listCatalogBackgrounds } from "@/domain/backgrounds/background-service";
+import { BACKGROUNDS_PER_PAGE } from "@/domain/backgrounds/constants";
+import type { CatalogBackground, PersonalBackground } from "@/domain/backgrounds/types";
+import { SHOW_AI_BACKGROUNDS } from "@/lib/feature-flags-client";
 
 type OnboardingFormProps = {
   initialLogoUrl?: string | null;
@@ -84,6 +90,16 @@ export function OnboardingForm({
     uploadedBackground,
   } = useBackgroundUpload({ showToasts: true, trackAnalytics: true });
 
+  const [backgroundMode, setBackgroundMode] = useState<"upload" | "ai">(
+    SHOW_AI_BACKGROUNDS ? "ai" : "upload",
+  );
+  const [catalogBackgrounds, setCatalogBackgrounds] = useState<CatalogBackground[]>([]);
+  const [isCatalogLoading, setIsCatalogLoading] = useState(false);
+  const [isCatalogShuffling, setIsCatalogShuffling] = useState(false);
+  const [addingCatalogId, setAddingCatalogId] = useState<string | null>(null);
+  const [selectedCatalogBackground, setSelectedCatalogBackground] =
+    useState<PersonalBackground | null>(null);
+
   const dropZonePattern = useMemo(() => {
     const isDark = resolvedTheme !== "light";
     const tint = isDark ? "255,255,255" : "0,0,0";
@@ -128,6 +144,80 @@ export function OnboardingForm({
     }),
     [],
   );
+
+  const backgroundModeOptions = useMemo(() => {
+    const options = [{ id: "upload", label: "Upload" }];
+    if (SHOW_AI_BACKGROUNDS) {
+      options.push({ id: "ai", label: "AI suggestions" });
+    }
+    return options;
+  }, []);
+
+  const loadCatalogSuggestions = useCallback(
+    async ({ offset = 0, shuffle = false }: { offset?: number; shuffle?: boolean } = {}) => {
+      if (!SHOW_AI_BACKGROUNDS || backgroundMode !== "ai") return;
+      setIsCatalogLoading(!shuffle);
+      setIsCatalogShuffling(shuffle);
+
+      try {
+        const response = await listCatalogBackgrounds({
+          personality,
+          limit: BACKGROUNDS_PER_PAGE,
+          offset,
+        });
+        if (response.items.length === 0 && offset > 0) {
+          const fallback = await listCatalogBackgrounds({
+            personality,
+            limit: BACKGROUNDS_PER_PAGE,
+            offset: 0,
+          });
+          setCatalogBackgrounds(fallback.items);
+        } else {
+          setCatalogBackgrounds(response.items);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to load AI suggestions";
+        toast.error(message);
+      } finally {
+        setIsCatalogLoading(false);
+        setIsCatalogShuffling(false);
+      }
+    },
+    [backgroundMode, personality],
+  );
+
+  const handleShuffleCatalog = useCallback(() => {
+    const offset = Math.floor(Math.random() * 48);
+    void loadCatalogSuggestions({ offset, shuffle: true });
+  }, [loadCatalogSuggestions]);
+
+  const handleSelectCatalog = useCallback(
+    async (item: CatalogBackground) => {
+      setAddingCatalogId(item.id);
+      try {
+        const background = await addCatalogBackground(item.id);
+        setSelectedCatalogBackground(background);
+        resetBackground();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to add background";
+        toast.error(message);
+      } finally {
+        setAddingCatalogId(null);
+      }
+    },
+    [resetBackground],
+  );
+
+  useEffect(() => {
+    if (!SHOW_AI_BACKGROUNDS || backgroundMode !== "ai") return;
+    void loadCatalogSuggestions({ offset: 0 });
+  }, [backgroundMode, loadCatalogSuggestions, personality]);
+
+  useEffect(() => {
+    if (backgroundMode === "upload") {
+      setSelectedCatalogBackground(null);
+    }
+  }, [backgroundMode]);
 
   const handleLogoUpload = async (file: File) => {
     setIsUploadingLogo(true);
@@ -194,7 +284,7 @@ export function OnboardingForm({
         mode,
         personality,
         has_logo: Boolean(logoPath),
-        has_background: Boolean(uploadedBackground),
+        has_background: Boolean(uploadedBackground || selectedCatalogBackground),
       });
 
       // Invalidate tier cache in case user was upgraded during onboarding
@@ -214,7 +304,11 @@ export function OnboardingForm({
 
   const handleBgFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) void uploadBackground(file);
+    if (file) {
+      setBackgroundMode("upload");
+      setSelectedCatalogBackground(null);
+      void uploadBackground(file);
+    }
     e.currentTarget.value = "";
   };
 
@@ -318,52 +412,164 @@ export function OnboardingForm({
               aria-label="Upload background"
             />
 
-            <div className="mt-4">
-              {uploadedBackground ? (
+            <div className="mt-4 space-y-3">
+              {SHOW_AI_BACKGROUNDS ? (
+                <SegmentedControl
+                  value={backgroundMode}
+                  options={backgroundModeOptions}
+                  onChange={(value) => setBackgroundMode(value as "upload" | "ai")}
+                  ariaLabel="Background source"
+                />
+              ) : null}
+
+              {backgroundMode === "upload" ? (
+                <>
+                  {uploadedBackground ? (
+                    <div className="relative overflow-hidden rounded-lg border border-border">
+                      <div
+                        className="aspect-video w-full bg-cover bg-center"
+                        style={{ backgroundImage: `url(${uploadedBackground.previewUrl})` }}
+                        aria-label="Uploaded background preview"
+                      />
+                      <button
+                        type="button"
+                        onClick={resetBackground}
+                        disabled={isSubmitting}
+                        className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
+                        aria-label="Remove background"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => bgInputRef.current?.click()}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (isUploadingBackground || isSubmitting) return;
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          setBackgroundMode("upload");
+                          setSelectedCatalogBackground(null);
+                          void uploadBackground(file);
+                        }
+                      }}
+                      disabled={isUploadingBackground || isSubmitting}
+                      className={cn(
+                        "flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/30 transition",
+                        "hover:border-border hover:bg-muted/50 dark:bg-black/20 dark:hover:bg-black/30",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                        (isUploadingBackground || isSubmitting) && "cursor-not-allowed opacity-60",
+                      )}
+                    >
+                      {isUploadingBackground ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Drop or click to upload</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              ) : selectedCatalogBackground ? (
                 <div className="relative overflow-hidden rounded-lg border border-border">
                   <div
                     className="aspect-video w-full bg-cover bg-center"
-                    style={{ backgroundImage: `url(${uploadedBackground.previewUrl})` }}
-                    aria-label="Uploaded background preview"
+                    style={{ backgroundImage: `url(${selectedCatalogBackground.previewUrl})` }}
+                    aria-label="Selected AI background preview"
                   />
                   <button
                     type="button"
-                    onClick={resetBackground}
+                    onClick={() => setSelectedCatalogBackground(null)}
                     disabled={isSubmitting}
                     className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-black/80"
-                    aria-label="Remove background"
+                    aria-label="Remove AI background"
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={() => bgInputRef.current?.click()}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault();
-                    if (isUploadingBackground || isSubmitting) return;
-                    const file = e.dataTransfer.files?.[0];
-                    if (file) void uploadBackground(file);
-                  }}
-                  disabled={isUploadingBackground || isSubmitting}
-                  className={cn(
-                    "flex aspect-video w-full flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border/60 bg-muted/30 transition",
-                    "hover:border-border hover:bg-muted/50 dark:bg-black/20 dark:hover:bg-black/30",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
-                    (isUploadingBackground || isSubmitting) && "cursor-not-allowed opacity-60",
-                  )}
-                >
-                  {isUploadingBackground ? (
-                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  ) : (
-                    <>
-                      <ImagePlus className="h-6 w-6 text-muted-foreground" />
-                      <span className="text-xs text-muted-foreground">Drop or click to upload</span>
-                    </>
-                  )}
-                </button>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      AI suggestions for {brandPersonalityLabels[personality]}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleShuffleCatalog}
+                      disabled={isCatalogLoading || isCatalogShuffling}
+                      className="h-7 gap-1.5 px-2 text-xs"
+                    >
+                      {isCatalogShuffling ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-3.5 w-3.5" />
+                      )}
+                      Shuffle
+                    </Button>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    {isCatalogLoading ? (
+                      <>
+                        <Skeleton className="aspect-video w-full rounded-lg" />
+                        <Skeleton className="aspect-video w-full rounded-lg" />
+                        <Skeleton className="aspect-video w-full rounded-lg" />
+                      </>
+                    ) : catalogBackgrounds.length === 0 ? (
+                      <div className="col-span-3 flex min-h-[64px] items-center justify-center rounded-lg border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
+                        No AI backgrounds yet. Check back soon.
+                      </div>
+                    ) : (
+                      catalogBackgrounds.map((item) => {
+                        const selectedCatalogId =
+                          (selectedCatalogBackground as PersonalBackground | null)?.sourceId ?? null;
+                        const isSelected = selectedCatalogId === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => handleSelectCatalog(item)}
+                            disabled={addingCatalogId === item.id || isSubmitting}
+                            className={cn(
+                              "group relative aspect-video w-full overflow-hidden rounded-lg border border-border/60 bg-muted/30 text-left transition",
+                              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                              (addingCatalogId === item.id || isSubmitting) && "cursor-not-allowed opacity-80",
+                            )}
+                          >
+                            <div
+                              className="absolute inset-0"
+                              style={{
+                                backgroundImage: `url(${item.previewUrl})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                              }}
+                              aria-hidden
+                            />
+                            <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-[11px] font-semibold text-white">
+                                {addingCatalogId === item.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : isSelected ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : (
+                                  <ImagePlus className="h-3.5 w-3.5" />
+                                )}
+                                {isSelected ? "Selected" : "Select"}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               )}
             </div>
           </div>

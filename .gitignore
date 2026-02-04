@@ -53,3 +53,7 @@ playwright-report/
 .codex/
 
 .vercel
+
+# AI background seeding manifests
+apps/app/data/ai-backgrounds/seeds.json
+apps/app/data/ai-backgrounds/discards.json

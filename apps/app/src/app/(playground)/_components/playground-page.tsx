@@ -9,6 +9,7 @@ import { MobileActions } from "@/components/layout/mobile-actions";
 import { PlaygroundWorkspace } from "@/app/(playground)/_components/playground-workspace";
 import { LayoutSelector } from "@/components/selectors/layout-selector";
 import { SidebarTabs } from "@/components/layout/sidebar-tabs";
+import { LeftSidebar, type LeftSidebarView } from "@/components/layout/left-sidebar";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { useUserTier } from "@/hooks/use-user-tier";
@@ -35,7 +36,6 @@ import { getDefaultDemoPreset } from "@/domain/demo/presets";
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
-import { MemorySidebar } from "@/components/memory/memory-sidebar";
 import { useMemory } from "@/hooks/use-memory";
 import { useSession } from "@/lib/auth/auth-client";
 import { useSaveDesign } from "@/hooks/use-save-design";
@@ -113,6 +113,7 @@ type PlaygroundPageProps = {
   initialMemoryItemId?: string;
   initialIsAuthenticated?: boolean;
   initialOnboardingOpen?: boolean;
+  initialLeftSidebarView?: LeftSidebarView;
 };
 
 export function PlaygroundPage(props: PlaygroundPageProps) {
@@ -142,6 +143,7 @@ function PlaygroundPageInner({
   initialMemoryItemId,
   initialIsAuthenticated,
   initialOnboardingOpen,
+  initialLeftSidebarView,
 }: PlaygroundPageProps) {
   const router = useRouter();
   const orientation = useAtomValue(orientationAtom);
@@ -198,11 +200,16 @@ function PlaygroundPageInner({
     fetchMemoryItems,
     deleteDesign,
     resetToEmptyCanvas,
-    isLoading: isMemoryLoading,
   } = useMemory();
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user) || Boolean(initialIsAuthenticated);
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
+  const [leftSidebarView, setLeftSidebarView] = useState<LeftSidebarView>(
+    initialLeftSidebarView ?? "saved",
+  );
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(
+    initialLeftSidebarView === "brand" || initialLeftSidebarView === "account",
+  );
 
   const {
     shouldRedirectToOnboarding,
@@ -279,6 +286,7 @@ function PlaygroundPageInner({
   useEffect(() => {
     if (!isLoggedIn) {
       hasBootstrappedRef.current = false;
+      setLeftSidebarOpen(false);
       return;
     }
 
@@ -397,6 +405,23 @@ function PlaygroundPageInner({
     showLoadingState,
   ]);
 
+  const handleLeftSidebarViewChange = useCallback((view: LeftSidebarView) => {
+    setLeftSidebarView(view);
+    if (typeof window === "undefined") return;
+    const routeForView: Record<LeftSidebarView, string> = {
+      saved: "/",
+      brand: "/brand",
+      account: "/account",
+    };
+    const currentPath = window.location.pathname;
+    const allowedRoutes = new Set(Object.values(routeForView));
+    if (!allowedRoutes.has(currentPath)) return;
+    const nextPath = routeForView[view];
+    if (currentPath !== nextPath) {
+      window.history.replaceState(null, "", nextPath);
+    }
+  }, []);
+
   // Save design hooks
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
   const hasExported = useAtomValue(hasExportedAtom);
@@ -447,7 +472,6 @@ function PlaygroundPageInner({
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
         onNewClick={resetToEmptyCanvas}
-        showUploadButton={requiresScreenshot}
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
@@ -457,16 +481,29 @@ function PlaygroundPageInner({
         isAtSaveLimit={isAtLimit}
         saveCount={saveCount}
         saveLimit={saveLimit}
-        onBrandClick={undefined}
         onFeedbackClick={handleFeedbackClick}
+        onLeftSidebarToggle={
+          isLoggedIn ? () => setLeftSidebarOpen((prev) => !prev) : undefined
+        }
+        leftSidebarOpen={leftSidebarOpen}
       />
 
-      {/* Three-column layout: Memory Sidebar | Content (Looks + Preview) | Design Sidebar */}
+      {/* Layout: Left Rail/Drawer | Content (Looks + Preview) | Design Sidebar */}
       <div className={cn("flex min-h-0 flex-1", isMobile ? "flex-col" : "overflow-hidden")}>
-        {/* Left: Memory Sidebar (collapsible) */}
-        <MemoryErrorBoundary>
-          <MemorySidebar onLoadItem={loadMemoryItem} onDeleteItem={deleteDesign} />
-        </MemoryErrorBoundary>
+        {/* Left: Logged-in sidebar (rail + drawer) */}
+        {isLoggedIn ? (
+          <MemoryErrorBoundary>
+            <LeftSidebar
+              isOpen={leftSidebarOpen}
+              activeView={leftSidebarView}
+              onOpenChange={setLeftSidebarOpen}
+              onViewChange={handleLeftSidebarViewChange}
+              onLoadItem={loadMemoryItem}
+              onDeleteItem={deleteDesign}
+              isMobile={isMobile}
+            />
+          </MemoryErrorBoundary>
+        ) : null}
 
         {/* Center: Content Column (Looks Rail + Preview) */}
         <PlaygroundErrorBoundary>

@@ -18,8 +18,21 @@ CREATE TABLE IF NOT EXISTS "personal_backgrounds" (
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "personal_backgrounds_user_id_idx" ON "personal_backgrounds"("user_id");
 
--- AddForeignKey
-ALTER TABLE "personal_backgrounds" ADD CONSTRAINT "personal_backgrounds_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (guarded for existing schema)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'personal_backgrounds_user_id_fkey'
+          AND conrelid = 'public.personal_backgrounds'::regclass
+    ) THEN
+        ALTER TABLE "personal_backgrounds"
+          ADD CONSTRAINT "personal_backgrounds_user_id_fkey"
+          FOREIGN KEY ("user_id") REFERENCES "user"("id")
+          ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;
 
 -- CreateTable (if not exists)
 CREATE TABLE IF NOT EXISTS "background_selections" (
@@ -35,5 +48,18 @@ CREATE TABLE IF NOT EXISTS "background_selections" (
 -- CreateIndex
 CREATE UNIQUE INDEX IF NOT EXISTS "background_selections_user_id_key" ON "background_selections"("user_id");
 
--- AddForeignKey
-ALTER TABLE "background_selections" ADD CONSTRAINT "background_selections_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+-- AddForeignKey (guarded for existing schema)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'background_selections_user_id_fkey'
+          AND conrelid = 'public.background_selections'::regclass
+    ) THEN
+        ALTER TABLE "background_selections"
+          ADD CONSTRAINT "background_selections_user_id_fkey"
+          FOREIGN KEY ("user_id") REFERENCES "user"("id")
+          ON DELETE CASCADE ON UPDATE CASCADE;
+    END IF;
+END $$;

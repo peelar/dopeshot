@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { User, X } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils/cn";
 
 const STORAGE_KEY = "dopeshot:lastDismissedUpdateId";
@@ -23,6 +24,7 @@ const CURRENT_UPDATE: InAppUpdate = {
 };
 
 export function InAppUpdateBanner({ className }: { className?: string }) {
+  const { isAuthenticated } = useAuth();
   const [ready, setReady] = useState(false);
   const [lastDismissedId, setLastDismissedId] = useState<string | null>(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -67,12 +69,12 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
           </div>
 
           <div className="flex items-center gap-1">
-            {update.cta ? (
+            {update.cta && !isAuthenticated ? (
               <Link
                 href={update.cta.href}
                 className={cn(
                   buttonVariants({ variant: "default", size: "xs" }),
-                  "cursor-default shadow-none"
+                  "shadow-none"
                 )}
               >
                 <User className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
@@ -84,7 +86,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               type="button"
               variant="ghost"
               size="icon-xs"
-              className="cursor-default text-foreground/70 hover:bg-primary/10 hover:text-foreground"
+              className="text-foreground/70 hover:bg-primary/10 hover:text-foreground"
               aria-label="Dismiss update banner"
               onClick={() => {
                 try {

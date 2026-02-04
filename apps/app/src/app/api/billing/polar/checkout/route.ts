@@ -10,8 +10,8 @@ import {
 } from "@/lib/billing/polar";
 
 function safeReturnPath(input: string | null): string {
-  if (!input) return "/settings/billing";
-  if (!input.startsWith("/")) return "/settings/billing";
+  if (!input) return "/billing";
+  if (!input.startsWith("/")) return "/billing";
   return input;
 }
 
@@ -57,4 +57,3 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(checkout.url, { status: 303 });
 }
-

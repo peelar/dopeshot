@@ -6,9 +6,7 @@
 const isDevelopment = process.env.NODE_ENV === "development";
 
 /**
- * Feature flag to show locked Brand tab UI for non-brand users.
- * When true: non-brand users see a disabled Brand tab with upgrade tooltip.
- * When false: non-brand users don't see the Brand tab at all.
- * Brand users always see the Brand tab regardless of this flag.
+ * Client-side feature flag for AI background UI.
+ * Enabled only in local development builds.
  */
-export const SHOW_LOCKED_BRAND_TAB = isDevelopment;
+export const SHOW_AI_BACKGROUNDS = isDevelopment;

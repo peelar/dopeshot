@@ -5,8 +5,8 @@ import { enablePolarBillingFlag } from "@/lib/feature-flags";
 import { getAppBaseUrlFromRequest, polarApiFetch } from "@/lib/billing/polar";
 
 function safeReturnPath(input: string | null): string {
-  if (!input) return "/settings/billing";
-  if (!input.startsWith("/")) return "/settings/billing";
+  if (!input) return "/billing";
+  if (!input.startsWith("/")) return "/billing";
   return input;
 }
 
@@ -43,4 +43,3 @@ export async function GET(request: Request) {
 
   return NextResponse.redirect(customerSession.customer_portal_url, { status: 303 });
 }
-

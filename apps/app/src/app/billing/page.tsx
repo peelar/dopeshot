@@ -67,8 +67,12 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
         />
       </div>
 
-      <div className="absolute left-0 right-0 top-0 z-10 flex items-center justify-between p-6">
-        <a href="/" aria-label="Go to homepage" className="transition-opacity hover:opacity-80">
+      <div className="absolute left-0 right-0 top-0 z-10 flex h-14 items-center justify-between px-4 sm:px-6">
+        <a
+          href="/"
+          aria-label="Go to homepage"
+          className="pl-4 transition-opacity hover:opacity-80"
+        >
           <Logo />
         </a>
         <Link
@@ -125,14 +129,14 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
             <div className="flex shrink-0 items-center gap-2">
               {tier === "brand" ? (
                 <Link
-                  href="/api/billing/polar/portal?returnTo=%2Fsettings%2Fbilling"
+                  href="/api/billing/polar/portal?returnTo=%2Fbilling"
                   className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
                 >
                   Manage
                 </Link>
               ) : (
                 <Link
-                  href="/api/billing/polar/checkout?returnTo=%2Fsettings%2Fbilling"
+                  href="/api/billing/polar/checkout?returnTo=%2Fbilling"
                   className={cn(buttonVariants({ size: "sm" }))}
                 >
                   Upgrade to Brand

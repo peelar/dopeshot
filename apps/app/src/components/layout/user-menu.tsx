@@ -71,7 +71,7 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger
-          className="group inline-flex h-8 w-8 items-center justify-center rounded-full p-0 outline-hidden transition-[box-shadow,transform] duration-150 hover:scale-[1.02] hover:shadow-sm"
+          className="group inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-full p-0 outline-hidden transition-[box-shadow,transform] duration-150 hover:scale-[1.02] hover:shadow-sm"
           aria-label={`Logged in as ${user.email}`}
         >
           <Avatar
