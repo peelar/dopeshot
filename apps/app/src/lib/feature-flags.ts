@@ -26,19 +26,17 @@ export const SHOW_BRAND_TAB = isDevelopment;
 
 /**
  * Feature flag that gates all Polar billing codepaths.
- *
- * Enabled in development by default, or when POLAR_ENABLED=true is set.
+ * Defaults to true in local development and off elsewhere.
  */
-const polarEnabledEnv = process.env.POLAR_ENABLED === "true";
 export const enablePolarBillingFlag = flag({
   key: "billing.enable-polar",
   description: "Enable Polar checkout + webhooks.",
-  defaultValue: isDevelopment || polarEnabledEnv,
+  defaultValue: isDevelopment,
   options: [
     { value: true, label: "Enabled" },
     { value: false, label: "Disabled" },
   ],
-  decide: () => isDevelopment || polarEnabledEnv,
+  decide: () => isDevelopment,
 });
 
 /**

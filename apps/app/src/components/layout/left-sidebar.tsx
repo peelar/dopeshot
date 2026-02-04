@@ -325,14 +325,9 @@ function BrandTeaser() {
         Early access
       </div>
       <div className="mt-3 space-y-2">
-        <p className="text-sm font-semibold text-foreground">Brand is in the works</p>
+        <p className="text-sm font-semibold text-foreground">Brand features in progress</p>
         <p className="text-sm text-muted-foreground">
-          Brand will let you save a logo, palette, and typography so every export looks
-          consistent.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          It&apos;s for indie hackers and small teams who want a repeatable look without extra
-          design work. If that sounds useful, I&apos;d love your perspective while I build it.
+          I&apos;m working on brand features. Let me know if you want to provide feedback.
         </p>
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-2">
