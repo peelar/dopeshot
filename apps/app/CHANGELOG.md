@@ -1,5 +1,16 @@
 # dopeshot
 
+## 0.10.0
+
+### Minor Changes
+
+- f1d8f06: Add Testimonial format - the first non-screenshot layout type. Includes three variants (Centered, Card, Editorial) with author fields, star rating, and avatar upload. Testimonials are gated to signed-in users. Format tabs in the layout selector allow switching between Screenshot and Testimonial formats.
+
+### Patch Changes
+
+- 3a694ce: Move AI backgrounds visibility to dev flag. AI backgrounds are now always off in production and controllable via NEXT_PUBLIC_SHOW_AI_BACKGROUNDS env var in local development.
+- fc87954: Fix the left sidebar Brand tab tooltip so it shows on hover instead of appearing constantly. Also fixes `InAppHint` to respect its controlled `open` state.
+
 ## 0.9.1
 
 ### Patch Changes
