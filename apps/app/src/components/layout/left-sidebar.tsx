@@ -183,6 +183,7 @@ export function LeftSidebar({
           key={item.id}
           hintText="Your brand settings live here"
           fallbackText="Brand"
+          defaultOpen={false}
           side="right"
           persistKey="hint:brand-settings"
         >

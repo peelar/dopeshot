@@ -46,7 +46,7 @@ export function InAppHint({
 
   if (hintOpen) {
     return (
-      <Tooltip open onOpenChange={handleHintOpenChange}>
+      <Tooltip open={hintOpen} onOpenChange={handleHintOpenChange}>
         <TooltipTrigger render={(props) => <span {...props}>{children}</span>} />
         <TooltipContent side={side} align={align}>
           {hintText}
