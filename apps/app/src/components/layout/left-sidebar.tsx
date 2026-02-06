@@ -361,6 +361,8 @@ function BrandTeaser() {
         <p className="text-sm text-muted-foreground">
           I&apos;m building brand kits so every post you make looks like you — your logo, your colors, your personality.
           Testimonials, custom backgrounds, and more are on the way.
+          <br />
+          <br />
           Want early access? Shoot me an email.
         </p>
       </div>

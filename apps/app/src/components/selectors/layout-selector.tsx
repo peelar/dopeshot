@@ -286,7 +286,7 @@ export function LayoutSelector({ className }: { className?: string }) {
             >
               {isLocked && <Lock className="h-3 w-3" />}
               {tab.label}
-              {tab.value === "testimonial" && !isLocked && (
+              {tab.value === "testimonial" && (
                 <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
               )}
             </button>
@@ -297,7 +297,7 @@ export function LayoutSelector({ className }: { className?: string }) {
                 <Tooltip key={tab.value} open={showLockedTooltip} onOpenChange={setShowLockedTooltip}>
                   <TooltipTrigger render={tabButton} />
                   <TooltipContent side="bottom" align="start">
-                  Upgrade to Brand to access testimonials.
+                  Available on Brand plan.
                   </TooltipContent>
                 </Tooltip>
               );

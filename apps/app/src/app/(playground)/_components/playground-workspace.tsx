@@ -46,6 +46,7 @@ interface PlaygroundWorkspaceProps {
   showLoadingState: boolean;
   onEmptyStateClick: () => void;
   onFormatChosen?: (format: import("@/domain/layout-def/definitions").LayoutFormat) => void;
+  onLockedTestimonialClick?: () => void;
   canvasWidth: number;
   canvasHeight: number;
   showFocusHint: boolean;
@@ -60,6 +61,7 @@ export function PlaygroundWorkspace({
   showLoadingState,
   onEmptyStateClick,
   onFormatChosen,
+  onLockedTestimonialClick,
   canvasHeight,
   canvasWidth,
   showFocusHint,
@@ -254,6 +256,7 @@ export function PlaygroundWorkspace({
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={onEmptyStateClick}
                 onFormatChosen={onFormatChosen}
+                onLockedTestimonialClick={onLockedTestimonialClick}
               />
             </div>
           </PreviewViewport>

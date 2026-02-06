@@ -21,6 +21,7 @@ interface CoverPreviewProps {
   showLoadingState?: boolean;
   onEmptyStateClick?: () => void;
   onFormatChosen?: (format: LayoutFormat) => void;
+  onLockedTestimonialClick?: () => void;
 }
 
 export function CoverPreview({
@@ -31,6 +32,7 @@ export function CoverPreview({
   showLoadingState = false,
   onEmptyStateClick,
   onFormatChosen,
+  onLockedTestimonialClick,
 }: CoverPreviewProps) {
   const layout = useAtomValue(currentLayoutAtom);
   const canvasDimensions = useAtomValue(canvasAtom);
@@ -139,12 +141,13 @@ export function CoverPreview({
                               track("testimonial_gate_hit", {
                                 reason: isLoggedIn ? "free_tier" : "not_logged_in",
                               });
+                              onLockedTestimonialClick?.();
                             }}
                           />
                         </span>
                       )}
                     />
-                    <TooltipContent side="top">Upgrade to Brand to access testimonials.</TooltipContent>
+                    <TooltipContent side="top">Available on Brand plan.</TooltipContent>
                   </Tooltip>
                 )}
                 </div>
@@ -206,7 +209,7 @@ function FormatCard({
         "backdrop-blur-sm transition-all duration-200",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         isLocked
-          ? "cursor-default border border-foreground/[0.05] bg-background/50 opacity-50"
+          ? "cursor-pointer border border-foreground/[0.05] bg-background/50 opacity-50"
           : "cursor-pointer border border-foreground/[0.12] bg-background/90 shadow-md hover:border-foreground/[0.2] hover:bg-background hover:shadow-xl hover:-translate-y-0.5",
       )}
     >

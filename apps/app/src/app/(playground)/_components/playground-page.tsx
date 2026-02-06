@@ -488,6 +488,16 @@ function PlaygroundPageInner({
     }
   }, []);
 
+  const handleLockedTestimonialClick = useCallback(() => {
+    if (isLoggedIn) {
+      handleLeftSidebarViewChange("brand");
+      setLeftSidebarOpen(true);
+      return;
+    }
+
+    router.push("/brand");
+  }, [handleLeftSidebarViewChange, isLoggedIn, router]);
+
   // Save design hooks
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
   const hasExported = useAtomValue(hasExportedAtom);
@@ -599,6 +609,7 @@ function PlaygroundPageInner({
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={openFilePicker}
                 onFormatChosen={handleFormatChosen}
+                onLockedTestimonialClick={handleLockedTestimonialClick}
                 canvasHeight={canvas.height}
                 canvasWidth={canvas.width}
                 showFocusHint={showFocusHint}

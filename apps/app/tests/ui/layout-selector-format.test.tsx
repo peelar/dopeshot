@@ -90,7 +90,7 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Upgrade to Brand to access testimonials.")).toBeInTheDocument();
+    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
   });
 
   it("does not switch format when anonymous user clicks Testimonial tab", () => {
@@ -133,7 +133,7 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Upgrade to Brand to access testimonials.")).toBeInTheDocument();
+    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
   });
 
   it("switches format when brand user clicks Testimonial tab", () => {
