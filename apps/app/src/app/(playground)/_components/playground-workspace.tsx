@@ -7,6 +7,7 @@ import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
 import {
+  activeFormatAtom,
   screenshotZoomAtom,
   configAtom,
   orientationAtom,
@@ -42,6 +43,7 @@ interface PlaygroundWorkspaceProps {
   showEmptyState: boolean;
   showLoadingState: boolean;
   onEmptyStateClick: () => void;
+  onFormatChosen?: (format: import("@/domain/layout-def/definitions").LayoutFormat) => void;
   canvasWidth: number;
   canvasHeight: number;
   showFocusHint: boolean;
@@ -55,6 +57,7 @@ export function PlaygroundWorkspace({
   showEmptyState,
   showLoadingState,
   onEmptyStateClick,
+  onFormatChosen,
   canvasHeight,
   canvasWidth,
   showFocusHint,
@@ -64,11 +67,13 @@ export function PlaygroundWorkspace({
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const activeFormat = useAtomValue(activeFormatAtom);
   const gradientOptions = useAtomValue(gradientOptionsAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
+  const showOrientationToggle = activeFormat === "screenshot";
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -141,9 +146,8 @@ export function PlaygroundWorkspace({
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex shrink-0 items-center justify-center">
-          {/* Tiny icon-only orientation toggle - centered against screenshot */}
-          {/* On mobile: vertical first, then horizontal. On desktop: horizontal first, then vertical */}
-          <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
+          {/* Orientation toggle — only visible for screenshot format */}
+          {showOrientationToggle ? <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
             {isMobile ? (
               <>
                 <Button
@@ -215,7 +219,7 @@ export function PlaygroundWorkspace({
                 </Button>
               </>
             )}
-          </div>
+          </div> : null}
 
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
@@ -256,6 +260,7 @@ export function PlaygroundWorkspace({
                 showEmptyState={showEmptyState}
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={onEmptyStateClick}
+                onFormatChosen={onFormatChosen}
               />
             </div>
           </PreviewViewport>

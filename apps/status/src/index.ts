@@ -52,7 +52,7 @@ type ResendEmail = {
 };
 
 
-const DEFAULT_SINCE_HOURS = 24;
+const DEFAULT_SINCE_HOURS = 168;
 const FEEDBACK_SUBJECT_PREFIX = "New Feedback:";
 
 const args = process.argv.slice(2);

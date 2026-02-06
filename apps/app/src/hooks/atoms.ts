@@ -122,7 +122,8 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
 );
 
 // Active format tab in layout selector
-export const activeFormatAtom = atom<LayoutFormat>("screenshot");
+// Defaults to "none" — user chooses a format on first visit via the format chooser
+export const activeFormatAtom = atom<LayoutFormat>("none");
 
 // Feedback modal
 export const feedbackModalOpenAtom = atom<boolean>(false);

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils/cn";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 import { orientationAtom, assetsAtom } from "@/hooks/atoms";
-import { buildShadowFromStyle } from "@/components/layouts/shared/shadows";
+import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 
 interface TestimonialProps {
   className?: string;
@@ -49,8 +49,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
     config,
     logo,
     text,
-    cornerRadius,
-    personalityStyle,
   } = useLayoutPrimitives();
 
   const isMobile = orientation === "mobile";
@@ -66,14 +64,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
     () => (avatarAssetId ? allAssets.find((a) => a.id === avatarAssetId) : undefined),
     [avatarAssetId, allAssets],
   );
-
-  const cardRadius = cornerRadius ?? 16;
-  const cardShadow = useMemo(() => {
-    if (personalityStyle) {
-      return buildShadowFromStyle(personalityStyle.shadow);
-    }
-    return "0 4px 24px rgba(0, 0, 0, 0.12)";
-  }, [personalityStyle]);
 
   const attribution = useMemo(() => {
     const parts: string[] = [];
@@ -122,7 +112,9 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
         />
       );
     }
-    return null;
+    // Show AdrianAvatar as default placeholder
+    const avatarSize = size >= 48 ? "md" : "sm";
+    return <AdrianAvatar size={avatarSize} />;
   };
 
   const renderAuthorBlock = (align: "center" | "left" | "right" = "center") => {
@@ -152,110 +144,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
     );
   };
 
-  const variant = config.variant;
-
-  if (variant === "card") {
-    return (
-      <LayoutSurface
-        className={cn("bg-cover bg-center bg-no-repeat", className)}
-        backgroundStyle={backgroundStyle}
-        assets={assets}
-        config={config}
-        assetMap={assetMap}
-      >
-        <div className="relative z-10 flex h-full w-full flex-col" data-export-element data-element="container">
-          {/* Logo */}
-          <div className="absolute left-14 top-8 z-10 flex items-center">
-            {renderLogo()}
-          </div>
-
-          {/* Card centered on canvas */}
-          <div className="flex flex-1 items-center justify-center px-8 py-16">
-            <div
-              className="flex max-w-xl flex-col gap-6 bg-white/10 backdrop-blur-md"
-              style={{
-                borderRadius: `${cardRadius}px`,
-                boxShadow: cardShadow !== "none" ? cardShadow : undefined,
-                padding: isMobile ? "24px" : "40px",
-                border: "1px solid rgba(255, 255, 255, 0.15)",
-              }}
-            >
-              <StarRating rating={starRating} textColorClass={text.textColorClass} />
-              {quoteText ? (
-                <h1 className={titleClassName} style={text.titleStyle}>
-                  {quoteText}
-                </h1>
-              ) : null}
-              <div className="flex items-center gap-3">
-                {renderAvatar(40)}
-                {renderAuthorBlock("left")}
-              </div>
-            </div>
-          </div>
-        </div>
-      </LayoutSurface>
-    );
-  }
-
-  if (variant === "editorial") {
-    return (
-      <LayoutSurface
-        className={cn("bg-cover bg-center bg-no-repeat", className)}
-        backgroundStyle={backgroundStyle}
-        assets={assets}
-        config={config}
-        assetMap={assetMap}
-      >
-        <div className="relative z-10 flex h-full w-full flex-col" data-export-element data-element="container">
-          {/* Logo */}
-          <div className="absolute right-14 top-8 z-10 flex items-center">
-            {renderLogo()}
-          </div>
-
-          {/* Editorial layout - big quote mark + left-aligned quote + right-aligned attribution */}
-          <div
-            className={cn(
-              "flex flex-1 flex-col justify-center",
-              isMobile ? "px-8 py-16" : "px-14 py-16",
-            )}
-          >
-            <div className="max-w-3xl space-y-8">
-              {/* Decorative quote character */}
-              <span
-                className={cn("block leading-none opacity-20", text.textColorClass)}
-                style={{
-                  fontFamily: text.fontFamily,
-                  fontSize: isMobile ? "80px" : "120px",
-                  lineHeight: "0.8",
-                }}
-              >
-                {"\u201C"}
-              </span>
-
-              {quoteText ? (
-                <h1
-                  className={cn(titleClassName, isMobile ? "-mt-4" : "-mt-8")}
-                  style={text.titleStyle}
-                >
-                  {quoteText}
-                </h1>
-              ) : null}
-
-              <div className="flex items-center justify-between">
-                <StarRating rating={starRating} textColorClass={text.textColorClass} />
-                <div className="flex items-center gap-3">
-                  {renderAvatar(36)}
-                  {renderAuthorBlock("right")}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </LayoutSurface>
-    );
-  }
-
-  // Default: centered variant
   return (
     <LayoutSurface
       className={cn("bg-cover bg-center bg-no-repeat", className)}

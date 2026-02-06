@@ -106,17 +106,17 @@ describe("LayoutSelector format tabs", () => {
     expect(store.get(activeFormatAtom)).toBe("testimonial");
   });
 
-  it("shows testimonial layouts when testimonial format is active", () => {
+  it("shows testimonial layout card when testimonial format is active", () => {
     mockSessionData = { user: { id: "user-1" } };
 
     store.set(activeFormatAtom, "testimonial");
-    const def = getLayoutDefinition("testimonial-centered");
+    const def = getLayoutDefinition("testimonial");
     store.set(configAtom, def!.createConfig());
 
     renderWithStore(store);
 
-    expect(screen.getByText("Testimonial Centered")).toBeInTheDocument();
-    expect(screen.getByText("Testimonial Card")).toBeInTheDocument();
-    expect(screen.getByText("Testimonial Editorial")).toBeInTheDocument();
+    // There should be a layout card with aria-label "Select Testimonial look"
+    const layoutCard = screen.getByRole("button", { name: "Select Testimonial look" });
+    expect(layoutCard).toBeInTheDocument();
   });
 });

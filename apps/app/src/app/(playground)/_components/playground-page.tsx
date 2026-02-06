@@ -18,6 +18,12 @@ import {
   ORIENTATION_DIMENSIONS,
 } from "@/domain/layout/screenshot-mode";
 import {
+  LAYOUT_DEFINITIONS,
+  withLayoutTextDefaults,
+  type LayoutFormat,
+} from "@/domain/layout-def/definitions";
+import {
+  activeFormatAtom,
   assetsAtom,
   baseConfigAtom,
   configAtom,
@@ -129,6 +135,7 @@ export function PlaygroundPage(props: PlaygroundPageProps) {
     const preset = getDefaultDemoPreset();
     nextStore.set(baseConfigAtom, preset.config);
     nextStore.set(assetsAtom, [preset.asset]);
+    nextStore.set(activeFormatAtom, "screenshot");
     return nextStore;
   }, [props.initialIsAuthenticated]);
 
@@ -405,6 +412,23 @@ function PlaygroundPageInner({
     showLoadingState,
   ]);
 
+  const [activeFormat, setActiveFormat] = useAtom(activeFormatAtom);
+  const isFormatChosen = activeFormat !== "none";
+  const handleFormatChosen = useCallback(
+    (format: LayoutFormat) => {
+      // Auto-select first layout of the chosen format
+      const firstLayout = LAYOUT_DEFINITIONS.find((l) => l.format === format);
+      if (firstLayout) {
+        const nextConfig = withLayoutTextDefaults(firstLayout.createConfig());
+        setConfig(nextConfig);
+        setScreenshotZoom(1.0);
+
+        track("format_tab_switched", { from: "none", to: format });
+      }
+    },
+    [setConfig, setScreenshotZoom],
+  );
+
   const handleLeftSidebarViewChange = useCallback((view: LeftSidebarView) => {
     setLeftSidebarView(view);
     if (typeof window === "undefined") return;
@@ -508,11 +532,14 @@ function PlaygroundPageInner({
         {/* Center: Content Column (Looks Rail + Preview) */}
         <PlaygroundErrorBoundary>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
-              <LayoutSelector />
-            </div>
-
-            <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
+            {isFormatChosen && (
+              <>
+                <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
+                  <LayoutSelector />
+                </div>
+                <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
+              </>
+            )}
 
             <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
               <PlaygroundWorkspace
@@ -522,6 +549,7 @@ function PlaygroundPageInner({
                 showEmptyState={showEmptyState}
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={openFilePicker}
+                onFormatChosen={handleFormatChosen}
                 canvasHeight={canvas.height}
                 canvasWidth={canvas.width}
                 showFocusHint={showFocusHint}

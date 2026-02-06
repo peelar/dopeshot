@@ -32,7 +32,8 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
   const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
 
   const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
-  const showHeadlineInput = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
+  // For testimonials, the quote input lives in TestimonialAuthorSection
+  const showHeadlineInput = !isTestimonialFormat && !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
   const showSubtitleInput = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
   const showTypographyControls = !hideTextOnMobile && lookCapabilities?.typography !== false;
 

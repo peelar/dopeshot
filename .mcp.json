@@ -1,12 +1,5 @@
 {
   "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "@executeautomation/playwright-mcp-server"
-      ]
-    },
     "context7": {
       "command": "npx",
       "args": [
@@ -14,9 +7,11 @@
         "@context7/mcp-server"
       ]
     },
-    "supabase": {
-      "type": "http",
-      "url": "https://mcp.supabase.com/mcp"
+    "chrome-devtools": {
+      "command": "npx",
+      "args": [
+        "chrome-devtools-mcp@latest"
+      ]
     }
   }
 }

@@ -18,7 +18,7 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
   textColor: "slate-50",
 };
 
-export type LayoutFormat = "screenshot" | "testimonial";
+export type LayoutFormat = "screenshot" | "testimonial" | "none";
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -309,10 +309,10 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     name: "Testimonial",
     description: "Quote-focused layout for customer testimonials and social proof.",
     format: "testimonial",
-    variants: ["centered", "card", "editorial"],
+    variants: [],
     createConfig: () => ({
       layoutId: "testimonial",
-      variant: "centered",
+      variant: "default",
       text: {
         title: "",
         subtitle: "",
@@ -344,9 +344,9 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       layoutSpecificSettings: {
         testimonial: {
-          authorName: "",
-          authorTitle: "",
-          authorCompany: "",
+          authorName: "Jane Smith",
+          authorTitle: "CEO",
+          authorCompany: "Acme Inc.",
           starRating: 5,
         },
       },
@@ -378,10 +378,11 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 6 layouts
+ * Total: 7 layouts
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
+ * - testimonial (Testimonial, no variants)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 
@@ -405,7 +406,9 @@ export function normalizeLayoutId(id: string): string {
     "popup-gradient": "popup-gradient-right", // Default was "right" in createConfig
     "hero-center": "hero-center-left",        // First variant was "left"
     "adaptive-stage": "adaptive-stage",       // No variants (unchanged)
-    "testimonial": "testimonial-centered",    // Default variant is "centered"
+    "testimonial-centered": "testimonial",     // Legacy variant ID
+    "testimonial-card": "testimonial",          // Legacy variant ID
+    "testimonial-editorial": "testimonial",     // Legacy variant ID
   };
 
   return legacyDefaults[id] ?? id;
