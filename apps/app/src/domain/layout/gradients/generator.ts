@@ -62,7 +62,7 @@ function generateGradient(
     stops,
     direction,
     angle,
-    colorSpace: "oklch", // Use OKLCH for perceptual uniformity
+    colorSpace: "oklab", // Use Oklab for smooth perceptual interpolation
   };
 }
 
@@ -380,7 +380,7 @@ function generateMeshGradient(
       { color: meshColors[1], position: 100 },
     ],
     meshLayers,
-    colorSpace: "oklch",
+    colorSpace: "oklab",
   };
 }
 
@@ -411,7 +411,7 @@ function generateAmbientGradient(
         { color: darkAccent, position: 100 },
       ],
       angle: 135,
-      colorSpace: "oklch",
+      colorSpace: "oklab",
     };
   } else {
     const lightAccent = enhanceColor(accentColor, {
@@ -426,7 +426,7 @@ function generateAmbientGradient(
         { color: lightAccent, position: 100 },
       ],
       angle: 135,
-      colorSpace: "oklch",
+      colorSpace: "oklab",
     };
   }
 }

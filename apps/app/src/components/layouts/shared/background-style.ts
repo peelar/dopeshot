@@ -93,16 +93,10 @@ function gradientToCssWithLayout(
 
   // Advanced but simple (2-3 stop linear)
   if (isAdvancedGradient(gradient)) {
-    const stops = gradient.stops
-      .map((stop) => {
-        if (stop.position !== undefined) {
-          const position = stop.position <= 1 ? `${stop.position * 100}%` : `${stop.position}%`;
-          return `${stop.color} ${position}`;
-        }
-        return stop.color;
-      })
-      .join(", ");
-    return `linear-gradient(${angle}deg, ${stops})`;
+    return customGradientToCss({
+      ...gradient,
+      angle,
+    });
   }
 
   // Fallback (shouldn't reach here)

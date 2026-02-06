@@ -13,7 +13,7 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
       { color: "#8b5cf6", position: 100 },
     ],
     angle: 90,
-    colorSpace: "oklch",
+    colorSpace: "oklab",
   },
   textColor: "slate-50",
 };
@@ -409,6 +409,5 @@ export function withLayoutTextDefaults(
 
   return config;
 }
-
 
 

@@ -7,16 +7,60 @@ import {
   isAdvancedGradient,
   isMeshGradient,
   GradientColorSpace,
+  GradientHueInterpolationMethod,
 } from "./types";
 
-function isColorSpaceSupported(_space?: GradientColorSpace): boolean {
-  return false;
+const POLAR_COLOR_SPACES = new Set<GradientColorSpace>(["oklch"]);
+
+type CssSupportsFn = (property: string, value: string) => boolean;
+
+function getCssSupports(): CssSupportsFn | undefined {
+  if (typeof globalThis === "undefined") return undefined;
+  const maybeSupports = (globalThis as typeof globalThis & {
+    CSS?: { supports?: CssSupportsFn };
+  }).CSS?.supports;
+  return typeof maybeSupports === "function" ? maybeSupports : undefined;
 }
 
-function buildGradientArgs(base: string, space?: GradientColorSpace): string {
-  const supportsSpace = isColorSpaceSupported(space);
-  if (supportsSpace && space) {
-    return `in ${space} ${base}`.trim();
+function buildColorInterpolationMethod(
+  space?: GradientColorSpace,
+  hueInterpolation?: GradientHueInterpolationMethod,
+): string | null {
+  if (!space) return null;
+
+  const hueSegment =
+    hueInterpolation && POLAR_COLOR_SPACES.has(space) ? ` ${hueInterpolation} hue` : "";
+  return `in ${space}${hueSegment}`;
+}
+
+function isColorSpaceSupported(
+  space?: GradientColorSpace,
+  hueInterpolation?: GradientHueInterpolationMethod,
+): boolean {
+  const interpolationMethod = buildColorInterpolationMethod(space, hueInterpolation);
+  if (!interpolationMethod) return false;
+
+  const supports = getCssSupports();
+  if (!supports) return false;
+
+  try {
+    return supports(
+      "background-image",
+      `linear-gradient(${interpolationMethod}, #000000, #ffffff)`,
+    );
+  } catch {
+    return false;
+  }
+}
+
+function buildGradientArgs(
+  base: string,
+  space?: GradientColorSpace,
+  hueInterpolation?: GradientHueInterpolationMethod,
+): string {
+  const interpolationMethod = buildColorInterpolationMethod(space, hueInterpolation);
+  if (interpolationMethod && isColorSpaceSupported(space, hueInterpolation)) {
+    return `${interpolationMethod} ${base}`.trim();
   }
   return base.trim();
 }
@@ -211,7 +255,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
       return meshGradientToCss(gradient);
     }
 
-    const { type, stops, direction, colorSpace, angle } = gradient;
+    const { type, stops, direction, colorSpace, angle, hueInterpolation } = gradient;
 
     // Handle aurora gradients (4+ stops with flowing wave effect)
     if (type === "linear" && stops.length >= 4) {
@@ -219,7 +263,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
     }
 
     const directionOrAngle = angle !== undefined ? `${angle}deg` : (direction ?? "to right");
-    const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace);
+    const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace, hueInterpolation);
 
     // Build stops string
     const stopsString = stops
@@ -237,10 +281,18 @@ export function customGradientToCss(gradient: CustomGradient): string {
     let gradientFunction = "";
 
     if (type === "radial") {
-      const radialDirection = buildGradientArgs(direction ?? "circle at center", colorSpace);
+      const radialDirection = buildGradientArgs(
+        direction ?? "circle at center",
+        colorSpace,
+        hueInterpolation,
+      );
       gradientFunction = `radial-gradient(${radialDirection}, ${stopsString})`;
     } else if (type === "conic") {
-      const conicDirection = buildGradientArgs(direction ?? "from 0deg at center", colorSpace);
+      const conicDirection = buildGradientArgs(
+        direction ?? "from 0deg at center",
+        colorSpace,
+        hueInterpolation,
+      );
       gradientFunction = `conic-gradient(${conicDirection}, ${stopsString})`;
     } else {
       gradientFunction = `linear-gradient(${directionWithSpace}, ${stopsString})`;

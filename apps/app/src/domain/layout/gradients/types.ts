@@ -38,7 +38,16 @@ export type GradientType = "linear" | "radial" | "conic";
 /**
  * Color space for gradient interpolation
  */
-export type GradientColorSpace = "oklch" | "srgb" | "lab";
+export type GradientColorSpace = "oklab" | "oklch" | "srgb" | "lab";
+
+/**
+ * Hue interpolation method (used by polar color spaces like OKLCH)
+ */
+export type GradientHueInterpolationMethod =
+  | "shorter"
+  | "longer"
+  | "increasing"
+  | "decreasing";
 
 /**
  * Advanced multi-stop gradient configuration
@@ -48,6 +57,7 @@ export type AdvancedGradient = {
   stops: GradientStop[]; // Color stops with positions
   direction?: string; // e.g., "to right", "45deg", "circle at center"
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
+  hueInterpolation?: GradientHueInterpolationMethod; // only applied for polar spaces (e.g., oklch)
   angle?: number; // for linear gradients in degrees (0-360)
   meshLayers?: MeshLayer[]; // For mesh gradients - overlaid radial blob layers
 };
@@ -103,7 +113,6 @@ export function isAuroraGradient(gradient: CustomGradient): boolean {
     !gradient.meshLayers
   );
 }
-
 
 
 
