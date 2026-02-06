@@ -26,7 +26,7 @@ import type { MemoryItemDTO } from "@/domain/memory/types";
 import { useSession } from "@/lib/auth/auth-client";
 import { exportLayoutAsPngWithBlob } from "@/domain/layout/export";
 import { compressImageBlob } from "@/lib/utils/image-compression";
-import { EXPORT_ORIENTATION_DIMENSIONS } from "@/domain/layout/screenshot-mode";
+import { getExportDimensionsForLayout } from "@/domain/layout/screenshot-mode";
 import { setMemoryState } from "@/lib/storage/memory-state";
 import { setMemoryUrl } from "@/lib/memory/memory-url";
 import { toast } from "@/lib/utils/toast";
@@ -96,7 +96,7 @@ export function useSaveDesign() {
 
     try {
       // Generate screenshot for this save (independent of export)
-      const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+      const exportDims = getExportDimensionsForLayout(config, orientation);
       const { blob: rawBlob } = await exportLayoutAsPngWithBlob("export-container", {
         width: exportDims.width,
         height: exportDims.height,

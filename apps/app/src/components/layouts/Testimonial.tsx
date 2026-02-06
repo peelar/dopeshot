@@ -1,10 +1,18 @@
-import { memo, useMemo } from "react";
+import { memo, useEffect, useMemo, useRef } from "react";
 import { useAtomValue } from "jotai";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils/cn";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
-import { orientationAtom, assetsAtom } from "@/hooks/atoms";
+import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
+import { ScanlinesOverlay } from "@/components/layouts/shared/ScanlinesOverlay";
+import { orientationAtom, assetsAtom, brandSettingsAtom } from "@/hooks/atoms";
 import { AdrianAvatar } from "@/components/ui/adrian-avatar";
+import { useSession } from "@/lib/auth/auth-client";
+import { useUserTier } from "@/hooks/use-user-tier";
+import { resolveTestimonialStyle } from "@/domain/layout/testimonial-style";
+import type { BrandMode } from "@/lib/types/brand";
+import { track } from "@/lib/analytics";
 
 interface TestimonialProps {
   className?: string;
@@ -28,10 +36,10 @@ function StarIcon({ filled, size = 20 }: { filled: boolean; size?: number }) {
   );
 }
 
-function StarRating({ rating, textColorClass }: { rating: number; textColorClass: string }) {
+function StarRating({ rating, color }: { rating: number; color: string }) {
   if (rating <= 0) return null;
   return (
-    <div className={cn("flex gap-1", textColorClass)}>
+    <div className="flex gap-1" style={{ color }}>
       {Array.from({ length: 5 }, (_, i) => (
         <StarIcon key={i} filled={i < rating} />
       ))}
@@ -42,6 +50,11 @@ function StarRating({ rating, textColorClass }: { rating: number; textColorClass
 function TestimonialComponent({ className, onUploadAsset, isStatic = false }: TestimonialProps) {
   const orientation = useAtomValue(orientationAtom);
   const allAssets = useAtomValue(assetsAtom);
+  const brandSettings = useAtomValue(brandSettingsAtom);
+  const { data: session } = useSession();
+  const { isBrandUser } = useUserTier();
+  const { resolvedTheme } = useTheme();
+  const trackedBrandStyleRef = useRef<string | null>(null);
   const {
     assets,
     assetMap,
@@ -52,13 +65,16 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   } = useLayoutPrimitives();
 
   const isMobile = orientation === "mobile";
+  const fallbackMode: BrandMode = resolvedTheme === "dark" ? "dark" : "light";
+  const isLoggedIn = Boolean(session?.user);
 
   const testimonialSettings = config.layoutSpecificSettings?.testimonial;
   const authorName = testimonialSettings?.authorName || "";
   const authorTitle = testimonialSettings?.authorTitle || "";
   const authorCompany = testimonialSettings?.authorCompany || "";
   const starRating = testimonialSettings?.starRating ?? 0;
-  const avatarAssetId = testimonialSettings?.authorAvatarAssetId;
+  const shouldShowAvatar = testimonialSettings?.showAuthorAvatar !== false;
+  const avatarAssetId = shouldShowAvatar ? testimonialSettings?.authorAvatarAssetId : undefined;
 
   const avatarAsset = useMemo(
     () => (avatarAssetId ? allAssets.find((a) => a.id === avatarAssetId) : undefined),
@@ -72,8 +88,79 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
     return parts.join(", ");
   }, [authorTitle, authorCompany]);
 
-  const titleClassName = cn(text.titleClasses, "whitespace-pre-line", text.textColorClass);
+  const testimonialStyle = useMemo(
+    () =>
+      resolveTestimonialStyle({
+        isLoggedIn,
+        isBrandUser,
+        personality: brandSettings.personality,
+        mode: brandSettings.mode,
+        accent: brandSettings.accent,
+        fallbackMode,
+        fallbackBackground: backgroundStyle,
+      }),
+    [
+      backgroundStyle,
+      brandSettings.accent,
+      brandSettings.mode,
+      brandSettings.personality,
+      fallbackMode,
+      isBrandUser,
+      isLoggedIn,
+    ],
+  );
+
+  useEffect(() => {
+    if (isStatic) return;
+
+    if (testimonialStyle.tier !== "brand") {
+      trackedBrandStyleRef.current = null;
+      return;
+    }
+
+    const signature = `${testimonialStyle.personality}:${testimonialStyle.mode}`;
+    if (trackedBrandStyleRef.current === signature) return;
+
+    trackedBrandStyleRef.current = signature;
+    track("testimonial_brand_style_applied", {
+      personality: testimonialStyle.personality,
+      mode: testimonialStyle.mode,
+    });
+  }, [isStatic, testimonialStyle.mode, testimonialStyle.personality, testimonialStyle.tier]);
+
+  // Override font weight for testimonials - they should feel like paragraphs, not headlines
+  // Also strip out font-family classes that would override inline styles
+  const { testimonialClassName, testimonialFontWeight } = useMemo(() => {
+    const titleClasses = text.titleClasses;
+
+    // Map from title weight to paragraph weight (one weight down)
+    let weight: string;
+    if (titleClasses.includes("font-extrabold")) weight = "font-bold";
+    else if (titleClasses.includes("font-bold")) weight = "font-medium";
+    else if (titleClasses.includes("font-medium")) weight = "font-normal";
+    else weight = "font-normal";
+
+    // Strip out font-weight and font-family classes that would conflict with inline styles
+    const cleanedClasses = titleClasses
+      .split(" ")
+      .filter((cls) => !cls.startsWith("font-") || cls === weight)
+      .join(" ");
+
+    return {
+      testimonialClassName: cn(cleanedClasses, "whitespace-pre-line", weight),
+      testimonialFontWeight: weight,
+    };
+  }, [text.titleClasses]);
+
+  const titleClassName = testimonialClassName;
   const quoteText = text.title;
+
+  // Tighter line height for testimonials
+  const testimonialLineHeight = useMemo(() => {
+    const baseLineHeight = text.titleStyle.lineHeight as number;
+    // Reduce line height slightly for testimonial feel (multiply by 0.9)
+    return baseLineHeight * 0.9;
+  }, [text.titleStyle.lineHeight]);
 
   const renderLogo = () => {
     if (logo) {
@@ -101,21 +188,35 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   };
 
   const renderAvatar = (size: number = 48) => {
+    if (!shouldShowAvatar) return null;
     if (avatarAsset) {
       return (
         <img
           src={avatarAsset.url}
           alt={authorName || "Author avatar"}
           className="rounded-full object-cover"
-          style={{ width: size, height: size }}
+          style={{
+            width: size,
+            height: size,
+            border: `2px solid ${testimonialStyle.avatarRingColor}`,
+          }}
           crossOrigin="anonymous"
         />
       );
     }
     // Show AdrianAvatar as default placeholder
     const avatarSize = size >= 48 ? "md" : "sm";
-    return <AdrianAvatar size={avatarSize} />;
+    return (
+      <div
+        className="inline-flex shrink-0 rounded-full p-[2px]"
+        style={{ background: testimonialStyle.avatarRingColor }}
+      >
+        <AdrianAvatar size={avatarSize} className="border-0" />
+      </div>
+    );
   };
+
+  const hasAuthorMetadata = Boolean(authorName || attribution);
 
   const renderAuthorBlock = (align: "center" | "left" | "right" = "center") => {
     if (!authorName && !attribution) return null;
@@ -126,16 +227,16 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
       <div className={cn("flex flex-col gap-1", alignClass)}>
         {authorName && (
           <span
-            className={cn("text-sm font-semibold", text.textColorClass)}
-            style={{ fontFamily: text.fontFamily }}
+            className="text-sm font-semibold"
+            style={{ fontFamily: text.fontFamily, color: testimonialStyle.textColor }}
           >
             {authorName}
           </span>
         )}
         {attribution && (
           <span
-            className={cn("text-xs opacity-70", text.textColorClass)}
-            style={{ fontFamily: text.fontFamily }}
+            className="text-xs"
+            style={{ fontFamily: text.fontFamily, color: testimonialStyle.mutedTextColor }}
           >
             {attribution}
           </span>
@@ -147,32 +248,91 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   return (
     <LayoutSurface
       className={cn("bg-cover bg-center bg-no-repeat", className)}
-      backgroundStyle={backgroundStyle}
+      backgroundStyle={testimonialStyle.canvasBackground}
       assets={assets}
       config={config}
       assetMap={assetMap}
+      disablePatternOverlay
     >
-      <div className="relative z-10 flex h-full w-full flex-col" data-export-element data-element="container">
+      {testimonialStyle.texture === "grain" ? (
+        <GrainOverlay enabled intensity={testimonialStyle.textureIntensity} />
+      ) : null}
+      {testimonialStyle.texture === "scanlines" ? (
+        <ScanlinesOverlay enabled intensity={testimonialStyle.textureIntensity} />
+      ) : null}
+
+      <div className="relative flex h-full w-full flex-col" data-export-element data-element="container">
         {/* Logo */}
         <div className="absolute left-14 top-8 z-10 flex items-center">
           {renderLogo()}
         </div>
 
+        {testimonialStyle.showDecorativeBlobs ? (
+          <>
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -left-[14%] -top-[30%] z-[2] h-[52%] w-[42%] rounded-full blur-3xl"
+              style={{ background: testimonialStyle.blobPrimary }}
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-[28%] -right-[14%] z-[2] h-[48%] w-[40%] rounded-full blur-3xl"
+              style={{ background: testimonialStyle.blobSecondary }}
+            />
+          </>
+        ) : null}
+
         {/* Centered content */}
-        <div className="flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
           <div
-            className={cn("flex max-w-2xl flex-col items-center gap-6", isMobile && "gap-4")}
+            className={cn(
+              "relative flex w-full max-w-3xl flex-col items-center gap-6 overflow-hidden border px-8 py-10 backdrop-blur-[2px]",
+              isMobile && "gap-4 px-6 py-8",
+            )}
+            style={{
+              background: testimonialStyle.cardBackground,
+              borderColor: testimonialStyle.cardBorder,
+              borderRadius: testimonialStyle.cardRadius,
+              boxShadow: testimonialStyle.cardShadow,
+            }}
           >
-            <StarRating rating={starRating} textColorClass={text.textColorClass} />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-5 top-3 text-7xl font-semibold leading-none"
+              style={{
+                color: testimonialStyle.quoteMarkColor,
+                fontFamily: text.fontFamily,
+                transform: "translateY(-8px)",
+              }}
+            >
+              “
+            </span>
+            <StarRating rating={starRating} color={testimonialStyle.starColor} />
             {quoteText ? (
-              <h1 className={cn(titleClassName, "text-center")} style={text.titleStyle}>
+              <h1
+                className={cn(titleClassName, "text-center")}
+                style={{
+                  ...text.titleStyle,
+                  color: testimonialStyle.textColor,
+                  lineHeight: testimonialLineHeight,
+                }}
+              >
                 {quoteText}
               </h1>
             ) : null}
-            <div className="flex items-center gap-3">
-              {renderAvatar(48)}
-              {renderAuthorBlock("center")}
-            </div>
+            {shouldShowAvatar || hasAuthorMetadata ? (
+              <div
+                className="flex items-center gap-3 rounded-full border px-4 py-2"
+                style={{
+                  background: testimonialStyle.authorPlateBackground,
+                  borderColor: testimonialStyle.authorPlateBorder,
+                  boxShadow: testimonialStyle.authorPlateShadow,
+                }}
+              >
+                {renderAvatar(48)}
+                {renderAuthorBlock("left")}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

@@ -93,6 +93,7 @@ describe("Testimonial layout definitions", () => {
 
       expect(config.layoutSpecificSettings?.testimonial).toBeDefined();
       expect(config.layoutSpecificSettings?.testimonial?.starRating).toBe(5);
+      expect(config.layoutSpecificSettings?.testimonial?.exportAspect).toBe("3:4");
     });
 
     it("legacy variant IDs resolve to the same definition", () => {
@@ -146,7 +147,7 @@ describe("Testimonial layout definitions", () => {
 
       const result = withLayoutTextDefaults(config);
       expect(result.text.title).toBe(
-        "This product completely transformed how we work. The results speak for themselves.",
+        "dopeshot completely transformed how I ship. Right now, no feature goes unshared.",
       );
     });
 

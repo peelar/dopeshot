@@ -32,6 +32,7 @@ import { EffectsSection } from "@/components/sidebar/effects-section";
 import { TestimonialContentSection, TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
+import { useSession } from "@/lib/auth/auth-client";
 
 
 interface LayoutConfigProps {
@@ -56,19 +57,25 @@ export const LayoutConfigPanel = ({
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const orientation = useAtomValue(orientationAtom);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
 
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
-  const [isAvatarHovered, setIsAvatarHovered] = useState(false);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+  const showTestimonialSections = isTestimonialFormat && isLoggedIn;
   const showScreenshotSection = !isTestimonialFormat;
 
-  // Avatar asset for testimonial format
-  const avatarAssetId = config.layoutSpecificSettings?.testimonial?.authorAvatarAssetId;
+  // Avatar field state for testimonial format
+  const testimonialSettings = config.layoutSpecificSettings?.testimonial;
+  const avatarAssetId = testimonialSettings?.authorAvatarAssetId;
   const avatarAsset = avatarAssetId ? assets.find((a) => a.id === avatarAssetId) : undefined;
+  const showAuthorAvatar = testimonialSettings?.showAuthorAvatar !== false;
+  const hasAvatarValue = showAuthorAvatar;
+  const avatarLabel = avatarAsset?.name ?? "adrian.jpg";
 
   // Check if brand logo is currently applied
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
@@ -179,6 +186,7 @@ export const LayoutConfigPanel = ({
         testimonial: {
           ...currentConfig.layoutSpecificSettings?.testimonial,
           authorAvatarAssetId: undefined,
+          showAuthorAvatar: false,
         },
       },
     }));
@@ -234,7 +242,7 @@ export const LayoutConfigPanel = ({
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <div className="flex flex-col gap-6 pb-6 pt-6">
         {/* Content section — "what does it say?" */}
-        {isTestimonialFormat ? (
+        {showTestimonialSections ? (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Content</span>
@@ -251,7 +259,7 @@ export const LayoutConfigPanel = ({
         ) : null}
 
         {/* Author section — "who said it?" (testimonial only) */}
-        {isTestimonialFormat && (
+        {showTestimonialSections && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Author</span>
@@ -261,7 +269,7 @@ export const LayoutConfigPanel = ({
         )}
 
         {/* Avatar section (testimonial only) — same structure as Logo */}
-        {isTestimonialFormat && !isMobile && (
+        {showTestimonialSections && !isMobile && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Avatar</span>
@@ -275,60 +283,59 @@ export const LayoutConfigPanel = ({
                   aria-hidden="true"
                   tabIndex={-1}
                 />
-                <div
-                  className="relative group"
-                  onMouseEnter={() => setIsAvatarHovered(true)}
-                  onMouseLeave={() => setIsAvatarHovered(false)}
-                >
+                {hasAvatarValue ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className={cn(
+                        "h-6 gap-1.5 px-2 text-xs",
+                        "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:decoration-foreground/80",
+                      )}
+                    >
+                      <span className="max-w-[8rem] truncate" title={avatarLabel}>
+                        {avatarLabel}
+                      </span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        disabled={!onUploadAsset}
+                        onClick={() => {
+                          avatarInputRef.current?.click();
+                        }}
+                      >
+                        <UploadCloud className="h-4 w-4" />
+                        Upload new
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleRemoveAvatar}>
+                        <Trash2 className="h-4 w-4" />
+                        Clear avatar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
                   <Button
                     type="button"
                     variant="ghost"
                     size="xs"
-                    disabled={!onUploadAsset || (!!avatarAsset && isAvatarHovered)}
+                    disabled={!onUploadAsset}
                     onClick={() => avatarInputRef.current?.click()}
-                    className={cn(
-                      "h-6 gap-1.5 px-2 text-xs transition-opacity",
-                      avatarAsset
-                        ? "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:text-foreground/80 hover:decoration-foreground/80"
-                        : "text-muted-foreground hover:text-foreground",
-                      avatarAsset && isAvatarHovered && "opacity-0"
-                    )}
+                    className="h-6 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
                   >
-                    {!avatarAsset && <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />}
-                    {avatarAsset ? (
-                      <span className="max-w-[8rem] truncate" title={avatarAsset.name}>
-                        {avatarAsset.name}
-                      </span>
-                    ) : (
-                      <span className="max-w-[8rem] truncate" title="Add avatar">
-                        Add avatar...
-                      </span>
-                    )}
+                    <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="max-w-[8rem] truncate" title="Add avatar">
+                      Add avatar...
+                    </span>
                   </Button>
-                  {avatarAsset && isAvatarHovered && (
-                    <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in duration-150 rounded-md">
-                      <button
-                        onClick={handleRemoveAvatar}
-                        className={cn(
-                          "rounded-md p-1.5 transition-all",
-                          "bg-white/10 hover:bg-white/20",
-                          "text-white/90 hover:text-white",
-                          "ring-1 ring-white/20 hover:ring-white/30",
-                        )}
-                        aria-label="Remove avatar"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </div>
           </section>
         )}
 
         {/* Font section (testimonial only — for screenshot, font is inside Content) */}
-        {isTestimonialFormat && showTextSection && (
+        {showTestimonialSections && showTextSection && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Font</span>

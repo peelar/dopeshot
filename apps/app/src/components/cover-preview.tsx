@@ -1,13 +1,15 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { Camera, MessageSquareQuote, Plus } from "lucide-react";
+import { Camera, MessageSquareQuote, Plus, Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { activeFormatAtom } from "@/hooks/atoms";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
 import { getLayoutComponent } from "@/components/layouts/registry";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import type { LayoutFormat } from "@/domain/layout-def/definitions";
+import { useSession } from "@/lib/auth/auth-client";
+import { useEffect, useRef, useState } from "react";
 
 interface CoverPreviewProps {
   className?: string;
@@ -32,7 +34,19 @@ export function CoverPreview({
   const canvasDimensions = useAtomValue(canvasAtom);
   const activeFormat = useAtomValue(activeFormatAtom);
   const setActiveFormat = useSetAtom(activeFormatAtom);
+  const { data: session } = useSession();
+  const isLoggedIn = Boolean(session?.user);
+  const [showLockedTooltip, setShowLockedTooltip] = useState(false);
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showFormatChooser = activeFormat === "none" && showEmptyState && !isStatic;
+
+  useEffect(() => {
+    return () => {
+      if (tooltipTimeoutRef.current) {
+        clearTimeout(tooltipTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!layout) {
     return (
@@ -89,7 +103,7 @@ export function CoverPreview({
 
           {showFormatChooser ? (
             <div className="relative z-10 flex flex-col items-center gap-8">
-              <span className="text-lg font-semibold text-foreground/70">
+              <span className="text-lg font-semibold text-foreground/70 dark:text-foreground/95">
                 What do you want to ship today?
               </span>
               <div className="flex gap-4">
@@ -98,8 +112,11 @@ export function CoverPreview({
                   label="Screenshot"
                   description="Wrap a screenshot in a beautiful layout"
                   onClick={() => {
+                    if (onFormatChosen) {
+                      onFormatChosen("screenshot");
+                      return;
+                    }
                     setActiveFormat("screenshot");
-                    onFormatChosen?.("screenshot");
                   }}
                 />
                 <FormatCard
@@ -107,12 +124,32 @@ export function CoverPreview({
                   label="Testimonial"
                   description="Create a social proof graphic"
                   isNew
+                  isLocked={!isLoggedIn}
                   onClick={() => {
+                    if (!isLoggedIn) {
+                      setShowLockedTooltip(true);
+                      if (tooltipTimeoutRef.current) {
+                        clearTimeout(tooltipTimeoutRef.current);
+                      }
+                      tooltipTimeoutRef.current = setTimeout(() => setShowLockedTooltip(false), 3000);
+                      return;
+                    }
                     setActiveFormat("testimonial");
                     onFormatChosen?.("testimonial");
                   }}
                 />
               </div>
+              {showLockedTooltip && !isLoggedIn ? (
+                <div className="rounded-lg border border-border bg-popover px-4 py-3 text-xs shadow-lg">
+                  <p className="font-medium text-foreground">Sign in to create testimonials</p>
+                  <a
+                    href="/auth/sign-in"
+                    className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    Sign in
+                  </a>
+                </div>
+              ) : null}
             </div>
           ) : (
             <button
@@ -150,23 +187,28 @@ function FormatCard({
   label,
   description,
   isNew,
+  isLocked = false,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   description: string;
   isNew?: boolean;
+  isLocked?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
+      aria-disabled={isLocked}
       className={cn(
         "group relative flex w-44 flex-col items-center gap-3 rounded-xl p-6",
         "border border-foreground/[0.08] bg-background/80 backdrop-blur-sm",
         "transition-all duration-200",
-        "hover:border-foreground/[0.2] hover:bg-background/90 hover:shadow-lg",
+        isLocked
+          ? "cursor-not-allowed opacity-70"
+          : "hover:border-foreground/[0.2] hover:bg-background/90 hover:shadow-lg",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
       )}
     >
@@ -175,13 +217,18 @@ function FormatCard({
           New
         </span>
       )}
-      <span className="text-foreground/50 transition-colors group-hover:text-foreground/80">
+      {isLocked && (
+        <span className="absolute right-2 top-2 text-foreground/50">
+          <Lock className="h-3.5 w-3.5" />
+        </span>
+      )}
+      <span className="text-foreground/50 transition-colors group-hover:text-foreground/80 dark:text-foreground/80 dark:group-hover:text-foreground">
         {icon}
       </span>
-      <span className="text-sm font-semibold text-foreground/70 transition-colors group-hover:text-foreground/90">
+      <span className="text-sm font-semibold text-foreground/70 transition-colors group-hover:text-foreground/90 dark:text-foreground/95 dark:group-hover:text-foreground">
         {label}
       </span>
-      <span className="text-center text-xs leading-relaxed text-foreground/40 transition-colors group-hover:text-foreground/60">
+      <span className="text-center text-xs leading-relaxed text-foreground/40 transition-colors group-hover:text-foreground/60 dark:text-foreground/65 dark:group-hover:text-foreground/75">
         {description}
       </span>
     </button>

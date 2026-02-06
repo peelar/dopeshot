@@ -347,7 +347,9 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
           authorName: "Jane Smith",
           authorTitle: "CEO",
           authorCompany: "Acme Inc.",
+          showAuthorAvatar: true,
           starRating: 5,
+          exportAspect: "3:4",
         },
       },
     }),
@@ -368,7 +370,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       screenshot: "hidden",
       supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
-        title: "This product completely transformed how we work. The results speak for themselves.",
+        title: "dopeshot completely transformed how I ship. Right now, no feature goes unshared.",
       },
     },
   },
@@ -502,6 +504,4 @@ export function withLayoutTextDefaults(
 
   return config;
 }
-
-
 

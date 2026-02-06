@@ -122,6 +122,7 @@ export function useFileUpload({
                 testimonial: {
                   ...currentConfig.layoutSpecificSettings?.testimonial,
                   authorAvatarAssetId: asset.id,
+                  showAuthorAvatar: true,
                 },
               },
             };

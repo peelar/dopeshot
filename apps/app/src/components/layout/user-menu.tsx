@@ -77,7 +77,7 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
           <Avatar
             name={user.email}
             size="sm"
-            className="transition-[filter] duration-150 group-hover:brightness-105"
+            className="transition-[filter,border-color] duration-150 group-hover:brightness-105 group-hover:border-transparent"
           />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 sm:w-56">

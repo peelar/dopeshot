@@ -131,6 +131,7 @@ interface LayoutSurfaceProps {
   config: LayoutConfig;
   assetMap: Map<string, Asset>;
   screenshot?: Asset;
+  disablePatternOverlay?: boolean;
   children: ReactNode;
 }
 
@@ -141,6 +142,7 @@ export function LayoutSurface({
   config,
   assetMap,
   screenshot,
+  disablePatternOverlay = false,
   children,
 }: LayoutSurfaceProps) {
   return (
@@ -148,7 +150,7 @@ export function LayoutSurface({
       className={cn("relative h-full w-full overflow-hidden", className)}
       style={{ background: backgroundStyle, isolation: "isolate" }}
     >
-      <PatternOverlay config={config} />
+      {!disablePatternOverlay ? <PatternOverlay config={config} /> : null}
       <div className="relative z-10 h-full w-full">{children}</div>
     </div>
   );

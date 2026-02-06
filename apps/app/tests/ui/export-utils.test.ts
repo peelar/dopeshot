@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { calculatePixelRatio, getExportDimensions } from '@/domain/layout/export';
+import { getCanvasDimensions, getExportDimensionsForLayout } from '@/domain/layout/screenshot-mode';
+import { getLayoutDefinition } from '@/domain/layout-def/definitions';
 
 describe('Export Utilities', () => {
   describe('calculatePixelRatio', () => {
@@ -71,6 +73,100 @@ describe('Export Utilities', () => {
       const dims = getExportDimensions('mobile');
       const aspectRatio = dims.width / dims.height;
       expect(aspectRatio).toBeCloseTo(9 / 16, 5);
+    });
+  });
+
+  describe('getExportDimensionsForLayout', () => {
+    it('uses orientation defaults for screenshot layouts', () => {
+      const screenshotConfig = getLayoutDefinition('popup-gradient-left')!.createConfig();
+      expect(getExportDimensionsForLayout(screenshotConfig, 'desktop')).toEqual({ width: 1920, height: 1080 });
+      expect(getExportDimensionsForLayout(screenshotConfig, 'mobile')).toEqual({ width: 1080, height: 1920 });
+    });
+
+    it('uses 3:4 export for testimonial by default', () => {
+      const testimonialConfig = getLayoutDefinition('testimonial')!.createConfig();
+      expect(getExportDimensionsForLayout(testimonialConfig, 'desktop')).toEqual({ width: 1080, height: 1440 });
+    });
+
+    it('uses selected testimonial export aspect', () => {
+      const testimonialConfig = getLayoutDefinition('testimonial')!.createConfig();
+      const config45 = {
+        ...testimonialConfig,
+        layoutSpecificSettings: {
+          ...testimonialConfig.layoutSpecificSettings,
+          testimonial: {
+            ...testimonialConfig.layoutSpecificSettings?.testimonial,
+            exportAspect: '4:5' as const,
+          },
+        },
+      };
+      const config916 = {
+        ...testimonialConfig,
+        layoutSpecificSettings: {
+          ...testimonialConfig.layoutSpecificSettings,
+          testimonial: {
+            ...testimonialConfig.layoutSpecificSettings?.testimonial,
+            exportAspect: '9:16' as const,
+          },
+        },
+      };
+      const config169 = {
+        ...testimonialConfig,
+        layoutSpecificSettings: {
+          ...testimonialConfig.layoutSpecificSettings,
+          testimonial: {
+            ...testimonialConfig.layoutSpecificSettings?.testimonial,
+            exportAspect: '16:9' as const,
+          },
+        },
+      };
+
+      expect(getExportDimensionsForLayout(config45, 'desktop')).toEqual({ width: 1080, height: 1350 });
+      expect(getExportDimensionsForLayout(config916, 'desktop')).toEqual({ width: 1080, height: 1920 });
+      expect(getExportDimensionsForLayout(config169, 'desktop')).toEqual({ width: 1920, height: 1080 });
+    });
+  });
+
+  describe('getCanvasDimensions', () => {
+    it('uses testimonial preview dimensions for 3:4', () => {
+      const testimonialConfig = getLayoutDefinition('testimonial')!.createConfig();
+      const dims = getCanvasDimensions(testimonialConfig, undefined, 'desktop');
+      expect(dims.width).toBe(720);
+      expect(dims.height).toBe(960);
+    });
+
+    it('uses testimonial preview dimensions for 4:5', () => {
+      const testimonialConfig = getLayoutDefinition('testimonial')!.createConfig();
+      const config45 = {
+        ...testimonialConfig,
+        layoutSpecificSettings: {
+          ...testimonialConfig.layoutSpecificSettings,
+          testimonial: {
+            ...testimonialConfig.layoutSpecificSettings?.testimonial,
+            exportAspect: '4:5' as const,
+          },
+        },
+      };
+      const dims = getCanvasDimensions(config45, undefined, 'desktop');
+      expect(dims.width).toBe(720);
+      expect(dims.height).toBe(900);
+    });
+
+    it('uses testimonial preview dimensions for 16:9', () => {
+      const testimonialConfig = getLayoutDefinition('testimonial')!.createConfig();
+      const config169 = {
+        ...testimonialConfig,
+        layoutSpecificSettings: {
+          ...testimonialConfig.layoutSpecificSettings,
+          testimonial: {
+            ...testimonialConfig.layoutSpecificSettings?.testimonial,
+            exportAspect: '16:9' as const,
+          },
+        },
+      };
+      const dims = getCanvasDimensions(config169, undefined, 'desktop');
+      expect(dims.width).toBe(1280);
+      expect(dims.height).toBe(720);
     });
   });
 });

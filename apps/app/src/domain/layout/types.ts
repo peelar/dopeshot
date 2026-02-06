@@ -32,6 +32,7 @@ export type ScreenshotFramePreset = "soft-glass" | "solid";
 export type FrameShape = "rounded" | "rectangular";
 
 export type CanvasMode = "adaptive" | "locked";
+export type TestimonialExportAspect = "3:4" | "4:5" | "9:16" | "16:9";
 
 export type ScreenshotTreatment = {
   preset: ScreenshotFramePreset;
@@ -115,7 +116,9 @@ export type LayoutConfig = {
       authorTitle?: string;
       authorCompany?: string;
       authorAvatarAssetId?: string;
+      showAuthorAvatar?: boolean;
       starRating?: number; // 0-5, 0 = hidden
+      exportAspect?: TestimonialExportAspect;
     };
   };
 };

@@ -2,6 +2,7 @@
 
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
+import { getRandomDemoPreset } from "@/domain/demo/presets";
 import {
   LAYOUT_DEFINITIONS,
   getLayoutDefinition,
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
+import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { Lock, Sparkles } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
@@ -58,9 +60,13 @@ export function LayoutSelector({ className }: { className?: string }) {
   const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
   const setConfig = useSetAtom(configAtom);
+  const setAssets = useSetAtom(assetsAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
   const [activeFormat, setActiveFormat] = useAtom(activeFormatAtom);
+  const isFormatUnselected = activeFormat === "none";
+  const formatForPreview = isFormatUnselected ? "screenshot" : activeFormat;
   const { data: session } = useSession();
+  const { processColorAnalysis } = useColorAnalysis();
   const isLoggedIn = !!session?.user;
 
   // Tooltip state for locked tab
@@ -164,10 +170,10 @@ export function LayoutSelector({ className }: { className?: string }) {
   const filteredPreviewConfigs = useMemo(() => {
     let options = previewConfigs;
 
-    // Filter by active format
+    // Filter by active format (use screenshot as sizing baseline before first selection)
     options = options.filter((option) => {
       const def = getLayoutDefinition(option.layoutId);
-      return def?.format === activeFormat;
+      return def?.format === formatForPreview;
     });
 
     // Filter by orientation
@@ -181,7 +187,7 @@ export function LayoutSelector({ className }: { className?: string }) {
     });
 
     return options;
-  }, [activeFormat, orientation, previewConfigs]);
+  }, [formatForPreview, orientation, previewConfigs]);
 
   const applyLayoutSelection = useCallback(
     (layoutId: string, displayName?: string) => {
@@ -228,6 +234,15 @@ export function LayoutSelector({ className }: { className?: string }) {
         to: format,
       });
 
+      if (format === "screenshot") {
+        const demoPreset = getRandomDemoPreset();
+        setConfig(demoPreset.config);
+        setAssets([demoPreset.asset]);
+        setScreenshotZoom(1.0);
+        void processColorAnalysis(demoPreset.asset.url, demoPreset.asset.id, null);
+        return;
+      }
+
       // Auto-select first layout of the new format with a FRESH config
       // State is intentionally not carried between formats
       const firstLayoutOfFormat = LAYOUT_DEFINITIONS.find((l) => l.format === format);
@@ -237,16 +252,18 @@ export function LayoutSelector({ className }: { className?: string }) {
         setScreenshotZoom(1.0);
       }
     },
-    [activeFormat, applyLayoutSelection, isLoggedIn, setActiveFormat],
+    [activeFormat, isLoggedIn, processColorAnalysis, setActiveFormat, setAssets],
   );
 
-  // Hide the entire selector when no format is chosen yet
-  if (activeFormat === "none") {
-    return null;
-  }
-
   return (
-    <div className={cn("flex w-full flex-col gap-2 py-3 sm:px-4", className)}>
+    <div
+      className={cn(
+        "flex w-full flex-col gap-2 py-3 sm:px-4",
+        isFormatUnselected && "invisible",
+        className,
+      )}
+      aria-hidden={isFormatUnselected}
+    >
       {/* Format tabs */}
       <div className="flex gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {

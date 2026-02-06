@@ -6,7 +6,7 @@ import { toast } from "@/lib/utils/toast";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
-  EXPORT_ORIENTATION_DIMENSIONS,
+  getExportDimensionsForLayout,
   getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
@@ -267,7 +267,7 @@ function useExportHandler({
     setStatusMessage("Exporting image...");
     try {
       // Use high-resolution export dimensions
-      const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+      const exportDims = getExportDimensionsForLayout(config, orientation);
 
       const maxImageScale =
         screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
