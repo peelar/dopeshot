@@ -1,5 +1,5 @@
 import { atom } from "jotai";
-import { getLayoutDefinition } from "@/domain/layout-def/definitions";
+import { getLayoutDefinition, getLayoutFormat } from "@/domain/layout-def/definitions";
 import {
   getCanvasDimensions,
   getScreenshotTreatment,
@@ -15,6 +15,11 @@ import {
 export const currentLayoutAtom = atom((get) => {
   const config = get(configAtom);
   return getLayoutDefinition(config.layoutId);
+});
+
+export const currentFormatAtom = atom((get) => {
+  const config = get(configAtom);
+  return getLayoutFormat(config.layoutId);
 });
 
 export const layoutCapabilitiesAtom = atom((get) => {

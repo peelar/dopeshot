@@ -5,11 +5,14 @@ import type { LayoutConfig } from "@/domain/layout/types";
 import {
   LAYOUT_DEFINITIONS,
   getLayoutDefinition,
+  getLayoutFormat,
   normalizeLayoutId,
   supportsScreenshots,
   withLayoutTextDefaults,
+  type LayoutFormat,
 } from "@/domain/layout-def/definitions";
 import {
+  activeFormatAtom,
   assetsAtom,
   configAtom,
   orientationAtom,
@@ -19,8 +22,10 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics";
+import { useSession } from "@/lib/auth/auth-client";
+import { Lock } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 
 // Memoize layout default configs at module level to avoid recreation
 // Since layouts are now pre-flattened, each layout has exactly one variant baked in
@@ -42,6 +47,11 @@ type PreviewCard = {
   previewConfig: LayoutConfig;
 };
 
+const FORMAT_TABS: { value: LayoutFormat; label: string }[] = [
+  { value: "screenshot", label: "Screenshot" },
+  { value: "testimonial", label: "Testimonial" },
+];
+
 export function LayoutSelector({ className }: { className?: string }) {
   const orientation = useAtomValue(orientationAtom);
   const currentConfig = useAtomValue(configAtom);
@@ -49,6 +59,23 @@ export function LayoutSelector({ className }: { className?: string }) {
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
   const setConfig = useSetAtom(configAtom);
   const setScreenshotZoom = useSetAtom(screenshotZoomAtom);
+  const [activeFormat, setActiveFormat] = useAtom(activeFormatAtom);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+
+  // Tooltip state for locked tab
+  const [showLockedTooltip, setShowLockedTooltip] = useState(false);
+  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  // Sync activeFormat when the current layout changes (e.g., loading a saved design)
+  useEffect(() => {
+    const currentFormat = getLayoutFormat(currentConfig.layoutId);
+    if (currentFormat !== activeFormat) {
+      setActiveFormat(currentFormat);
+    }
+    // Only sync when layoutId changes, not when activeFormat changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentConfig.layoutId, setActiveFormat]);
 
   // Memoize preview configs - only recalculate when user content changes
   // Preserve user's background, colors, and shadow settings across layout switches
@@ -93,6 +120,11 @@ export function LayoutSelector({ className }: { className?: string }) {
           screenshotShadow: currentConfig.screenshotShadow,
           fontStyle: currentConfig.fontStyle,
           screenshotFrame: currentConfig.screenshotFrame,
+          // Preserve testimonial settings across layout switches
+          layoutSpecificSettings: {
+            ...defaultConfig.layoutSpecificSettings,
+            ...currentConfig.layoutSpecificSettings,
+          },
         } as typeof currentConfig,
         { preserveEmptyText: true },
       );
@@ -110,6 +142,7 @@ export function LayoutSelector({ className }: { className?: string }) {
     currentConfig.colors,
     currentConfig.fontStyle,
     currentConfig.layoutId,
+    currentConfig.layoutSpecificSettings,
     currentConfig.screenshotShadow,
     currentConfig.screenshotFrame,
     currentConfig.text,
@@ -127,8 +160,11 @@ export function LayoutSelector({ className }: { className?: string }) {
   const filteredPreviewConfigs = useMemo(() => {
     let options = previewConfigs;
 
-    // Filter by screenshot support
-    options = options.filter((option) => supportsScreenshots(option.layoutId));
+    // Filter by active format
+    options = options.filter((option) => {
+      const def = getLayoutDefinition(option.layoutId);
+      return def?.format === activeFormat;
+    });
 
     // Filter by orientation
     options = options.filter((option) => {
@@ -141,38 +177,124 @@ export function LayoutSelector({ className }: { className?: string }) {
     });
 
     return options;
-  }, [orientation, previewConfigs]);
+  }, [activeFormat, orientation, previewConfigs]);
 
   const applyLayoutSelection = useCallback(
     (layoutId: string, displayName?: string) => {
       const nextConfig = previewConfigByLayoutId.get(layoutId);
       if (!nextConfig) return;
 
+      const fromFormat = getLayoutFormat(currentConfig.layoutId);
+      const toFormat = getLayoutFormat(layoutId);
+
       if (displayName) {
         track("look_changed", {
           from_look: currentConfig.layoutId,
           to_look: layoutId,
           look_name: displayName,
+          format: toFormat,
         });
       }
 
-      setConfig(
-        withLayoutTextDefaults(
-          {
-            ...nextConfig,
-            // variant is already in nextConfig from the flattened layout definition
+      // When switching to testimonial, initialize testimonial settings if missing
+      let configToApply = { ...nextConfig };
+      if (toFormat === "testimonial" && !configToApply.layoutSpecificSettings?.testimonial) {
+        configToApply = {
+          ...configToApply,
+          layoutSpecificSettings: {
+            ...configToApply.layoutSpecificSettings,
+            testimonial: {
+              authorName: "",
+              authorTitle: "",
+              authorCompany: "",
+              starRating: 5,
+            },
           },
-          { preserveEmptyText: true },
-        ),
+        };
+      }
+
+      setConfig(
+        withLayoutTextDefaults(configToApply, { preserveEmptyText: true }),
       );
       setScreenshotZoom(1.0);
     },
     [currentConfig.layoutId, previewConfigByLayoutId, setConfig, setScreenshotZoom],
   );
 
+  const handleFormatTabClick = useCallback(
+    (format: LayoutFormat) => {
+      if (format === "testimonial" && !isLoggedIn) {
+        // Show tooltip
+        setShowLockedTooltip(true);
+        if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
+        tooltipTimeoutRef.current = setTimeout(() => setShowLockedTooltip(false), 3000);
+        return;
+      }
+
+      if (format === activeFormat) return;
+
+      const previousFormat = activeFormat;
+      setActiveFormat(format);
+
+      track("format_tab_switched", {
+        from: previousFormat,
+        to: format,
+      });
+
+      // Auto-select first layout of the new format
+      const firstLayoutOfFormat = LAYOUT_DEFINITIONS.find((l) => l.format === format);
+      if (firstLayoutOfFormat) {
+        applyLayoutSelection(firstLayoutOfFormat.id, firstLayoutOfFormat.name);
+      }
+    },
+    [activeFormat, applyLayoutSelection, isLoggedIn, setActiveFormat],
+  );
 
   return (
     <div className={cn("flex w-full flex-col gap-2 sm:px-4", className)}>
+      {/* Format tabs */}
+      <div className="flex gap-1 px-1 sm:px-0">
+        {FORMAT_TABS.map((tab) => {
+          const isActive = activeFormat === tab.value;
+          const isLocked = tab.value === "testimonial" && !isLoggedIn;
+
+          return (
+            <div key={tab.value} className="relative">
+              <button
+                type="button"
+                onClick={() => handleFormatTabClick(tab.value)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                  isActive
+                    ? "bg-primary/10 text-primary"
+                    : isLocked
+                      ? "cursor-not-allowed text-muted-foreground/50"
+                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                )}
+                aria-pressed={isActive}
+                aria-label={isLocked ? `${tab.label} (sign in required)` : `Show ${tab.label} layouts`}
+              >
+                {isLocked && <Lock className="h-3 w-3" />}
+                {tab.label}
+              </button>
+
+              {/* Locked tooltip */}
+              {isLocked && showLockedTooltip && (
+                <div className="absolute left-0 top-full z-50 mt-2 w-48 rounded-lg border border-border bg-popover p-3 text-xs shadow-lg">
+                  <p className="font-medium text-foreground">Sign in to create testimonials</p>
+                  <a
+                    href="/auth/sign-in"
+                    className="mt-1.5 inline-block text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    Sign in
+                  </a>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
       <div className="flex w-full gap-3 overflow-x-auto px-1 py-2 sm:gap-4 sm:py-3">
         {filteredPreviewConfigs.map(({ key, displayName, layoutId, previewConfig }) => {
           // Normalize current config's layoutId before comparison to handle legacy IDs
@@ -209,12 +331,13 @@ function LayoutSketch({
 
   // Extract variant from layout ID (e.g., "popup-gradient-left" -> "left")
   const variant = layoutId.includes("-")
-    ? (layoutId.split("-").pop() as "left" | "right" | "center" | undefined)
+    ? (layoutId.split("-").pop() as string | undefined)
     : undefined;
 
   const isPeakLayout = layoutId.startsWith("popup-gradient");
   const isSpotlightLayout = layoutId.startsWith("hero-center");
   const isBackdropLayout = layoutId.startsWith("adaptive-stage");
+  const isTestimonialLayout = layoutId.startsWith("testimonial");
 
   if (isPeakLayout && variant) {
     // Peak layouts: text on one side, screenshot on the other or center
@@ -268,7 +391,7 @@ function LayoutSketch({
     // Spotlight: side-by-side with text on one side and screenshot on the other
     const isLeft = variant === "left";
     const showText = !isMobile;
-    
+
     return (
       <div className="flex h-full w-full bg-stone-100 p-2 dark:bg-stone-800">
         {isLeft && (
@@ -306,6 +429,70 @@ function LayoutSketch({
         </div>
       </div>
     );
+  }
+
+  if (isTestimonialLayout) {
+    if (variant === "centered") {
+      // Centered: stars, quote lines, author at bottom — all centered
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-stone-100 p-3 dark:bg-stone-800">
+          {/* Stars */}
+          <div className="flex gap-0.5">
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className="h-1.5 w-1.5 rounded-full bg-stone-400 dark:bg-stone-500" />
+            ))}
+          </div>
+          {/* Quote lines */}
+          <div className="h-1.5 w-20 rounded bg-stone-400 dark:bg-stone-500" />
+          <div className="h-1.5 w-14 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+          {/* Author */}
+          <div className="mt-1 h-1 w-10 rounded bg-stone-300 dark:bg-stone-600" />
+        </div>
+      );
+    }
+
+    if (variant === "card") {
+      // Card: inner card with quote and author
+      return (
+        <div className="flex h-full w-full items-center justify-center bg-stone-100 p-2 dark:bg-stone-800">
+          <div className="flex w-4/5 flex-col gap-1.5 rounded-md bg-white/60 p-2 shadow-sm dark:bg-stone-700/60">
+            {/* Stars */}
+            <div className="flex gap-0.5">
+              {Array.from({ length: 5 }, (_, i) => (
+                <div key={i} className="h-1 w-1 rounded-full bg-stone-400 dark:bg-stone-500" />
+              ))}
+            </div>
+            {/* Quote */}
+            <div className="h-1.5 w-full rounded bg-stone-400 dark:bg-stone-500" />
+            <div className="h-1.5 w-3/4 rounded bg-stone-400/60 dark:bg-stone-500/60" />
+            {/* Author row */}
+            <div className="mt-0.5 flex items-center gap-1">
+              <div className="h-3 w-3 rounded-full bg-stone-300 dark:bg-stone-600" />
+              <div className="h-1 w-8 rounded bg-stone-300 dark:bg-stone-600" />
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (variant === "editorial") {
+      // Editorial: big quote mark, left-aligned quote, right-aligned author
+      return (
+        <div className="flex h-full w-full flex-col justify-center bg-stone-100 p-3 dark:bg-stone-800">
+          {/* Quote mark */}
+          <div className="mb-0.5 text-xl font-bold leading-none text-stone-300 dark:text-stone-600">
+            {"\u201C"}
+          </div>
+          {/* Quote lines */}
+          <div className="mb-1 h-1.5 w-full rounded bg-stone-400 dark:bg-stone-500" />
+          <div className="mb-2 h-1.5 w-3/4 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+          {/* Author right-aligned */}
+          <div className="flex justify-end">
+            <div className="h-1 w-10 rounded bg-stone-300 dark:bg-stone-600" />
+          </div>
+        </div>
+      );
+    }
   }
 
   // Default fallback

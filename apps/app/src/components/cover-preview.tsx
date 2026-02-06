@@ -9,7 +9,7 @@ import { LoadingOverlay } from "@/components/ui/loading-overlay";
 
 interface CoverPreviewProps {
   className?: string;
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   isStatic?: boolean;
   showEmptyState?: boolean;
   showLoadingState?: boolean;

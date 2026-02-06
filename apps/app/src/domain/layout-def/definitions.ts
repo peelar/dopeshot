@@ -18,6 +18,8 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
   textColor: "slate-50",
 };
 
+export type LayoutFormat = "screenshot" | "testimonial";
+
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
 export type LayoutOutlineControls = {
@@ -60,6 +62,7 @@ export interface LayoutDefinition {
   id: string;
   name: string;
   description: string;
+  format: LayoutFormat;
   variants: string[];
   createConfig: () => LayoutConfig;
   capabilities: LayoutCapabilities;
@@ -124,6 +127,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     id: "popup-gradient",
     name: "Peak",
     description: "Gradient hero with headline, subtitle, and an elevated screenshot frame.",
+    format: "screenshot",
     variants: ["left", "right", "center"],
     createConfig: () => ({
       layoutId: "popup-gradient",
@@ -186,6 +190,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     id: "hero-center",
     name: "Spotlight",
     description: "Split layout with copy on one side and a tall screenshot on the other.",
+    format: "screenshot",
     variants: ["left", "right"],
     createConfig: () => ({
       layoutId: "hero-center",
@@ -246,6 +251,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     id: "adaptive-stage",
     name: "Backdrop",
     description: "Let a single screenshot shine with adaptive sizing and a curated background.",
+    format: "screenshot",
     variants: [],
     createConfig: () => ({
       layoutId: "adaptive-stage",
@@ -298,6 +304,74 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       supportedOrientations: ["mobile", "desktop"],
     },
   },
+  {
+    id: "testimonial",
+    name: "Testimonial",
+    description: "Quote-focused layout for customer testimonials and social proof.",
+    format: "testimonial",
+    variants: ["centered", "card", "editorial"],
+    createConfig: () => ({
+      layoutId: "testimonial",
+      variant: "centered",
+      text: {
+        title: "",
+        subtitle: "",
+      },
+      colors: {
+        background: "slate-50",
+        text: DEFAULT_GRADIENT.textColor,
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: "custom",
+        customGradient: DEFAULT_GRADIENT.gradient,
+        grainEnabled: true,
+        patternMode: "auto",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+      screenshotFrame: {
+        preset: "soft-glass",
+        canvasMode: "locked",
+        lockedAspectRatio: 16 / 9,
+        shadowEnabled: false,
+        shape: "rounded",
+      },
+      layoutSpecificSettings: {
+        testimonial: {
+          authorName: "",
+          authorTitle: "",
+          authorCompany: "",
+          starRating: 5,
+        },
+      },
+    }),
+    capabilities: {
+      focusMode: "never",
+      canvasBehavior: "locked",
+      zoomBehavior: "scale-content",
+      text: {
+        headline: "required",
+        subtitle: "hidden",
+      },
+      typography: true,
+      outline: {
+        softGlass: false,
+        shadow: false,
+      },
+      logo: "supported",
+      screenshot: "hidden",
+      supportedOrientations: ["mobile", "desktop"],
+      copyDefaults: {
+        title: "This product completely transformed how we work. The results speak for themselves.",
+      },
+    },
+  },
 ];
 
 /**
@@ -331,6 +405,7 @@ export function normalizeLayoutId(id: string): string {
     "popup-gradient": "popup-gradient-right", // Default was "right" in createConfig
     "hero-center": "hero-center-left",        // First variant was "left"
     "adaptive-stage": "adaptive-stage",       // No variants (unchanged)
+    "testimonial": "testimonial-centered",    // Default variant is "centered"
   };
 
   return legacyDefaults[id] ?? id;
@@ -371,6 +446,21 @@ function hasUserProvidedText(value: string | undefined, preserveEmptyText: boole
  * This is domain logic: it understands layout requirements and config structure,
  * but doesn't depend on UI components.
  */
+/**
+ * Get the format of a layout by its ID.
+ */
+export function getLayoutFormat(layoutId: string): LayoutFormat {
+  const def = getLayoutDefinition(layoutId);
+  return def?.format ?? "screenshot";
+}
+
+/**
+ * Get all layout definitions for a given format.
+ */
+export function getLayoutsForFormat(format: LayoutFormat): LayoutDefinition[] {
+  return LAYOUT_DEFINITIONS.filter((layout) => layout.format === format);
+}
+
 export function withLayoutTextDefaults(
   config: LayoutConfig,
   options?: LayoutTextDefaultOptions,

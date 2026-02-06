@@ -5,7 +5,7 @@ import { SidebarFooter } from "@/components/layout/sidebar-footer";
 import { useUserTier } from "@/hooks/use-user-tier";
 
 interface SidebarTabsProps {
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   onFeedbackClick?: () => void;
 }
 

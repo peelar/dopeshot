@@ -29,11 +29,13 @@ import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
+import { TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 
 
 interface LayoutConfigProps {
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   isMobile?: boolean;
   isBrandUser?: boolean;
 }
@@ -59,6 +61,8 @@ export const LayoutConfigPanel = ({
   const logoInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
+  const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+  const showScreenshotSection = !isTestimonialFormat;
 
   // Check if brand logo is currently applied
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
@@ -200,9 +204,21 @@ export const LayoutConfigPanel = ({
         {showTextSection && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Text</span>
+              <span className="text-sm font-semibold">{isTestimonialFormat ? "Quote" : "Text"}</span>
             </div>
             <LayoutSection isBrandUser={isBrandUser} />
+          </section>
+        )}
+
+        {/* Author section for testimonial format */}
+        {isTestimonialFormat && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Author</span>
+            </div>
+            <TestimonialAuthorSection
+              onUploadAsset={onUploadAsset ? (file, kind) => onUploadAsset(file, kind) : undefined}
+            />
           </section>
         )}
 
@@ -219,8 +235,8 @@ export const LayoutConfigPanel = ({
         {/* Hide background section on mobile - now shown inline beneath canvas */}
         {!isMobile && <BackgroundSection />}
 
-        {/* Hide screenshot section on mobile - upload available via Upload button in bottom menu */}
-        {!isMobile && (
+        {/* Hide screenshot section on mobile and for testimonial format */}
+        {!isMobile && showScreenshotSection && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Screenshot</span>

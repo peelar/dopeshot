@@ -26,7 +26,7 @@ export type Asset = {
   userId: string;
   name: string;
   url: string;
-  kind: "screenshot" | "logo" | "icon" | "background" | "other";
+  kind: "screenshot" | "logo" | "icon" | "background" | "avatar" | "other";
   createdAt: string;
   colorPalette?: ColorPalette; // populated after color analysis
   metadata?: ImageMetadata;

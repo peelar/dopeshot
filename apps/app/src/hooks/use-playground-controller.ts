@@ -10,7 +10,7 @@ import {
   getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import type { LayoutDefinition } from "@/domain/layout-def/definitions";
+import { getLayoutFormat, type LayoutDefinition } from "@/domain/layout-def/definitions";
 import { exportLayoutAsPngWithBlob, generateThumbnail } from "@/domain/layout/export";
 import { useSession } from "@/lib/auth/auth-client";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -300,6 +300,7 @@ function useExportHandler({
       track("export_completed", {
         look_id: config.layoutId,
         orientation,
+        format: getLayoutFormat(config.layoutId),
       });
 
       // DEV FLAG: Force show modal for all users in development

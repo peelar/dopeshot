@@ -16,7 +16,7 @@ export interface UploadResult {
 
 export async function processFileUpload(
   file: File,
-  kind: "screenshot" | "logo" | "background",
+  kind: "screenshot" | "logo" | "background" | "avatar",
 ): Promise<UploadResult> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -75,7 +75,7 @@ export async function processFileUpload(
         userId: "playground-user",
         name: backgroundRecord?.name ?? file.name,
         url: backgroundRecord?.previewUrl ?? dataUrl,
-        kind: kind === "background" ? "background" : kind === "logo" ? "logo" : "screenshot",
+        kind: kind === "background" ? "background" : kind === "logo" ? "logo" : kind === "avatar" ? "avatar" : "screenshot",
         createdAt: new Date().toISOString(),
         metadata: assetMetadata,
       };

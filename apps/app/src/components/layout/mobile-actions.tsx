@@ -27,7 +27,7 @@ interface MobileActionsProps {
   isProcessingUpload: boolean;
   showUploadButton: boolean;
   isBrandUser?: boolean;
-  onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
 }
 
 const CLOSE_DRAG_DISTANCE = 120;

@@ -4,6 +4,7 @@ import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback } from "react";
 import { configAtom, orientationAtom, brandSettingsAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, personalityStyleAtom } from "@/hooks/atoms/derived";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { Label } from "@/components/ui/label";
 import { FontStyleSelector } from "@/components/selectors/font-style-selector";
 import { brandPersonalityLabels } from "@/lib/types/brand";
@@ -30,6 +31,7 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
   const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
 
+  const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
   const showHeadlineInput = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
   const showSubtitleInput = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
   const showTypographyControls = !hideTextOnMobile && lookCapabilities?.typography !== false;
@@ -62,13 +64,13 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
       {showHeadlineInput && (
         <div className="flex flex-col gap-2">
           <Label htmlFor="look-headline" className="text-xs font-medium text-muted-foreground">
-            Headline
+            {isTestimonialFormat ? "Quote" : "Headline"}
           </Label>
           <textarea
             id="look-headline"
             value={config.text.title ?? ""}
             onChange={(event) => handleTextInputChange("title", event.target.value)}
-            placeholder="Bring the heat"
+            placeholder={isTestimonialFormat ? "This product changed everything..." : "Bring the heat"}
             rows={2}
             maxLength={120}
             className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"

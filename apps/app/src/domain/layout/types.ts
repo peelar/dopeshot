@@ -110,5 +110,12 @@ export type LayoutConfig = {
   layoutSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-layout fade state
     fadeDirection?: Record<string, string>; // Per-layout fade direction override
+    testimonial?: {
+      authorName?: string;
+      authorTitle?: string;
+      authorCompany?: string;
+      authorAvatarAssetId?: string;
+      starRating?: number; // 0-5, 0 = hidden
+    };
   };
 };
