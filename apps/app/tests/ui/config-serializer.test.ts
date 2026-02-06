@@ -234,6 +234,6 @@ describe("serializeEditorState", () => {
       screenshotPath: "test.png",
     });
 
-    expect(result.assets.some((asset) => asset.id === "avatar-1")).toBe(true);
+    expect(result.assets?.some((asset) => asset.id === "avatar-1")).toBe(true);
   });
 });
