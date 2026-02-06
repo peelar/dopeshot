@@ -291,7 +291,10 @@ async function getEnhancedUserDataWithGrowth(window: { start: Date }): Promise<E
     return {
       newCount: 0,
       totalCount: 0,
-      growth: ""
+      growth: "",
+      activeCount: 0,
+      activeGrowth: "",
+      activeRate: "0%"
     };
   }
 
@@ -319,11 +322,31 @@ async function getEnhancedUserDataWithGrowth(window: { start: Date }): Promise<E
     );
     const previousNewCount = parseInt(previousNewResult.rows[0]?.count ?? "0", 10);
 
-    return getEnhancedUserData(newCount, totalCount, previousNewCount);
+    // Count active users (saved at least one design) in current period
+    const activeResult = await pool.query(
+      'SELECT COUNT(DISTINCT "user_id") as count FROM "memory_items" WHERE created_at >= $1',
+      [window.start.toISOString()]
+    );
+    const activeCount = parseInt(activeResult.rows[0]?.count ?? "0", 10);
+
+    // Count active users in previous period for growth comparison
+    const previousActiveResult = await pool.query(
+      'SELECT COUNT(DISTINCT "user_id") as count FROM "memory_items" WHERE created_at >= $1 AND created_at < $2',
+      [previousStart.toISOString(), window.start.toISOString()]
+    );
+    const previousActiveCount = parseInt(previousActiveResult.rows[0]?.count ?? "0", 10);
+
+    return getEnhancedUserData(
+      newCount,
+      totalCount,
+      previousNewCount,
+      activeCount,
+      previousActiveCount
+    );
   } catch (error) {
     const newCount = 0;
     const totalCount = 0;
-    return getEnhancedUserData(newCount, totalCount, 0);
+    return getEnhancedUserData(newCount, totalCount, 0, 0, 0);
   } finally {
     await pool.end();
   }
@@ -363,6 +386,7 @@ function formatEnhancedOutput(data: {
   lines.push(`${ICONS.users} Users`);
   lines.push(`   New signups: ${userData.growth || userData.newCount}`);
   lines.push(`   Total users: ${userData.totalCount}`);
+  lines.push(`   Active users: ${userData.activeGrowth || userData.activeCount} (${userData.activeRate})`);
   
   return lines.join("\n");
 }
