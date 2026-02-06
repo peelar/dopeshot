@@ -178,6 +178,24 @@ function calculateAdaptiveFontSize(
 }
 
 /**
+ * Line breaks consume vertical space disproportionately vs plain characters.
+ * We inflate effective length so manual line breaks trigger earlier down-scaling.
+ */
+function getEffectiveTextLength(text: string | undefined, lineBreakPenalty: number): number {
+  if (!text) {
+    return 0;
+  }
+
+  const normalized = text.trim();
+  if (!normalized) {
+    return 0;
+  }
+
+  const lineBreaks = (normalized.match(/\n/g) ?? []).length;
+  return normalized.length + lineBreaks * lineBreakPenalty;
+}
+
+/**
  * Get inline styles for title with fluid sizing
  */
 export function getTitleStyles(
@@ -244,8 +262,8 @@ export function getAdaptiveTypography(
   titleText?: string,
   subtitleText?: string,
 ) {
-  const titleLength = titleText?.length ?? 0;
-  const subtitleLength = subtitleText?.length ?? 0;
+  const titleLength = getEffectiveTextLength(titleText, 22);
+  const subtitleLength = getEffectiveTextLength(subtitleText, 14);
 
   return {
     containerClasses: getTextContainerClasses(fontStyle),

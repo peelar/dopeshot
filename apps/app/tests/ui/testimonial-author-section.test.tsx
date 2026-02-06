@@ -128,19 +128,25 @@ describe("TestimonialContentSection", () => {
     expect(config.layoutSpecificSettings?.testimonial?.starRating).toBe(0);
   });
 
-  it("renders quote textarea", () => {
+  it("renders quote rich text editor", () => {
     renderContentWithStore(store);
 
-    expect(screen.getByPlaceholderText("This product changed everything...")).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Quote" })).toBeInTheDocument();
   });
 
-  it("updates quote text on input", () => {
+  it("updates quote text and rich segments on input", () => {
     renderContentWithStore(store);
 
-    const quoteInput = screen.getByPlaceholderText("This product changed everything...");
-    fireEvent.change(quoteInput, { target: { value: "Amazing product!" } });
+    const quoteInput = screen.getByRole("textbox", { name: "Quote" });
+    quoteInput.innerHTML = "Amazing <strong>product</strong>!";
+    fireEvent.input(quoteInput);
 
     const config = store.get(configAtom);
     expect(config.text.title).toBe("Amazing product!");
+    expect(config.layoutSpecificSettings?.richText?.title).toEqual([
+      { text: "Amazing " },
+      { text: "product", marks: ["bold"] },
+      { text: "!" },
+    ]);
   });
 });

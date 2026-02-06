@@ -73,6 +73,8 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   const authorTitle = testimonialSettings?.authorTitle || "";
   const authorCompany = testimonialSettings?.authorCompany || "";
   const starRating = testimonialSettings?.starRating ?? 0;
+  const styleAccentOverride = testimonialSettings?.styleAccent;
+  const styleModeOverride = testimonialSettings?.styleMode;
   const shouldShowAvatar = testimonialSettings?.showAuthorAvatar !== false;
   const avatarAssetId = shouldShowAvatar ? testimonialSettings?.authorAvatarAssetId : undefined;
 
@@ -94,19 +96,21 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
         isLoggedIn,
         isBrandUser,
         personality: brandSettings.personality,
-        mode: brandSettings.mode,
-        accent: brandSettings.accent,
+        mode: styleModeOverride ?? brandSettings.mode,
+        accent: styleAccentOverride ?? brandSettings.accent,
         fallbackMode,
         fallbackBackground: backgroundStyle,
       }),
     [
       backgroundStyle,
-      brandSettings.accent,
       brandSettings.mode,
       brandSettings.personality,
       fallbackMode,
       isBrandUser,
       isLoggedIn,
+      styleAccentOverride,
+      styleModeOverride,
+      brandSettings.accent,
     ],
   );
 
@@ -135,10 +139,10 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
 
     // Map from title weight to paragraph weight (one weight down)
     let weight: string;
-    if (titleClasses.includes("font-extrabold")) weight = "font-bold";
-    else if (titleClasses.includes("font-bold")) weight = "font-medium";
-    else if (titleClasses.includes("font-medium")) weight = "font-normal";
-    else weight = "font-normal";
+    if (titleClasses.includes("font-extrabold")) weight = "font-semibold";
+    else if (titleClasses.includes("font-bold")) weight = "font-normal";
+    else if (titleClasses.includes("font-medium")) weight = "font-light";
+    else weight = "font-light";
 
     // Strip out font-weight and font-family classes that would conflict with inline styles
     const cleanedClasses = titleClasses
@@ -154,6 +158,7 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
 
   const titleClassName = testimonialClassName;
   const quoteText = text.title;
+  const quoteContent = text.titleContent;
 
   // Tighter line height for testimonials
   const testimonialLineHeight = useMemo(() => {
@@ -310,14 +315,14 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
             <StarRating rating={starRating} color={testimonialStyle.starColor} />
             {quoteText ? (
               <h1
-                className={cn(titleClassName, "text-center")}
+                className={cn(titleClassName, "ds-testimonial-quote my-2 text-center")}
                 style={{
                   ...text.titleStyle,
                   color: testimonialStyle.textColor,
                   lineHeight: testimonialLineHeight,
                 }}
               >
-                {quoteText}
+                {quoteContent}
               </h1>
             ) : null}
             {shouldShowAvatar || hasAuthorMetadata ? (

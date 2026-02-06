@@ -112,6 +112,8 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   const shouldShowText = !(isMobile && (textVariant === "left" || textVariant === "right"));
   const title = shouldShowText ? text.title : undefined;
   const subtitle = shouldShowText ? text.subtitle : undefined;
+  const titleContent = shouldShowText ? text.titleContent : undefined;
+  const subtitleContent = shouldShowText ? text.subtitleContent : undefined;
 
   // Adaptive typography classes
   const titleClassName = cn(text.titleClasses, "whitespace-pre-line", text.textColorClass);
@@ -267,12 +269,12 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             >
               {title ? (
                 <h1 className={titleClassName} style={text.titleStyle}>
-                  {title}
+                  {titleContent}
                 </h1>
               ) : null}
               {subtitle ? (
                 <p className={subtitleClassName} style={text.subtitleStyle}>
-                  {subtitle}
+                  {subtitleContent}
                 </p>
               ) : null}
             </div>
@@ -291,12 +293,12 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             >
               {title ? (
                 <h1 className={cn(titleClassName, "text-right")} style={text.titleStyle}>
-                  {title}
+                  {titleContent}
                 </h1>
               ) : null}
               {subtitle ? (
                 <p className={cn(subtitleClassName, "text-right")} style={text.subtitleStyle}>
-                  {subtitle}
+                  {subtitleContent}
                 </p>
               ) : null}
             </div>
@@ -314,12 +316,12 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
             >
               {title ? (
                 <h1 className={titleClassName} style={text.titleStyle}>
-                  {title}
+                  {titleContent}
                 </h1>
               ) : null}
               {subtitle ? (
                 <p className={subtitleClassName} style={text.subtitleStyle}>
-                  {subtitle}
+                  {subtitleContent}
                 </p>
               ) : null}
             </div>

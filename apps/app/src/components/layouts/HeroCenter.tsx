@@ -84,17 +84,19 @@ function HeroCenterComponent({ className, onUploadAsset, isStatic = false }: Her
       align === "center" ? "text-center" : align === "right" ? "text-right" : "text-left";
     const title = text.title;
     const subtitle = text.subtitle;
+    const titleContent = text.titleContent;
+    const subtitleContent = text.subtitleContent;
 
     return (
       <div className={cn("space-y-4", alignmentClass, text.containerClasses)}>
         {title ? (
           <h1 className={cn(text.titleClasses, "whitespace-pre-line", text.textColorClass)} style={text.titleStyle}>
-            {title}
+            {titleContent}
           </h1>
         ) : null}
         {subtitle ? (
           <p className={cn(text.subtitleClasses, "whitespace-pre-line", text.textColorClass)} style={text.subtitleStyle}>
-            {subtitle}
+            {subtitleContent}
           </p>
         ) : null}
       </div>

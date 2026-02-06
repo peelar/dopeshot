@@ -17,10 +17,10 @@ type InAppUpdate = {
 };
 
 const CURRENT_UPDATE: InAppUpdate = {
-  id: "2026-01-accounts-saving-designs",
-  title: "User accounts & saving designs",
-  description: "Sign in to save designs and pick up where you left off.",
-  cta: { label: "Sign up", href: "/auth" },
+  id: "2026-02-testimonials-format",
+  title: "Testimonials",
+  description: "turn customer quotes into polished social proof graphics.",
+  cta: { label: "Sign up to try", href: "/auth" },
 };
 
 export function InAppUpdateBanner({ className }: { className?: string }) {
@@ -63,7 +63,7 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
               NEW
             </span>
             <p className="min-w-0 text-xs text-foreground/90">
-              <span className="font-premium text-foreground">{update.title}</span>
+              <strong className="font-premium font-semibold text-foreground">{update.title}</strong>
               <span className="hidden text-muted-foreground sm:inline"> — {update.description}</span>
             </p>
           </div>

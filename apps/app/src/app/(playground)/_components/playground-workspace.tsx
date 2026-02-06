@@ -130,6 +130,10 @@ export function PlaygroundWorkspace({
               fontId: config.fontId,
               fontSize: config.fontSize,
               screenshotFrame: config.screenshotFrame,
+              layoutSpecificSettings: {
+                ...nextConfig.layoutSpecificSettings,
+                ...config.layoutSpecificSettings,
+              },
             },
             { preserveEmptyText: true },
           ),

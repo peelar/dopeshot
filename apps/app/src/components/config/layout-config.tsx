@@ -30,6 +30,7 @@ import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
 import { TestimonialContentSection, TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
+import { TestimonialStyleSection } from "@/components/sidebar/testimonial-style-section";
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
@@ -341,6 +342,15 @@ export const LayoutConfigPanel = ({
               <span className="text-sm font-semibold">Font</span>
             </div>
             <LayoutSection isBrandUser={isBrandUser} />
+          </section>
+        )}
+
+        {showTestimonialSections && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Style</span>
+            </div>
+            <TestimonialStyleSection />
           </section>
         )}
 

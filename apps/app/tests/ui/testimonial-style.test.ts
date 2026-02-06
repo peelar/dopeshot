@@ -14,32 +14,56 @@ describe("resolveTestimonialStyle", () => {
     expect(style.canvasBackground).toBe("linear-gradient(135deg, #111111, #222222)");
   });
 
-  it("uses neutral solid background for logged-in non-brand users (light)", () => {
+  it("uses accent-tinted background for logged-in non-brand users (light)", () => {
     const style = resolveTestimonialStyle({
       isLoggedIn: true,
       isBrandUser: false,
+      accent: "#22C55E",
       fallbackMode: "light",
       fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
     });
 
     expect(style.tier).toBe("default");
-    expect(style.canvasBackground).toBe("#E2E8F0");
+    expect(style.canvasBackground).toContain("linear-gradient");
     expect(style.texture).toBe("none");
     expect(style.showDecorativeBlobs).toBe(false);
   });
 
-  it("uses neutral solid background for logged-in non-brand users (dark)", () => {
+  it("uses accent-tinted background for logged-in non-brand users (dark)", () => {
     const style = resolveTestimonialStyle({
       isLoggedIn: true,
       isBrandUser: false,
+      accent: "#22C55E",
       mode: "dark",
       fallbackMode: "light",
       fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
     });
 
     expect(style.tier).toBe("default");
-    expect(style.canvasBackground).toBe("#0F172A");
+    expect(style.canvasBackground).toContain("linear-gradient");
     expect(style.mode).toBe("dark");
+  });
+
+  it("changes non-brand background when accent changes", () => {
+    const green = resolveTestimonialStyle({
+      isLoggedIn: true,
+      isBrandUser: false,
+      accent: "#22C55E",
+      mode: "light",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+
+    const red = resolveTestimonialStyle({
+      isLoggedIn: true,
+      isBrandUser: false,
+      accent: "#EF4444",
+      mode: "light",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+
+    expect(green.canvasBackground).not.toBe(red.canvasBackground);
   });
 
   it("applies founder defaults for brand users when personality is missing", () => {
@@ -119,5 +143,20 @@ describe("resolveTestimonialStyle", () => {
     });
 
     expect(style.accent).toBe("#6366F1");
+  });
+
+  it("respects explicit mode and accent inputs", () => {
+    const style = resolveTestimonialStyle({
+      isLoggedIn: true,
+      isBrandUser: true,
+      personality: "founder",
+      accent: "#123456",
+      mode: "dark",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+
+    expect(style.mode).toBe("dark");
+    expect(style.accent).toBe("#123456");
   });
 });

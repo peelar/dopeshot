@@ -7,8 +7,9 @@ import { layoutCapabilitiesAtom, personalityStyleAtom } from "@/hooks/atoms/deri
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { Label } from "@/components/ui/label";
 import { FontStyleSelector } from "@/components/selectors/font-style-selector";
+import { RichTextEditor } from "@/components/sidebar/rich-text-editor";
 import { brandPersonalityLabels } from "@/lib/types/brand";
-import type { FontStyle } from "@/domain/layout/types";
+import type { FontStyle, RichTextSegment } from "@/domain/layout/types";
 
 interface LayoutSectionProps {
   isBrandUser?: boolean;
@@ -44,6 +45,37 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
         text: {
           ...currentConfig.text,
           [field]: value,
+        },
+        ...(field !== "title"
+          ? {}
+          : {
+              layoutSpecificSettings: {
+                ...currentConfig.layoutSpecificSettings,
+                richText: {
+                  ...currentConfig.layoutSpecificSettings?.richText,
+                  title: undefined,
+                },
+              },
+            }),
+      }));
+    },
+    [setConfig],
+  );
+
+  const handleRichTextInputChange = useCallback(
+    (field: "title" | "subtitle", payload: { text: string; segments?: RichTextSegment[] }) => {
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        text: {
+          ...currentConfig.text,
+          [field]: payload.text,
+        },
+        layoutSpecificSettings: {
+          ...currentConfig.layoutSpecificSettings,
+          richText: {
+            ...currentConfig.layoutSpecificSettings?.richText,
+            [field]: payload.segments,
+          },
         },
       }));
     },
@@ -84,14 +116,15 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
           <Label htmlFor="look-subtitle" className="text-xs font-medium text-muted-foreground">
             Subtitle
           </Label>
-          <textarea
+          <RichTextEditor
             id="look-subtitle"
             value={config.text.subtitle ?? ""}
-            onChange={(event) => handleTextInputChange("subtitle", event.target.value)}
+            segments={config.layoutSpecificSettings?.richText?.subtitle}
+            onChange={(payload) => handleRichTextInputChange("subtitle", payload)}
             placeholder="Keep the heat going"
-            rows={2}
             maxLength={240}
-            className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            analyticsField="subtitle"
+            ariaLabel="Subtitle"
           />
         </div>
       )}

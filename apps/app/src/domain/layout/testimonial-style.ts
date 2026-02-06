@@ -46,11 +46,6 @@ const DEFAULT_PERSONALITY: BrandPersonality = "founder";
 const LIGHT_TEXT = "#0F172A";
 const DARK_TEXT = "#F8FAFC";
 
-const NEUTRAL_SOLID_BY_MODE: Record<BrandMode, string> = {
-  light: "#E2E8F0",
-  dark: "#0F172A",
-};
-
 const DEFAULT_STYLE: TestimonialVisualStyle = {
   tier: "anonymous",
   mode: "light",
@@ -162,7 +157,9 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
       mode,
       personality: DEFAULT_PERSONALITY,
       accent,
-      canvasBackground: NEUTRAL_SOLID_BY_MODE[mode],
+      canvasBackground: dark
+        ? `linear-gradient(150deg, ${mixHex(accent, "#020617", 0.9)} 0%, #050816 46%, ${mixHex(accent, "#0B1120", 0.8)} 100%)`
+        : `linear-gradient(150deg, ${mixHex(accent, "#FFFFFF", 0.88)} 0%, #F8FAFC 52%, ${mixHex(accent, "#E2E8F0", 0.72)} 100%)`,
       textColor: dark ? DARK_TEXT : LIGHT_TEXT,
       mutedTextColor: dark ? "rgba(248, 250, 252, 0.72)" : "rgba(15, 23, 42, 0.70)",
       starColor: dark ? "#FBBF24" : "#D97706",

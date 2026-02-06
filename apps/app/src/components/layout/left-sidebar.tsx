@@ -44,7 +44,7 @@ export function LeftSidebar({
   onDeleteItem,
   isMobile,
 }: LeftSidebarProps) {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const saveCount = useAtomValue(currentSaveCountAtom);
   const saveLimit = useAtomValue(saveLimitAtom);
@@ -56,6 +56,7 @@ export function LeftSidebar({
   const isLoggedIn = Boolean(user);
   const showBrandTab = isLoggedIn;
   const brandDisabled = isTierLoading && isLoggedIn;
+  const showBrandPanelLoading = isAuthLoading || (isLoggedIn && isTierLoading);
 
   const saveLimitLabel = Number.isFinite(saveLimit) ? `${saveCount}/${saveLimit}` : `${saveCount}`;
   const savedHeaderLabel = Number.isFinite(saveLimit)
@@ -216,6 +217,14 @@ export function LeftSidebar({
     </div>
   );
 
+  const renderBrandContent = () => {
+    if (showBrandPanelLoading) {
+      return <BrandPanelLoading />;
+    }
+
+    return isBrandUser ? <BrandPanel /> : <BrandTeaser />;
+  };
+
   if (isMobile) {
     return isOpen ? (
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
@@ -248,7 +257,7 @@ export function LeftSidebar({
             />
           ) : activeView === "brand" ? (
             <div className="flex-1 min-h-0 overflow-y-auto">
-              {isBrandUser ? <BrandPanel /> : <BrandTeaser />}
+              {renderBrandContent()}
             </div>
           ) : (
             <div className="flex h-full w-full flex-col px-4 py-6">
@@ -296,7 +305,7 @@ export function LeftSidebar({
             <div className="flex h-full w-full flex-col overflow-y-auto">
               {renderPanelHeader("Brand")}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                {isBrandUser ? <BrandPanel /> : <BrandTeaser />}
+                {renderBrandContent()}
               </div>
             </div>
           ) : (
@@ -315,6 +324,14 @@ export function LeftSidebar({
         </aside>
       ) : null}
     </TooltipProvider>
+  );
+}
+
+function BrandPanelLoading() {
+  return (
+    <div className="flex h-full w-full flex-col px-4 py-6">
+      <p className="text-sm text-muted-foreground">Loading brand tools...</p>
+    </div>
   );
 }
 

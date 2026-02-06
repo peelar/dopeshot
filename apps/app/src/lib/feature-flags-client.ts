@@ -3,10 +3,11 @@
  * These are static values that get bundled at build time.
  */
 
-const isDevelopment = process.env.NODE_ENV === "development";
+import { SHOW_AI_BACKGROUNDS_DEV } from "./dev-flags";
 
 /**
  * Client-side feature flag for AI background UI.
- * Enabled only in local development builds.
+ * ALWAYS OFF in production.
+ * In local development, controlled via NEXT_PUBLIC_SHOW_AI_BACKGROUNDS env var.
  */
-export const SHOW_AI_BACKGROUNDS = isDevelopment;
+export const SHOW_AI_BACKGROUNDS = SHOW_AI_BACKGROUNDS_DEV;

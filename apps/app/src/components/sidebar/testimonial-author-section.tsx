@@ -4,8 +4,10 @@ import { useCallback } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { configAtom } from "@/hooks/atoms";
 import { Label } from "@/components/ui/label";
+import { RichTextEditor } from "@/components/sidebar/rich-text-editor";
 import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
+import type { RichTextSegment } from "@/domain/layout/types";
 
 function StarButton({
   filled,
@@ -50,13 +52,21 @@ export function TestimonialContentSection() {
   const setConfig = useSetAtom(configAtom);
 
   const quoteText = config.text.title ?? "";
+  const quoteSegments = config.layoutSpecificSettings?.richText?.title;
   const starRating = config.layoutSpecificSettings?.testimonial?.starRating ?? 0;
 
   const handleQuoteChange = useCallback(
-    (value: string) => {
+    (payload: { text: string; segments?: RichTextSegment[] }) => {
       setConfig((prev) => ({
         ...prev,
-        text: { ...prev.text, title: value },
+        text: { ...prev.text, title: payload.text },
+        layoutSpecificSettings: {
+          ...prev.layoutSpecificSettings,
+          richText: {
+            ...prev.layoutSpecificSettings?.richText,
+            title: payload.segments,
+          },
+        },
       }));
     },
     [setConfig],
@@ -86,14 +96,15 @@ export function TestimonialContentSection() {
         <Label htmlFor="testimonial-quote" className="text-xs font-medium text-muted-foreground">
           Quote
         </Label>
-        <textarea
+        <RichTextEditor
           id="testimonial-quote"
           value={quoteText}
-          onChange={(e) => handleQuoteChange(e.target.value)}
+          segments={quoteSegments}
+          onChange={handleQuoteChange}
           placeholder="This product changed everything..."
-          rows={3}
           maxLength={200}
-          className="w-full rounded-lg border border-border/70 bg-background/70 px-3 py-2 text-sm font-medium text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+          analyticsField="quote"
+          ariaLabel="Quote"
         />
       </div>
 
