@@ -7,9 +7,11 @@ import { activeFormatAtom } from "@/hooks/atoms";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
 import { getLayoutComponent } from "@/components/layouts/registry";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { LayoutFormat } from "@/domain/layout-def/definitions";
 import { useSession } from "@/lib/auth/auth-client";
-import { useEffect, useRef, useState } from "react";
+import { useUserTier } from "@/hooks/use-user-tier";
+import { track } from "@/lib/analytics";
 
 interface CoverPreviewProps {
   className?: string;
@@ -36,17 +38,8 @@ export function CoverPreview({
   const setActiveFormat = useSetAtom(activeFormatAtom);
   const { data: session } = useSession();
   const isLoggedIn = Boolean(session?.user);
-  const [showLockedTooltip, setShowLockedTooltip] = useState(false);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const { isBrandUser } = useUserTier();
   const showFormatChooser = activeFormat === "none" && showEmptyState && !isStatic;
-
-  useEffect(() => {
-    return () => {
-      if (tooltipTimeoutRef.current) {
-        clearTimeout(tooltipTimeoutRef.current);
-      }
-    };
-  }, []);
 
   if (!layout) {
     return (
@@ -106,11 +99,12 @@ export function CoverPreview({
               <span className="text-lg font-semibold text-foreground/70 dark:text-foreground/95">
                 What do you want to ship today?
               </span>
-              <div className="flex gap-4">
+              <TooltipProvider>
+                <div className="flex gap-4">
                 <FormatCard
                   icon={<Camera className="h-6 w-6" strokeWidth={1.5} />}
                   label="Screenshot"
-                  description="Wrap a screenshot in a beautiful layout"
+                  description="Polished product screenshots"
                   onClick={() => {
                     if (onFormatChosen) {
                       onFormatChosen("screenshot");
@@ -119,37 +113,42 @@ export function CoverPreview({
                     setActiveFormat("screenshot");
                   }}
                 />
-                <FormatCard
-                  icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
-                  label="Testimonial"
-                  description="Create a social proof graphic"
-                  isNew
-                  isLocked={!isLoggedIn}
-                  onClick={() => {
-                    if (!isLoggedIn) {
-                      setShowLockedTooltip(true);
-                      if (tooltipTimeoutRef.current) {
-                        clearTimeout(tooltipTimeoutRef.current);
-                      }
-                      tooltipTimeoutRef.current = setTimeout(() => setShowLockedTooltip(false), 3000);
-                      return;
-                    }
-                    setActiveFormat("testimonial");
-                    onFormatChosen?.("testimonial");
-                  }}
-                />
-              </div>
-              {showLockedTooltip && !isLoggedIn ? (
-                <div className="rounded-lg border border-border bg-popover px-4 py-3 text-xs shadow-lg">
-                  <p className="font-medium text-foreground">Sign in to create testimonials</p>
-                  <a
-                    href="/auth/sign-in"
-                    className="mt-1 inline-block text-primary underline underline-offset-2 hover:text-primary/80"
-                  >
-                    Sign in
-                  </a>
+                {isBrandUser ? (
+                  <FormatCard
+                    icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
+                    label="Testimonial"
+                    description="Social proof graphics from customer quotes"
+                    isNew
+                    onClick={() => {
+                      setActiveFormat("testimonial");
+                      onFormatChosen?.("testimonial");
+                    }}
+                  />
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(props) => (
+                        <span {...props}>
+                          <FormatCard
+                            icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
+                            label="Testimonial"
+                            description="Social proof graphics from customer quotes"
+                            isNew
+                            isLocked
+                            onClick={() => {
+                              track("testimonial_gate_hit", {
+                                reason: isLoggedIn ? "free_tier" : "not_logged_in",
+                              });
+                            }}
+                          />
+                        </span>
+                      )}
+                    />
+                    <TooltipContent side="top">Upgrade to Brand to access testimonials.</TooltipContent>
+                  </Tooltip>
+                )}
                 </div>
-              ) : null}
+              </TooltipProvider>
             </div>
           ) : (
             <button
@@ -203,13 +202,12 @@ function FormatCard({
       onClick={onClick}
       aria-disabled={isLocked}
       className={cn(
-        "group relative flex w-44 flex-col items-center gap-3 rounded-xl p-6",
-        "border border-foreground/[0.08] bg-background/80 backdrop-blur-sm",
-        "transition-all duration-200",
-        isLocked
-          ? "cursor-not-allowed opacity-70"
-          : "hover:border-foreground/[0.2] hover:bg-background/90 hover:shadow-lg",
+        "group relative flex h-40 w-44 flex-col items-center gap-3 rounded-xl p-6",
+        "backdrop-blur-sm transition-all duration-200",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        isLocked
+          ? "cursor-default border border-foreground/[0.05] bg-background/50 opacity-50"
+          : "cursor-pointer border border-foreground/[0.12] bg-background/90 shadow-md hover:border-foreground/[0.2] hover:bg-background hover:shadow-xl hover:-translate-y-0.5",
       )}
     >
       {isNew && (

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAtom, useAtomValue } from "jotai";
 import Link from "next/link";
-import { BookmarkCheck, Palette, CreditCard, User, X, PanelLeft } from "lucide-react";
+import { BookmarkCheck, Palette, CreditCard, User, X, PanelLeft, Check } from "lucide-react";
 import { useUserTier } from "@/hooks/use-user-tier";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -276,53 +276,55 @@ export function LeftSidebar({
 
   return (
     <TooltipProvider>
-      <div className="relative hidden h-full w-14 flex-col items-center gap-3 border-r border-border bg-background py-4 sm:flex">
-        {navItems.map(renderNavButton)}
-      </div>
+      <div className="relative hidden h-full sm:flex">
+        <div className="h-full w-14 flex-col items-center gap-3 border-r border-border bg-background py-4 sm:flex">
+          {navItems.map(renderNavButton)}
+        </div>
 
-      {isOpen ? (
-        <aside
-          role="complementary"
-          className={cn(
-            "fixed left-14 top-14 z-40 h-[calc(100vh-3.5rem)] w-[22rem] overflow-hidden border-r border-border bg-background/95 shadow-lg",
-            "backdrop-blur supports-[backdrop-filter]:bg-background/80",
-          )}
-          aria-label="Account sidebar"
-        >
-          {activeView === "saved" ? (
-            <div className="flex h-full min-h-0 flex-col">
-              {renderPanelHeader("Saved", savedHeaderLabel)}
-              <MemoryPanel
-                onLoadItem={onLoadItem}
-                onDeleteItem={onDeleteItem}
-                onClose={() => onOpenChange(false)}
-                isVisible={isOpen && activeView === "saved"}
-                showHeader={false}
-                className="flex-1"
-              />
-            </div>
-          ) : activeView === "brand" ? (
-            <div className="flex h-full w-full flex-col overflow-y-auto">
-              {renderPanelHeader("Brand")}
-              <div className="min-h-0 flex-1 overflow-y-auto">
-                {renderBrandContent()}
+        {isOpen ? (
+          <aside
+            role="complementary"
+            className={cn(
+              "absolute left-14 top-0 z-40 h-full w-[22rem] overflow-hidden border-r border-border bg-background/95 shadow-lg",
+              "backdrop-blur supports-[backdrop-filter]:bg-background/80",
+            )}
+            aria-label="Account sidebar"
+          >
+            {activeView === "saved" ? (
+              <div className="flex h-full min-h-0 flex-col">
+                {renderPanelHeader("Saved", savedHeaderLabel)}
+                <MemoryPanel
+                  onLoadItem={onLoadItem}
+                  onDeleteItem={onDeleteItem}
+                  onClose={() => onOpenChange(false)}
+                  isVisible={isOpen && activeView === "saved"}
+                  showHeader={false}
+                  className="flex-1"
+                />
               </div>
-            </div>
-          ) : (
-            <div className="flex h-full w-full flex-col">
-              {renderPanelHeader("Account")}
-              <div className="px-4 py-6">
-                <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
-                  <p className="text-xs text-muted-foreground">Signed in as</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {user?.email ?? "Unknown user"}
-                  </p>
+            ) : activeView === "brand" ? (
+              <div className="flex h-full w-full flex-col overflow-y-auto">
+                {renderPanelHeader("Brand")}
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  {renderBrandContent()}
                 </div>
               </div>
-            </div>
-          )}
-        </aside>
-      ) : null}
+            ) : (
+              <div className="flex h-full w-full flex-col">
+                {renderPanelHeader("Account")}
+                <div className="px-4 py-6">
+                  <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Signed in as</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {user?.email ?? "Unknown user"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </aside>
+        ) : null}
+      </div>
     </TooltipProvider>
   );
 }
@@ -336,47 +338,49 @@ function BrandPanelLoading() {
 }
 
 function BrandTeaser() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText("hey@dopeshot.io");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      window.location.href = "mailto:hey@dopeshot.io?subject=Brand%20early%20access";
+    }
+  };
+
   return (
     <div className="flex h-full w-full flex-col px-4 py-6">
       <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
         <span className="h-1.5 w-1.5 rounded-full bg-primary/70" aria-hidden="true" />
-        Early access
+        Beta
       </div>
       <div className="mt-3 space-y-2">
-        <p className="text-sm font-semibold text-foreground">Brand features in progress</p>
+        <p className="text-sm font-semibold text-foreground">Brand features</p>
         <p className="text-sm text-muted-foreground">
-          I&apos;m working on brand kits so your designs stay consistent: saved logos, colors,
-          fonts, and templates.
-          <br />
-          <br /> If you&apos;re building a product or company, this one&apos;s for you. Want to help
-          shape it?
+          I&apos;m building brand kits so every post you make looks like you — your logo, your colors, your personality.
+          Testimonials, custom backgrounds, and more are on the way.
+          Want early access? Shoot me an email.
         </p>
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-2">
+      <div className="mt-4">
         <Button
           size="sm"
-          nativeButton={false}
-          render={(props) => (
-            <a {...props} href="mailto:feedback@dopeshot.io?subject=Brand%20early%20access">
-              Email me
-            </a>
+          type="button"
+          variant="default"
+          onClick={handleCopy}
+          className="gap-1.5 font-mono text-xs"
+        >
+          {copied ? (
+            <>
+              <Check className="h-3.5 w-3.5" />
+              Copied!
+            </>
+          ) : (
+            "hey@dopeshot.io"
           )}
-        />
-        <Button
-          size="sm"
-          variant="outline"
-          nativeButton={false}
-          render={(props) => (
-            <a
-              {...props}
-              href="https://cal.com/adrian-pilarczyk-cs0y69/30min"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Book a call
-            </a>
-          )}
-        />
+        </Button>
       </div>
     </div>
   );

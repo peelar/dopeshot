@@ -74,8 +74,8 @@ Out of scope:
 ### Format chooser
 
 - Heading: `What do you want to ship today?`
-- Screenshot card description: `Wrap a screenshot in a beautiful layout`
-- Testimonial card description: `Create a social proof graphic`
+- Screenshot card description: `Polished product screenshots`
+- Testimonial card description: `Social proof graphics from customer quotes`
 
 ### Screenshot demo helper
 

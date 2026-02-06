@@ -58,9 +58,13 @@ export function useSaveDesign() {
   const orientation = useAtomValue(orientationAtom);
   const screenshotZoom = useAtomValue(screenshotZoomAtom);
 
+  const selectedScreenshotAsset = config.assets.screenshot
+    ? assets.find((asset) => asset.id === config.assets.screenshot)
+    : undefined;
+  const isDemoScreenshotAsset =
+    selectedScreenshotAsset?.projectId === "demo" || selectedScreenshotAsset?.userId === "demo";
   const isDemoDesign =
-    assets.some((asset) => asset.projectId === "demo" || asset.userId === "demo") ||
-    config.assets.screenshot === PLACEHOLDER_ASSET_ID;
+    config.assets.screenshot === PLACEHOLDER_ASSET_ID || Boolean(isDemoScreenshotAsset);
 
   const canSave = Boolean(session?.user?.id) && saveCount < saveLimit && !isDemoDesign;
   const isAtLimit = saveCount >= saveLimit;

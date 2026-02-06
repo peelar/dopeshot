@@ -2,8 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifySession } from "@/lib/auth/session";
 import { getUserDb } from "@/lib/data/dal";
 import { getSignedUrl, deleteScreenshot } from "@/lib/storage/memory-storage";
-import type { MemoryItemFull } from "@/domain/memory/types";
+import type { MemoryConfiguration, MemoryItemFull } from "@/domain/memory/types";
 import { revalidateTag } from "next/cache";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
+
+function getSavedFormatFromLayoutId(layoutId: unknown): "screenshot" | "testimonial" {
+  if (typeof layoutId !== "string") {
+    return "screenshot";
+  }
+  return getLayoutFormat(layoutId) === "testimonial" ? "testimonial" : "screenshot";
+}
 
 /**
  * GET /api/memory/items/[itemId]
@@ -68,12 +76,13 @@ export async function GET(
     const itemFull: MemoryItemFull = {
       id: item.id,
       screenshotUrl: screenshotUrl!,
+      format: getSavedFormatFromLayoutId((item.configuration as { layoutId?: unknown })?.layoutId),
       isShared: Boolean(item.shareHash),
       shareUrl: item.shareHash
         ? `${request.nextUrl.origin}/${item.shareHash}`
         : null,
       createdAt: item.createdAt.toISOString(),
-      configuration: item.configuration as any, // Prisma Json type
+      configuration: item.configuration as MemoryConfiguration, // Prisma Json type
     };
 
     return NextResponse.json({ item: itemFull });

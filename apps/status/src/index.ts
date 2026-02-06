@@ -10,7 +10,7 @@ import {
   formatRelativeTime,
   summarizeFeedback,
 } from "./lib/status-dashboard";
-import { buildUmamiStatsRequest } from "./lib/umami-client";
+import { buildUmamiEventValuesRequest, buildUmamiStatsRequest } from "./lib/umami-client";
 import { ICONS, formatHeader } from "./lib/display";
 import { 
   getEnhancedUmamiData, 
@@ -44,6 +44,17 @@ type UmamiStatsResponse = {
   visitors?: number | { value?: number };
 };
 
+type UmamiEventValue = {
+  value?: string | null;
+  total?: number;
+};
+
+type ExportData = {
+  total: number;
+  testimonial: number;
+  screenshot: number;
+};
+
 type ResendEmail = {
   id: string;
   subject: string | null;
@@ -63,11 +74,13 @@ const timeWindow = createTimeWindow(sinceHours);
 // Create previous period window for growth comparison
 const previousWindow = createTimeWindow(sinceHours * 2, new Date(timeWindow.start.getTime() - 1));
 
-// Get enhanced data with growth metrics
-const [umamiData, feedbackData, userData] = await Promise.all([
+const lastWeekWindow = createTimeWindow(168);
+
+const [umamiData, feedbackData, userData, exportData] = await Promise.all([
   getEnhancedUmamiData(timeWindow, previousWindow, fetchUmamiStats),
   getEnhancedFeedbackDataWithGrowth(timeWindow),
-  getEnhancedUserDataWithGrowth(timeWindow)
+  getEnhancedUserDataWithGrowth(timeWindow),
+  getExportData(lastWeekWindow),
 ]);
 
 // Format the new delightful output
@@ -75,7 +88,8 @@ const output = formatEnhancedOutput({
   duration: `${sinceHours}h`,
   umamiData,
   feedbackData,
-  userData
+  userData,
+  exportData,
 });
 
 console.log(output);
@@ -185,6 +199,122 @@ async function fetchUmamiStats(options: {
   const data = (await response.json()) as UmamiStatsResponse;
   logDebug("Umami response", { status: response.status, statusText: response.statusText });
   return data;
+}
+
+async function getExportData(window: { start: Date; end: Date }): Promise<ExportData> {
+  const apiKey = process.env.UMAMI_API_KEY;
+  const websiteId = process.env.UMAMI_WEBSITE_ID;
+
+  if (!apiKey || !websiteId) {
+    return {
+      total: 0,
+      testimonial: 0,
+      screenshot: 0,
+    };
+  }
+
+  try {
+    const countsFromExportType = await getExportCountsByProperty({
+      apiKey,
+      websiteId,
+      window,
+      propertyName: "export_type",
+    });
+
+    if (countsFromExportType.total > 0) {
+      return countsFromExportType;
+    }
+
+    // Backfill from older events that only used the "format" property.
+    return await getExportCountsByProperty({
+      apiKey,
+      websiteId,
+      window,
+      propertyName: "format",
+    });
+  } catch {
+    return {
+      total: 0,
+      testimonial: 0,
+      screenshot: 0,
+    };
+  }
+}
+
+async function getExportCountsByProperty(options: {
+  apiKey: string;
+  websiteId: string;
+  window: { start: Date; end: Date };
+  propertyName: "export_type" | "format";
+}): Promise<ExportData> {
+  const values = await fetchUmamiEventValuesWithFallback(options);
+  return values.reduce<ExportData>(
+    (acc, item) => {
+      const value = (item.value ?? "").toLowerCase();
+      const total = item.total ?? 0;
+      acc.total += total;
+
+      if (value === "testimonial") {
+        acc.testimonial += total;
+      } else if (value === "screenshot") {
+        acc.screenshot += total;
+      }
+
+      return acc;
+    },
+    { total: 0, testimonial: 0, screenshot: 0 },
+  );
+}
+
+async function fetchUmamiEventValuesWithFallback(options: {
+  apiKey: string;
+  websiteId: string;
+  window: { start: Date; end: Date };
+  propertyName: string;
+}): Promise<UmamiEventValue[]> {
+  try {
+    return await fetchUmamiEventValues({ ...options, eventParamName: "eventName" });
+  } catch {
+    return fetchUmamiEventValues({ ...options, eventParamName: "event" });
+  }
+}
+
+async function fetchUmamiEventValues(options: {
+  apiKey: string;
+  websiteId: string;
+  window: { start: Date; end: Date };
+  propertyName: string;
+  eventParamName: "eventName" | "event";
+}): Promise<UmamiEventValue[]> {
+  const { apiKey, websiteId, window, propertyName, eventParamName } = options;
+
+  const request = buildUmamiEventValuesRequest({
+    apiKey,
+    websiteId,
+    startAt: window.start.getTime(),
+    endAt: window.end.getTime(),
+    eventName: "export_completed",
+    propertyName,
+  });
+
+  const url = new URL(request.url);
+  if (eventParamName === "event") {
+    const eventName = url.searchParams.get("eventName");
+    if (eventName) {
+      url.searchParams.delete("eventName");
+      url.searchParams.set("event", eventName);
+    }
+  }
+
+  const response = await fetch(url.toString(), {
+    headers: request.headers,
+  });
+
+  if (!response.ok) {
+    throw new Error(`${response.status} ${response.statusText}`.trim());
+  }
+
+  return (await response.json()) as UmamiEventValue[];
 }
 
 async function getFeedbackLine(window: { start: Date }): Promise<string> {
@@ -357,8 +487,9 @@ function formatEnhancedOutput(data: {
   umamiData: EnhancedUmamiData;
   feedbackData: EnhancedFeedbackData;
   userData: EnhancedUserData;
+  exportData: ExportData;
 }): string {
-  const { duration, umamiData, feedbackData, userData } = data;
+  const { duration, umamiData, feedbackData, userData, exportData } = data;
   
   const lines: string[] = [];
   
@@ -369,6 +500,9 @@ function formatEnhancedOutput(data: {
   // Traffic section
   lines.push(`${ICONS.traffic} Traffic`);
   lines.push(`   Pageviews: ${umamiData.pageviewsGrowth || umamiData.pageviews}`);
+  lines.push(
+    `   Exports (7d): ${formatNumber(exportData.total)} total (testimonial: ${formatNumber(exportData.testimonial)}, screenshot: ${formatNumber(exportData.screenshot)})`,
+  );
   lines.push(`   Visitors: ${umamiData.visitorsGrowth || umamiData.visitors}`);
   lines.push("");
   

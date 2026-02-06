@@ -33,7 +33,6 @@ import { TestimonialContentSection, TestimonialAuthorSection } from "@/component
 import { TestimonialStyleSection } from "@/components/sidebar/testimonial-style-section";
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
-import { useSession } from "@/lib/auth/auth-client";
 
 
 interface LayoutConfigProps {
@@ -58,8 +57,6 @@ export const LayoutConfigPanel = ({
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const orientation = useAtomValue(orientationAtom);
   const [isLogoHovered, setIsLogoHovered] = useState(false);
-  const { data: session } = useSession();
-  const isLoggedIn = !!session?.user;
 
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
@@ -67,7 +64,7 @@ export const LayoutConfigPanel = ({
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
-  const showTestimonialSections = isTestimonialFormat && isLoggedIn;
+  const showTestimonialSections = isTestimonialFormat && isBrandUser;
   const showScreenshotSection = !isTestimonialFormat;
 
   // Avatar field state for testimonial format

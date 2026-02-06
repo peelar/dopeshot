@@ -2,6 +2,37 @@ import { describe, expect, it } from "vitest";
 import { resolveTestimonialStyle } from "@/domain/layout/testimonial-style";
 
 describe("resolveTestimonialStyle", () => {
+  it("always uses yellow stars regardless of tier or brand accent", () => {
+    const anonymous = resolveTestimonialStyle({
+      isLoggedIn: false,
+      isBrandUser: false,
+      accent: "#22C55E",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+    const defaultTier = resolveTestimonialStyle({
+      isLoggedIn: true,
+      isBrandUser: false,
+      accent: "#EC4899",
+      mode: "dark",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+    const brand = resolveTestimonialStyle({
+      isLoggedIn: true,
+      isBrandUser: true,
+      personality: "hacker",
+      accent: "#22C55E",
+      mode: "dark",
+      fallbackMode: "light",
+      fallbackBackground: "linear-gradient(135deg, #111111, #222222)",
+    });
+
+    expect(anonymous.starColor).toBe("#FBBF24");
+    expect(defaultTier.starColor).toBe("#FBBF24");
+    expect(brand.starColor).toBe("#FBBF24");
+  });
+
   it("keeps fallback background for anonymous users", () => {
     const style = resolveTestimonialStyle({
       isLoggedIn: false,

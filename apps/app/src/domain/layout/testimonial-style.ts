@@ -45,6 +45,7 @@ const DEFAULT_PERSONALITY: BrandPersonality = "founder";
 
 const LIGHT_TEXT = "#0F172A";
 const DARK_TEXT = "#F8FAFC";
+const STAR_YELLOW = "#FBBF24";
 
 const DEFAULT_STYLE: TestimonialVisualStyle = {
   tier: "anonymous",
@@ -54,7 +55,7 @@ const DEFAULT_STYLE: TestimonialVisualStyle = {
   canvasBackground: "",
   textColor: LIGHT_TEXT,
   mutedTextColor: "rgba(15, 23, 42, 0.72)",
-  starColor: DEFAULT_ACCENT,
+  starColor: STAR_YELLOW,
   quoteMarkColor: "rgba(99, 102, 241, 0.22)",
   avatarRingColor: hexToRgba(DEFAULT_ACCENT, 0.45),
   authorPlateBackground: "linear-gradient(135deg, rgba(241, 245, 249, 0.86) 0%, rgba(255, 255, 255, 0.68) 100%)",
@@ -162,7 +163,6 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
         : `linear-gradient(150deg, ${mixHex(accent, "#FFFFFF", 0.88)} 0%, #F8FAFC 52%, ${mixHex(accent, "#E2E8F0", 0.72)} 100%)`,
       textColor: dark ? DARK_TEXT : LIGHT_TEXT,
       mutedTextColor: dark ? "rgba(248, 250, 252, 0.72)" : "rgba(15, 23, 42, 0.70)",
-      starColor: dark ? "#FBBF24" : "#D97706",
       quoteMarkColor: dark ? "rgba(248, 250, 252, 0.18)" : "rgba(15, 23, 42, 0.15)",
       avatarRingColor: dark ? "rgba(248, 250, 252, 0.26)" : "rgba(15, 23, 42, 0.20)",
       authorPlateBackground: dark
@@ -190,7 +190,7 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
     accent,
     textColor: dark ? DARK_TEXT : LIGHT_TEXT,
     mutedTextColor: dark ? "rgba(248, 250, 252, 0.78)" : "rgba(15, 23, 42, 0.76)",
-    starColor: dark ? mixHex(accent, "#FCD34D", 0.45) : mixHex(accent, "#B45309", 0.20),
+    starColor: STAR_YELLOW,
     quoteMarkColor: dark ? hexToRgba(accent, 0.30) : hexToRgba(accent, 0.24),
     avatarRingColor: dark ? hexToRgba(accent, 0.42) : hexToRgba(accent, 0.28),
     authorPlateBackground: dark
@@ -237,7 +237,6 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
           ? "0 3px 10px rgba(120, 53, 15, 0.32), 0 1px 4px rgba(28, 19, 12, 0.40)"
           : "0 2px 8px rgba(180, 83, 9, 0.14), 0 1px 3px rgba(120, 53, 15, 0.10)",
         quoteMarkColor: dark ? "rgba(251, 191, 36, 0.30)" : "rgba(180, 83, 9, 0.22)",
-        starColor: dark ? "#FCD34D" : "#B45309",
         texture: "grain",
         textureIntensity: 0.62,
         showDecorativeBlobs: true,
@@ -255,7 +254,6 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
         cardBorder: dark ? "rgba(249, 168, 212, 0.42)" : "rgba(244, 114, 182, 0.28)",
         avatarRingColor: dark ? "rgba(249, 168, 212, 0.48)" : "rgba(244, 114, 182, 0.32)",
         quoteMarkColor: dark ? "rgba(249, 168, 212, 0.32)" : "rgba(236, 72, 153, 0.24)",
-        starColor: dark ? "#FDE68A" : "#EC4899",
         authorPlateBackground: dark
           ? "linear-gradient(135deg, rgba(62, 48, 94, 0.82) 0%, rgba(42, 31, 74, 0.88) 100%)"
           : "linear-gradient(135deg, rgba(253, 242, 248, 0.96) 0%, rgba(255, 247, 252, 0.94) 100%)",
@@ -281,7 +279,6 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
         textColor: dark ? "#DCFCE7" : "#052E16",
         mutedTextColor: dark ? "rgba(220, 252, 231, 0.76)" : "rgba(5, 46, 22, 0.70)",
         quoteMarkColor: dark ? "rgba(74, 222, 128, 0.26)" : "rgba(22, 163, 74, 0.24)",
-        starColor: dark ? "#4ADE80" : "#15803D",
         avatarRingColor: dark ? "rgba(74, 222, 128, 0.38)" : "rgba(22, 101, 52, 0.28)",
         authorPlateBackground: dark
           ? "linear-gradient(135deg, rgba(6, 44, 32, 0.78) 0%, rgba(3, 26, 20, 0.84) 100%)"

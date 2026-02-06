@@ -6,6 +6,8 @@
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 
+export type SavedDesignFormat = "screenshot" | "testimonial";
+
 export interface MemoryConfiguration {
   // Schema version for future migrations
   version: 1;
@@ -37,6 +39,7 @@ export interface MemoryConfiguration {
 export interface MemoryItemDTO {
   id: string;
   screenshotUrl: string; // Signed URL for thumbnail
+  format: SavedDesignFormat;
   isShared: boolean;
   shareUrl: string | null;
   createdAt: string; // ISO 8601

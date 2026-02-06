@@ -535,6 +535,7 @@ function PlaygroundPageInner({
         isLoggedIn={isLoggedIn}
         hasSelectedSavedDesign={Boolean(loadedItemId)}
         hasCustomScreenshot={hasCustomScreenshot}
+        isTestimonialFormat={layoutFormat === "testimonial"}
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
         onNewClick={resetToEmptyCanvas}

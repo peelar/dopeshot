@@ -5,12 +5,14 @@ import { Logo } from "@/components/ui/logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
 import { Download, Loader2, Plus, RefreshCw, Save, PanelLeft } from "lucide-react";
+import Link from "next/link";
 import { UserMenu } from "./user-menu";
 
 interface AppHeaderProps {
   isLoggedIn: boolean;
   hasSelectedSavedDesign: boolean;
   hasCustomScreenshot: boolean;
+  isTestimonialFormat: boolean;
   isProcessingUpload: boolean;
   onUploadClick: () => void;
   onNewClick: () => void;
@@ -32,6 +34,7 @@ export function AppHeader({
   isLoggedIn,
   hasSelectedSavedDesign,
   hasCustomScreenshot,
+  isTestimonialFormat,
   isProcessingUpload,
   onUploadClick,
   onNewClick,
@@ -50,7 +53,8 @@ export function AppHeader({
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
   const shouldShowCtaButton = shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
-  const shouldShowSaveButton = hasCustomScreenshot && (canSave || isAtSaveLimit);
+  const hasSaveableContent = hasCustomScreenshot || isTestimonialFormat;
+  const shouldShowSaveButton = hasSaveableContent && (canSave || isAtSaveLimit);
 
   const ctaButtonLabel = shouldShowNewButton
     ? "New"
@@ -63,9 +67,9 @@ export function AppHeader({
   return (
     <header className="relative sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background/90 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-primary/30 after:via-primary/10 after:to-transparent after:opacity-40 sm:px-6">
       <div className="flex items-center gap-3">
-        <a href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
+        <Link href="/" aria-label="Go to homepage" className="pl-4 transition-opacity hover:opacity-80">
           <Logo />
-        </a>
+        </Link>
         {onLeftSidebarToggle ? (
           <>
             <div className="relative h-6 w-px bg-border/60" aria-hidden="true" />

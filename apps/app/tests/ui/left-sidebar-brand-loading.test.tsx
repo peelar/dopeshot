@@ -77,5 +77,10 @@ describe("LeftSidebar brand loading state", () => {
     expect(screen.getByText("Loading brand tools...")).toBeInTheDocument();
     expect(screen.queryByText("Brand features in progress")).not.toBeInTheDocument();
     expect(screen.queryByTestId("brand-panel")).not.toBeInTheDocument();
+    expect(screen.getByRole("complementary", { name: "Account sidebar" })).toHaveClass(
+      "absolute",
+      "top-0",
+      "left-14",
+    );
   });
 });

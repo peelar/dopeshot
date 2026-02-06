@@ -6,10 +6,12 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ClipboardEvent,
   type KeyboardEvent,
   type MouseEvent,
 } from "react";
+import { useAtomValue } from "jotai";
 import { Bold, Highlighter, Italic, Underline } from "lucide-react";
 import type { RichTextMark, RichTextSegment } from "@/domain/layout/types";
 import {
@@ -21,6 +23,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
+import { brandSettingsAtom } from "@/hooks/atoms";
+import { buildRichHighlightGradient } from "@/lib/colors/rich-highlight-gradient";
 
 type HighlightMark = Extract<RichTextMark, `highlight-${string}`>;
 
@@ -427,6 +431,7 @@ export function RichTextEditor({
   ariaLabel,
   onChange,
 }: RichTextEditorProps) {
+  const brandSettings = useAtomValue(brandSettingsAtom);
   const editorRef = useRef<HTMLDivElement | null>(null);
   const lastSignatureRef = useRef<string>("");
   const [activeMarks, setActiveMarks] = useState<RichTextMark[]>([]);
@@ -662,9 +667,16 @@ export function RichTextEditor({
   const activeHighlight = activeMarks.find(
     (mark): mark is HighlightMark => mark.startsWith("highlight-"),
   );
+  const editorStyle = useMemo(
+    () =>
+      ({
+        "--ds-rich-highlight-gradient": buildRichHighlightGradient(brandSettings.accent),
+      }) as CSSProperties,
+    [brandSettings.accent],
+  );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" style={editorStyle}>
       <div className="flex items-center gap-1 rounded-lg border border-border/70 bg-muted/10 p-1">
         <Button
           type="button"

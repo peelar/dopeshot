@@ -22,8 +22,10 @@ import {
 } from "@/hooks/atoms";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
+import { useUserTier } from "@/hooks/use-user-tier";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { Lock, Sparkles } from "lucide-react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
@@ -66,12 +68,12 @@ export function LayoutSelector({ className }: { className?: string }) {
   const isFormatUnselected = activeFormat === "none";
   const formatForPreview = isFormatUnselected ? "screenshot" : activeFormat;
   const { data: session } = useSession();
+  const { isBrandUser } = useUserTier();
   const { processColorAnalysis } = useColorAnalysis();
   const isLoggedIn = !!session?.user;
 
-  // Tooltip state for locked tab
+  // Tooltip state for locked testimonial tab
   const [showLockedTooltip, setShowLockedTooltip] = useState(false);
-  const tooltipTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Track initial layoutId to detect when a saved design is loaded
   const initialLayoutIdRef = useRef(currentConfig.layoutId);
@@ -216,11 +218,9 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   const handleFormatTabClick = useCallback(
     (format: LayoutFormat) => {
-      if (format === "testimonial" && !isLoggedIn) {
-        // Show tooltip
+      if (format === "testimonial" && !isBrandUser) {
         setShowLockedTooltip(true);
-        if (tooltipTimeoutRef.current) clearTimeout(tooltipTimeoutRef.current);
-        tooltipTimeoutRef.current = setTimeout(() => setShowLockedTooltip(false), 3000);
+        track("testimonial_gate_hit", { reason: isLoggedIn ? "free_tier" : "not_logged_in" });
         return;
       }
 
@@ -252,7 +252,7 @@ export function LayoutSelector({ className }: { className?: string }) {
         setScreenshotZoom(1.0);
       }
     },
-    [activeFormat, isLoggedIn, processColorAnalysis, setActiveFormat, setAssets],
+    [activeFormat, isBrandUser, isLoggedIn, processColorAnalysis, setActiveFormat, setAssets],
   );
 
   return (
@@ -268,43 +268,44 @@ export function LayoutSelector({ className }: { className?: string }) {
       <div className="flex gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
-          const isLocked = tab.value === "testimonial" && !isLoggedIn;
+          const isLocked = tab.value === "testimonial" && !isBrandUser;
+          const tabButton = (
+            <button
+              type="button"
+              onClick={() => handleFormatTabClick(tab.value)}
+              className={cn(
+                "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
+                isActive
+                  ? "bg-primary/10 text-primary"
+                  : isLocked
+                    ? "cursor-not-allowed text-muted-foreground/50"
+                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+              )}
+              aria-pressed={isActive}
+              aria-label={isLocked ? `${tab.label} (Brand tier required)` : `Show ${tab.label} layouts`}
+            >
+              {isLocked && <Lock className="h-3 w-3" />}
+              {tab.label}
+              {tab.value === "testimonial" && !isLocked && (
+                <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
+              )}
+            </button>
+          );
+
+          if (isLocked) {
+            return (
+                <Tooltip key={tab.value} open={showLockedTooltip} onOpenChange={setShowLockedTooltip}>
+                  <TooltipTrigger render={tabButton} />
+                  <TooltipContent side="bottom" align="start">
+                  Upgrade to Brand to access testimonials.
+                  </TooltipContent>
+                </Tooltip>
+              );
+          }
 
           return (
             <div key={tab.value} className="relative">
-              <button
-                type="button"
-                onClick={() => handleFormatTabClick(tab.value)}
-                className={cn(
-                  "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
-                  isActive
-                    ? "bg-primary/10 text-primary"
-                    : isLocked
-                      ? "cursor-not-allowed text-muted-foreground/50"
-                      : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
-                )}
-                aria-pressed={isActive}
-                aria-label={isLocked ? `${tab.label} (sign in required)` : `Show ${tab.label} layouts`}
-              >
-                {isLocked && <Lock className="h-3 w-3" />}
-                {tab.label}
-                {tab.value === "testimonial" && !isLocked && (
-                  <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
-                )}
-              </button>
-
-              {/* Locked tooltip */}
-              {isLocked && showLockedTooltip && (
-                <div className="absolute left-0 top-full z-50 mt-2 w-48 rounded-lg border border-border bg-popover p-3 text-xs shadow-lg">
-                  <p className="font-medium text-foreground">Sign in to create testimonials</p>
-                  <a
-                    href="/auth/sign-in"
-                    className="mt-1.5 inline-block text-primary underline underline-offset-2 hover:text-primary/80"
-                  >
-                    Sign in
-                  </a>
-                </div>
-              )}
+              {tabButton}
             </div>
           );
         })}

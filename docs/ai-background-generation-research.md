@@ -93,7 +93,7 @@ This document explores adding AI-generated abstract backgrounds to dopeshot, add
 3. **Generation limits** - 5 free AI backgrounds per session
    - Reduces abuse
    - Creates urgency to export before refreshing
-   - Future: "Sign up to unlock unlimited AI backgrounds"
+   - Future: "Sign up to access unlimited AI backgrounds"
 
 4. **Export prompts** - After AI generation, show export button prominently
    - "Love this background? Export now to save it"

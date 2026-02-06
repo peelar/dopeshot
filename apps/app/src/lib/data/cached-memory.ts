@@ -18,7 +18,7 @@ export async function getCachedMemoryItems(
   cacheTag(`memory-items-${userId}`);
 
   const db = await getUserDb(userId);
-  const where: any = { userId };
+  const where: { userId: string; createdAt?: { lt: Date } } = { userId };
   if (cursor) {
     where.createdAt = { lt: new Date(cursor) };
   }
@@ -30,6 +30,7 @@ export async function getCachedMemoryItems(
     select: {
       id: true,
       screenshotPath: true,
+      configuration: true,
       shareHash: true,
       sharedAt: true,
       createdAt: true,

@@ -88,7 +88,7 @@ export async function POST(request: Request) {
     const hasBrandAccess = await isBrandUser(auth.userId);
     if (!hasBrandAccess) {
       return NextResponse.json(
-        { error: "Custom backgrounds are a Brand feature. Upgrade to unlock." },
+        { error: "Custom backgrounds are a Brand feature. Upgrade to access." },
         { status: 403 },
       );
     }

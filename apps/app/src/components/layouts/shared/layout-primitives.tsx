@@ -1,11 +1,11 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type CSSProperties, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { getFontStyleCssValue } from "@/domain/layout/fonts";
 import { getAdaptiveTypography } from "@/domain/layout/adaptive-typography";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
-import { configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
+import { brandSettingsAtom, configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom, personalityStyleAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig, RichTextSegment } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
@@ -18,6 +18,7 @@ import {
   normalizeRichTextSegments,
   segmentsToPlainText,
 } from "@/domain/layout/rich-text";
+import { buildRichHighlightGradient } from "@/lib/colors/rich-highlight-gradient";
 
 function resolveRichTextSegments(
   segments: RichTextSegment[] | undefined,
@@ -178,6 +179,7 @@ interface LayoutSurfaceProps {
   assetMap: Map<string, Asset>;
   screenshot?: Asset;
   disablePatternOverlay?: boolean;
+  highlightAccent?: string | null;
   children: ReactNode;
 }
 
@@ -189,12 +191,28 @@ export function LayoutSurface({
   assetMap,
   screenshot,
   disablePatternOverlay = false,
+  highlightAccent,
   children,
 }: LayoutSurfaceProps) {
+  const brandSettings = useAtomValue(brandSettingsAtom);
+  const highlightGradient = useMemo(
+    () => buildRichHighlightGradient(highlightAccent ?? brandSettings.accent),
+    [brandSettings.accent, highlightAccent],
+  );
+  const surfaceStyle = useMemo(
+    () =>
+      ({
+        background: backgroundStyle,
+        isolation: "isolate",
+        "--ds-rich-highlight-gradient": highlightGradient,
+      }) as CSSProperties,
+    [backgroundStyle, highlightGradient],
+  );
+
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle, isolation: "isolate" }}
+      style={surfaceStyle}
     >
       {!disablePatternOverlay ? <PatternOverlay config={config} /> : null}
       <div className="relative z-10 h-full w-full">{children}</div>

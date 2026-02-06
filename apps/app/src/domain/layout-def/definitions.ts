@@ -343,6 +343,12 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
         shape: "rounded",
       },
       layoutSpecificSettings: {
+        richText: {
+          title: [
+            { text: "dopeshot", marks: ["highlight-1"] },
+            { text: " completely transformed how I ship. Right now, no feature goes unshared." },
+          ],
+        },
         testimonial: {
           authorName: "Jane Smith",
           authorTitle: "CEO",
@@ -504,4 +510,3 @@ export function withLayoutTextDefaults(
 
   return config;
 }
-

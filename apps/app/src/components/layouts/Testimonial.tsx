@@ -258,6 +258,7 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
       config={config}
       assetMap={assetMap}
       disablePatternOverlay
+      highlightAccent={testimonialStyle.accent}
     >
       {testimonialStyle.texture === "grain" ? (
         <GrainOverlay enabled intensity={testimonialStyle.textureIntensity} />

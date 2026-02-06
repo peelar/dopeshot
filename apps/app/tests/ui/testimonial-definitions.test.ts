@@ -96,6 +96,16 @@ describe("Testimonial layout definitions", () => {
       expect(config.layoutSpecificSettings?.testimonial?.exportAspect).toBe("3:4");
     });
 
+    it("includes highlighted rich text for the default quote", () => {
+      const def = getLayoutDefinition("testimonial");
+      const config = def!.createConfig();
+
+      expect(config.layoutSpecificSettings?.richText?.title).toEqual([
+        { text: "dopeshot", marks: ["highlight-1"] },
+        { text: " completely transformed how I ship. Right now, no feature goes unshared." },
+      ]);
+    });
+
     it("legacy variant IDs resolve to the same definition", () => {
       const fromBase = getLayoutDefinition("testimonial");
       const fromCentered = getLayoutDefinition("testimonial-centered");

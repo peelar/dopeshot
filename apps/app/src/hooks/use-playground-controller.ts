@@ -255,6 +255,8 @@ function useExportHandler({
       return;
     }
 
+    const exportType = getLayoutFormat(config.layoutId) === "testimonial" ? "testimonial" : "screenshot";
+
     track("export_button_clicked", {
       look_id: config.layoutId,
       look_name: currentLook?.name ?? "unknown",
@@ -262,6 +264,7 @@ function useExportHandler({
       background_type: config.background?.type ?? "unknown",
       font_style: config.fontStyle ?? "default",
       orientation,
+      export_type: exportType,
     });
     setIsExporting(true);
     setStatusMessage("Exporting image...");
@@ -301,6 +304,7 @@ function useExportHandler({
         look_id: config.layoutId,
         orientation,
         format: getLayoutFormat(config.layoutId),
+        export_type: exportType,
       });
 
       // DEV FLAG: Force show modal for all users in development

@@ -18,6 +18,12 @@ vi.mock("@/lib/auth/auth-client", () => ({
   useSession: () => ({ data: mockSessionData, isPending: false }),
 }));
 
+// Mock tier - free by default
+let mockIsBrandUser = false;
+vi.mock("@/hooks/use-user-tier", () => ({
+  useUserTier: () => ({ isBrandUser: mockIsBrandUser, isLoading: false }),
+}));
+
 vi.mock("@/lib/analytics", () => ({
   track: vi.fn(),
 }));
@@ -39,6 +45,7 @@ describe("LayoutSelector format tabs", () => {
 
   beforeEach(() => {
     mockSessionData = null; // Anonymous by default
+    mockIsBrandUser = false; // Free tier by default
     store = createStore();
     const def = getLayoutDefinition("popup-gradient-left");
     store.set(configAtom, def!.createConfig());
@@ -73,30 +80,65 @@ describe("LayoutSelector format tabs", () => {
   it("shows lock icon on Testimonial tab for anonymous users", () => {
     renderWithStore(store);
 
-    const tab = screen.getByRole("button", { name: "Testimonial (sign in required)" });
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     expect(tab).toBeInTheDocument();
   });
 
-  it("shows tooltip when anonymous user clicks Testimonial tab", () => {
+  it("shows upgrade tooltip when anonymous user hovers locked Testimonial tab", () => {
     renderWithStore(store);
 
-    const tab = screen.getByRole("button", { name: "Testimonial (sign in required)" });
-    fireEvent.click(tab);
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
+    fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Sign in to create testimonials")).toBeInTheDocument();
+    expect(screen.getByText("Upgrade to Brand to access testimonials.")).toBeInTheDocument();
   });
 
   it("does not switch format when anonymous user clicks Testimonial tab", () => {
     renderWithStore(store);
 
-    const tab = screen.getByRole("button", { name: "Testimonial (sign in required)" });
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.click(tab);
 
     expect(store.get(activeFormatAtom)).toBe("screenshot");
   });
 
-  it("switches format when logged-in user clicks Testimonial tab", () => {
+  it("shows lock icon on Testimonial tab for logged-in free user", () => {
     mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = false;
+
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
+    expect(tab).toBeInTheDocument();
+  });
+
+  it("does not switch format when free user clicks Testimonial tab", () => {
+    mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = false;
+
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
+    fireEvent.click(tab);
+
+    expect(store.get(activeFormatAtom)).toBe("screenshot");
+  });
+
+  it("shows upgrade tooltip when logged-in free user hovers locked Testimonial tab", () => {
+    mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = false;
+
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
+    fireEvent.mouseEnter(tab);
+
+    expect(screen.getByText("Upgrade to Brand to access testimonials.")).toBeInTheDocument();
+  });
+
+  it("switches format when brand user clicks Testimonial tab", () => {
+    mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = true;
 
     renderWithStore(store);
 
@@ -108,6 +150,7 @@ describe("LayoutSelector format tabs", () => {
 
   it("shows testimonial layout card when testimonial format is active", () => {
     mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = true;
 
     store.set(activeFormatAtom, "testimonial");
     const def = getLayoutDefinition("testimonial");
