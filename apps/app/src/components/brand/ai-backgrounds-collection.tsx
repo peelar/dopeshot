@@ -148,7 +148,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
           </>
         ) : showEmptyState ? (
           <div className="col-span-3 flex min-h-[56px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
-            Pick a personality to unlock AI suggestions.
+            Pick a personality to access AI suggestions.
           </div>
         ) : catalog.length === 0 ? (
           <div className="col-span-3 flex min-h-[56px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">

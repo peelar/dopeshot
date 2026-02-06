@@ -5,10 +5,27 @@ import { isBrandUser } from "@/lib/tier";
 import { uploadScreenshot, getSignedUrl } from "@/lib/storage/memory-storage";
 import { computeConfigHash } from "@/domain/memory/config-hash";
 import { SAVE_LIMIT } from "@/domain/memory/constants";
-import type { MemoryConfiguration, MemoryItemDTO } from "@/domain/memory/types";
+import type { MemoryConfiguration, MemoryItemDTO, SavedDesignFormat } from "@/domain/memory/types";
 import { nanoid } from "nanoid";
 import { revalidateTag } from "next/cache";
 import { getCachedMemoryItems } from "@/lib/data/cached-memory";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
+import type { Prisma } from "@prisma/client";
+
+function extractLayoutId(configuration: unknown): string | null {
+  if (!configuration || typeof configuration !== "object") {
+    return null;
+  }
+
+  const layoutId = (configuration as { layoutId?: unknown }).layoutId;
+  return typeof layoutId === "string" ? layoutId : null;
+}
+
+function getSavedFormat(configuration: unknown): SavedDesignFormat {
+  const layoutId = extractLayoutId(configuration);
+  const format = getLayoutFormat(layoutId ?? "adaptive-stage");
+  return format === "testimonial" ? "testimonial" : "screenshot";
+}
 
 /**
  * GET /api/memory/items
@@ -43,6 +60,7 @@ export async function GET(request: NextRequest) {
         return {
           id: item.id,
           screenshotUrl,
+          format: getSavedFormat(item.configuration),
           isShared: Boolean(item.shareHash),
           shareUrl: item.shareHash
             ? `${request.nextUrl.origin}/${item.shareHash}`
@@ -116,6 +134,7 @@ export async function POST(request: NextRequest) {
         select: {
           id: true,
           screenshotPath: true,
+          configuration: true,
           shareHash: true,
           createdAt: true,
         },
@@ -142,6 +161,7 @@ export async function POST(request: NextRequest) {
         item: {
           id: existing.id,
           screenshotUrl,
+          format: getSavedFormat(existing.configuration),
           isShared: Boolean(existing.shareHash),
           shareUrl: existing.shareHash
             ? `${request.nextUrl.origin}/${existing.shareHash}`
@@ -170,7 +190,7 @@ export async function POST(request: NextRequest) {
           userId: session.userId,
           configHash,
           screenshotPath: storagePath,
-          configuration: configuration as any,
+          configuration: configuration as unknown as Prisma.InputJsonValue,
         },
         select: {
           id: true,
@@ -198,6 +218,7 @@ export async function POST(request: NextRequest) {
     const itemDTO: MemoryItemDTO = {
       id: memoryItem.id,
       screenshotUrl,
+      format: getSavedFormat(configuration),
       isShared: false,
       shareUrl: null,
       createdAt: memoryItem.createdAt.toISOString(),

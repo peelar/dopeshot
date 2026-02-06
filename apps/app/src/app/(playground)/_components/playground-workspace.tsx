@@ -5,8 +5,11 @@ import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
+import { AspectToggle } from "@/components/selectors/aspect-toggle";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
+import type { TestimonialExportAspect } from "@/domain/layout/types";
 import {
+  activeFormatAtom,
   screenshotZoomAtom,
   configAtom,
   orientationAtom,
@@ -42,6 +45,8 @@ interface PlaygroundWorkspaceProps {
   showEmptyState: boolean;
   showLoadingState: boolean;
   onEmptyStateClick: () => void;
+  onFormatChosen?: (format: import("@/domain/layout-def/definitions").LayoutFormat) => void;
+  onLockedTestimonialClick?: () => void;
   canvasWidth: number;
   canvasHeight: number;
   showFocusHint: boolean;
@@ -55,6 +60,8 @@ export function PlaygroundWorkspace({
   showEmptyState,
   showLoadingState,
   onEmptyStateClick,
+  onFormatChosen,
+  onLockedTestimonialClick,
   canvasHeight,
   canvasWidth,
   showFocusHint,
@@ -64,11 +71,15 @@ export function PlaygroundWorkspace({
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const activeFormat = useAtomValue(activeFormatAtom);
   const gradientOptions = useAtomValue(gradientOptionsAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
+  const showOrientationToggle = activeFormat === "screenshot";
+  const showTestimonialAspectToggle = activeFormat === "testimonial";
+  const testimonialExportAspect = config.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -100,10 +111,6 @@ export function PlaygroundWorkspace({
       "desktop",
     ];
 
-    const previousLayoutId = config.layoutId;
-    let layoutChanged = false;
-    let newLayoutId = previousLayoutId;
-
     if (!supportedOrientations.includes(newOrientation)) {
       // Find first compatible layout
       const compatibleLayout = LAYOUT_DEFINITIONS.find((def) => {
@@ -125,97 +132,89 @@ export function PlaygroundWorkspace({
               fontId: config.fontId,
               fontSize: config.fontSize,
               screenshotFrame: config.screenshotFrame,
+              layoutSpecificSettings: {
+                ...nextConfig.layoutSpecificSettings,
+                ...config.layoutSpecificSettings,
+              },
             },
             { preserveEmptyText: true },
           ),
         );
-        layoutChanged = compatibleLayout.id !== previousLayoutId;
-        newLayoutId = compatibleLayout.id;
       }
     }
 
     setOrientation(newOrientation);
   };
 
+  const handleTestimonialAspectChange = useCallback((nextAspect: TestimonialExportAspect) => {
+    setConfig((prev) => ({
+      ...prev,
+      layoutSpecificSettings: {
+        ...prev.layoutSpecificSettings,
+        testimonial: {
+          ...prev.layoutSpecificSettings?.testimonial,
+          exportAspect: nextAspect,
+        },
+      },
+    }));
+  }, [setConfig]);
+
+  const screenshotAspectOptions = isMobile
+    ? [
+      {
+        id: "mobile",
+        label: <Smartphone className="h-3.5 w-3.5" />,
+        ariaLabel: "Mobile mode (9:16)",
+        iconOnly: true,
+      },
+      {
+        id: "desktop",
+        label: <Monitor className="h-3.5 w-3.5" />,
+        ariaLabel: "Desktop mode (16:9)",
+        iconOnly: true,
+      },
+    ]
+    : [
+      {
+        id: "desktop",
+        label: <Monitor className="h-3.5 w-3.5" />,
+        ariaLabel: "Desktop mode (16:9)",
+        iconOnly: true,
+      },
+      {
+        id: "mobile",
+        label: <Smartphone className="h-3.5 w-3.5" />,
+        ariaLabel: "Mobile mode (9:16)",
+        iconOnly: true,
+      },
+    ];
+
+  const testimonialAspectOptions = [
+    { id: "3:4", label: "3:4", ariaLabel: "Testimonial export ratio 3 by 4" },
+    { id: "4:5", label: "4:5", ariaLabel: "Testimonial export ratio 4 by 5" },
+    { id: "9:16", label: "9:16", ariaLabel: "Testimonial export ratio 9 by 16" },
+    { id: "16:9", label: "16:9", ariaLabel: "Testimonial export ratio 16 by 9" },
+  ];
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
         <div className="relative z-10 flex shrink-0 items-center justify-center">
-          {/* Tiny icon-only orientation toggle - centered against screenshot */}
-          {/* On mobile: vertical first, then horizontal. On desktop: horizontal first, then vertical */}
-          <div className="flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
-            {isMobile ? (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleOrientationChange("mobile")}
-                  aria-pressed={orientation === "mobile"}
-                  aria-label="Mobile mode (9:16)"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    orientation === "mobile"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Smartphone className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleOrientationChange("desktop")}
-                  aria-pressed={orientation === "desktop"}
-                  aria-label="Desktop mode (16:9)"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    orientation === "desktop"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleOrientationChange("desktop")}
-                  aria-pressed={orientation === "desktop"}
-                  aria-label="Desktop mode (16:9)"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    orientation === "desktop"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Monitor className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handleOrientationChange("mobile")}
-                  aria-pressed={orientation === "mobile"}
-                  aria-label="Mobile mode (9:16)"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    orientation === "mobile"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  <Smartphone className="h-3.5 w-3.5" />
-                </Button>
-              </>
-            )}
-          </div>
+          {/* Orientation toggle — only visible for screenshot format */}
+          {showOrientationToggle ? (
+            <AspectToggle
+              value={orientation}
+              options={screenshotAspectOptions}
+              onChange={(value) => handleOrientationChange(value as Orientation)}
+            />
+          ) : null}
+          {showTestimonialAspectToggle ? (
+            <AspectToggle
+              value={testimonialExportAspect}
+              options={testimonialAspectOptions}
+              onChange={(value) => handleTestimonialAspectChange(value as TestimonialExportAspect)}
+            />
+          ) : null}
 
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
@@ -256,6 +255,8 @@ export function PlaygroundWorkspace({
                 showEmptyState={showEmptyState}
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={onEmptyStateClick}
+                onFormatChosen={onFormatChosen}
+                onLockedTestimonialClick={onLockedTestimonialClick}
               />
             </div>
           </PreviewViewport>

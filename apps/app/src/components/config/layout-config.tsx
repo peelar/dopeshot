@@ -29,11 +29,14 @@ import { LogoSection } from "@/components/sidebar/logo-section";
 import { BackgroundSection } from "@/components/sidebar/background-section";
 import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
+import { TestimonialContentSection, TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
+import { TestimonialStyleSection } from "@/components/sidebar/testimonial-style-section";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 
 
 interface LayoutConfigProps {
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   isMobile?: boolean;
   isBrandUser?: boolean;
 }
@@ -57,8 +60,20 @@ export const LayoutConfigPanel = ({
 
   const screenshotInputRef = useRef<HTMLInputElement | null>(null);
   const logoInputRef = useRef<HTMLInputElement | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
+  const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+  const showTestimonialSections = isTestimonialFormat && isBrandUser;
+  const showScreenshotSection = !isTestimonialFormat;
+
+  // Avatar field state for testimonial format
+  const testimonialSettings = config.layoutSpecificSettings?.testimonial;
+  const avatarAssetId = testimonialSettings?.authorAvatarAssetId;
+  const avatarAsset = avatarAssetId ? assets.find((a) => a.id === avatarAssetId) : undefined;
+  const showAuthorAvatar = testimonialSettings?.showAuthorAvatar !== false;
+  const hasAvatarValue = showAuthorAvatar;
+  const avatarLabel = avatarAsset?.name ?? "adrian.jpg";
 
   // Check if brand logo is currently applied
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
@@ -71,7 +86,8 @@ export const LayoutConfigPanel = ({
   const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
   const hasHeadlineSupport = !hideTextOnMobile && (lookCapabilities?.text.headline ?? "optional") !== "hidden";
   const hasSubtitleSupport = !hideTextOnMobile && (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
-  const showTextSection = hasHeadlineSupport || hasSubtitleSupport;
+  const hasTypography = !hideTextOnMobile && lookCapabilities?.typography !== false;
+  const showTextSection = hasHeadlineSupport || hasSubtitleSupport || hasTypography;
 
   const handleLogoUpload = useCallback(
     async (file: File) => {
@@ -149,6 +165,32 @@ export const LayoutConfigPanel = ({
     [setConfig],
   );
 
+  const handleAvatarUpload = useCallback(
+    (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file && onUploadAsset) {
+        onUploadAsset(file, "avatar");
+      }
+      if (event.target) event.target.value = "";
+    },
+    [onUploadAsset],
+  );
+
+  const handleRemoveAvatar = useCallback(() => {
+    setConfig((currentConfig) => ({
+      ...currentConfig,
+      layoutSpecificSettings: {
+        ...currentConfig.layoutSpecificSettings,
+        testimonial: {
+          ...currentConfig.layoutSpecificSettings?.testimonial,
+          authorAvatarAssetId: undefined,
+          showAuthorAvatar: false,
+        },
+      },
+    }));
+    track("testimonial_author_edited", { field: "authorAvatarAssetId" });
+  }, [setConfig]);
+
   const handleApplyBrandLogo = useCallback(
     (event: React.MouseEvent) => {
       event.stopPropagation();
@@ -197,17 +239,120 @@ export const LayoutConfigPanel = ({
   return (
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <div className="flex flex-col gap-6 pb-6 pt-6">
-        {showTextSection && (
+        {/* Content section — "what does it say?" */}
+        {showTestimonialSections ? (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
-              <span className="text-sm font-semibold">Text</span>
+              <span className="text-sm font-semibold">Content</span>
+            </div>
+            <TestimonialContentSection />
+          </section>
+        ) : showTextSection ? (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Content</span>
+            </div>
+            <LayoutSection isBrandUser={isBrandUser} />
+          </section>
+        ) : null}
+
+        {/* Author section — "who said it?" (testimonial only) */}
+        {showTestimonialSections && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Author</span>
+            </div>
+            <TestimonialAuthorSection />
+          </section>
+        )}
+
+        {/* Avatar section (testimonial only) — same structure as Logo */}
+        {showTestimonialSections && !isMobile && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Avatar</span>
+              <div className="flex items-center gap-2">
+                <input
+                  type="file"
+                  className="hidden"
+                  ref={avatarInputRef}
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleAvatarUpload}
+                  aria-hidden="true"
+                  tabIndex={-1}
+                />
+                {hasAvatarValue ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      className={cn(
+                        "h-6 gap-1.5 px-2 text-xs",
+                        "inline-flex items-center justify-center whitespace-nowrap rounded-md font-medium transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                        "hover:bg-accent hover:text-accent-foreground",
+                        "text-foreground underline decoration-muted-foreground/60 underline-offset-2 hover:decoration-foreground/80",
+                      )}
+                    >
+                      <span className="max-w-[8rem] truncate" title={avatarLabel}>
+                        {avatarLabel}
+                      </span>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <DropdownMenuItem
+                        disabled={!onUploadAsset}
+                        onClick={() => {
+                          avatarInputRef.current?.click();
+                        }}
+                      >
+                        <UploadCloud className="h-4 w-4" />
+                        Upload new
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleRemoveAvatar}>
+                        <Trash2 className="h-4 w-4" />
+                        Clear avatar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="xs"
+                    disabled={!onUploadAsset}
+                    onClick={() => avatarInputRef.current?.click()}
+                    className="h-6 gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
+                  >
+                    <UploadCloud className="h-3.5 w-3.5" aria-hidden="true" />
+                    <span className="max-w-[8rem] truncate" title="Add avatar">
+                      Add avatar...
+                    </span>
+                  </Button>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Font section (testimonial only — for screenshot, font is inside Content) */}
+        {showTestimonialSections && showTextSection && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Font</span>
             </div>
             <LayoutSection isBrandUser={isBrandUser} />
           </section>
         )}
 
-        {/* Hide effects section on mobile - keeps drawer focused on essential controls */}
-        {!isMobile && (
+        {showTestimonialSections && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Style</span>
+            </div>
+            <TestimonialStyleSection />
+          </section>
+        )}
+
+        {/* Hide effects and background sections on mobile and for testimonial format */}
+        {!isMobile && !isTestimonialFormat && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Effects</span>
@@ -216,11 +361,10 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {/* Hide background section on mobile - now shown inline beneath canvas */}
-        {!isMobile && <BackgroundSection />}
+        {!isMobile && !isTestimonialFormat && <BackgroundSection />}
 
-        {/* Hide screenshot section on mobile - upload available via Upload button in bottom menu */}
-        {!isMobile && (
+        {/* Hide screenshot section on mobile and for testimonial format */}
+        {!isMobile && showScreenshotSection && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Screenshot</span>

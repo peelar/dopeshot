@@ -72,6 +72,7 @@ export async function signUpWithEmail(
 export async function signOutUser(): Promise<AuthResult> {
   try {
     await signOut();
+    window.location.reload();
     return {};
   } catch (error) {
     const message = error instanceof Error ? error.message : "Sign out failed";

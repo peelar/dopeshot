@@ -7,3 +7,4 @@ Lean references for dopeshot.
 - [Refactor](REFACTOR.md) — Architecture redesign: layouts, effects, backgrounds.
 - [Decisions](DECISIONS.md) — High-confidence calls that guide builds.
 - [Open questions](OPEN_QUESTIONS.md) — Outstanding calls that block roadmap items.
+- [Initial canvas unification](INITIAL_CANVAS_UNIFICATION.md) — Unified demo-first behavior for Screenshot and Testimonial starts.

@@ -66,7 +66,7 @@ export function useFileUpload({
   );
 
   const handleFileProcess = useCallback(
-    async (file: File, kind: "screenshot" | "logo" | "background" = "screenshot") => {
+    async (file: File, kind: "screenshot" | "logo" | "background" | "avatar" = "screenshot") => {
       if (!validateFile(file)) {
         return;
       }
@@ -105,10 +105,28 @@ export function useFileUpload({
           track("logo_uploaded", {
             file_size_kb: Math.round(file.size / 1024),
           });
+        } else if (kind === "avatar") {
+          track("testimonial_author_edited", {
+            field: "avatar",
+          });
         }
 
         setConfig((currentConfig) => {
           // Don't auto-apply logos to canvas - user must toggle "apply to all screenshots"
+          // For avatars, store the asset ID in testimonial settings
+          if (kind === "avatar") {
+            return {
+              ...currentConfig,
+              layoutSpecificSettings: {
+                ...currentConfig.layoutSpecificSettings,
+                testimonial: {
+                  ...currentConfig.layoutSpecificSettings?.testimonial,
+                  authorAvatarAssetId: asset.id,
+                  showAuthorAvatar: true,
+                },
+              },
+            };
+          }
           const newConfig = kind === "logo"
             ? currentConfig
             : {

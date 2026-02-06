@@ -64,6 +64,7 @@ const config: Config = {
   				'sans-serif'
   			],
   			mono: [
+  				'var(--font-developer)',
   				'SFMono-Regular',
   				'monospace'
   			],

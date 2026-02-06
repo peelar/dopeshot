@@ -35,6 +35,12 @@ export function serializeEditorState(params: {
   const referencedAssetIds = new Set(
     Object.values(config.assets).filter((value): value is string => Boolean(value))
   );
+
+  // Testimonial avatars are stored in layout-specific settings, not config.assets.
+  const testimonialAvatarAssetId = config.layoutSpecificSettings?.testimonial?.authorAvatarAssetId;
+  if (testimonialAvatarAssetId) {
+    referencedAssetIds.add(testimonialAvatarAssetId);
+  }
   const serializedAssets = referencedAssetIds.size
     ? assets.filter((asset) => referencedAssetIds.has(asset.id))
     : [];

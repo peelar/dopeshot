@@ -274,3 +274,43 @@
     opacity: 0.3;
   }
 }
+
+/* Lightweight rich text editor */
+.ds-rich-editor[contenteditable="true"] {
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-weight: 460;
+  font-variation-settings: "wght" 460;
+}
+
+.ds-rich-editor[contenteditable="true"]:empty::before {
+  content: attr(data-placeholder);
+  color: color-mix(in oklab, var(--color-muted-foreground) 72%, transparent);
+  pointer-events: none;
+}
+
+.ds-rich-highlight {
+  display: inline;
+  padding: 0 0.12em;
+  border-radius: 0.32em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.ds-rich-bold {
+  font-weight: 780;
+  font-variation-settings: "wght" 780;
+}
+
+.ds-rich-editor strong,
+.ds-rich-editor b {
+  font-weight: 780;
+  font-variation-settings: "wght" 780;
+}
+
+.ds-rich-highlight-1 {
+  background-image: var(
+    --ds-rich-highlight-gradient,
+    linear-gradient(110deg, rgba(99, 102, 241, 0.34), rgba(133, 136, 244, 0.5))
+  );
+}

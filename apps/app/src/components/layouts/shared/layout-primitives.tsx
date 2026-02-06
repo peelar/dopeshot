@@ -1,18 +1,45 @@
-import { useMemo, type ReactNode } from "react";
+import { useMemo, type CSSProperties, type ReactNode } from "react";
 import { useAtomValue } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { getFontStyleCssValue } from "@/domain/layout/fonts";
 import { getAdaptiveTypography } from "@/domain/layout/adaptive-typography";
 import { getScreenshotTreatment } from "@/domain/layout/screenshot-mode";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
-import { configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
+import { brandSettingsAtom, configAtom, assetsAtom, screenshotZoomAtom, orientationAtom } from "@/hooks/atoms";
 import { logoAssetAtom, screenshotAssetAtom, personalityStyleAtom } from "@/hooks/atoms/derived";
-import type { LayoutConfig } from "@/domain/layout/types";
+import type { LayoutConfig, RichTextSegment } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 import { getBackgroundStyle } from "./background-style";
 import { tokenToTextColorClass } from "./color-utils";
 import { getShadowValue, buildShadowFromStyle } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
+import { renderRichTextSegments } from "./rich-text-render";
+import {
+  normalizeRichTextSegments,
+  segmentsToPlainText,
+} from "@/domain/layout/rich-text";
+import { buildRichHighlightGradient } from "@/lib/colors/rich-highlight-gradient";
+
+function resolveRichTextSegments(
+  segments: RichTextSegment[] | undefined,
+  fallbackText: string | undefined,
+): RichTextSegment[] | undefined {
+  const normalized = normalizeRichTextSegments(segments);
+  if (!normalized.length) {
+    return undefined;
+  }
+
+  const normalizedText = segmentsToPlainText(normalized).trim();
+  if (!normalizedText.length) {
+    return undefined;
+  }
+
+  if (!fallbackText || normalizedText === fallbackText) {
+    return normalized;
+  }
+
+  return [{ text: fallbackText }];
+}
 
 export function useLayoutPrimitives() {
   const config = useAtomValue(configAtom);
@@ -54,10 +81,26 @@ export function useLayoutPrimitives() {
     return getAdaptiveTypography(effectiveFontStyle, fontFamily, titleText, subtitleText);
   }, [effectiveFontStyle, fontFamily, config.text.title, config.text.subtitle]);
 
+  const title = useMemo(() => config.text.title?.trim(), [config.text.title]);
+  const subtitle = useMemo(() => config.text.subtitle?.trim(), [config.text.subtitle]);
+
+  const richTextSegments = useMemo(
+    () => ({
+      title: resolveRichTextSegments(config.layoutSpecificSettings?.richText?.title, title),
+      subtitle: resolveRichTextSegments(config.layoutSpecificSettings?.richText?.subtitle, subtitle),
+    }),
+    [
+      config.layoutSpecificSettings?.richText?.title,
+      config.layoutSpecificSettings?.richText?.subtitle,
+      subtitle,
+      title,
+    ],
+  );
+
   const text = useMemo(
     () => ({
-      title: config.text.title?.trim(),
-      subtitle: config.text.subtitle?.trim(),
+      title,
+      subtitle,
       titleStyle: adaptiveTypography.titleStyle,
       subtitleStyle: adaptiveTypography.subtitleStyle,
       containerClasses: adaptiveTypography.containerClasses,
@@ -65,10 +108,12 @@ export function useLayoutPrimitives() {
       subtitleClasses: adaptiveTypography.subtitleClasses,
       fontFamily,
       textColorClass,
+      titleContent: renderRichTextSegments(richTextSegments.title, title),
+      subtitleContent: renderRichTextSegments(richTextSegments.subtitle, subtitle),
     }),
     [
-      config.text.title,
-      config.text.subtitle,
+      title,
+      subtitle,
       adaptiveTypography.titleStyle,
       adaptiveTypography.subtitleStyle,
       adaptiveTypography.containerClasses,
@@ -76,6 +121,8 @@ export function useLayoutPrimitives() {
       adaptiveTypography.subtitleClasses,
       fontFamily,
       textColorClass,
+      richTextSegments.title,
+      richTextSegments.subtitle,
     ],
   );
 
@@ -131,6 +178,8 @@ interface LayoutSurfaceProps {
   config: LayoutConfig;
   assetMap: Map<string, Asset>;
   screenshot?: Asset;
+  disablePatternOverlay?: boolean;
+  highlightAccent?: string | null;
   children: ReactNode;
 }
 
@@ -141,14 +190,31 @@ export function LayoutSurface({
   config,
   assetMap,
   screenshot,
+  disablePatternOverlay = false,
+  highlightAccent,
   children,
 }: LayoutSurfaceProps) {
+  const brandSettings = useAtomValue(brandSettingsAtom);
+  const highlightGradient = useMemo(
+    () => buildRichHighlightGradient(highlightAccent ?? brandSettings.accent),
+    [brandSettings.accent, highlightAccent],
+  );
+  const surfaceStyle = useMemo(
+    () =>
+      ({
+        background: backgroundStyle,
+        isolation: "isolate",
+        "--ds-rich-highlight-gradient": highlightGradient,
+      }) as CSSProperties,
+    [backgroundStyle, highlightGradient],
+  );
+
   return (
     <div
       className={cn("relative h-full w-full overflow-hidden", className)}
-      style={{ background: backgroundStyle, isolation: "isolate" }}
+      style={surfaceStyle}
     >
-      <PatternOverlay config={config} />
+      {!disablePatternOverlay ? <PatternOverlay config={config} /> : null}
       <div className="relative z-10 h-full w-full">{children}</div>
     </div>
   );

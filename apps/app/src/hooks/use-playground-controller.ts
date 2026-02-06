@@ -6,11 +6,11 @@ import { toast } from "@/lib/utils/toast";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import {
   DEFAULT_LOCKED_ASPECT_RATIO,
-  EXPORT_ORIENTATION_DIMENSIONS,
+  getExportDimensionsForLayout,
   getScreenshotTreatment,
 } from "@/domain/layout/screenshot-mode";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
-import type { LayoutDefinition } from "@/domain/layout-def/definitions";
+import { getLayoutFormat, type LayoutDefinition } from "@/domain/layout-def/definitions";
 import { exportLayoutAsPngWithBlob, generateThumbnail } from "@/domain/layout/export";
 import { useSession } from "@/lib/auth/auth-client";
 import type { LayoutConfig } from "@/domain/layout/types";
@@ -255,6 +255,8 @@ function useExportHandler({
       return;
     }
 
+    const exportType = getLayoutFormat(config.layoutId) === "testimonial" ? "testimonial" : "screenshot";
+
     track("export_button_clicked", {
       look_id: config.layoutId,
       look_name: currentLook?.name ?? "unknown",
@@ -262,12 +264,13 @@ function useExportHandler({
       background_type: config.background?.type ?? "unknown",
       font_style: config.fontStyle ?? "default",
       orientation,
+      export_type: exportType,
     });
     setIsExporting(true);
     setStatusMessage("Exporting image...");
     try {
       // Use high-resolution export dimensions
-      const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+      const exportDims = getExportDimensionsForLayout(config, orientation);
 
       const maxImageScale =
         screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
@@ -300,6 +303,8 @@ function useExportHandler({
       track("export_completed", {
         look_id: config.layoutId,
         orientation,
+        format: getLayoutFormat(config.layoutId),
+        export_type: exportType,
       });
 
       // DEV FLAG: Force show modal for all users in development

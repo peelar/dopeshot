@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles } from "lucide-react";
+import { Link2 } from "lucide-react";
 
 interface FontStyleSelectorProps {
   fontStyle?: FontStyle;
@@ -51,7 +51,7 @@ export function FontStyleSelector({
           <SelectValue className={currentStyle ? undefined : "text-muted-foreground"}>
             <span className="flex items-center gap-1.5">
               {isShowingBrandFont && (
-                <Sparkles className="size-3.5 text-violet-500" />
+                <Link2 className="size-3.5 text-sky-500" />
               )}
               {currentStyle?.fontName ?? "Select font"}
               {isShowingBrandFont && brandPersonalityName && (
@@ -68,7 +68,7 @@ export function FontStyleSelector({
                 <div className="flex flex-col gap-1">
                   <span className="flex items-center gap-1.5 font-medium text-sm">
                     {isBrandDefault && (
-                      <Sparkles className="size-3 text-violet-500" />
+                      <Link2 className="size-3 text-sky-500" />
                     )}
                     <span
                       style={{ fontFamily: `var(${style.cssVariable})` }}

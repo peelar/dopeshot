@@ -1,10 +1,15 @@
 import { Asset } from "@/domain/asset/types";
 import type { Orientation } from "@/hooks/atoms";
-import { CanvasMode, LayoutConfig, ScreenshotTreatment } from "./types";
+import {
+  CanvasMode,
+  LayoutConfig,
+  ScreenshotTreatment,
+  TestimonialExportAspect,
+} from "./types";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 
 export const DEFAULT_LOCKED_ASPECT_RATIO = 1280 / 720;
-const BASE_CANVAS_WIDTH = 1280;
+export const DEFAULT_TESTIMONIAL_EXPORT_ASPECT: TestimonialExportAspect = "3:4";
 
 // Preview dimensions - optimized for UI preview performance and text readability
 export const ORIENTATION_DIMENSIONS = {
@@ -17,6 +22,48 @@ export const EXPORT_ORIENTATION_DIMENSIONS = {
   desktop: { width: 1920, height: 1080 },  // 16:9
   mobile: { width: 1080, height: 1920 },   // 9:16
 } as const;
+
+// Testimonial preview dimensions keep ratios aligned with export sizes.
+export const TESTIMONIAL_PREVIEW_DIMENSIONS: Record<TestimonialExportAspect, { width: number; height: number }> = {
+  "3:4": { width: 720, height: 960 },
+  "4:5": { width: 720, height: 900 },
+  "9:16": { width: 720, height: 1280 },
+  "16:9": { width: 1280, height: 720 },
+};
+
+export const TESTIMONIAL_EXPORT_DIMENSIONS: Record<TestimonialExportAspect, { width: number; height: number }> = {
+  "3:4": { width: 1080, height: 1440 },
+  "4:5": { width: 1080, height: 1350 },
+  "9:16": { width: 1080, height: 1920 },
+  "16:9": { width: 1920, height: 1080 },
+};
+
+function isTestimonialExportAspect(
+  value: string | undefined,
+): value is TestimonialExportAspect {
+  return value === "3:4" || value === "4:5" || value === "9:16" || value === "16:9";
+}
+
+export function getTestimonialExportAspect(config: LayoutConfig): TestimonialExportAspect {
+  const value = config.layoutSpecificSettings?.testimonial?.exportAspect;
+  return isTestimonialExportAspect(value) ? value : DEFAULT_TESTIMONIAL_EXPORT_ASPECT;
+}
+
+function getLockedCanvasDimensions(config: LayoutConfig, orientation: Orientation) {
+  const layout = getLayoutDefinition(config.layoutId);
+  if (layout?.format === "testimonial") {
+    return TESTIMONIAL_PREVIEW_DIMENSIONS[getTestimonialExportAspect(config)];
+  }
+  return ORIENTATION_DIMENSIONS[orientation];
+}
+
+export function getExportDimensionsForLayout(config: LayoutConfig, orientation: Orientation) {
+  const layout = getLayoutDefinition(config.layoutId);
+  if (layout?.format === "testimonial") {
+    return TESTIMONIAL_EXPORT_DIMENSIONS[getTestimonialExportAspect(config)];
+  }
+  return EXPORT_ORIENTATION_DIMENSIONS[orientation];
+}
 
 function isBlank(value?: string) {
   return !value || !value.trim();
@@ -71,9 +118,6 @@ export function getCanvasDimensions(
   screenshotAsset?: Asset | null,
   orientation: Orientation = "desktop",
 ): { width: number; height: number; aspectRatio: number; mode: CanvasMode } {
-  const layout = getLayoutDefinition(config.layoutId);
-
-  const treatment = getScreenshotTreatment(config);
   const effectiveMode = getEffectiveCanvasMode(config);
 
   // Normalize orientation to handle legacy values from localStorage
@@ -82,7 +126,7 @@ export function getCanvasDimensions(
     : "desktop"; // Default to desktop for any invalid/legacy values
 
   if (effectiveMode === "locked") {
-    const dims = ORIENTATION_DIMENSIONS[normalizedOrientation];
+    const dims = getLockedCanvasDimensions(config, normalizedOrientation);
     return {
       width: dims.width,
       height: dims.height,
@@ -103,7 +147,7 @@ export function getCanvasDimensions(
   }
 
   // Fallback to orientation defaults
-  const dims = ORIENTATION_DIMENSIONS[normalizedOrientation];
+  const dims = getLockedCanvasDimensions(config, normalizedOrientation);
   return {
     width: dims.width,
     height: dims.height,

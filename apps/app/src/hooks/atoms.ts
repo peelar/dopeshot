@@ -2,7 +2,7 @@ import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
 import { LayoutConfig, BackgroundConfig, FontId, CustomGradient } from "@/domain/layout/types";
 import { Asset } from "@/domain/asset/types";
-import { getLayoutDefinition } from "@/domain/layout-def/definitions";
+import { getLayoutDefinition, type LayoutFormat } from "@/domain/layout-def/definitions";
 import { migrateFontIdToStyle } from "@/domain/layout/fonts";
 import type { BrandMode, BrandPersonality } from "@/lib/types/brand";
 
@@ -120,6 +120,10 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
     personality: null,
   }
 );
+
+// Active format tab in layout selector
+// Defaults to "none" — user chooses a format on first visit via the format chooser
+export const activeFormatAtom = atom<LayoutFormat>("none");
 
 // Feedback modal
 export const feedbackModalOpenAtom = atom<boolean>(false);

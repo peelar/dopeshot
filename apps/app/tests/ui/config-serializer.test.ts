@@ -46,6 +46,20 @@ describe("serializeEditorState", () => {
         aspectRatio: 1920 / 1080,
       },
     },
+    {
+      id: "avatar-1",
+      projectId: "project-1",
+      userId: "user-1",
+      name: "avatar.png",
+      kind: "avatar",
+      url: "https://example.com/avatar.png",
+      createdAt: new Date().toISOString(),
+      metadata: {
+        width: 512,
+        height: 512,
+        aspectRatio: 1,
+      },
+    },
   ];
 
   const mockScreenshotGradient: BackgroundConfig = {
@@ -199,5 +213,27 @@ describe("serializeEditorState", () => {
 
     expect(result.variant).toBe("minimal");
     expect(result.layoutId).toBe("classic");
+  });
+
+  it("should include testimonial avatar assets referenced in layout settings", () => {
+    const testimonialConfig: LayoutConfig = {
+      ...mockConfig,
+      layoutSpecificSettings: {
+        testimonial: {
+          authorAvatarAssetId: "avatar-1",
+        },
+      },
+    };
+
+    const result = serializeEditorState({
+      config: testimonialConfig,
+      assets: mockAssets,
+      screenshotGradient: null,
+      orientation: "desktop",
+      screenshotZoom: 1,
+      screenshotPath: "test.png",
+    });
+
+    expect(result.assets?.some((asset) => asset.id === "avatar-1")).toBe(true);
   });
 });

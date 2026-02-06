@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { PopupGradient } from "./PopupGradient";
 import { HeroCenter } from "./HeroCenter";
 import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
+import { Testimonial } from "./Testimonial";
 
 /**
  * Component registry for Layout rendering.
@@ -12,7 +13,7 @@ import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
 
 export type LayoutComponentProps = {
   className?: string;
-  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background") => void;
+  onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   isStatic?: boolean;
 };
 
@@ -22,6 +23,7 @@ const LAYOUT_COMPONENTS: Record<string, LayoutComponent> = {
   "popup-gradient": PopupGradient,
   "hero-center": HeroCenter,
   "adaptive-stage": AdaptiveScreenshot,
+  "testimonial": Testimonial,
 };
 
 export function getLayoutComponent(id: string): LayoutComponent {
@@ -37,7 +39,7 @@ export function getLayoutComponent(id: string): LayoutComponent {
 
   // Handle flattened layout IDs (e.g., "popup-gradient-left" → "popup-gradient")
   // Extract base ID by removing variant suffix
-  const knownVariants = ["left", "right", "center"];
+  const knownVariants = ["left", "right", "center", "centered", "card", "editorial"];
   const lastHyphenIndex = id.lastIndexOf("-");
 
   if (lastHyphenIndex !== -1) {

@@ -14,10 +14,17 @@ import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
 import { usePlaygroundController } from "@/hooks/use-playground-controller";
 import { useUserTier } from "@/hooks/use-user-tier";
 import {
-  EXPORT_ORIENTATION_DIMENSIONS,
+  getExportDimensionsForLayout,
   ORIENTATION_DIMENSIONS,
 } from "@/domain/layout/screenshot-mode";
 import {
+  LAYOUT_DEFINITIONS,
+  getLayoutFormat,
+  withLayoutTextDefaults,
+  type LayoutFormat,
+} from "@/domain/layout-def/definitions";
+import {
+  activeFormatAtom,
   assetsAtom,
   baseConfigAtom,
   configAtom,
@@ -28,11 +35,10 @@ import {
   orientationAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
-  type Orientation,
 } from "@/hooks/atoms";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
-import { getDefaultDemoPreset } from "@/domain/demo/presets";
+import { getDefaultDemoPreset, getRandomDemoPreset } from "@/domain/demo/presets";
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
@@ -54,6 +60,7 @@ import { ExportSuccessModal } from "@/components/post-export";
 import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
 import { useRouter } from "next/navigation";
 import { track } from "@/lib/analytics";
+import { useColorAnalysis } from "@/hooks/use-color-analysis";
 
 const FeedbackModal = dynamic(
   () =>
@@ -64,15 +71,15 @@ const FeedbackModal = dynamic(
 function ExportContainer({
   width,
   height,
-  orientation,
+  baseWidth,
+  baseHeight,
 }: {
   width: number;
   height: number;
-  orientation: Orientation;
+  baseWidth: number;
+  baseHeight: number;
 }) {
-  // Use preview dimensions as base (matching what user sees)
-  const baseDims = ORIENTATION_DIMENSIONS[orientation];
-  const scale = width / baseDims.width;
+  const scale = width / baseWidth;
 
   return (
     <div
@@ -97,8 +104,8 @@ function ExportContainer({
     >
       <div
         style={{
-          width: `${baseDims.width}px`,
-          height: `${baseDims.height}px`,
+          width: `${baseWidth}px`,
+          height: `${baseHeight}px`,
           transformOrigin: "center",
           transform: `scale(${scale})`,
         }}
@@ -129,6 +136,7 @@ export function PlaygroundPage(props: PlaygroundPageProps) {
     const preset = getDefaultDemoPreset();
     nextStore.set(baseConfigAtom, preset.config);
     nextStore.set(assetsAtom, [preset.asset]);
+    nextStore.set(activeFormatAtom, "screenshot");
     return nextStore;
   }, [props.initialIsAuthenticated]);
 
@@ -151,6 +159,7 @@ function PlaygroundPageInner({
   const personalBackgrounds = useAtomValue(personalBackgroundsAtom);
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
+  const [isPreparingScreenshotPreset, setIsPreparingScreenshotPreset] = useState(false);
 
   // Export success sheet state
   const [showExportSheet, setShowExportSheet] = useAtom(showExportSheetAtom);
@@ -384,9 +393,24 @@ function PlaygroundPageInner({
     isConfigDrawerOpen,
     setIsConfigDrawerOpen,
   } = usePlaygroundController({ demoEnabled: !isLoggedIn });
+  const { processColorAnalysis } = useColorAnalysis();
+  const layoutFormat = getLayoutFormat(config.layoutId);
+  const exportDimensions = useMemo(
+    () => getExportDimensionsForLayout(config, orientation),
+    [config, orientation],
+  );
+  const exportBaseDimensions = useMemo(
+    () => (
+      layoutFormat === "testimonial"
+        ? { width: canvas.width, height: canvas.height }
+        : ORIENTATION_DIMENSIONS[orientation]
+    ),
+    [canvas.height, canvas.width, layoutFormat, orientation],
+  );
 
-  // Only show loading when actually loading a specific memory item from URL
-  const showLoadingState = isLoggedIn && Boolean(initialMemoryItemId) && !loadedItemId;
+  // Show loading when hydrating a saved design, or while preparing screenshot demo preset.
+  const showLoadingState =
+    (isLoggedIn && Boolean(initialMemoryItemId) && !loadedItemId) || isPreparingScreenshotPreset;
 
   const showEmptyState = useMemo(() => {
     const hasText = Boolean(config.text.title?.trim() || config.text.subtitle?.trim());
@@ -405,6 +429,48 @@ function PlaygroundPageInner({
     showLoadingState,
   ]);
 
+  const [activeFormat, setActiveFormat] = useAtom(activeFormatAtom);
+  const isFormatChosen = activeFormat !== "none";
+  const handleFormatChosen = useCallback(
+    (format: LayoutFormat) => {
+      if (format === "screenshot") {
+        setIsPreparingScreenshotPreset(true);
+        const demoPreset = getRandomDemoPreset();
+        setConfig(demoPreset.config);
+        setAssets([demoPreset.asset]);
+        setScreenshotZoom(1.0);
+        void (async () => {
+          try {
+            await processColorAnalysis(demoPreset.asset.url, demoPreset.asset.id, null);
+          } finally {
+            setActiveFormat("screenshot");
+            setIsPreparingScreenshotPreset(false);
+            track("format_tab_switched", { from: "none", to: format });
+          }
+        })();
+        return;
+      }
+
+      // Auto-select first layout of the chosen format
+      const firstLayout = LAYOUT_DEFINITIONS.find((l) => l.format === format);
+      if (firstLayout) {
+        const nextConfig = withLayoutTextDefaults(firstLayout.createConfig());
+        setConfig(nextConfig);
+        setScreenshotZoom(1.0);
+
+        track("format_tab_switched", { from: "none", to: format });
+      }
+    },
+    [
+      processColorAnalysis,
+      setActiveFormat,
+      setAssets,
+      setConfig,
+      setScreenshotZoom,
+      setIsPreparingScreenshotPreset,
+    ],
+  );
+
   const handleLeftSidebarViewChange = useCallback((view: LeftSidebarView) => {
     setLeftSidebarView(view);
     if (typeof window === "undefined") return;
@@ -421,6 +487,16 @@ function PlaygroundPageInner({
       window.history.replaceState(null, "", nextPath);
     }
   }, []);
+
+  const handleLockedTestimonialClick = useCallback(() => {
+    if (isLoggedIn) {
+      handleLeftSidebarViewChange("brand");
+      setLeftSidebarOpen(true);
+      return;
+    }
+
+    router.push("/brand");
+  }, [handleLeftSidebarViewChange, isLoggedIn, router]);
 
   // Save design hooks
   const { saveDesign, canSave, isAtLimit, isSaving, saveCount, saveLimit } = useSaveDesign();
@@ -469,6 +545,7 @@ function PlaygroundPageInner({
         isLoggedIn={isLoggedIn}
         hasSelectedSavedDesign={Boolean(loadedItemId)}
         hasCustomScreenshot={hasCustomScreenshot}
+        isTestimonialFormat={layoutFormat === "testimonial"}
         isProcessingUpload={isProcessingUpload}
         onUploadClick={openFilePicker}
         onNewClick={resetToEmptyCanvas}
@@ -508,11 +585,20 @@ function PlaygroundPageInner({
         {/* Center: Content Column (Looks Rail + Preview) */}
         <PlaygroundErrorBoundary>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className="flex-shrink-0 bg-muted/20 pl-4 sm:pl-8">
+            <div
+              className={cn(
+                "flex-shrink-0 pl-4 sm:pl-8",
+                isFormatChosen ? "bg-muted/20" : "bg-transparent",
+              )}
+            >
               <LayoutSelector />
             </div>
-
-            <div className="flex-shrink-0 border-b border-border pl-4 sm:pl-12" />
+            <div
+              className={cn(
+                "flex-shrink-0 border-b pl-4 sm:pl-12",
+                isFormatChosen ? "border-border" : "border-transparent",
+              )}
+            />
 
             <div className="flex min-h-0 flex-1 overflow-hidden px-4 pb-12 sm:px-8 sm:pb-10">
               <PlaygroundWorkspace
@@ -522,6 +608,8 @@ function PlaygroundPageInner({
                 showEmptyState={showEmptyState}
                 showLoadingState={showLoadingState}
                 onEmptyStateClick={openFilePicker}
+                onFormatChosen={handleFormatChosen}
+                onLockedTestimonialClick={handleLockedTestimonialClick}
                 canvasHeight={canvas.height}
                 canvasWidth={canvas.width}
                 showFocusHint={showFocusHint}
@@ -553,9 +641,10 @@ function PlaygroundPageInner({
 
       {canExport ? (
         <ExportContainer
-          width={EXPORT_ORIENTATION_DIMENSIONS[orientation].width}
-          height={EXPORT_ORIENTATION_DIMENSIONS[orientation].height}
-          orientation={orientation}
+          width={exportDimensions.width}
+          height={exportDimensions.height}
+          baseWidth={exportBaseDimensions.width}
+          baseHeight={exportBaseDimensions.height}
         />
       ) : null}
 

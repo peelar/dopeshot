@@ -32,6 +32,7 @@ export type ScreenshotFramePreset = "soft-glass" | "solid";
 export type FrameShape = "rounded" | "rectangular";
 
 export type CanvasMode = "adaptive" | "locked";
+export type TestimonialExportAspect = "3:4" | "4:5" | "9:16" | "16:9";
 
 export type ScreenshotTreatment = {
   preset: ScreenshotFramePreset;
@@ -58,6 +59,19 @@ export type FontId =
 
 export type FontSize = "sm" | "md" | "lg" | "xl" | "2xl";
 
+export type RichTextMark =
+  | "bold"
+  | "italic"
+  | "underline"
+  | "highlight-1"
+  | "highlight-2"
+  | "highlight-3";
+
+export type RichTextSegment = {
+  text: string;
+  marks?: RichTextMark[];
+};
+
 // Re-export gradient types from gradients module for backward compatibility
 export type {
   GradientStop,
@@ -71,6 +85,7 @@ export type {
 export { isLegacyGradient, isAdvancedGradient } from "./gradients/types";
 
 import type { CustomGradient } from "./gradients/types";
+import type { BrandMode } from "@/lib/types/brand";
 
 export type BackgroundConfig = {
   type: BackgroundType;
@@ -110,5 +125,20 @@ export type LayoutConfig = {
   layoutSpecificSettings?: {
     fadeEnabled?: Record<string, boolean>; // Per-layout fade state
     fadeDirection?: Record<string, string>; // Per-layout fade direction override
+    richText?: {
+      title?: RichTextSegment[];
+      subtitle?: RichTextSegment[];
+    };
+    testimonial?: {
+      authorName?: string;
+      authorTitle?: string;
+      authorCompany?: string;
+      authorAvatarAssetId?: string;
+      showAuthorAvatar?: boolean;
+      starRating?: number; // 0-5, 0 = hidden
+      styleAccent?: string; // Testimonial-local accent override (hex)
+      styleMode?: BrandMode; // Testimonial-local mode override
+      exportAspect?: TestimonialExportAspect;
+    };
   };
 };

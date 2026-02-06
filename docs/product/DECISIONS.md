@@ -10,9 +10,9 @@ High-confidence calls that shape the product today.
 - **Chose**: Popup for vertical, Split for horizontal/square
 - **Because**: Removes decision paralysis and yields an instant first result.
 
-## No blank canvas
-- **Chose**: Demo screenshot on landing
-- **Because**: Shows capability immediately; no empty state.
+## No blank canvas (all formats)
+- **Chose**: Demo-first start for Screenshot and Testimonial, including logged-in "new design" sessions.
+- **Because**: Keeps onboarding behavior coherent, shows capability immediately, and removes empty-state friction.
 
 ## Speed as the feature
 - **Chose**: Deliver a polished first result in ~2-3 seconds
