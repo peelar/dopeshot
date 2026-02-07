@@ -448,6 +448,26 @@ function LayoutSketch({
   }
 
   if (isTestimonialLayout) {
+    const isTwitter = layoutId === "testimonial-twitter";
+
+    if (isTwitter) {
+      // Twitter testimonial: X logo, quote lines, author with handle
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-stone-100 p-3 dark:bg-stone-800">
+          {/* X logo */}
+          <div className="h-2.5 w-2.5 rounded-sm bg-stone-500 dark:bg-stone-400" />
+          {/* Quote lines */}
+          <div className="h-1.5 w-20 rounded bg-stone-400 dark:bg-stone-500" />
+          <div className="h-1.5 w-14 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+          {/* Author with avatar dot */}
+          <div className="mt-1 flex items-center gap-1">
+            <div className="h-2.5 w-2.5 rounded-full bg-stone-400 dark:bg-stone-500" />
+            <div className="h-1 w-8 rounded bg-stone-300 dark:bg-stone-600" />
+          </div>
+        </div>
+      );
+    }
+
     // Testimonial: stars, quote lines, author at bottom — all centered
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-stone-100 p-3 dark:bg-stone-800">

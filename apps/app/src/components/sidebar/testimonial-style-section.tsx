@@ -53,31 +53,37 @@ function BrandLinkedBadge({
   );
 }
 
-export function TestimonialStyleSection() {
+type SettingsKey = "testimonial" | "twitterTestimonial";
+
+interface TestimonialStyleSectionProps {
+  settingsKey?: SettingsKey;
+}
+
+export function TestimonialStyleSection({ settingsKey = "testimonial" }: TestimonialStyleSectionProps) {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const brandSettings = useAtomValue(brandSettingsAtom);
   const { resolvedTheme } = useTheme();
 
-  const testimonial = config.layoutSpecificSettings?.testimonial;
+  const settings = config.layoutSpecificSettings?.[settingsKey];
   const fallbackMode: BrandMode = resolvedTheme === "dark" ? "dark" : "light";
 
   const effectiveAccent = useMemo(() => {
-    const testimonialAccent = normalizeHex(testimonial?.styleAccent);
-    if (testimonialAccent) return testimonialAccent;
+    const settingsAccent = normalizeHex(settings?.styleAccent);
+    if (settingsAccent) return settingsAccent;
 
     const brandAccent = normalizeHex(brandSettings.accent);
     if (brandAccent) return brandAccent;
 
     return DEFAULT_ACCENT;
-  }, [brandSettings.accent, testimonial?.styleAccent]);
+  }, [brandSettings.accent, settings?.styleAccent]);
 
   const effectiveMode: BrandMode =
-    testimonial?.styleMode ?? brandSettings.mode ?? fallbackMode;
-  const storedAccent = normalizeHex(testimonial?.styleAccent);
+    settings?.styleMode ?? brandSettings.mode ?? fallbackMode;
+  const storedAccent = normalizeHex(settings?.styleAccent);
   const brandAccent = normalizeHex(brandSettings.accent);
   const isAccentInheritedFromBrand = !storedAccent && Boolean(brandAccent);
-  const isModeInheritedFromBrand = !testimonial?.styleMode && Boolean(brandSettings.mode);
+  const isModeInheritedFromBrand = !settings?.styleMode && Boolean(brandSettings.mode);
 
   const [accentInput, setAccentInput] = useState(effectiveAccent);
 
@@ -91,14 +97,14 @@ export function TestimonialStyleSection() {
         ...prev,
         layoutSpecificSettings: {
           ...prev.layoutSpecificSettings,
-          testimonial: {
-            ...prev.layoutSpecificSettings?.testimonial,
+          [settingsKey]: {
+            ...prev.layoutSpecificSettings?.[settingsKey],
             ...style,
           },
         },
       }));
     },
-    [setConfig],
+    [setConfig, settingsKey],
   );
 
   const commitAccent = useCallback(

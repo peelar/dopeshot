@@ -50,6 +50,7 @@
     "prisma-json-types-generator": "^4.0.1",
     "react": "19.2.1",
     "react-dom": "19.2.1",
+    "react-tweet": "^3.3.0",
     "resend": "^6.6.0",
     "server-only": "^0.0.1",
     "shadcn": "^3.6.2",

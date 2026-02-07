@@ -48,28 +48,34 @@ describe("Testimonial layout definitions", () => {
 
     it("returns only testimonial layouts for 'testimonial' format", () => {
       const testimonialLayouts = getLayoutsForFormat("testimonial");
-      expect(testimonialLayouts.length).toBe(1); // single testimonial layout
+      expect(testimonialLayouts.length).toBe(2); // testimonial + testimonial-twitter
       expect(testimonialLayouts.every((l) => l.format === "testimonial")).toBe(true);
     });
 
-    it("testimonial layout ID is 'testimonial'", () => {
+    it("testimonial layout IDs include standard and twitter", () => {
       const testimonialLayouts = getLayoutsForFormat("testimonial");
       const ids = testimonialLayouts.map((l) => l.id);
       expect(ids).toContain("testimonial");
+      expect(ids).toContain("testimonial-twitter");
     });
   });
 
   describe("testimonial in LAYOUT_DEFINITIONS", () => {
-    it("has exactly 1 testimonial entry", () => {
+    it("has exactly 2 testimonial entries", () => {
       const testimonialEntries = LAYOUT_DEFINITIONS.filter((l) =>
         l.id.startsWith("testimonial"),
       );
-      expect(testimonialEntries).toHaveLength(1);
+      expect(testimonialEntries).toHaveLength(2);
     });
 
     it("testimonial has correct display name", () => {
       const def = getLayoutDefinition("testimonial");
       expect(def?.name).toBe("Testimonial");
+    });
+
+    it("testimonial-twitter has correct display name", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def?.name).toBe("Tweet");
     });
   });
 
@@ -170,6 +176,51 @@ describe("Testimonial layout definitions", () => {
 
       const result = withLayoutTextDefaults(config);
       expect(result.text.title).toBe("My custom quote");
+    });
+  });
+
+  describe("testimonial-twitter layout definition", () => {
+    it("can be retrieved by ID", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def).toBeDefined();
+      expect(def?.id).toBe("testimonial-twitter");
+    });
+
+    it("has testimonial format", () => {
+      expect(getLayoutFormat("testimonial-twitter")).toBe("testimonial");
+    });
+
+    it("produces a valid config with twitterTestimonial settings", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      const config = def!.createConfig();
+
+      expect(config.layoutId).toBe("testimonial-twitter");
+      expect(config.variant).toBe("default");
+      expect(config.layoutSpecificSettings?.twitterTestimonial).toBeDefined();
+      expect(config.layoutSpecificSettings?.twitterTestimonial?.fetchStatus).toBe("idle");
+      expect(config.layoutSpecificSettings?.twitterTestimonial?.exportAspect).toBe("3:4");
+    });
+
+    it("has headline and subtitle hidden", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def?.capabilities.text.headline).toBe("hidden");
+      expect(def?.capabilities.text.subtitle).toBe("hidden");
+    });
+
+    it("has screenshot hidden", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def?.capabilities.screenshot).toBe("hidden");
+    });
+
+    it("supports typography and logo", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def?.capabilities.typography).toBe(true);
+      expect(def?.capabilities.logo).toBe("supported");
+    });
+
+    it("supports both orientations", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      expect(def?.capabilities.supportedOrientations).toEqual(["mobile", "desktop"]);
     });
   });
 });

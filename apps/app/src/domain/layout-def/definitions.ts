@@ -380,17 +380,83 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
     },
   },
+  {
+    id: "testimonial-twitter",
+    name: "Tweet",
+    description: "Turn a tweet into a beautiful testimonial card with brand styling.",
+    format: "testimonial",
+    variants: [],
+    createConfig: () => ({
+      layoutId: "testimonial-twitter",
+      variant: "default",
+      text: {
+        title: "",
+        subtitle: "",
+      },
+      colors: {
+        background: "slate-50",
+        text: DEFAULT_GRADIENT.textColor,
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: "custom",
+        customGradient: DEFAULT_GRADIENT.gradient,
+        grainEnabled: true,
+        patternMode: "auto",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+      screenshotFrame: {
+        preset: "soft-glass",
+        canvasMode: "locked",
+        lockedAspectRatio: 16 / 9,
+        shadowEnabled: false,
+        shape: "rounded",
+      },
+      layoutSpecificSettings: {
+        twitterTestimonial: {
+          tweetUrl: "",
+          tweetId: "",
+          fetchStatus: "idle",
+          exportAspect: "3:4",
+        },
+      },
+    }),
+    capabilities: {
+      focusMode: "never",
+      canvasBehavior: "locked",
+      zoomBehavior: "scale-content",
+      text: {
+        headline: "hidden",
+        subtitle: "hidden",
+      },
+      typography: true,
+      outline: {
+        softGlass: false,
+        shadow: false,
+      },
+      logo: "supported",
+      screenshot: "hidden",
+      supportedOrientations: ["mobile", "desktop"],
+    },
+  },
 ];
 
 /**
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 7 layouts
+ * Total: 8 layouts
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
  * - testimonial (Testimonial, no variants)
+ * - testimonial-twitter (Tweet, no variants)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 

@@ -140,5 +140,25 @@ export type LayoutConfig = {
       styleMode?: BrandMode; // Testimonial-local mode override
       exportAspect?: TestimonialExportAspect;
     };
+    twitterTestimonial?: {
+      tweetUrl?: string;
+      tweetId?: string;
+      cachedTweet?: {
+        text: string;
+        authorName: string;
+        authorHandle: string; // without @
+        authorAvatarUrl: string;
+        createdAt: string; // ISO date string
+        metrics?: {
+          likes: number;
+          replies: number;
+        };
+      };
+      fetchStatus?: "idle" | "loading" | "success" | "error";
+      fetchError?: string;
+      styleAccent?: string;
+      styleMode?: BrandMode;
+      exportAspect?: TestimonialExportAspect;
+    };
   };
 };

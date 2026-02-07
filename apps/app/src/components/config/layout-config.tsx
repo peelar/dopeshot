@@ -31,6 +31,7 @@ import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
 import { TestimonialContentSection, TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
 import { TestimonialStyleSection } from "@/components/sidebar/testimonial-style-section";
+import { TwitterTestimonialContentSection } from "@/components/sidebar/twitter-testimonial-content-section";
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 
@@ -64,6 +65,7 @@ export const LayoutConfigPanel = ({
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+  const isTwitterTestimonial = config.layoutId === "testimonial-twitter";
   const showTestimonialSections = isTestimonialFormat && isBrandUser;
   const showScreenshotSection = !isTestimonialFormat;
 
@@ -245,7 +247,11 @@ export const LayoutConfigPanel = ({
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Content</span>
             </div>
-            <TestimonialContentSection />
+            {isTwitterTestimonial ? (
+              <TwitterTestimonialContentSection />
+            ) : (
+              <TestimonialContentSection />
+            )}
           </section>
         ) : showTextSection ? (
           <section className="space-y-3 px-4">
@@ -256,8 +262,8 @@ export const LayoutConfigPanel = ({
           </section>
         ) : null}
 
-        {/* Author section — "who said it?" (testimonial only) */}
-        {showTestimonialSections && (
+        {/* Author section — "who said it?" (standard testimonial only, not twitter) */}
+        {showTestimonialSections && !isTwitterTestimonial && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Author</span>
@@ -266,8 +272,8 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {/* Avatar section (testimonial only) — same structure as Logo */}
-        {showTestimonialSections && !isMobile && (
+        {/* Avatar section (standard testimonial only) — same structure as Logo */}
+        {showTestimonialSections && !isTwitterTestimonial && !isMobile && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Avatar</span>
@@ -347,7 +353,7 @@ export const LayoutConfigPanel = ({
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Style</span>
             </div>
-            <TestimonialStyleSection />
+            <TestimonialStyleSection settingsKey={isTwitterTestimonial ? "twitterTestimonial" : "testimonial"} />
           </section>
         )}
 
