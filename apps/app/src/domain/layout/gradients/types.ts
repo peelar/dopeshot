@@ -37,7 +37,13 @@ export type GradientType = "linear" | "radial" | "conic";
 /**
  * Color space for gradient interpolation
  */
-export type GradientColorSpace = "oklch" | "srgb" | "lab";
+export type GradientColorSpace = "oklch" | "oklab" | "srgb" | "lab";
+
+/**
+ * Hue interpolation method for polar color spaces (oklch, hsl)
+ * Controls which path around the color wheel the gradient takes
+ */
+export type HueInterpolation = "shorter" | "longer" | "increasing" | "decreasing";
 
 /**
  * Advanced multi-stop gradient configuration
@@ -47,6 +53,7 @@ export type AdvancedGradient = {
   stops: GradientStop[]; // Color stops with positions
   direction?: string; // e.g., "to right", "45deg", "circle at center"
   colorSpace?: GradientColorSpace; // defaults to "oklch" for perceptual uniformity
+  hueInterpolation?: HueInterpolation; // hue path for polar spaces (oklch); defaults to "shorter"
   angle?: number; // for linear gradients in degrees (0-360)
   meshLayers?: MeshLayer[]; // For mesh gradients - overlaid radial blob layers
   layoutHint?: "beam"; // Optional layout-aware hint for positioning

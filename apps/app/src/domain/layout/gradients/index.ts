@@ -12,6 +12,7 @@ export type {
   GradientStop,
   GradientType,
   GradientColorSpace,
+  HueInterpolation,
   AdvancedGradient,
   LegacyGradient,
   CustomGradient,

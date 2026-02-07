@@ -7,16 +7,29 @@ import {
   isAdvancedGradient,
   isMeshGradient,
   GradientColorSpace,
+  HueInterpolation,
 } from "./types";
 
-function isColorSpaceSupported(_space?: GradientColorSpace): boolean {
-  return false;
+const POLAR_COLOR_SPACES = new Set<GradientColorSpace>(["oklch"]);
+
+/**
+ * Build the CSS color interpolation prefix for a gradient.
+ * Returns e.g. "in oklch", "in oklch longer hue", "in oklab", or "" if no space.
+ */
+function colorSpacePrefix(space?: GradientColorSpace, hueInterpolation?: HueInterpolation): string {
+  if (!space) return "";
+  const hueKeyword = hueInterpolation && POLAR_COLOR_SPACES.has(space) ? ` ${hueInterpolation} hue` : "";
+  return `in ${space}${hueKeyword}`;
 }
 
-function buildGradientArgs(base: string, space?: GradientColorSpace): string {
-  const supportsSpace = isColorSpaceSupported(space);
-  if (supportsSpace && space) {
-    return `in ${space} ${base}`.trim();
+/**
+ * Combine a color space prefix with a gradient direction/angle string.
+ * Produces correct CSS like "in oklch, 90deg" or just "90deg" if no space.
+ */
+function buildGradientArgs(base: string, space?: GradientColorSpace, hueInterpolation?: HueInterpolation): string {
+  const prefix = colorSpacePrefix(space, hueInterpolation);
+  if (prefix) {
+    return `${prefix}, ${base}`.trim();
   }
   return base.trim();
 }
@@ -121,6 +134,8 @@ export function getContrastTextColorFromPalette(palette: ColorPalette): ColorTok
  * Each layer is a soft-edged radial gradient with transparency
  */
 function meshGradientToCss(gradient: AdvancedGradient): string {
+  const csPrefix = colorSpacePrefix(gradient.colorSpace, gradient.hueInterpolation);
+
   if (!gradient.meshLayers || gradient.meshLayers.length === 0) {
     // Fallback to simple radial if no layers defined
     const stopsString = gradient.stops
@@ -132,21 +147,24 @@ function meshGradientToCss(gradient: AdvancedGradient): string {
         return stop.color;
       })
       .join(", ");
-    return `radial-gradient(circle at center, ${stopsString})`;
+    const radialArgs = csPrefix ? `${csPrefix}, circle at center` : "circle at center";
+    return `radial-gradient(${radialArgs}, ${stopsString})`;
   }
 
   // Build layered radial gradients - each blob is a soft-edged ellipse
+  // OKLCH interpolation maintains hue/chroma as blobs fade to transparent
   const layers = gradient.meshLayers.map((layer) => {
     const { color, position, size } = layer;
-    // Create elliptical gradient for organic feel
-    // Size determines the spread, position places the center
-    return `radial-gradient(ellipse ${size}% ${size}% at ${position.x}% ${position.y}%, ${color}, transparent)`;
+    const shape = `ellipse ${size}% ${size}% at ${position.x}% ${position.y}%`;
+    const args = csPrefix ? `${csPrefix}, ${shape}` : shape;
+    return `radial-gradient(${args}, ${color}, transparent)`;
   });
 
   // Add a subtle base color from the first stop for depth
   const baseColor = gradient.stops[0]?.color ?? "#1a1a2e";
   const darkBase = hexToRgba(baseColor, 0.15);
-  layers.push(`linear-gradient(135deg, ${darkBase}, transparent)`);
+  const baseArgs = csPrefix ? `${csPrefix}, 135deg` : "135deg";
+  layers.push(`linear-gradient(${baseArgs}, ${darkBase}, transparent)`);
 
   // Return comma-separated layers (first layer renders on top)
   return layers.join(", ");
@@ -158,11 +176,19 @@ function meshGradientToCss(gradient: AdvancedGradient): string {
  * with varying transparency and angles
  */
 function auroraGradientToCss(gradient: AdvancedGradient): string {
+  const csPrefix = colorSpacePrefix(gradient.colorSpace, gradient.hueInterpolation);
   const stops = gradient.stops;
+
+  /** Build a linear-gradient with OKLCH interpolation baked in */
+  const lg = (angle: number, ...colorStops: string[]) => {
+    const args = csPrefix ? `${csPrefix}, ${angle}deg` : `${angle}deg`;
+    return `linear-gradient(${args}, ${colorStops.join(", ")})`;
+  };
+
   if (stops.length < 2) {
     // Fallback for minimal stops
     const color = stops[0]?.color ?? "#6366f1";
-    return `linear-gradient(135deg, ${color}, ${hexToRgba(color, 0.7)})`;
+    return lg(135, color, hexToRgba(color, 0.7));
   }
 
   // Extract primary colors from stops
@@ -179,15 +205,16 @@ function auroraGradientToCss(gradient: AdvancedGradient): string {
   const baseAngle = gradient.angle ?? 135;
 
   // Aurora uses multiple angled gradients for flowing wave effect
+  // OKLCH interpolation keeps each layer vibrant across the full sweep
   const layers = [
     // Top flowing wave - primary color sweep
-    `linear-gradient(${baseAngle}deg, ${primaryAlpha} 0%, transparent 40%, ${secondaryAlpha} 70%, transparent 100%)`,
+    lg(baseAngle, `${primaryAlpha} 0%`, `transparent 40%`, `${secondaryAlpha} 70%`, `transparent 100%`),
     // Middle wave - offset angle creates depth
-    `linear-gradient(${(baseAngle + 60) % 360}deg, transparent 10%, ${tertiaryAlpha} 35%, transparent 60%, ${primaryAlpha} 85%, transparent 100%)`,
+    lg((baseAngle + 60) % 360, `transparent 10%`, `${tertiaryAlpha} 35%`, `transparent 60%`, `${primaryAlpha} 85%`, `transparent 100%`),
     // Accent shimmer - subtle highlight
-    `linear-gradient(${(baseAngle + 120) % 360}deg, transparent 20%, ${secondaryAlpha} 50%, transparent 80%)`,
+    lg((baseAngle + 120) % 360, `transparent 20%`, `${secondaryAlpha} 50%`, `transparent 80%`),
     // Base gradient - solid foundation
-    `linear-gradient(${baseAngle}deg, ${primary} 0%, ${secondary} 50%, ${tertiary} 100%)`,
+    lg(baseAngle, `${primary} 0%`, `${secondary} 50%`, `${tertiary} 100%`),
   ];
 
   return layers.join(", ");
@@ -211,7 +238,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
       return meshGradientToCss(gradient);
     }
 
-    const { type, stops, direction, colorSpace, angle } = gradient;
+    const { type, stops, direction, colorSpace, hueInterpolation, angle } = gradient;
 
     // Handle aurora gradients (4+ stops with flowing wave effect)
     if (type === "linear" && stops.length >= 4) {
@@ -219,7 +246,7 @@ export function customGradientToCss(gradient: CustomGradient): string {
     }
 
     const directionOrAngle = angle !== undefined ? `${angle}deg` : (direction ?? "to right");
-    const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace);
+    const directionWithSpace = buildGradientArgs(directionOrAngle, colorSpace, hueInterpolation);
 
     // Build stops string
     const stopsString = stops
@@ -237,10 +264,10 @@ export function customGradientToCss(gradient: CustomGradient): string {
     let gradientFunction = "";
 
     if (type === "radial") {
-      const radialDirection = buildGradientArgs(direction ?? "circle at center", colorSpace);
+      const radialDirection = buildGradientArgs(direction ?? "circle at center", colorSpace, hueInterpolation);
       gradientFunction = `radial-gradient(${radialDirection}, ${stopsString})`;
     } else if (type === "conic") {
-      const conicDirection = buildGradientArgs(direction ?? "from 0deg at center", colorSpace);
+      const conicDirection = buildGradientArgs(direction ?? "from 0deg at center", colorSpace, hueInterpolation);
       gradientFunction = `conic-gradient(${conicDirection}, ${stopsString})`;
     } else {
       gradientFunction = `linear-gradient(${directionWithSpace}, ${stopsString})`;
