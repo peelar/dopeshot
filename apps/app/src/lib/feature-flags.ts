@@ -31,3 +31,18 @@ export const showAiBackgroundsFlag = flag({
   ],
   decide: () => isDevelopment,
 });
+
+/**
+ * Feature flag that gates the personality playground.
+ * Defaults to true in local development and off elsewhere.
+ */
+export const showPersonalityPlaygroundFlag = flag({
+  key: "features.show-personality-playground",
+  description: "Enable personality preview playground (local development only).",
+  defaultValue: isDevelopment,
+  options: [
+    { value: true, label: "Enabled (development default)" },
+    { value: false, label: "Disabled (production default)" },
+  ],
+  decide: () => isDevelopment,
+});
