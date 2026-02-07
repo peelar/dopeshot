@@ -423,7 +423,7 @@ export function BrandPanel() {
                 htmlFor="use-logo"
                 className="cursor-pointer text-sm font-normal"
               >
-                Apply to all screenshots
+                Apply automatically to all assets
               </Label>
               <Switch
                 id="use-logo"
