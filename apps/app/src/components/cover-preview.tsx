@@ -117,53 +117,53 @@ export function CoverPreview({
               </span>
               <TooltipProvider>
                 <div className="flex gap-4">
-                <FormatCard
-                  icon={<Camera className="h-6 w-6" strokeWidth={1.5} />}
-                  label="Screenshot"
-                  description="Polished product screenshots"
-                  onClick={() => {
-                    if (onFormatChosen) {
-                      onFormatChosen("screenshot");
-                      return;
-                    }
-                    setActiveFormat("screenshot");
-                  }}
-                />
-                {isBrandUser ? (
                   <FormatCard
-                    icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
-                    label="Testimonial"
-                    description="Social proof graphics from customer quotes"
-                    isNew
+                    icon={<Camera className="h-6 w-6" strokeWidth={1.5} />}
+                    label="Screenshot"
+                    description="Polished product screenshots"
                     onClick={() => {
-                      setActiveFormat("testimonial");
-                      onFormatChosen?.("testimonial");
+                      if (onFormatChosen) {
+                        onFormatChosen("screenshot");
+                        return;
+                      }
+                      setActiveFormat("screenshot");
                     }}
                   />
-                ) : (
-                  <Tooltip>
-                    <TooltipTrigger
-                      render={(props) => (
-                        <span {...props}>
-                          <FormatCard
-                            icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
-                            label="Testimonial"
-                            description="Social proof graphics from customer quotes"
-                            isNew
-                            isLocked
-                            onClick={() => {
-                              track("testimonial_gate_hit", {
-                                reason: isLoggedIn ? "free_tier" : "not_logged_in",
-                              });
-                              onLockedTestimonialClick?.();
-                            }}
-                          />
-                        </span>
-                      )}
+                  {isBrandUser ? (
+                    <FormatCard
+                      icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
+                      label="Testimonial"
+                      description="Social proof graphics from customer quotes"
+                      isNew
+                      onClick={() => {
+                        setActiveFormat("testimonial");
+                        onFormatChosen?.("testimonial");
+                      }}
                     />
-                    <TooltipContent side="top">Available on Brand plan.</TooltipContent>
-                  </Tooltip>
-                )}
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={(props) => (
+                          <span {...props}>
+                            <FormatCard
+                              icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
+                              label="Testimonial"
+                              description="Social proof graphics from customer quotes"
+                              isNew
+                              isLocked
+                              onClick={() => {
+                                track("testimonial_gate_hit", {
+                                  reason: isLoggedIn ? "free_tier" : "not_logged_in",
+                                });
+                                onLockedTestimonialClick?.();
+                              }}
+                            />
+                          </span>
+                        )}
+                      />
+                      <TooltipContent side="top">Available on Brand plan.</TooltipContent>
+                    </Tooltip>
+                  )}
                 </div>
               </TooltipProvider>
             </div>

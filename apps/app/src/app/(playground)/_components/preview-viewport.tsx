@@ -98,7 +98,6 @@ export function PreviewViewport({
       const scaleX = containerWidth / surfaceWidth;
       const scaleY = containerHeight ? containerHeight / surfaceHeight : Number.POSITIVE_INFINITY;
       const nextScale = Math.min(scaleX, scaleY, 1);
-      
       setScale(nextScale);
       setHasMeasured(true);
       reportMetrics(nextScale, containerWidth, containerHeight);
