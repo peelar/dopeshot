@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, type ChangeEvent } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { UploadCloud, Star, Trash2, Minus, ArrowRight, X } from "lucide-react";
+import { UploadCloud, Star, Trash2, Minus, X } from "lucide-react";
 import { configAtom, assetsAtom, brandSettingsAtom } from "@/hooks/atoms";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
@@ -19,8 +19,7 @@ interface LogoSwapLogosSectionProps {
 }
 
 const SEPARATOR_OPTIONS: { value: LogoSwapSeparator; icon: React.ReactNode; label: string }[] = [
-  { value: "dash", icon: <Minus className="h-3.5 w-3.5" />, label: "Dash" },
-  { value: "arrow", icon: <ArrowRight className="h-3.5 w-3.5" />, label: "Arrow" },
+  { value: "dash", icon: <Minus className="h-3.5 w-3.5 rotate-[20deg]" />, label: "Dash" },
   { value: "x", icon: <X className="h-3.5 w-3.5" />, label: "Cross" },
   { value: "none", icon: <span className="text-[10px] font-medium">Off</span>, label: "None" },
 ];
