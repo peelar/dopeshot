@@ -162,8 +162,8 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
               alt={cachedTweet.authorName}
               className="shrink-0 rounded-full object-cover"
               style={{
-                width: isMobile ? 40 : 48,
-                height: isMobile ? 40 : 48,
+                width: isMobile ? 52 : 62,
+                height: isMobile ? 52 : 62,
               }}
               crossOrigin="anonymous"
             />
@@ -174,7 +174,7 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
               style={{
                 fontFamily: text.fontFamily,
                 color: testimonialStyle.textColor,
-                fontSize: isMobile ? 14 : 15,
+                fontSize: isMobile ? 18 : 20,
               }}
             >
               {cachedTweet.authorName}
@@ -184,20 +184,20 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
               style={{
                 fontFamily: text.fontFamily,
                 color: testimonialStyle.mutedTextColor,
-                fontSize: isMobile ? 13 : 14,
+                fontSize: isMobile ? 17 : 18,
               }}
             >
               @{cachedTweet.authorHandle}
             </span>
           </div>
           <div className="shrink-0">
-            <XLogo size={isMobile ? 18 : 20} color={testimonialStyle.textColor} />
+            <XLogo size={isMobile ? 24 : 26} color={testimonialStyle.textColor} />
           </div>
         </div>
 
         {/* Tweet body */}
         <p
-          className={cn("mt-3 whitespace-pre-line", isMobile ? "text-[15px]" : "text-[17px]")}
+          className={cn("mt-3 whitespace-pre-line", isMobile ? "text-[20px]" : "text-[22px]")}
           style={{
             color: testimonialStyle.textColor,
             fontFamily: text.fontFamily,
@@ -209,7 +209,7 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
 
         {/* Date + metrics footer */}
         <div
-          className="mt-3 flex items-center gap-1 text-[13px]"
+          className="mt-3 flex items-center gap-1 text-[17px]"
           style={{ color: testimonialStyle.mutedTextColor, fontFamily: text.fontFamily }}
         >
           {cachedTweet.createdAt && (
