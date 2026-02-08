@@ -54,6 +54,7 @@ type PreviewCard = {
 const FORMAT_TABS: { value: LayoutFormat; label: string }[] = [
   { value: "screenshot", label: "Screenshot" },
   { value: "testimonial", label: "Testimonial" },
+  { value: "tweet", label: "Tweet" },
 ];
 
 export function LayoutSelector({ className }: { className?: string }) {
@@ -218,7 +219,7 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   const handleFormatTabClick = useCallback(
     (format: LayoutFormat) => {
-      if (format === "testimonial" && !isBrandUser) {
+      if ((format === "testimonial" || format === "tweet") && !isBrandUser) {
         setShowLockedTooltip(true);
         track("testimonial_gate_hit", { reason: isLoggedIn ? "free_tier" : "not_logged_in" });
         return;
@@ -268,7 +269,7 @@ export function LayoutSelector({ className }: { className?: string }) {
       <div className="flex gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
-          const isLocked = tab.value === "testimonial" && !isBrandUser;
+          const isLocked = (tab.value === "testimonial" || tab.value === "tweet") && !isBrandUser;
           const tabButton = (
             <button
               type="button"
