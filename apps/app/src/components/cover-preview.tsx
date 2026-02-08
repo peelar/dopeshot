@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { Camera, MessageSquareQuote, Plus, Lock } from "lucide-react";
+import { Camera, MessageSquareQuote, Repeat2, Plus, Lock } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { activeFormatAtom } from "@/hooks/atoms";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
@@ -153,6 +153,42 @@ export function CoverPreview({
                               isLocked
                               onClick={() => {
                                 track("testimonial_gate_hit", {
+                                  reason: isLoggedIn ? "free_tier" : "not_logged_in",
+                                });
+                                onLockedTestimonialClick?.();
+                              }}
+                            />
+                          </span>
+                        )}
+                      />
+                      <TooltipContent side="top">Available on Brand plan.</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {isBrandUser ? (
+                    <FormatCard
+                      icon={<Repeat2 className="h-6 w-6" strokeWidth={1.5} />}
+                      label="Logo Swap"
+                      description="Side-by-side logo comparisons"
+                      isNew
+                      onClick={() => {
+                        setActiveFormat("logo-swap");
+                        onFormatChosen?.("logo-swap");
+                      }}
+                    />
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={(props) => (
+                          <span {...props}>
+                            <FormatCard
+                              icon={<Repeat2 className="h-6 w-6" strokeWidth={1.5} />}
+                              label="Logo Swap"
+                              description="Side-by-side logo comparisons"
+                              isNew
+                              isLocked
+                              onClick={() => {
+                                track("brand_format_gate_hit", {
+                                  format: "logo-swap",
                                   reason: isLoggedIn ? "free_tier" : "not_logged_in",
                                 });
                                 onLockedTestimonialClick?.();

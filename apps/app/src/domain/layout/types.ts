@@ -33,6 +33,7 @@ export type FrameShape = "rounded" | "rectangular";
 
 export type CanvasMode = "adaptive" | "locked";
 export type TestimonialExportAspect = "3:4" | "4:5" | "9:16" | "16:9";
+export type LogoSwapSeparator = "dash" | "arrow" | "x" | "none";
 
 export type ScreenshotTreatment = {
   preset: ScreenshotFramePreset;
@@ -139,6 +140,11 @@ export type LayoutConfig = {
       styleAccent?: string; // Testimonial-local accent override (hex)
       styleMode?: BrandMode; // Testimonial-local mode override
       exportAspect?: TestimonialExportAspect;
+    };
+    logoSwap?: {
+      leftLogoAssetId?: string;
+      rightLogoAssetId?: string;
+      separatorStyle?: LogoSwapSeparator;
     };
   };
 };

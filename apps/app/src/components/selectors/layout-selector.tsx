@@ -54,6 +54,7 @@ type PreviewCard = {
 const FORMAT_TABS: { value: LayoutFormat; label: string }[] = [
   { value: "screenshot", label: "Screenshot" },
   { value: "testimonial", label: "Testimonial" },
+  { value: "logo-swap", label: "Logo Swap" },
 ];
 
 export function LayoutSelector({ className }: { className?: string }) {
@@ -218,9 +219,9 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   const handleFormatTabClick = useCallback(
     (format: LayoutFormat) => {
-      if (format === "testimonial" && !isBrandUser) {
+      if ((format === "testimonial" || format === "logo-swap") && !isBrandUser) {
         setShowLockedTooltip(true);
-        track("testimonial_gate_hit", { reason: isLoggedIn ? "free_tier" : "not_logged_in" });
+        track("brand_format_gate_hit", { format, reason: isLoggedIn ? "free_tier" : "not_logged_in" });
         return;
       }
 
@@ -268,7 +269,8 @@ export function LayoutSelector({ className }: { className?: string }) {
       <div className="flex gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
-          const isLocked = tab.value === "testimonial" && !isBrandUser;
+          const isBrandFormat = tab.value === "testimonial" || tab.value === "logo-swap";
+          const isLocked = isBrandFormat && !isBrandUser;
           const tabButton = (
             <button
               type="button"
@@ -286,7 +288,7 @@ export function LayoutSelector({ className }: { className?: string }) {
             >
               {isLocked && <Lock className="h-3 w-3" />}
               {tab.label}
-              {tab.value === "testimonial" && (
+              {isBrandFormat && (
                 <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
               )}
             </button>
@@ -443,6 +445,18 @@ function LayoutSketch({
         <div className="absolute inset-2 flex items-center justify-center">
           <div className="h-2.5 w-24 rounded bg-stone-500/30 dark:bg-stone-400/30" />
         </div>
+      </div>
+    );
+  }
+
+  const isLogoSwapLayout = layoutId.startsWith("logo-swap");
+
+  if (isLogoSwapLayout) {
+    return (
+      <div className="flex h-full w-full items-center justify-center gap-2 bg-stone-100 p-2 dark:bg-stone-800">
+        <div className="h-6 w-6 rounded bg-stone-400 dark:bg-stone-500" />
+        <div className="h-[2px] w-3 rounded-full bg-stone-300 dark:bg-stone-600" />
+        <div className="h-6 w-6 rounded bg-stone-400 dark:bg-stone-500" />
       </div>
     );
   }

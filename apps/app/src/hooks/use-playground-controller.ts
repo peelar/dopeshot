@@ -255,7 +255,7 @@ function useExportHandler({
       return;
     }
 
-    const exportType = getLayoutFormat(config.layoutId) === "testimonial" ? "testimonial" : "screenshot";
+    const exportType = getLayoutFormat(config.layoutId);
 
     track("export_button_clicked", {
       look_id: config.layoutId,

@@ -56,11 +56,12 @@ describe("LayoutSelector format tabs", () => {
     store.set(activeFormatAtom, "screenshot");
   });
 
-  it("renders Screenshot and Testimonial format tabs", () => {
+  it("renders Screenshot, Testimonial, and Logo Swap format tabs", () => {
     renderWithStore(store);
 
     expect(screen.getByText("Screenshot")).toBeInTheDocument();
     expect(screen.getByText("Testimonial")).toBeInTheDocument();
+    expect(screen.getByText("Logo Swap")).toBeInTheDocument();
   });
 
   it("Screenshot tab is active by default", () => {
@@ -90,7 +91,9 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
+    // Multiple brand-gated tabs share tooltip state, so multiple instances may appear
+    const tooltips = screen.getAllByText("Available on Brand plan.");
+    expect(tooltips.length).toBeGreaterThan(0);
   });
 
   it("does not switch format when anonymous user clicks Testimonial tab", () => {
@@ -133,7 +136,9 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
+    // Multiple brand-gated tabs share tooltip state, so multiple instances may appear
+    const tooltips = screen.getAllByText("Available on Brand plan.");
+    expect(tooltips.length).toBeGreaterThan(0);
   });
 
   it("switches format when brand user clicks Testimonial tab", () => {
@@ -160,6 +165,48 @@ describe("LayoutSelector format tabs", () => {
 
     // There should be a layout card with aria-label "Select Testimonial look"
     const layoutCard = screen.getByRole("button", { name: "Select Testimonial look" });
+    expect(layoutCard).toBeInTheDocument();
+  });
+
+  it("shows lock icon on Logo Swap tab for anonymous users", () => {
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Logo Swap (Brand tier required)" });
+    expect(tab).toBeInTheDocument();
+  });
+
+  it("does not switch format when anonymous user clicks Logo Swap tab", () => {
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Logo Swap (Brand tier required)" });
+    fireEvent.click(tab);
+
+    expect(store.get(activeFormatAtom)).toBe("screenshot");
+  });
+
+  it("switches format when brand user clicks Logo Swap tab", () => {
+    mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = true;
+
+    renderWithStore(store);
+
+    const tab = screen.getByRole("button", { name: "Show Logo Swap layouts" });
+    fireEvent.click(tab);
+
+    expect(store.get(activeFormatAtom)).toBe("logo-swap");
+  });
+
+  it("shows logo-swap layout card when logo-swap format is active", () => {
+    mockSessionData = { user: { id: "user-1" } };
+    mockIsBrandUser = true;
+
+    store.set(activeFormatAtom, "logo-swap");
+    const def = getLayoutDefinition("logo-swap");
+    store.set(configAtom, def!.createConfig());
+
+    renderWithStore(store);
+
+    const layoutCard = screen.getByRole("button", { name: "Select Logo Swap look" });
     expect(layoutCard).toBeInTheDocument();
   });
 });

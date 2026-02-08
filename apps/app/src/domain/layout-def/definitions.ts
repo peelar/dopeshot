@@ -18,7 +18,7 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
   textColor: "slate-50",
 };
 
-export type LayoutFormat = "screenshot" | "testimonial" | "none";
+export type LayoutFormat = "screenshot" | "testimonial" | "logo-swap" | "none";
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -380,17 +380,82 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
     },
   },
+  {
+    id: "logo-swap",
+    name: "Logo Swap",
+    description: "Two logos side by side with a subtle separator, perfect for partnerships and rebrands.",
+    format: "logo-swap",
+    variants: [],
+    createConfig: () => ({
+      layoutId: "logo-swap",
+      variant: "default",
+      text: {
+        title: "",
+        subtitle: "",
+      },
+      colors: {
+        background: "slate-50",
+        text: DEFAULT_GRADIENT.textColor,
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: "custom",
+        customGradient: DEFAULT_GRADIENT.gradient,
+        grainEnabled: true,
+        patternMode: "auto",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+      screenshotFrame: {
+        preset: "soft-glass",
+        canvasMode: "locked",
+        lockedAspectRatio: 16 / 9,
+        shadowEnabled: false,
+        shape: "rounded",
+      },
+      layoutSpecificSettings: {
+        logoSwap: {
+          leftLogoAssetId: undefined,
+          rightLogoAssetId: undefined,
+          separatorStyle: "dash",
+        },
+      },
+    }),
+    capabilities: {
+      focusMode: "never",
+      canvasBehavior: "locked",
+      zoomBehavior: "scale-content",
+      text: {
+        headline: "hidden",
+        subtitle: "hidden",
+      },
+      typography: false,
+      outline: {
+        softGlass: false,
+        shadow: false,
+      },
+      logo: "hidden",
+      screenshot: "hidden",
+      supportedOrientations: ["desktop"],
+    },
+  },
 ];
 
 /**
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 7 layouts
+ * Total: 8 layouts
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
  * - testimonial (Testimonial, no variants)
+ * - logo-swap (Logo Swap, no variants)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 

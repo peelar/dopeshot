@@ -3,6 +3,7 @@ import { PopupGradient } from "./PopupGradient";
 import { HeroCenter } from "./HeroCenter";
 import { AdaptiveScreenshot } from "./AdaptiveScreenshot";
 import { Testimonial } from "./Testimonial";
+import { LogoSwap } from "./LogoSwap";
 
 /**
  * Component registry for Layout rendering.
@@ -24,6 +25,7 @@ const LAYOUT_COMPONENTS: Record<string, LayoutComponent> = {
   "hero-center": HeroCenter,
   "adaptive-stage": AdaptiveScreenshot,
   "testimonial": Testimonial,
+  "logo-swap": LogoSwap,
 };
 
 export function getLayoutComponent(id: string): LayoutComponent {

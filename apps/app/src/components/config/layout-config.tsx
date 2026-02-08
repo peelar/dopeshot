@@ -31,6 +31,7 @@ import { LayoutSection } from "@/components/sidebar/layout-section";
 import { EffectsSection } from "@/components/sidebar/effects-section";
 import { TestimonialContentSection, TestimonialAuthorSection } from "@/components/sidebar/testimonial-author-section";
 import { TestimonialStyleSection } from "@/components/sidebar/testimonial-style-section";
+import { LogoSwapLogosSection } from "@/components/sidebar/logo-swap-logos-section";
 import { getLayoutFormat } from "@/domain/layout-def/definitions";
 import { track } from "@/lib/analytics";
 
@@ -64,8 +65,10 @@ export const LayoutConfigPanel = ({
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
   const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+  const isLogoSwapFormat = getLayoutFormat(config.layoutId) === "logo-swap";
   const showTestimonialSections = isTestimonialFormat && isBrandUser;
-  const showScreenshotSection = !isTestimonialFormat;
+  const showLogoSwapSections = isLogoSwapFormat && isBrandUser;
+  const showScreenshotSection = !isTestimonialFormat && !isLogoSwapFormat;
 
   // Avatar field state for testimonial format
   const testimonialSettings = config.layoutSpecificSettings?.testimonial;
@@ -351,8 +354,21 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {/* Hide effects and background sections on mobile and for testimonial format */}
-        {!isMobile && !isTestimonialFormat && (
+        {/* Logo Swap logos section (logo-swap only) */}
+        {showLogoSwapSections && !isMobile && (
+          <section className="space-y-3 px-4">
+            <div className="flex w-full items-center justify-between">
+              <span className="text-sm font-semibold">Logos</span>
+            </div>
+            <LogoSwapLogosSection
+              onUploadAsset={onUploadAsset}
+              isBrandUser={isBrandUser}
+            />
+          </section>
+        )}
+
+        {/* Hide effects and background sections on mobile and for testimonial/logo-swap formats */}
+        {!isMobile && !isTestimonialFormat && !isLogoSwapFormat && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Effects</span>
