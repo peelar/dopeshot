@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { OnboardingForm } from "@/components/onboarding/onboarding-form";
+import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { track } from "@/lib/analytics";
 import { brandPersonalityValues, type BrandPersonality } from "@/lib/types/brand";
 import { cn } from "@/lib/utils/cn";
@@ -160,19 +160,17 @@ export function OnboardingModal({
           </AlertDialog>
 
           <div className="relative">
-            <header className="flex items-start justify-between gap-4 border-b border-border/80 px-5 py-4 sm:px-6">
-              <div className="flex items-start gap-3">
+            <header className="flex items-center justify-between gap-4 border-b border-border/80 px-5 py-4 sm:px-6">
+              <div className="flex items-center gap-3">
                 <div className="grid size-10 place-items-center rounded-xl border border-border/80 bg-muted/40 dark:bg-white/5">
                   <PartyPopper className="size-4 text-primary" />
                 </div>
-                <div className="space-y-0.5">
-                  <DialogPrimitive.Title className="text-sm font-semibold text-foreground">
-                    Welcome to dopeshot
-                  </DialogPrimitive.Title>
-                  <DialogPrimitive.Description className="text-xs text-muted-foreground">
-                    Quick setup so your next export looks unmistakably you.
-                  </DialogPrimitive.Description>
-                </div>
+                <DialogPrimitive.Title className="sr-only">
+                  Brand onboarding
+                </DialogPrimitive.Title>
+                <DialogPrimitive.Description className="sr-only">
+                  Set up your brand identity
+                </DialogPrimitive.Description>
               </div>
               <Button
                 type="button"
@@ -187,13 +185,12 @@ export function OnboardingModal({
             </header>
 
             <div className="max-h-[calc(100vh-7rem)] min-h-[520px] overflow-y-auto">
-              <OnboardingForm
+              <OnboardingWizard
                 initialLogoUrl={profile?.logoUrl ?? null}
                 initialLogoPath={profile?.profile?.logoPath ?? null}
                 initialAccent={initialAccent}
                 initialMode={initialMode}
                 initialPersonality={initialPersonality}
-                embedded
                 onCompleted={onCompleted}
                 onDismiss={handleErrorClose}
               />

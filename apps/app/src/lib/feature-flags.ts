@@ -17,17 +17,3 @@ export const enablePolarBillingFlag = flag({
   decide: () => isDevelopment,
 });
 
-/**
- * Feature flag that gates AI background tooling.
- * Defaults to true in local development and off elsewhere.
- */
-export const showAiBackgroundsFlag = flag({
-  key: "features.show-ai-backgrounds",
-  description: "Enable AI backgrounds tooling (local development only).",
-  defaultValue: isDevelopment,
-  options: [
-    { value: true, label: "Enabled (development default)" },
-    { value: false, label: "Disabled (production default)" },
-  ],
-  decide: () => isDevelopment,
-});

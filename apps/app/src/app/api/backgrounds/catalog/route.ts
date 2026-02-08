@@ -25,8 +25,13 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const personality = searchParams.get("personality");
-    if (!personality || !PERSONALITY_SET.has(personality as BrandPersonality)) {
+    const excludePersonality = searchParams.get("exclude_personality");
+
+    if (personality && !PERSONALITY_SET.has(personality as BrandPersonality)) {
       return NextResponse.json({ error: "Invalid personality" }, { status: 400 });
+    }
+    if (excludePersonality && !PERSONALITY_SET.has(excludePersonality as BrandPersonality)) {
+      return NextResponse.json({ error: "Invalid exclude_personality" }, { status: 400 });
     }
 
     const limitParam = Number.parseInt(searchParams.get("limit") ?? "12", 10);
@@ -34,8 +39,15 @@ export async function GET(request: Request) {
     const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), MAX_LIMIT) : 12;
     const offset = Number.isFinite(offsetParam) ? Math.max(offsetParam, 0) : 0;
 
+    const where: { personality?: string | { not: string }; status: string } = { status: "published" };
+    if (personality) {
+      where.personality = personality;
+    } else if (excludePersonality) {
+      where.personality = { not: excludePersonality };
+    }
+
     const backgrounds = await prisma.aiBackground.findMany({
-      where: { personality, status: "published" },
+      where,
       orderBy: { createdAt: "desc" },
       take: limit,
       skip: offset,

@@ -18,11 +18,11 @@ import type { BrandPersonality } from "@/lib/types/brand";
 import type { CatalogBackground } from "@/domain/backgrounds/types";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
 
-interface AiBackgroundsCollectionProps {
+interface BackgroundCatalogCollectionProps {
   personality: BrandPersonality | null;
 }
 
-export function AiBackgroundsCollection({ personality }: AiBackgroundsCollectionProps) {
+export function BackgroundCatalogCollection({ personality }: BackgroundCatalogCollectionProps) {
   const [backgrounds, setBackgrounds] = useAtom(personalBackgroundsAtom);
   const [catalog, setCatalog] = useState<CatalogBackground[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -66,7 +66,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
           setCatalog(response.items);
         }
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load AI backgrounds";
+        const message = error instanceof Error ? error.message : "Failed to load backgrounds";
         toast.error(message);
       } finally {
         setIsLoading(false);
@@ -84,7 +84,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
     if (!personality) return;
     const offset = Math.floor(Math.random() * 48);
     void loadCatalog({ offset, shuffle: true });
-    track("ai_backgrounds_shuffled", { personality });
+    track("background_collection_shuffled", { personality });
   }, [loadCatalog, personality]);
 
   const handleAdd = useCallback(
@@ -100,7 +100,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
         const background = await addCatalogBackground(item.id);
         setBackgrounds((prev) => [background, ...prev]);
         toast.success("Added to your library");
-        track("ai_background_added", { catalog_id: item.id, personality: item.personality });
+        track("background_collection_added", { catalog_id: item.id, personality: item.personality });
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to add background";
         toast.error(message);
@@ -117,7 +117,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
     <section className="space-y-3">
       <div className="space-y-1">
         <div className="flex w-full items-center justify-between">
-          <span className="text-sm font-semibold">AI Backgrounds</span>
+          <span className="text-sm font-semibold">Background collection</span>
           <Button
             type="button"
             variant="ghost"
@@ -135,7 +135,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Personality-matched suggestions you can add to your library.
+          Curated backgrounds matched to your personality.
         </p>
       </div>
 
@@ -148,15 +148,15 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
           </>
         ) : showEmptyState ? (
           <div className="col-span-3 flex min-h-[56px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
-            Pick a personality to access AI suggestions.
+            Pick a personality to see background suggestions.
           </div>
         ) : catalog.length === 0 ? (
           <div className="col-span-3 flex min-h-[56px] items-center justify-center rounded-md border border-dashed border-border/60 bg-muted/20 text-xs text-muted-foreground">
-            No AI backgrounds yet. Check back soon.
+            No backgrounds yet. Check back soon.
           </div>
         ) : (
           catalog.map((item) => (
-            <AiBackgroundThumbnail
+            <CatalogBackgroundThumbnail
               key={item.id}
               background={item}
               isAdding={addingId === item.id}
@@ -171,7 +171,7 @@ export function AiBackgroundsCollection({ personality }: AiBackgroundsCollection
   );
 }
 
-interface AiBackgroundThumbnailProps {
+interface CatalogBackgroundThumbnailProps {
   background: CatalogBackground;
   isAdding: boolean;
   isAdded: boolean;
@@ -179,13 +179,13 @@ interface AiBackgroundThumbnailProps {
   onAdd: () => void;
 }
 
-function AiBackgroundThumbnail({
+export function CatalogBackgroundThumbnail({
   background,
   isAdding,
   isAdded,
   isDisabled,
   onAdd,
-}: AiBackgroundThumbnailProps) {
+}: CatalogBackgroundThumbnailProps) {
   return (
     <div className="group relative flex h-12 w-full items-center justify-center overflow-hidden rounded-md bg-muted/30 p-0 text-left transition focus-within:ring-2 focus-within:ring-offset-2 ring-1 ring-border/60 hover:ring-border">
       {background.previewUrl ? (
@@ -203,10 +203,6 @@ function AiBackgroundThumbnail({
           No preview
         </div>
       )}
-
-      <div className="pointer-events-none absolute left-1 top-1 rounded-full bg-black/50 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-white">
-        AI
-      </div>
 
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition group-hover:pointer-events-auto group-hover:bg-black/45 group-hover:opacity-100">
         <button
