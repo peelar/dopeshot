@@ -168,7 +168,7 @@ export function CoverPreview({
                     <FormatCard
                       icon={<Repeat2 className="h-6 w-6" strokeWidth={1.5} />}
                       label="Logo Swap"
-                      description="Side-by-side logo comparisons"
+                      description="Partnership and collaboration announcements"
                       isNew
                       onClick={() => {
                         setActiveFormat("logo-swap");
@@ -183,7 +183,7 @@ export function CoverPreview({
                             <FormatCard
                               icon={<Repeat2 className="h-6 w-6" strokeWidth={1.5} />}
                               label="Logo Swap"
-                              description="Side-by-side logo comparisons"
+                              description="Partnership and collaboration announcements"
                               isNew
                               isLocked
                               onClick={() => {
