@@ -12,7 +12,7 @@ const RECT_PADDING = {
 };
 
 /** Default corner radius when no personality override is provided */
-const DEFAULT_CORNER_RADIUS = 16;
+const DEFAULT_CORNER_RADIUS = 8;
 
 function roundedRadius(customRadius?: number) {
   const radius = customRadius ?? DEFAULT_CORNER_RADIUS;

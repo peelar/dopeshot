@@ -8,6 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type TransitionEvent,
 } from "react";
+import { useAtomValue } from "jotai";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
 import { BackgroundSection } from "@/components/sidebar/background-section";
 import {
@@ -19,6 +20,9 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { ImageUp, Palette } from "lucide-react";
+import { configAtom, orientationAtom } from "@/hooks/atoms";
+import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 
 interface MobileActionsProps {
   isOpen: boolean;
@@ -42,6 +46,10 @@ export function MobileActions({
   isBrandUser = false,
   onUploadAsset,
 }: MobileActionsProps) {
+  const config = useAtomValue(configAtom);
+  const orientation = useAtomValue(orientationAtom);
+  const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
+
   const sheetRef = useRef<HTMLDivElement>(null);
   const settleTimerRef = useRef<number | null>(null);
   const dragStateRef = useRef({
@@ -53,6 +61,27 @@ export function MobileActions({
   });
   const [isDragging, setIsDragging] = useState(false);
   const [isSettling, setIsSettling] = useState(false);
+
+  // Determine if Design button should be shown
+  // On mobile, we hide text for Peak Left/Right, and we always hide effects, background, screenshot, logo sections
+  // So we only show Design button if there's text to edit OR if it's a testimonial format
+  const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
+  const hideTextOnMobile = orientation === "mobile" && isPeakLeftOrRight;
+
+  // If text is hidden on mobile for this layout, don't show any text-related controls
+  if (hideTextOnMobile) {
+    // No text section to show, so hide Design button
+    var showDesignButton = false;
+  } else {
+    // Check if there are any text controls to show
+    const hasHeadlineSupport = (lookCapabilities?.text.headline ?? "optional") !== "hidden";
+    const hasSubtitleSupport = (lookCapabilities?.text.subtitle ?? "optional") !== "hidden";
+    const hasTypography = lookCapabilities?.typography !== false;
+    const showTextSection = hasHeadlineSupport || hasSubtitleSupport || hasTypography;
+    const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
+    const showTestimonialSections = isTestimonialFormat && isBrandUser;
+    var showDesignButton = showTextSection || showTestimonialSections;
+  }
 
   const setDragOffset = useCallback((offset: number) => {
     const clampedOffset = Math.max(0, offset);
@@ -153,21 +182,22 @@ export function MobileActions({
       {/* Bottom action buttons */}
       <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/70 bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 sm:hidden">
         <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-3 py-2">
-        <Sheet open={isOpen} onOpenChange={onOpenChange}>
-          <SheetTrigger asChild>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className={cn(
-                "flex h-12 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0",
-                showUploadButton ? "basis-2/3" : "flex-1",
-              )}
-            >
-              <Palette className="h-5 w-5" aria-hidden="true" />
-              <span className="text-sm font-semibold">Design</span>
-            </Button>
-          </SheetTrigger>
+        {showDesignButton && (
+          <Sheet open={isOpen} onOpenChange={onOpenChange}>
+            <SheetTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "flex h-12 items-center gap-3 rounded-md bg-gradient-to-r from-foreground to-foreground/90 px-4 text-left text-sm font-semibold text-background transition hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 focus-visible:ring-offset-background active:translate-y-0",
+                  showUploadButton ? "basis-2/3" : "flex-1",
+                )}
+              >
+                <Palette className="h-5 w-5" aria-hidden="true" />
+                <span className="text-sm font-semibold">Design</span>
+              </Button>
+            </SheetTrigger>
           <SheetContent
             side="bottom"
             ref={sheetRef}
@@ -209,7 +239,8 @@ export function MobileActions({
               />
             </div>
           </SheetContent>
-        </Sheet>
+          </Sheet>
+        )}
 
         {showUploadButton ? (
           <Button

@@ -80,6 +80,7 @@ export function PlaygroundWorkspace({
   const showOrientationToggle = activeFormat === "screenshot";
   const showTestimonialAspectToggle = activeFormat === "testimonial";
   const testimonialExportAspect = config.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
+  const showFullScreenEmptyState = isMobile && showEmptyState && activeFormat === "none";
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -198,7 +199,12 @@ export function PlaygroundWorkspace({
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
-      <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
+      <div
+        className={cn(
+          "mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6",
+          showFullScreenEmptyState && "gap-0 px-0 pb-0 pt-0 sm:px-0 sm:pt-0",
+        )}
+      >
         <div className="relative z-10 flex shrink-0 items-center justify-center">
           {/* Orientation toggle — only visible for screenshot format */}
           {showOrientationToggle ? (
@@ -238,12 +244,16 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 w-full justify-center items-center">
+        <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
           <PreviewViewport
-            className={orientation === "mobile" ? "max-h-[85%]" : undefined}
+            className={cn(
+              showFullScreenEmptyState ? "h-full w-full" : undefined,
+              orientation === "mobile" && !showFullScreenEmptyState ? "max-h-[85%]" : undefined,
+            )}
             surfaceWidth={canvasWidth}
             surfaceHeight={canvasHeight}
             onViewportMetricsChange={handleViewportMetricsChange}
+            fluidLayout={showFullScreenEmptyState}
           >
             <div
               className={cn(
@@ -257,6 +267,7 @@ export function PlaygroundWorkspace({
                 onEmptyStateClick={onEmptyStateClick}
                 onFormatChosen={onFormatChosen}
                 onLockedTestimonialClick={onLockedTestimonialClick}
+                fullHeight={showFullScreenEmptyState}
               />
             </div>
           </PreviewViewport>
