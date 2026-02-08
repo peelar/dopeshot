@@ -5,11 +5,13 @@ import {
   LayoutConfig,
   ScreenshotTreatment,
   TestimonialExportAspect,
+  TwitterExportAspect,
 } from "./types";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 
 export const DEFAULT_LOCKED_ASPECT_RATIO = 1280 / 720;
 export const DEFAULT_TESTIMONIAL_EXPORT_ASPECT: TestimonialExportAspect = "3:4";
+export const DEFAULT_TWITTER_EXPORT_ASPECT: TwitterExportAspect = "4:5";
 
 // Preview dimensions - optimized for UI preview performance and text readability
 export const ORIENTATION_DIMENSIONS = {
@@ -38,6 +40,17 @@ export const TESTIMONIAL_EXPORT_DIMENSIONS: Record<TestimonialExportAspect, { wi
   "16:9": { width: 1920, height: 1080 },
 };
 
+// Twitter preview dimensions (subset of testimonial ratios)
+export const TWITTER_PREVIEW_DIMENSIONS: Record<TwitterExportAspect, { width: number; height: number }> = {
+  "4:5": { width: 720, height: 900 },
+  "16:9": { width: 1280, height: 720 },
+};
+
+export const TWITTER_EXPORT_DIMENSIONS: Record<TwitterExportAspect, { width: number; height: number }> = {
+  "4:5": { width: 1080, height: 1350 },
+  "16:9": { width: 1920, height: 1080 },
+};
+
 function isTestimonialExportAspect(
   value: string | undefined,
 ): value is TestimonialExportAspect {
@@ -49,10 +62,24 @@ export function getTestimonialExportAspect(config: LayoutConfig): TestimonialExp
   return isTestimonialExportAspect(value) ? value : DEFAULT_TESTIMONIAL_EXPORT_ASPECT;
 }
 
+function isTwitterExportAspect(
+  value: string | undefined,
+): value is TwitterExportAspect {
+  return value === "4:5" || value === "16:9";
+}
+
+export function getTwitterExportAspect(config: LayoutConfig): TwitterExportAspect {
+  const value = config.layoutSpecificSettings?.twitterTestimonial?.exportAspect;
+  return isTwitterExportAspect(value) ? value : DEFAULT_TWITTER_EXPORT_ASPECT;
+}
+
 function getLockedCanvasDimensions(config: LayoutConfig, orientation: Orientation) {
   const layout = getLayoutDefinition(config.layoutId);
   if (layout?.format === "testimonial") {
     return TESTIMONIAL_PREVIEW_DIMENSIONS[getTestimonialExportAspect(config)];
+  }
+  if (layout?.format === "tweet") {
+    return TWITTER_PREVIEW_DIMENSIONS[getTwitterExportAspect(config)];
   }
   return ORIENTATION_DIMENSIONS[orientation];
 }
@@ -61,6 +88,9 @@ export function getExportDimensionsForLayout(config: LayoutConfig, orientation: 
   const layout = getLayoutDefinition(config.layoutId);
   if (layout?.format === "testimonial") {
     return TESTIMONIAL_EXPORT_DIMENSIONS[getTestimonialExportAspect(config)];
+  }
+  if (layout?.format === "tweet") {
+    return TWITTER_EXPORT_DIMENSIONS[getTwitterExportAspect(config)];
   }
   return EXPORT_ORIENTATION_DIMENSIONS[orientation];
 }

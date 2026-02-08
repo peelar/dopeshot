@@ -34,6 +34,10 @@ describe("Testimonial layout definitions", () => {
       expect(getLayoutFormat("testimonial-editorial")).toBe("testimonial");
     });
 
+    it("returns 'tweet' for testimonial-twitter layout", () => {
+      expect(getLayoutFormat("testimonial-twitter")).toBe("tweet");
+    });
+
     it("returns 'screenshot' as fallback for unknown layouts", () => {
       expect(getLayoutFormat("nonexistent")).toBe("screenshot");
     });
@@ -48,15 +52,21 @@ describe("Testimonial layout definitions", () => {
 
     it("returns only testimonial layouts for 'testimonial' format", () => {
       const testimonialLayouts = getLayoutsForFormat("testimonial");
-      expect(testimonialLayouts.length).toBe(2); // testimonial + testimonial-twitter
+      expect(testimonialLayouts.length).toBe(1); // testimonial only
       expect(testimonialLayouts.every((l) => l.format === "testimonial")).toBe(true);
     });
 
-    it("testimonial layout IDs include standard and twitter", () => {
+    it("testimonial layout IDs include standard only", () => {
       const testimonialLayouts = getLayoutsForFormat("testimonial");
       const ids = testimonialLayouts.map((l) => l.id);
       expect(ids).toContain("testimonial");
-      expect(ids).toContain("testimonial-twitter");
+      expect(ids).not.toContain("testimonial-twitter");
+    });
+
+    it("returns only tweet layouts for 'tweet' format", () => {
+      const tweetLayouts = getLayoutsForFormat("tweet");
+      expect(tweetLayouts.length).toBe(1); // testimonial-twitter only
+      expect(tweetLayouts.every((l) => l.format === "tweet")).toBe(true);
     });
   });
 
@@ -186,8 +196,8 @@ describe("Testimonial layout definitions", () => {
       expect(def?.id).toBe("testimonial-twitter");
     });
 
-    it("has testimonial format", () => {
-      expect(getLayoutFormat("testimonial-twitter")).toBe("testimonial");
+    it("has tweet format", () => {
+      expect(getLayoutFormat("testimonial-twitter")).toBe("tweet");
     });
 
     it("produces a valid config with twitterTestimonial settings", () => {
@@ -198,7 +208,7 @@ describe("Testimonial layout definitions", () => {
       expect(config.variant).toBe("default");
       expect(config.layoutSpecificSettings?.twitterTestimonial).toBeDefined();
       expect(config.layoutSpecificSettings?.twitterTestimonial?.fetchStatus).toBe("success");
-      expect(config.layoutSpecificSettings?.twitterTestimonial?.exportAspect).toBe("3:4");
+      expect(config.layoutSpecificSettings?.twitterTestimonial?.exportAspect).toBe("4:5");
     });
 
     it("includes pre-cached default tweet", () => {

@@ -7,7 +7,7 @@ import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { AspectToggle } from "@/components/selectors/aspect-toggle";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
-import type { TestimonialExportAspect } from "@/domain/layout/types";
+import type { TestimonialExportAspect, TwitterExportAspect } from "@/domain/layout/types";
 import {
   activeFormatAtom,
   screenshotZoomAtom,
@@ -79,7 +79,9 @@ export function PlaygroundWorkspace({
   const hasAutoSetOrientation = useRef(false);
   const showOrientationToggle = activeFormat === "screenshot";
   const showTestimonialAspectToggle = activeFormat === "testimonial";
+  const showTwitterAspectToggle = activeFormat === "tweet";
   const testimonialExportAspect = config.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
+  const twitterExportAspect = config.layoutSpecificSettings?.twitterTestimonial?.exportAspect ?? "4:5";
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -159,6 +161,19 @@ export function PlaygroundWorkspace({
     }));
   }, [setConfig]);
 
+  const handleTwitterAspectChange = useCallback((nextAspect: TwitterExportAspect) => {
+    setConfig((prev) => ({
+      ...prev,
+      layoutSpecificSettings: {
+        ...prev.layoutSpecificSettings,
+        twitterTestimonial: {
+          ...prev.layoutSpecificSettings?.twitterTestimonial,
+          exportAspect: nextAspect,
+        },
+      },
+    }));
+  }, [setConfig]);
+
   const screenshotAspectOptions = isMobile
     ? [
       {
@@ -196,6 +211,11 @@ export function PlaygroundWorkspace({
     { id: "16:9", label: "16:9", ariaLabel: "Testimonial export ratio 16 by 9" },
   ];
 
+  const twitterAspectOptions = [
+    { id: "4:5", label: "4:5", ariaLabel: "Tweet export ratio 4 by 5" },
+    { id: "16:9", label: "16:9", ariaLabel: "Tweet export ratio 16 by 9" },
+  ];
+
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-background">
       <div className="mx-auto flex h-full w-full max-w-full flex-col gap-6 px-2 pb-8 pt-4 sm:px-4 sm:pt-6">
@@ -213,6 +233,13 @@ export function PlaygroundWorkspace({
               value={testimonialExportAspect}
               options={testimonialAspectOptions}
               onChange={(value) => handleTestimonialAspectChange(value as TestimonialExportAspect)}
+            />
+          ) : null}
+          {showTwitterAspectToggle ? (
+            <AspectToggle
+              value={twitterExportAspect}
+              options={twitterAspectOptions}
+              onChange={(value) => handleTwitterAspectChange(value as TwitterExportAspect)}
             />
           ) : null}
 

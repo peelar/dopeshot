@@ -18,7 +18,7 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
   textColor: "slate-50",
 };
 
-export type LayoutFormat = "screenshot" | "testimonial" | "none";
+export type LayoutFormat = "screenshot" | "testimonial" | "tweet" | "none";
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -384,7 +384,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
     id: "testimonial-twitter",
     name: "Tweet",
     description: "Turn a tweet into a beautiful testimonial card with brand styling.",
-    format: "testimonial",
+    format: "tweet",
     variants: [],
     createConfig: () => ({
       layoutId: "testimonial-twitter",
@@ -434,7 +434,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
             },
           },
           fetchStatus: "success",
-          exportAspect: "3:4",
+          exportAspect: "4:5",
         },
       },
     }),
@@ -462,11 +462,14 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 8 layouts
+ * Total: 8 layouts across 4 formats
+ * Screenshot format (6):
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
+ * Testimonial format (1):
  * - testimonial (Testimonial, no variants)
+ * Tweet format (1):
  * - testimonial-twitter (Tweet, no variants)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
