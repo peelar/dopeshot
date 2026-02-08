@@ -38,6 +38,8 @@ export function UserMenu({ onFeedbackClick }: UserMenuProps = {}) {
     if (user?.id) {
       clearMemoryItemsCache(user.id);
     }
+    // Clear brand settings so logged-out users get default styling (not stale personality)
+    localStorage.removeItem("dopeshot:brandSettings");
     const { error } = await signOutUser();
     if (error) {
       console.error("Logout failed:", error);

@@ -31,7 +31,7 @@ const SIDE_SCREENSHOT_TRANSFORM_ORIGINS: Record<"left" | "right", string> = {
   right: "right top",
 };
 
-const PEAK_CORNER_RADIUS = "16px";
+const PEAK_CORNER_RADIUS = "8px";
 
 // Minimum zoom values to ensure screenshot always fills the frame
 // These are calculated based on: minZoom >= 1.0 / baseScale
