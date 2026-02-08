@@ -1,5 +1,15 @@
 # dopeshot
 
+## 0.10.1
+
+### Patch Changes
+
+- 92e9eb6: Hide Design button on mobile when there's nothing to customize (e.g., Peak Left/Right layouts with no text fields)
+- e8915f8: Fix default border radius from 16px to 8px and clear brand settings on logout so logged-out users get default styling
+- 4f8ce67: Improve the mobile empty state layout, hide action controls until a format is chosen, and update the sidebar drawer styling.
+- 5f6c77e: Restore the logged-out top-nav `Change screenshot` action so the secondary CTA and refresh icon resurface for demo visitors.
+- d5385af: Apply brand logos automatically for testimonial layouts when auto-apply is enabled, not only screenshot layouts. Update the brand panel copy to reflect that the setting applies across assets, and add regression coverage for testimonial auto-apply behavior.
+
 ## 0.10.0
 
 ### Minor Changes
