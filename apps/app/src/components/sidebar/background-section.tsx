@@ -49,13 +49,15 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   const isAuthenticated = Boolean(session?.user);
 
   // Pagination math
+  const isLogoSwapFormat = getLayoutFormat(config.layoutId) === "logo-swap";
   const hasScreenshot = Boolean(config.assets?.screenshot);
+  const canShowBrandBackgrounds = hasScreenshot || isLogoSwapFormat;
 
-  const brandPageCount = isBrandUser && hasScreenshot
+  const brandPageCount = isBrandUser && canShowBrandBackgrounds
     ? Math.ceil(backgrounds.length / BACKGROUNDS_PER_PAGE)
     : 0;
   const totalPages = brandPageCount > 0 ? 1 + brandPageCount : 1;
-  const showPagination = isBrandUser && hasScreenshot && totalPages > 1;
+  const showPagination = isBrandUser && canShowBrandBackgrounds && totalPages > 1;
 
   // Reset selection and page on logout
   useEffect(() => {
@@ -95,10 +97,10 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
 
   // Force gradients tab for non-brand users to avoid showing brand pagination
   useEffect(() => {
-    if ((!isBrandUser || !hasScreenshot) && activePage !== 0) {
+    if ((!isBrandUser || !canShowBrandBackgrounds) && activePage !== 0) {
       setActivePage(0);
     }
-  }, [isBrandUser, hasScreenshot, activePage]);
+  }, [isBrandUser, canShowBrandBackgrounds, activePage]);
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
@@ -205,21 +207,22 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
     [totalPages],
   );
 
-  const isLogoSwapFormat = getLayoutFormat(config.layoutId) === "logo-swap";
-  const emptyStateMessage = isLogoSwapFormat
-    ? "Upload logos to generate backgrounds."
-    : "Upload a screenshot to generate backgrounds.";
-
   const emptyState = (
     <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-3">
       <div className="text-xs text-muted-foreground">
-        {emptyStateMessage}
+        Upload a screenshot to generate backgrounds.
       </div>
     </div>
   );
 
-  if (!hasScreenshot && variant === "inline") {
+  // For inline variant, show empty state only for screenshot format without screenshot
+  if (!hasScreenshot && variant === "inline" && !isLogoSwapFormat) {
     return emptyState;
+  }
+
+  // For inline logo-swap, always show gradients (no screenshot required)
+  if (isLogoSwapFormat && variant === "inline") {
+    return <GradientPicker onChangeAction={handleGradientChange} variant="inline" />;
   }
 
   // Inline variant: just gradients, no pagination
@@ -230,7 +233,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   // Compute brand backgrounds for the active brand page
   const brandPageIndex = activePage - 1; // page 0 = gradients, page 1+ = brand
   const brandPageBackgrounds =
-    brandPageIndex >= 0 && isBrandUser && hasScreenshot
+    brandPageIndex >= 0 && isBrandUser && canShowBrandBackgrounds
       ? backgrounds.slice(
           brandPageIndex * BACKGROUNDS_PER_PAGE,
           (brandPageIndex + 1) * BACKGROUNDS_PER_PAGE,
@@ -255,7 +258,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
         )}
       </div>
 
-      {!hasScreenshot ? (
+      {!canShowBrandBackgrounds ? (
         emptyState
       ) : activePage === 0 ? (
           <GradientPicker onChangeAction={handleGradientChange} />
