@@ -88,10 +88,10 @@ function LogoSwapComponent({
     return (
       <div className="flex shrink-0 items-center justify-center">
         {separatorStyle === "dash" && (
-          <div className="h-16 w-[2px] rotate-[20deg] rounded-full bg-white/25" />
+          <div className="h-16 w-1 rotate-[20deg] rounded-full bg-white/30" />
         )}
         {separatorStyle === "x" && (
-          <span className="select-none text-5xl font-light text-white/30">
+          <span className="select-none text-5xl font-normal text-white/35">
             &times;
           </span>
         )}
