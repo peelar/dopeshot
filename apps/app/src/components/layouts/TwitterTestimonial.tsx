@@ -123,7 +123,7 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
   };
 
   const renderEmptyState = () => (
-    <div className="flex flex-col items-center gap-3 py-6">
+    <div className="flex flex-col items-center gap-3 py-8">
       <XLogo size={32} color={testimonialStyle.mutedTextColor} />
       <p
         className="text-sm opacity-60"
@@ -135,7 +135,7 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
   );
 
   const renderLoadingState = () => (
-    <div className="flex flex-col items-center gap-4 py-6">
+    <div className="flex flex-col items-center gap-4 py-8">
       <div
         className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent"
         style={{ color: testimonialStyle.mutedTextColor }}
@@ -153,59 +153,63 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
     if (!cachedTweet) return null;
 
     return (
-      <div className="flex w-full flex-col gap-4">
-        {/* Tweet text */}
+      <div className="flex w-full flex-col">
+        {/* Header: avatar + name/handle + X logo */}
+        <div className="flex items-start gap-3">
+          {cachedTweet.authorAvatarUrl && (
+            <img
+              src={cachedTweet.authorAvatarUrl.replace("_normal", "_200x200")}
+              alt={cachedTweet.authorName}
+              className="shrink-0 rounded-full object-cover"
+              style={{
+                width: isMobile ? 40 : 48,
+                height: isMobile ? 40 : 48,
+              }}
+              crossOrigin="anonymous"
+            />
+          )}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span
+              className="truncate font-bold leading-tight"
+              style={{
+                fontFamily: text.fontFamily,
+                color: testimonialStyle.textColor,
+                fontSize: isMobile ? 14 : 15,
+              }}
+            >
+              {cachedTweet.authorName}
+            </span>
+            <span
+              className="truncate leading-tight"
+              style={{
+                fontFamily: text.fontFamily,
+                color: testimonialStyle.mutedTextColor,
+                fontSize: isMobile ? 13 : 14,
+              }}
+            >
+              @{cachedTweet.authorHandle}
+            </span>
+          </div>
+          <div className="shrink-0">
+            <XLogo size={isMobile ? 18 : 20} color={testimonialStyle.textColor} />
+          </div>
+        </div>
+
+        {/* Tweet body */}
         <p
-          className={cn("whitespace-pre-line text-center", isMobile ? "text-base" : "text-lg")}
+          className={cn("mt-3 whitespace-pre-line", isMobile ? "text-[15px]" : "text-[17px]")}
           style={{
             color: testimonialStyle.textColor,
             fontFamily: text.fontFamily,
-            lineHeight: 1.5,
+            lineHeight: 1.45,
           }}
         >
           {cachedTweet.text}
         </p>
 
-        {/* Divider */}
+        {/* Date + metrics footer */}
         <div
-          className="mx-auto h-px w-16"
-          style={{ background: testimonialStyle.cardBorder }}
-        />
-
-        {/* Author row */}
-        <div className="flex items-center justify-center gap-3">
-          {cachedTweet.authorAvatarUrl && (
-            <img
-              src={cachedTweet.authorAvatarUrl.replace("_normal", "_200x200")}
-              alt={cachedTweet.authorName}
-              className="rounded-full object-cover"
-              style={{
-                width: 44,
-                height: 44,
-                border: `2px solid ${testimonialStyle.avatarRingColor}`,
-              }}
-              crossOrigin="anonymous"
-            />
-          )}
-          <div className="flex flex-col items-start">
-            <span
-              className="text-sm font-semibold"
-              style={{ fontFamily: text.fontFamily, color: testimonialStyle.textColor }}
-            >
-              {cachedTweet.authorName}
-            </span>
-            <span
-              className="text-xs"
-              style={{ fontFamily: text.fontFamily, color: testimonialStyle.mutedTextColor }}
-            >
-              @{cachedTweet.authorHandle}
-            </span>
-          </div>
-        </div>
-
-        {/* Date + metrics */}
-        <div
-          className="flex items-center justify-center gap-3 text-xs"
+          className="mt-3 flex items-center gap-1 text-[13px]"
           style={{ color: testimonialStyle.mutedTextColor, fontFamily: text.fontFamily }}
         >
           {cachedTweet.createdAt && (
@@ -213,12 +217,27 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
           )}
           {cachedTweet.metrics && (cachedTweet.metrics.likes > 0 || cachedTweet.metrics.replies > 0) && (
             <>
-              <span aria-hidden="true">·</span>
-              {cachedTweet.metrics.likes > 0 && (
-                <span>{formatMetric(cachedTweet.metrics.likes)} likes</span>
-              )}
               {cachedTweet.metrics.replies > 0 && (
-                <span>{formatMetric(cachedTweet.metrics.replies)} replies</span>
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    <strong style={{ color: testimonialStyle.textColor }}>
+                      {formatMetric(cachedTweet.metrics.replies)}
+                    </strong>{" "}
+                    Replies
+                  </span>
+                </>
+              )}
+              {cachedTweet.metrics.likes > 0 && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span>
+                    <strong style={{ color: testimonialStyle.textColor }}>
+                      {formatMetric(cachedTweet.metrics.likes)}
+                    </strong>{" "}
+                    Likes
+                  </span>
+                </>
               )}
             </>
           )}
@@ -267,12 +286,12 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
           </>
         ) : null}
 
-        {/* Centered content */}
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 py-16 text-center">
+        {/* Centered card */}
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-8 py-16">
           <div
             className={cn(
-              "relative flex w-full max-w-3xl flex-col items-center gap-6 overflow-hidden border px-8 py-10 backdrop-blur-[2px]",
-              isMobile && "gap-4 px-6 py-8",
+              "relative flex w-full max-w-xl flex-col overflow-hidden border backdrop-blur-[2px]",
+              isMobile ? "px-5 py-5" : "px-7 py-6",
             )}
             style={{
               background: testimonialStyle.cardBackground,
@@ -281,24 +300,6 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
               boxShadow: testimonialStyle.cardShadow,
             }}
           >
-            {/* X logo in top-right */}
-            <div className="absolute right-5 top-4">
-              <XLogo size={20} color={testimonialStyle.mutedTextColor} />
-            </div>
-
-            {/* Quote mark */}
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-5 top-3 text-7xl font-semibold leading-none"
-              style={{
-                color: testimonialStyle.quoteMarkColor,
-                fontFamily: text.fontFamily,
-                transform: "translateY(-8px)",
-              }}
-            >
-              "
-            </span>
-
             {fetchStatus === "loading" && renderLoadingState()}
             {hasContent && renderTweetContent()}
             {!hasContent && fetchStatus !== "loading" && renderEmptyState()}

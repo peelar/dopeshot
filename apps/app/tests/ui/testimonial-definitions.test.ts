@@ -197,8 +197,19 @@ describe("Testimonial layout definitions", () => {
       expect(config.layoutId).toBe("testimonial-twitter");
       expect(config.variant).toBe("default");
       expect(config.layoutSpecificSettings?.twitterTestimonial).toBeDefined();
-      expect(config.layoutSpecificSettings?.twitterTestimonial?.fetchStatus).toBe("idle");
+      expect(config.layoutSpecificSettings?.twitterTestimonial?.fetchStatus).toBe("success");
       expect(config.layoutSpecificSettings?.twitterTestimonial?.exportAspect).toBe("3:4");
+    });
+
+    it("includes pre-cached default tweet", () => {
+      const def = getLayoutDefinition("testimonial-twitter");
+      const config = def!.createConfig();
+      const cached = config.layoutSpecificSettings?.twitterTestimonial?.cachedTweet;
+
+      expect(cached).toBeDefined();
+      expect(cached?.authorHandle).toBe("gaba6ool");
+      expect(cached?.authorName).toBe("Adrian Pilarczyk");
+      expect(cached?.text).toContain("screenshots");
     });
 
     it("has headline and subtitle hidden", () => {
