@@ -19,6 +19,7 @@ interface CoverPreviewProps {
   isStatic?: boolean;
   showEmptyState?: boolean;
   showLoadingState?: boolean;
+  fullHeight?: boolean;
   onEmptyStateClick?: () => void;
   onFormatChosen?: (format: LayoutFormat) => void;
   onLockedTestimonialClick?: () => void;
@@ -30,6 +31,7 @@ export function CoverPreview({
   isStatic = false,
   showEmptyState = false,
   showLoadingState = false,
+  fullHeight = false,
   onEmptyStateClick,
   onFormatChosen,
   onLockedTestimonialClick,
@@ -64,18 +66,30 @@ export function CoverPreview({
 
   return (
     <div
-      className={cn("relative w-full overflow-hidden", isStatic ? "" : "rounded-lg", className)}
-      style={{
-        aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
-      }}
+      className={cn(
+        "relative w-full overflow-hidden",
+        fullHeight ? "h-full" : "",
+        isStatic || fullHeight ? "" : "rounded-lg",
+        className,
+      )}
+      style={
+        fullHeight
+          ? { height: "100%" }
+          : {
+              aspectRatio: `${canvasDimensions.width} / ${canvasDimensions.height}`,
+            }
+      }
     >
       <LayoutComponent onUploadAsset={onUploadAsset} isStatic={isStatic} />
-      {showLoadingState && !isStatic ? <LoadingOverlay className="z-30 rounded-lg" /> : null}
+      {showLoadingState && !isStatic ? (
+        <LoadingOverlay className={cn("z-30", fullHeight ? "" : "rounded-lg")} />
+      ) : null}
       {showEmptyState && !showLoadingState && !isStatic ? (
         <div
           className={cn(
             "absolute inset-0 z-20 flex items-center justify-center overflow-hidden",
-            "rounded-lg border border-foreground/[0.08] bg-background",
+            fullHeight ? "border-none" : "rounded-lg border border-foreground/[0.08]",
+            "bg-background",
           )}
         >
           {/* Animated corner blobs */}

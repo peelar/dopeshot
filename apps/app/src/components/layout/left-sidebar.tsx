@@ -227,48 +227,56 @@ export function LeftSidebar({
 
   if (isMobile) {
     return isOpen ? (
-      <div className="fixed inset-0 z-50 flex flex-col bg-background">
-        <div className="flex h-14 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <PanelLeft className="h-4 w-4" aria-hidden="true" />
-            {activeView === "saved" ? "Saved" : activeView === "brand" ? "Brand" : "Account"}
+      <div className="fixed inset-0 z-50 flex">
+        <button
+          type="button"
+          className="absolute inset-0 z-0 bg-black/40 backdrop-blur-sm"
+          aria-label="Close sidebar overlay"
+          onClick={() => onOpenChange(false)}
+        />
+        <div className="relative z-10 flex h-full w-[70%] max-w-[20rem] flex-col bg-background shadow-2xl">
+          <div className="flex h-14 items-center justify-between border-b px-4">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <PanelLeft className="h-4 w-4" aria-hidden="true" />
+              {activeView === "saved" ? "Saved" : activeView === "brand" ? "Brand" : "Account"}
+            </div>
+            <button
+              onClick={() => onOpenChange(false)}
+              className="rounded-md p-1 hover:bg-accent"
+              aria-label="Close sidebar"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            onClick={() => onOpenChange(false)}
-            className="rounded-md p-1 hover:bg-accent"
-            aria-label="Close sidebar"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
 
-        <div className="flex items-center gap-2 border-b px-3 py-2">
-          <TooltipProvider>{navItems.map(renderNavButton)}</TooltipProvider>
-        </div>
+          <div className="flex items-center gap-2 border-b px-3 py-2">
+            <TooltipProvider>{navItems.map(renderNavButton)}</TooltipProvider>
+          </div>
 
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          {activeView === "saved" ? (
-            <MemoryPanel
-              onLoadItem={onLoadItem}
-              onDeleteItem={onDeleteItem}
-              onClose={() => onOpenChange(false)}
-              isVisible={isOpen && activeView === "saved"}
-              showHeader={false}
-            />
-          ) : activeView === "brand" ? (
-            <div className="flex-1 min-h-0 overflow-y-auto">
-              {renderBrandContent()}
-            </div>
-          ) : (
-            <div className="flex h-full w-full flex-col px-4 py-6">
-              <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
-                <p className="text-xs text-muted-foreground">Signed in as</p>
-                <p className="text-sm font-medium text-foreground">
-                  {user?.email ?? "Unknown user"}
-                </p>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            {activeView === "saved" ? (
+              <MemoryPanel
+                onLoadItem={onLoadItem}
+                onDeleteItem={onDeleteItem}
+                onClose={() => onOpenChange(false)}
+                isVisible={isOpen && activeView === "saved"}
+                showHeader={false}
+              />
+            ) : activeView === "brand" ? (
+              <div className="flex-1 min-h-0 overflow-y-auto">
+                {renderBrandContent()}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="flex h-full w-full flex-col px-4 py-6">
+                <div className="mt-4 rounded-lg border border-border/60 bg-muted/40 p-3">
+                  <p className="text-xs text-muted-foreground">Signed in as</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {user?.email ?? "Unknown user"}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     ) : null;

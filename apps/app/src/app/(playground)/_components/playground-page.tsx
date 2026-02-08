@@ -627,7 +627,7 @@ function PlaygroundPageInner({
         </SidebarErrorBoundary>
       </div>
 
-      {isMobile ? (
+      {isMobile && isFormatChosen ? (
         <MobileActions
           isOpen={isConfigDrawerOpen}
           onOpenChange={setIsConfigDrawerOpen}
