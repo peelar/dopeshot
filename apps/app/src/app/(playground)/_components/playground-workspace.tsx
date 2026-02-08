@@ -2,10 +2,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Monitor, Smartphone } from "lucide-react";
+import { Monitor, Smartphone, ImageIcon, Video } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { AspectToggle } from "@/components/selectors/aspect-toggle";
+import { VideoPreview } from "@/app/(playground)/_components/video-preview";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
 import type { TestimonialExportAspect, TwitterExportAspect } from "@/domain/layout/types";
 import {
@@ -15,7 +16,10 @@ import {
   orientationAtom,
   gradientOptionsAtom,
   isAnalyzingColorsAtom,
+  hasCustomScreenshotAtom,
+  previewModeAtom,
   type Orientation,
+  type PreviewMode,
 } from "@/hooks/atoms";
 import {
   LAYOUT_DEFINITIONS,
@@ -24,7 +28,9 @@ import {
 } from "@/domain/layout-def/definitions";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { BrandOnly } from "@/components/auth/brand-only";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { track } from "@/lib/analytics";
 
 /**
  * PlaygroundWorkspace
@@ -69,6 +75,8 @@ export function PlaygroundWorkspace({
 }: PlaygroundWorkspaceProps) {
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
   const [orientation, setOrientation] = useAtom(orientationAtom);
+  const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
+  const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const activeFormat = useAtomValue(activeFormatAtom);
@@ -83,6 +91,11 @@ export function PlaygroundWorkspace({
   const testimonialExportAspect = config.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
   const twitterExportAspect = config.layoutSpecificSettings?.twitterTestimonial?.exportAspect ?? "4:5";
   const showFullScreenEmptyState = isMobile && showEmptyState && activeFormat === "none";
+
+  const handlePreviewModeChange = (mode: PreviewMode) => {
+    setPreviewMode(mode);
+    track("preview_mode_changed", { mode });
+  };
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
@@ -249,6 +262,46 @@ export function PlaygroundWorkspace({
             />
           ) : null}
 
+          {/* Image/Video toggle — brand users only */}
+          <BrandOnly>
+            {hasCustomScreenshot ? (
+              <div className="ml-2 flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handlePreviewModeChange("image")}
+                  aria-pressed={previewMode === "image"}
+                  aria-label="Image preview"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    previewMode === "image"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <ImageIcon className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => handlePreviewModeChange("video")}
+                  aria-pressed={previewMode === "video"}
+                  aria-label="Video preview"
+                  className={cn(
+                    "h-7 w-7 rounded transition-colors",
+                    previewMode === "video"
+                      ? "bg-foreground text-background shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <Video className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ) : null}
+          </BrandOnly>
+
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
             <Button
@@ -271,57 +324,65 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
-          <PreviewViewport
-            className={cn(
-              showFullScreenEmptyState ? "h-full w-full" : undefined,
-              orientation === "mobile" && !showFullScreenEmptyState ? "max-h-[85%]" : undefined,
-            )}
-            surfaceWidth={canvasWidth}
-            surfaceHeight={canvasHeight}
-            onViewportMetricsChange={handleViewportMetricsChange}
-            fluidLayout={showFullScreenEmptyState}
-          >
-            <div
-              className={cn(
-                "transition-opacity duration-300",
-                shouldHoldCanvas ? "opacity-0 pointer-events-none" : "opacity-100",
-              )}
-            >
-              <CoverPreview
-                showEmptyState={showEmptyState}
-                showLoadingState={showLoadingState}
-                onEmptyStateClick={onEmptyStateClick}
-                onFormatChosen={onFormatChosen}
-                onLockedTestimonialClick={onLockedTestimonialClick}
-                fullHeight={showFullScreenEmptyState}
-              />
-            </div>
-          </PreviewViewport>
-          {showFocusHint ? (
-            <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
-              <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
-                Screenshot-focused variant active
-              </span>
-            </div>
-          ) : null}
-        </div>
-
-        {hasScreenshot && !shouldHoldCanvas ? (
-          <div className="relative z-10">
-            <div
-              style={
-                bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
-              }
-            >
-              <ScreenshotZoomSlider
-                value={screenshotZoom}
-                onChange={setScreenshotZoom}
-                max={isBackdropLayout ? 1 : 1.5}
-              />
-            </div>
+        {previewMode === "video" ? (
+          <div className="relative flex min-h-0 flex-1 w-full justify-center items-center">
+            <VideoPreview />
           </div>
-        ) : null}
+        ) : (
+          <>
+            <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
+              <PreviewViewport
+                className={cn(
+                  showFullScreenEmptyState ? "h-full w-full" : undefined,
+                  orientation === "mobile" && !showFullScreenEmptyState ? "max-h-[85%]" : undefined,
+                )}
+                surfaceWidth={canvasWidth}
+                surfaceHeight={canvasHeight}
+                onViewportMetricsChange={handleViewportMetricsChange}
+                fluidLayout={showFullScreenEmptyState}
+              >
+                <div
+                  className={cn(
+                    "transition-opacity duration-300",
+                    shouldHoldCanvas ? "opacity-0 pointer-events-none" : "opacity-100",
+                  )}
+                >
+                  <CoverPreview
+                    showEmptyState={showEmptyState}
+                    showLoadingState={showLoadingState}
+                    onEmptyStateClick={onEmptyStateClick}
+                    onFormatChosen={onFormatChosen}
+                    onLockedTestimonialClick={onLockedTestimonialClick}
+                    fullHeight={showFullScreenEmptyState}
+                  />
+                </div>
+              </PreviewViewport>
+              {showFocusHint ? (
+                <div className="pointer-events-none absolute inset-x-0 top-4 flex justify-center">
+                  <span className="rounded-full bg-background/80 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-foreground/80 shadow-sm ring-1 ring-border/70">
+                    Screenshot-focused variant active
+                  </span>
+                </div>
+              ) : null}
+            </div>
+
+            {hasScreenshot && !shouldHoldCanvas ? (
+              <div className="relative z-10">
+                <div
+                  style={
+                    bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
+                  }
+                >
+                  <ScreenshotZoomSlider
+                    value={screenshotZoom}
+                    onChange={setScreenshotZoom}
+                    max={isBackdropLayout ? 1 : 1.5}
+                  />
+                </div>
+              </div>
+            ) : null}
+          </>
+        )}
       </div>
     </div>
   );
