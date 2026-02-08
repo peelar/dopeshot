@@ -26,6 +26,7 @@ import { track } from "@/lib/analytics";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import type { BackgroundSelection, PersonalBackground } from "@/domain/backgrounds/types";
 import type { Asset } from "@/domain/asset/types";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 
 interface BackgroundSectionProps {
   variant?: "default" | "inline";
@@ -204,10 +205,15 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
     [totalPages],
   );
 
+  const isLogoSwapFormat = getLayoutFormat(config.layoutId) === "logo-swap";
+  const emptyStateMessage = isLogoSwapFormat
+    ? "Upload logos to generate backgrounds."
+    : "Upload a screenshot to generate backgrounds.";
+
   const emptyState = (
     <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-3">
       <div className="text-xs text-muted-foreground">
-        Upload a screenshot to generate backgrounds.
+        {emptyStateMessage}
       </div>
     </div>
   );

@@ -86,7 +86,7 @@ function LogoSwapComponent({
     if (separatorStyle === "none") return null;
 
     return (
-      <div className="flex items-center justify-center px-4">
+      <div className="flex shrink-0 items-center justify-center">
         {separatorStyle === "dash" && (
           <div className="h-[2px] w-10 rounded-full bg-white/25" />
         )}
@@ -153,16 +153,16 @@ function LogoSwapComponent({
         data-export-element
         data-element="container"
       >
-        <div className="flex items-center">
+        <div className="flex items-center gap-8">
           {/* Left logo */}
-          <div className="flex h-40 w-40 items-center justify-center">
+          <div className="flex h-64 w-64 items-center justify-center">
             {renderLogo(leftLogoAsset, "left")}
           </div>
 
           {renderSeparator()}
 
           {/* Right logo */}
-          <div className="flex h-40 w-40 items-center justify-center">
+          <div className="flex h-64 w-64 items-center justify-center">
             {renderLogo(rightLogoAsset, "right")}
           </div>
         </div>
