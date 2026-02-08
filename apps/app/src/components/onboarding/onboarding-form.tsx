@@ -86,6 +86,7 @@ export function OnboardingForm({
       founder: "Sharp, clean, precise. Modern tech vibes.",
       hacker: "Terminal vibes, functional, no fluff.",
       kawaii: "Warm, rounded, Studio Ghibli feel.",
+      brutalist: "Raw, heavy, unapologetic. Hard edges.",
     }),
     [],
   );
@@ -96,6 +97,7 @@ export function OnboardingForm({
       founder: "font-clean",
       hacker: "font-developer",
       kawaii: "font-ghibli",
+      brutalist: "font-brutalist",
     }),
     [],
   );

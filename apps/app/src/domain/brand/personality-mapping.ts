@@ -35,6 +35,7 @@ export interface PersonalityStyle {
  * - Founder: Sharp, clean, precise (Geist Sans)
  * - Hacker: Terminal vibes, functional, no fluff (IBM Plex Mono)
  * - Kawaii: Soft, rounded, Studio Ghibli warmth (Kiwi Maru)
+ * - Brutalist: Raw, heavy, hard cartoony shadows (Space Grotesk)
  */
 export const personalityStyles: Record<BrandPersonality, PersonalityStyle> = {
   hipster: {
@@ -83,6 +84,17 @@ export const personalityStyles: Record<BrandPersonality, PersonalityStyle> = {
     },
     texture: "none",
     fontStyle: "ghibli", // Kiwi Maru - warm, rounded, Studio Ghibli feel
+  },
+  brutalist: {
+    cornerRadius: 0,
+    shadow: {
+      blur: 2,
+      spread: 0,
+      offsetY: 8,
+      opacity: 0.85,
+    },
+    texture: "none",
+    fontStyle: "brutalist", // Space Grotesk - geometric, bold, raw
   },
 };
 

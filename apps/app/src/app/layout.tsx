@@ -5,6 +5,7 @@ import {
   IBM_Plex_Mono,
   Bricolage_Grotesque,
   Kiwi_Maru,
+  Space_Grotesk,
 } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
@@ -46,6 +47,11 @@ const kiwiMaru = Kiwi_Maru({
   variable: "--font-ghibli",
 });
 
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-brutalist",
+});
+
 // Combine all font variables
 const fontVariables = [
   geistSans.variable, // --font-geist-sans (from package)
@@ -53,6 +59,7 @@ const fontVariables = [
   ibmPlexMono.variable,
   bricolageGrotesque.variable,
   kiwiMaru.variable,
+  spaceGrotesk.variable,
 ].join(" ");
 
 const siteUrl = "https://app.dopeshot.io";

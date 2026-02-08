@@ -56,6 +56,14 @@ export const FONT_STYLES: FontStyleDefinition[] = [
     cssVariable: "--font-ghibli",
     description: "Warm, rounded, Studio Ghibli feel",
   },
+  {
+    id: "brutalist",
+    name: "Brutalist",
+    fontName: "Space Grotesk",
+    foundry: "Florian Karsten",
+    cssVariable: "--font-brutalist",
+    description: "Geometric, bold, raw and unapologetic",
+  },
 ];
 
 export const DEFAULT_FONT_STYLE: FontStyle = "founder";
@@ -244,7 +252,7 @@ export function migrateFontIdToStyle(fontId: FontId): FontStyle {
     // Other legacy fonts default to founder
     professional: "founder",
     friendly: "founder",
-    edgy: "founder",
+    edgy: "brutalist",
     technical: "terminal",
     premium: "founder",
   };

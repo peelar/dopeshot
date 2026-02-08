@@ -11,6 +11,7 @@ import type { FontStyle } from "./types";
  * - Billboard: Bold, expressive, max 2 lines
  * - Terminal: Compact, technical, max 4 lines
  * - Ghibli: Warm, rounded, Studio Ghibli feel, max 3 lines
+ * - Brutalist: Raw, geometric, compressed, max 2 lines
  */
 
 export interface TypographyScalingRules {
@@ -81,6 +82,18 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     subtitleMaxLines: 3,
     titleLetterSpacing: 0,
   },
+  brutalist: {
+    titleMinSize: 2.5,
+    titleMaxSize: 5.0,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.5,
+    titleLineHeight: 0.9,
+    subtitleLineHeight: 1.3,
+    titleMaxLines: 2,
+    subtitleMaxLines: 2,
+    titleLetterSpacing: -0.03,
+    subtitleLetterSpacing: -0.01,
+  },
 };
 
 /**
@@ -117,6 +130,7 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
     billboard: ["tracking-tighter", "font-extrabold"],
     terminal: ["tracking-tight", "font-bold", "font-mono"],
     ghibli: ["tracking-normal", "font-medium"],
+    brutalist: ["tracking-tighter", "font-black", "uppercase"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
@@ -147,6 +161,7 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
     billboard: ["tracking-tight", "font-medium"],
     terminal: ["tracking-tight", "font-mono"],
     ghibli: ["tracking-normal", "font-normal"],
+    brutalist: ["tracking-tight", "font-bold"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
