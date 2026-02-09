@@ -2,6 +2,7 @@
 
 import type { Asset } from "@/domain/asset/types";
 import type { LayoutConfig } from "@/domain/layout/types";
+import type { TestimonialExportAspect, TwitterExportAspect } from "@/domain/layout/types";
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import {
   LAYOUT_DEFINITIONS,
@@ -9,6 +10,7 @@ import {
   getLayoutFormat,
   normalizeLayoutId,
   supportsScreenshots,
+  supportsVideo,
   withLayoutTextDefaults,
   type LayoutFormat,
 } from "@/domain/layout-def/definitions";
@@ -19,15 +21,18 @@ import {
   orientationAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
+  type Orientation,
 } from "@/hooks/atoms";
 import { cn } from "@/lib/utils/cn";
+import { AspectToggle } from "@/components/selectors/aspect-toggle";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Lock, Monitor, Smartphone, Sparkles, Video } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
 import { useUserTier } from "@/hooks/use-user-tier";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
-import { Lock, Sparkles } from "lucide-react";
+import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 
@@ -58,7 +63,7 @@ const FORMAT_TABS: { value: LayoutFormat; label: string }[] = [
 ];
 
 export function LayoutSelector({ className }: { className?: string }) {
-  const orientation = useAtomValue(orientationAtom);
+  const [orientation, setOrientation] = useAtom(orientationAtom);
   const currentConfig = useAtomValue(configAtom);
   const assets = useAtomValue(assetsAtom);
   const screenshotGradient = useAtomValue(screenshotGradientAtom);
@@ -72,9 +77,144 @@ export function LayoutSelector({ className }: { className?: string }) {
   const { isBrandUser } = useUserTier();
   const { processColorAnalysis } = useColorAnalysis();
   const isLoggedIn = !!session?.user;
+  const isMobile = useMobileDetection();
+  const hasAutoSetOrientation = useRef(false);
 
   // Tooltip state for locked testimonial tab
   const [showLockedTooltip, setShowLockedTooltip] = useState(false);
+
+  const showOrientationToggle = activeFormat === "screenshot" || activeFormat === "none";
+  const showTestimonialAspectToggle = activeFormat === "testimonial";
+  const showTwitterAspectToggle = activeFormat === "tweet";
+  const testimonialExportAspect = currentConfig.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
+  const twitterExportAspect = currentConfig.layoutSpecificSettings?.twitterTestimonial?.exportAspect ?? "4:5";
+
+  // Set mobile as default orientation on mobile devices
+  useEffect(() => {
+    if (hasAutoSetOrientation.current) return;
+    if (!isMobile) return;
+    if (orientation !== "desktop") return;
+    setOrientation("mobile");
+    hasAutoSetOrientation.current = true;
+  }, [isMobile, orientation, setOrientation]);
+
+  const handleOrientationChange = useCallback(
+    (newOrientation: Orientation) => {
+      const currentDef = getLayoutDefinition(currentConfig.layoutId);
+      const supportedOrientations = currentDef?.capabilities.supportedOrientations ?? [
+        "mobile",
+        "desktop",
+      ];
+
+      if (!supportedOrientations.includes(newOrientation)) {
+        const compatibleLayout = LAYOUT_DEFINITIONS.find((def) => {
+          const orientations = def.capabilities.supportedOrientations ?? ["mobile", "desktop"];
+          return orientations.includes(newOrientation);
+        });
+
+        if (compatibleLayout) {
+          const nextConfig = compatibleLayout.createConfig();
+          setConfig(
+            withLayoutTextDefaults(
+              {
+                ...nextConfig,
+                text: currentConfig.text,
+                assets: currentConfig.assets,
+                background: currentConfig.background,
+                colors: currentConfig.colors,
+                screenshotShadow: currentConfig.screenshotShadow,
+                fontId: currentConfig.fontId,
+                fontSize: currentConfig.fontSize,
+                screenshotFrame: currentConfig.screenshotFrame,
+                layoutSpecificSettings: {
+                  ...nextConfig.layoutSpecificSettings,
+                  ...currentConfig.layoutSpecificSettings,
+                },
+              },
+              { preserveEmptyText: true },
+            ),
+          );
+        }
+      }
+
+      setOrientation(newOrientation);
+    },
+    [currentConfig, setConfig, setOrientation],
+  );
+
+  const handleTestimonialAspectChange = useCallback(
+    (nextAspect: TestimonialExportAspect) => {
+      setConfig((prev) => ({
+        ...prev,
+        layoutSpecificSettings: {
+          ...prev.layoutSpecificSettings,
+          testimonial: {
+            ...prev.layoutSpecificSettings?.testimonial,
+            exportAspect: nextAspect,
+          },
+        },
+      }));
+    },
+    [setConfig],
+  );
+
+  const handleTwitterAspectChange = useCallback(
+    (nextAspect: TwitterExportAspect) => {
+      setConfig((prev) => ({
+        ...prev,
+        layoutSpecificSettings: {
+          ...prev.layoutSpecificSettings,
+          twitterTestimonial: {
+            ...prev.layoutSpecificSettings?.twitterTestimonial,
+            exportAspect: nextAspect,
+          },
+        },
+      }));
+    },
+    [setConfig],
+  );
+
+  const screenshotAspectOptions = isMobile
+    ? [
+        {
+          id: "mobile",
+          label: <Smartphone className="h-3.5 w-3.5" />,
+          ariaLabel: "Mobile mode (9:16)",
+          iconOnly: true,
+        },
+        {
+          id: "desktop",
+          label: <Monitor className="h-3.5 w-3.5" />,
+          ariaLabel: "Desktop mode (16:9)",
+          iconOnly: true,
+        },
+      ]
+    : [
+        {
+          id: "desktop",
+          label: <Monitor className="h-3.5 w-3.5" />,
+          ariaLabel: "Desktop mode (16:9)",
+          iconOnly: true,
+        },
+        {
+          id: "mobile",
+          label: <Smartphone className="h-3.5 w-3.5" />,
+          ariaLabel: "Mobile mode (9:16)",
+          iconOnly: true,
+        },
+      ];
+
+  const testimonialAspectOptions = [
+    { id: "3:4", label: "3:4", ariaLabel: "Testimonial export ratio 3 by 4" },
+    { id: "4:5", label: "4:5", ariaLabel: "Testimonial export ratio 4 by 5" },
+    { id: "9:16", label: "9:16", ariaLabel: "Testimonial export ratio 9 by 16" },
+    { id: "16:9", label: "16:9", ariaLabel: "Testimonial export ratio 16 by 9" },
+  ];
+
+  const twitterAspectOptions = [
+    { id: "4:5", label: "4:5", ariaLabel: "Tweet export ratio 4 by 5" },
+    { id: "16:9", label: "16:9", ariaLabel: "Tweet export ratio 16 by 9" },
+  ];
 
   // Track initial layoutId to detect when a saved design is loaded
   const initialLayoutIdRef = useRef(currentConfig.layoutId);
@@ -265,8 +405,8 @@ export function LayoutSelector({ className }: { className?: string }) {
       )}
       aria-hidden={isFormatUnselected}
     >
-      {/* Format tabs */}
-      <div className="flex gap-1 px-1 sm:px-0">
+      {/* Format tabs + aspect toggle */}
+      <div className="flex items-center gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
           const isLocked = (tab.value === "testimonial" || tab.value === "tweet") && !isBrandUser;
@@ -310,6 +450,31 @@ export function LayoutSelector({ className }: { className?: string }) {
             </div>
           );
         })}
+
+        {/* Orientation / aspect toggle — right-aligned */}
+        <div className="ml-auto">
+          {showOrientationToggle ? (
+            <AspectToggle
+              value={orientation}
+              options={screenshotAspectOptions}
+              onChange={(value) => handleOrientationChange(value as Orientation)}
+            />
+          ) : null}
+          {showTestimonialAspectToggle ? (
+            <AspectToggle
+              value={testimonialExportAspect}
+              options={testimonialAspectOptions}
+              onChange={(value) => handleTestimonialAspectChange(value as TestimonialExportAspect)}
+            />
+          ) : null}
+          {showTwitterAspectToggle ? (
+            <AspectToggle
+              value={twitterExportAspect}
+              options={twitterAspectOptions}
+              onChange={(value) => handleTwitterAspectChange(value as TwitterExportAspect)}
+            />
+          ) : null}
+        </div>
       </div>
 
       <div className="flex w-full gap-3 overflow-x-auto px-1 py-2 sm:gap-4 sm:py-3">
@@ -524,6 +689,11 @@ function LayoutPreviewCard({
     >
       <div className="relative h-[64px] w-[105px] overflow-hidden rounded bg-background ring-1 ring-border/5 sm:h-[90px] sm:w-[144px]">
         <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
+        {supportsVideo(option.layoutId) ? (
+          <div className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded bg-primary/10 ring-1 ring-primary/20 sm:h-5 sm:w-5">
+            <Video className="h-2.5 w-2.5 text-primary/70 sm:h-3 sm:w-3" />
+          </div>
+        ) : null}
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
         <span

@@ -1,5 +1,6 @@
 import { CSSProperties } from "react";
 import { FrameShape, ScreenshotFramePreset } from "@/domain/layout/types";
+import { getShadowValue } from "./shadows";
 
 const GLASS_BACKGROUND = "rgba(255, 255, 255, 0.14)";
 const ROUNDED_PADDING = {
@@ -55,7 +56,7 @@ export function getScreenshotFrameAppearance({
     
     // Use custom shadow if provided, otherwise fall back to default
     const shadow = shadowEnabled
-      ? customShadow ?? "0 18px 42px rgba(15, 23, 42, 0.35)"
+      ? customShadow ?? getShadowValue("high")
       : undefined;
 
     return {
@@ -81,8 +82,8 @@ export function getScreenshotFrameAppearance({
       shadow = customShadow;
     } else {
       shadow = shape === "rounded"
-        ? "0 24px 55px rgba(15, 23, 42, 0.35)"
-        : "0 16px 36px rgba(15, 23, 42, 0.2)";
+        ? getShadowValue("high")
+        : getShadowValue("medium");
     }
   }
 

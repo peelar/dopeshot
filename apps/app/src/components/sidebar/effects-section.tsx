@@ -2,9 +2,11 @@
 
 import { useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useMemo } from "react";
-import { configAtom } from "@/hooks/atoms";
+import { configAtom, previewModeAtom } from "@/hooks/atoms";
 import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { supportsVideo } from "@/domain/layout-def/definitions";
 import { Switch } from "@/components/ui/switch";
+import { track } from "@/lib/analytics";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 import { inferFadeDirection } from "@/domain/layout/fade-direction";
 
@@ -23,14 +25,21 @@ const FULL_OUTLINE_CONTROLS = {
 export function EffectsSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
+  const previewMode = useAtomValue(previewModeAtom);
   const lookCapabilities = useAtomValue(layoutCapabilitiesAtom);
   const outlineControls = lookCapabilities?.outline ?? FULL_OUTLINE_CONTROLS;
+
+  const isVideoMode = previewMode === "video";
+  const layoutHasVideo = supportsVideo(config.layoutId);
 
   // Fade is disabled by default, only enabled if explicitly set by user
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];
   const layoutSpecificFadeDirection =
     config.layoutSpecificSettings?.fadeDirection?.[config.layoutId];
   const currentFadeState = layoutSpecificFadeEnabled ?? false;
+
+  // Typing animation (video mode only)
+  const currentTypingState = config.layoutSpecificSettings?.typingEnabled?.[config.layoutId] ?? false;
 
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
@@ -77,9 +86,32 @@ export function EffectsSection() {
     });
   }, [setConfig, layoutSpecificFadeDirection]);
 
+  const toggleTyping = useCallback(() => {
+    setConfig((currentConfig) => {
+      const currentState =
+        currentConfig.layoutSpecificSettings?.typingEnabled?.[currentConfig.layoutId] ?? false;
+
+      track("video_typing_toggled", { enabled: !currentState, layout_id: currentConfig.layoutId });
+
+      return {
+        ...currentConfig,
+        layoutSpecificSettings: {
+          ...currentConfig.layoutSpecificSettings,
+          typingEnabled: {
+            ...currentConfig.layoutSpecificSettings?.typingEnabled,
+            [currentConfig.layoutId]: !currentState,
+          },
+        },
+      };
+    });
+  }, [setConfig]);
+
+  const showTypingToggle = isVideoMode && layoutHasVideo;
+
   const showOutlineSection =
     outlineControls.softGlass ||
-    outlineControls.fade;
+    outlineControls.fade ||
+    showTypingToggle;
 
   if (!showOutlineSection) {
     return (
@@ -106,6 +138,14 @@ export function EffectsSection() {
           label="Fade"
           checked={currentFadeState}
           onToggle={toggleFade}
+        />
+      )}
+
+      {showTypingToggle && (
+        <EffectToggleRow
+          label="Typewriter"
+          checked={currentTypingState}
+          onToggle={toggleTyping}
         />
       )}
     </div>

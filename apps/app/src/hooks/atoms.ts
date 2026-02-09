@@ -125,6 +125,10 @@ export const brandSettingsAtom = atomWithStorage<BrandSettings>(
 // Defaults to "none" — user chooses a format on first visit via the format chooser
 export const activeFormatAtom = atom<LayoutFormat>("none");
 
+// Preview mode — image (static) or video (Remotion animation), brand-only
+export type PreviewMode = "image" | "video";
+export const previewModeAtom = atom<PreviewMode>("image");
+
 // Feedback modal
 export const feedbackModalOpenAtom = atom<boolean>(false);
 

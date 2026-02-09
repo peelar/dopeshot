@@ -9,8 +9,9 @@ import { brandSettingsAtom, configAtom, assetsAtom, screenshotZoomAtom, orientat
 import { logoAssetAtom, screenshotAssetAtom, personalityStyleAtom } from "@/hooks/atoms/derived";
 import type { LayoutConfig, RichTextSegment } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
+import { isAdvancedGradient, isLegacyGradient } from "@/domain/layout/gradients";
 import { getBackgroundStyle } from "./background-style";
-import { tokenToTextColorClass } from "./color-utils";
+import { tokenToCssColor, tokenToTextColorClass } from "./color-utils";
 import { getShadowValue, buildShadowFromStyle } from "./shadows";
 import { PatternOverlay } from "./PatternOverlay";
 import { renderRichTextSegments } from "./rich-text-render";
@@ -39,6 +40,24 @@ function resolveRichTextSegments(
   }
 
   return [{ text: fallbackText }];
+}
+
+function resolveShadowSurfaceColor(config: LayoutConfig): string {
+  if (config.background?.type === "solid") {
+    return tokenToCssColor(config.background.value);
+  }
+
+  if (config.background?.type === "gradient" && config.background.customGradient) {
+    const gradient = config.background.customGradient;
+    if (isLegacyGradient(gradient)) {
+      return gradient.from;
+    }
+    if (isAdvancedGradient(gradient) && gradient.stops.length > 0) {
+      return gradient.stops[0].color;
+    }
+  }
+
+  return tokenToCssColor(config.colors.background);
 }
 
 export function useLayoutPrimitives() {
@@ -127,6 +146,7 @@ export function useLayoutPrimitives() {
   );
 
   const screenshotTreatment = useMemo(() => getScreenshotTreatment(config), [config]);
+  const shadowSurfaceColor = resolveShadowSurfaceColor(config);
 
   // Compute corner radius: personality style takes precedence as preset
   const cornerRadius = useMemo(() => {
@@ -142,13 +162,15 @@ export function useLayoutPrimitives() {
 
     // If personality provides a shadow style, use it
     if (personalityStyle) {
-      const customShadow = buildShadowFromStyle(personalityStyle.shadow);
+      const customShadow = buildShadowFromStyle(personalityStyle.shadow, {
+        surfaceColor: shadowSurfaceColor,
+      });
       return customShadow !== "none" ? customShadow : undefined;
     }
 
     // Fall back to standard shadow presets
-    return getShadowValue(config.screenshotShadow);
-  }, [config.screenshotShadow, screenshotTreatment.shadowEnabled, personalityStyle]);
+    return getShadowValue(config.screenshotShadow, { surfaceColor: shadowSurfaceColor });
+  }, [config.screenshotShadow, screenshotTreatment.shadowEnabled, personalityStyle, shadowSurfaceColor]);
 
   const layoutDefinition = getLayoutDefinition(config.layoutId);
   const zoomBehavior = layoutDefinition?.capabilities.zoomBehavior ?? "scale-container";

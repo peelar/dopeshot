@@ -152,7 +152,7 @@ export function AppHeader({
             </Tooltip>
           </TooltipProvider>
         ) : null}
-        {/* Export button - independent of save */}
+        {/* Export button */}
         {canExport ? (
           <Button
             size="sm"
@@ -161,14 +161,14 @@ export function AppHeader({
             onClick={onExport}
             disabled={isExporting}
             aria-busy={isExporting}
-            aria-label={isExporting ? "Exporting Image" : "Export As PNG"}
+            aria-label={isExporting ? "Exporting" : "Export"}
           >
             {isExporting ? (
               <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
               <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
             )}
-            Export PNG
+            Export
           </Button>
         ) : null}
         <UserMenu onFeedbackClick={onFeedbackClick} />

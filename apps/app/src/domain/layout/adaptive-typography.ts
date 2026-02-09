@@ -1,3 +1,4 @@
+import type { VideoTextStyle } from "@/remotion/types";
 import type { FontStyle } from "./types";
 
 /**
@@ -272,5 +273,61 @@ export function getAdaptiveTypography(
     titleStyle: getTitleStyles(fontStyle, fontFamily, titleLength),
     subtitleStyle: getSubtitleStyles(fontStyle, fontFamily, subtitleLength),
     rules: FONT_STYLE_SCALING_RULES[fontStyle],
+  };
+}
+
+// ── Video text style helpers ──────────────────────────────────────────
+
+/** Title font weight per font style (mirrors CSS classes) */
+const TITLE_FONT_WEIGHT: Record<FontStyle, number> = {
+  founder: 700,   // font-bold
+  billboard: 800, // font-extrabold
+  terminal: 700,  // font-bold
+  ghibli: 500,    // font-medium
+};
+
+/** Subtitle font weight per font style */
+const SUBTITLE_FONT_WEIGHT: Record<FontStyle, number> = {
+  founder: 400,   // font-normal (default)
+  billboard: 500, // font-medium
+  terminal: 400,  // font-normal
+  ghibli: 400,    // font-normal
+};
+
+/**
+ * Compute video-ready text styles at export resolution.
+ *
+ * The preview renders at 1280x720 with rem-based fonts (1rem = 16px).
+ * The export is at 1920x1080 — the html-to-image export container uses
+ * a 1.5x CSS scale from the preview base. The video composition renders
+ * directly at 1920x1080, so we multiply rem × 16 × 1.5 = rem × 24.
+ */
+export function getVideoTextStyles(
+  fontStyle: FontStyle,
+  titleText?: string,
+  subtitleText?: string,
+): { titleStyle: VideoTextStyle; subtitleStyle: VideoTextStyle } {
+  const rules = FONT_STYLE_SCALING_RULES[fontStyle];
+  const titleLength = titleText?.length ?? 0;
+  const subtitleLength = subtitleText?.length ?? 0;
+
+  const REM_TO_EXPORT_PX = 24; // 16px base × 1.5 scale
+
+  const titleSizeRem = calculateAdaptiveFontSize(titleLength, rules.titleMinSize, rules.titleMaxSize, 40, 150);
+  const subtitleSizeRem = calculateAdaptiveFontSize(subtitleLength, rules.subtitleMinSize, rules.subtitleMaxSize, 60, 200);
+
+  return {
+    titleStyle: {
+      fontSizePx: Math.round(titleSizeRem * REM_TO_EXPORT_PX),
+      lineHeight: rules.titleLineHeight,
+      letterSpacingEm: rules.titleLetterSpacing ?? 0,
+      fontWeight: TITLE_FONT_WEIGHT[fontStyle],
+    },
+    subtitleStyle: {
+      fontSizePx: Math.round(subtitleSizeRem * REM_TO_EXPORT_PX),
+      lineHeight: rules.subtitleLineHeight,
+      letterSpacingEm: rules.subtitleLetterSpacing ?? 0,
+      fontWeight: SUBTITLE_FONT_WEIGHT[fontStyle],
+    },
   };
 }

@@ -41,6 +41,7 @@ import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { getDefaultDemoPreset, getRandomDemoPreset } from "@/domain/demo/presets";
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
+import { track } from "@/lib/analytics";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { useMemory } from "@/hooks/use-memory";
 import { useSession } from "@/lib/auth/auth-client";
@@ -59,7 +60,6 @@ import { listPersonalBackgrounds } from "@/domain/backgrounds/background-service
 import { ExportSuccessModal } from "@/components/post-export";
 import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
 import { useRouter } from "next/navigation";
-import { track } from "@/lib/analytics";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 
 const FeedbackModal = dynamic(

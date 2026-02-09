@@ -45,6 +45,7 @@ export interface LayoutCapabilities {
   outline: LayoutOutlineControls;
   logo: "supported" | "hidden";
   screenshot: "supported" | "hidden";
+  video: boolean;
   supportedOrientations?: Orientation[];
   copyDefaults?: {
     title?: string;
@@ -179,6 +180,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
        },
        logo: "supported",
       screenshot: "supported",
+      video: true,
       supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
         title: "Bring the heat",
@@ -240,6 +242,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "supported",
+      video: false,
       supportedOrientations: ["desktop"],
       copyDefaults: {
         title: "Bring the heat",
@@ -301,6 +304,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "hidden",
       screenshot: "supported",
+      video: false,
       supportedOrientations: ["mobile", "desktop"],
     },
   },
@@ -374,6 +378,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "hidden",
+      video: false,
       supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
         title: "dopeshot completely transformed how I ship. Right now, no feature goes unshared.",
@@ -453,6 +458,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "hidden",
+      video: false,
       supportedOrientations: ["mobile", "desktop"],
     },
   },
@@ -513,6 +519,14 @@ export function getLayoutDefinition(id: string): LayoutDefinition | undefined {
 export function supportsScreenshots(layoutId: string): boolean {
   const layoutDef = getLayoutDefinition(layoutId);
   return layoutDef?.capabilities.screenshot === "supported";
+}
+
+/**
+ * Check if a layout supports video export based on its capabilities
+ */
+export function supportsVideo(layoutId: string): boolean {
+  const layoutDef = getLayoutDefinition(layoutId);
+  return layoutDef?.capabilities.video === true;
 }
 
 type LayoutTextDefaultOptions = {
