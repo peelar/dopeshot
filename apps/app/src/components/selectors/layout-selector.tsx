@@ -9,6 +9,7 @@ import {
   getLayoutFormat,
   normalizeLayoutId,
   supportsScreenshots,
+  supportsVideo,
   withLayoutTextDefaults,
   type LayoutFormat,
 } from "@/domain/layout-def/definitions";
@@ -23,6 +24,7 @@ import {
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Video } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { useSession } from "@/lib/auth/auth-client";
 import { useUserTier } from "@/hooks/use-user-tier";
@@ -524,6 +526,11 @@ function LayoutPreviewCard({
     >
       <div className="relative h-[64px] w-[105px] overflow-hidden rounded bg-background ring-1 ring-border/5 sm:h-[90px] sm:w-[144px]">
         <LayoutSketch layoutId={option.layoutId} orientation={orientation} />
+        {supportsVideo(option.layoutId) ? (
+          <div className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded bg-background/80 ring-1 ring-border/30 sm:h-5 sm:w-5">
+            <Video className="h-2.5 w-2.5 text-muted-foreground sm:h-3 sm:w-3" />
+          </div>
+        ) : null}
       </div>
       <div className="flex items-center justify-between gap-2 px-1">
         <span

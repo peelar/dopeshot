@@ -1,38 +1,39 @@
 import { renderMediaOnWeb } from "@remotion/web-renderer";
-import { ScreenshotIntro } from "./compositions/screenshot-intro";
-import type { ScreenshotIntroProps } from "./types";
+import { PeakVideo } from "./compositions/peak-video";
+import type { PeakVideoProps } from "./types";
+import { calculateVideoDuration, VIDEO_FPS } from "./typing-schedule";
 
-const VIDEO_WIDTH = 1080;
-const VIDEO_HEIGHT = 1080;
-const VIDEO_FPS = 30;
-const VIDEO_DURATION_FRAMES = 90;
-
-const DEFAULT_PROPS: ScreenshotIntroProps = {
+const DEFAULT_PROPS: PeakVideoProps = {
   screenshotUrl: "",
   title: "",
   subtitle: "",
   backgroundCss: "",
   fontFamily: "",
   textColor: "",
+  variant: "center",
+  screenshotShadowCss: "",
 };
 
 /**
- * Render the ScreenshotIntro composition to an MP4 blob client-side
+ * Render the PeakVideo composition to an MP4 blob client-side
  * using WebCodecs via @remotion/web-renderer.
  */
 export async function renderVideoToBlob(
-  inputProps: ScreenshotIntroProps,
+  inputProps: PeakVideoProps,
+  options: { width: number; height: number },
   onProgress?: (progress: number) => void,
   signal?: AbortSignal,
 ): Promise<Blob> {
+  const durationInFrames = calculateVideoDuration(inputProps);
+
   const { getBlob } = await renderMediaOnWeb({
     composition: {
-      id: "screenshot-intro",
-      component: ScreenshotIntro,
-      durationInFrames: VIDEO_DURATION_FRAMES,
+      id: "peak-video",
+      component: PeakVideo,
+      durationInFrames,
       fps: VIDEO_FPS,
-      width: VIDEO_WIDTH,
-      height: VIDEO_HEIGHT,
+      width: options.width,
+      height: options.height,
       defaultProps: DEFAULT_PROPS,
     },
     inputProps,
@@ -40,7 +41,7 @@ export async function renderVideoToBlob(
     videoCodec: "h264",
     onProgress: onProgress
       ? ({ renderedFrames }) => {
-          onProgress(renderedFrames / VIDEO_DURATION_FRAMES);
+          onProgress(renderedFrames / durationInFrames);
         }
       : undefined,
     signal,

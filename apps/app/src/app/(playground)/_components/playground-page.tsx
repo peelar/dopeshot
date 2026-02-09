@@ -33,14 +33,18 @@ import {
   hasCustomScreenshotAtom,
   hasExportedAtom,
   orientationAtom,
+  previewModeAtom,
   screenshotGradientAtom,
   screenshotZoomAtom,
+  type PreviewMode,
 } from "@/hooks/atoms";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
+import { supportsVideo } from "@/domain/layout-def/definitions";
 import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { getDefaultDemoPreset, getRandomDemoPreset } from "@/domain/demo/presets";
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
+import { track } from "@/lib/analytics";
 import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { useMemory } from "@/hooks/use-memory";
 import { useSession } from "@/lib/auth/auth-client";
@@ -59,7 +63,6 @@ import { listPersonalBackgrounds } from "@/domain/backgrounds/background-service
 import { ExportSuccessModal } from "@/components/post-export";
 import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
 import { useRouter } from "next/navigation";
-import { track } from "@/lib/analytics";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 
 const FeedbackModal = dynamic(
@@ -157,6 +160,7 @@ function PlaygroundPageInner({
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
   const personalBackgrounds = useAtomValue(personalBackgroundsAtom);
+  const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
   const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
   const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
   const [isPreparingScreenshotPreset, setIsPreparingScreenshotPreset] = useState(false);
@@ -167,6 +171,11 @@ function PlaygroundPageInner({
   const setExportThumbnail = useSetAtom(exportThumbnailAtom);
 
   const { isBrandUser } = useUserTier();
+
+  const handlePreviewModeChange = useCallback((mode: PreviewMode) => {
+    setPreviewMode(mode);
+    track("preview_mode_changed", { mode });
+  }, [setPreviewMode]);
 
   // Auto-apply brand logo for NEW designs (not loaded from memory)
   // For loaded designs, brand logo is applied during the load process in useMemory
@@ -563,6 +572,9 @@ function PlaygroundPageInner({
           isLoggedIn ? () => setLeftSidebarOpen((prev) => !prev) : undefined
         }
         leftSidebarOpen={leftSidebarOpen}
+        previewMode={previewMode}
+        onPreviewModeChange={handlePreviewModeChange}
+        showVideoToggle={isBrandUser && hasCustomScreenshot && supportsVideo(config.layoutId)}
       />
 
       {/* Layout: Left Rail/Drawer | Content (Looks + Preview) | Design Sidebar */}

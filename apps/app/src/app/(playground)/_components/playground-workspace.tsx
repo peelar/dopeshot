@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Monitor, Smartphone, ImageIcon, Video } from "lucide-react";
+import { Monitor, Smartphone } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { AspectToggle } from "@/components/selectors/aspect-toggle";
@@ -16,19 +16,17 @@ import {
   orientationAtom,
   gradientOptionsAtom,
   isAnalyzingColorsAtom,
-  hasCustomScreenshotAtom,
   previewModeAtom,
   type Orientation,
-  type PreviewMode,
 } from "@/hooks/atoms";
 import {
   LAYOUT_DEFINITIONS,
   getLayoutDefinition,
+  supportsVideo,
   withLayoutTextDefaults,
 } from "@/domain/layout-def/definitions";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
-import { BrandOnly } from "@/components/auth/brand-only";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { track } from "@/lib/analytics";
 
@@ -76,7 +74,6 @@ export function PlaygroundWorkspace({
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
   const [orientation, setOrientation] = useAtom(orientationAtom);
   const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
-  const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const activeFormat = useAtomValue(activeFormatAtom);
@@ -92,14 +89,19 @@ export function PlaygroundWorkspace({
   const twitterExportAspect = config.layoutSpecificSettings?.twitterTestimonial?.exportAspect ?? "4:5";
   const showFullScreenEmptyState = isMobile && showEmptyState && activeFormat === "none";
 
-  const handlePreviewModeChange = (mode: PreviewMode) => {
-    setPreviewMode(mode);
-    track("preview_mode_changed", { mode });
-  };
-
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
   const shouldHoldCanvas = hasScreenshot && (isAnalyzingColors || gradientOptions.length === 0);
+
+  // Auto-reset to image mode when switching to a layout that doesn't support video
+  useEffect(() => {
+    if (previewMode === "video" && !supportsVideo(config.layoutId)) {
+      setPreviewMode("image");
+      track("preview_mode_auto_reset", {
+        layout_id: config.layoutId,
+      });
+    }
+  }, [config.layoutId, previewMode, setPreviewMode]);
 
   // Set mobile as default orientation on mobile devices
   useEffect(() => {
@@ -262,46 +264,6 @@ export function PlaygroundWorkspace({
             />
           ) : null}
 
-          {/* Image/Video toggle — brand users only */}
-          <BrandOnly>
-            {hasCustomScreenshot ? (
-              <div className="ml-2 flex gap-1 rounded-md border border-border/40 bg-muted/20 p-0.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handlePreviewModeChange("image")}
-                  aria-pressed={previewMode === "image"}
-                  aria-label="Image preview"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    previewMode === "image"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => handlePreviewModeChange("video")}
-                  aria-pressed={previewMode === "video"}
-                  aria-label="Video preview"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    previewMode === "video"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Video className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ) : null}
-          </BrandOnly>
-
           {/* Aspect lock positioned absolutely on the right */}
           {shouldShowAspectLock ? (
             <Button
@@ -324,13 +286,11 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        {previewMode === "video" ? (
-          <div className="relative flex min-h-0 flex-1 w-full justify-center items-center">
+        <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
+          {previewMode === "video" ? (
             <VideoPreview />
-          </div>
-        ) : (
-          <>
-            <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
+          ) : (
+            <>
               <PreviewViewport
                 className={cn(
                   showFullScreenEmptyState ? "h-full w-full" : undefined,
@@ -364,25 +324,25 @@ export function PlaygroundWorkspace({
                   </span>
                 </div>
               ) : null}
-            </div>
+            </>
+          )}
+        </div>
 
-            {hasScreenshot && !shouldHoldCanvas ? (
-              <div className="relative z-10">
-                <div
-                  style={
-                    bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
-                  }
-                >
-                  <ScreenshotZoomSlider
-                    value={screenshotZoom}
-                    onChange={setScreenshotZoom}
-                    max={isBackdropLayout ? 1 : 1.5}
-                  />
-                </div>
-              </div>
-            ) : null}
-          </>
-        )}
+        {hasScreenshot && !shouldHoldCanvas ? (
+          <div className={cn("relative z-10", previewMode === "video" && "invisible")}>
+            <div
+              style={
+                bottomWhitespace ? { transform: `translateY(-${bottomWhitespace}px)` } : undefined
+              }
+            >
+              <ScreenshotZoomSlider
+                value={screenshotZoom}
+                onChange={setScreenshotZoom}
+                max={isBackdropLayout ? 1 : 1.5}
+              />
+            </div>
+          </div>
+        ) : null}
       </div>
     </div>
   );

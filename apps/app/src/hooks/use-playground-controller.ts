@@ -284,6 +284,7 @@ function useExportHandler({
         await exportVideo({
           config,
           assets,
+          orientation,
           screenshotAsset,
           setStatusMessage,
           setCurrentExportBlob,
@@ -413,6 +414,7 @@ async function exportImage({
 async function exportVideo({
   config,
   assets,
+  orientation,
   screenshotAsset,
   setStatusMessage,
   setCurrentExportBlob,
@@ -420,6 +422,7 @@ async function exportVideo({
 }: {
   config: LayoutConfig;
   assets: Asset[];
+  orientation: "mobile" | "desktop";
   screenshotAsset: Asset | undefined;
   setStatusMessage: Setter<string>;
   setCurrentExportBlob: Setter<Blob | null>;
@@ -430,9 +433,23 @@ async function exportVideo({
   const { getBackgroundStyle } = await import("@/components/layouts/shared/background-style");
   const { tokenToCssColor } = await import("@/components/layouts/shared/color-utils");
   const { getFontStyleCssValue } = await import("@/domain/layout/fonts");
+  const { getShadowValue } = await import("@/components/layouts/shared/shadows");
+  const { getVideoTextStyles } = await import("@/domain/layout/adaptive-typography");
   const { renderVideoToBlob } = await import("@/remotion/render");
 
   const assetMap = new Map(assets.map((a) => [a.id, a]));
+  const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+
+  const variant = (config.variant === "left" || config.variant === "right" || config.variant === "center")
+    ? config.variant
+    : "center";
+
+  const effectiveFontStyle = config.fontStyle ?? "founder";
+  const videoTextStyles = getVideoTextStyles(
+    effectiveFontStyle,
+    config.text.title?.trim(),
+    config.text.subtitle?.trim(),
+  );
 
   const blob = await renderVideoToBlob(
     {
@@ -440,9 +457,17 @@ async function exportVideo({
       title: config.text.title?.trim() ?? "",
       subtitle: config.text.subtitle?.trim() ?? "",
       backgroundCss: getBackgroundStyle(config, assetMap),
-      fontFamily: getFontStyleCssValue(config.fontStyle ?? "founder"),
+      fontFamily: getFontStyleCssValue(effectiveFontStyle),
       textColor: tokenToCssColor(config.colors.text),
+      variant,
+      screenshotShadowCss: getShadowValue(config.screenshotShadow),
+      titleStyle: videoTextStyles.titleStyle,
+      subtitleStyle: videoTextStyles.subtitleStyle,
+      grainEnabled: config.background?.type !== "image",
+      fadeEnabled: config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId] ?? false,
+      typingEnabled: config.layoutSpecificSettings?.typingEnabled?.[config.layoutId] ?? false,
     },
+    { width: exportDims.width, height: exportDims.height },
     (progress) => {
       setStatusMessage(`Rendering video... ${Math.round(progress * 100)}%`);
     },
