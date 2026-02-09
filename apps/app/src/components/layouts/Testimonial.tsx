@@ -6,6 +6,7 @@ import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/layout-primitives";
 import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { ScanlinesOverlay } from "@/components/layouts/shared/ScanlinesOverlay";
+import { DotsOverlay } from "@/components/layouts/shared/DotsOverlay";
 import { orientationAtom, assetsAtom, brandSettingsAtom } from "@/hooks/atoms";
 import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 import { useSession } from "@/lib/auth/auth-client";
@@ -265,6 +266,9 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
       ) : null}
       {testimonialStyle.texture === "scanlines" ? (
         <ScanlinesOverlay enabled intensity={testimonialStyle.textureIntensity} />
+      ) : null}
+      {testimonialStyle.texture === "dots" ? (
+        <DotsOverlay enabled intensity={testimonialStyle.textureIntensity} />
       ) : null}
 
       <div className="relative flex h-full w-full flex-col" data-export-element data-element="container">

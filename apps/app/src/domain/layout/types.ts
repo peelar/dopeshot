@@ -44,7 +44,7 @@ export type ScreenshotTreatment = {
 };
 
 // Font styles - semantic typographic systems for free users
-export type FontStyle = "founder" | "billboard" | "terminal" | "ghibli";
+export type FontStyle = "founder" | "billboard" | "terminal" | "ghibli" | "pixel";
 
 // Legacy types - kept for backward compatibility during migration
 export type FontId =
@@ -120,6 +120,7 @@ export type LayoutConfig = {
     logo?: string; // Asset ID
     background?: string; // Asset ID for background image
   };
+  overlayEnabled?: boolean; // Texture overlay (grain/dots/scanlines). Defaults to true when undefined.
   screenshotShadow?: ShadowIntensity;
   screenshotFrame?: ScreenshotTreatment;
   layoutSpecificSettings?: {

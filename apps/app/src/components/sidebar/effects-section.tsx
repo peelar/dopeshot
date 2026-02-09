@@ -1,12 +1,13 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { configAtom } from "@/hooks/atoms";
-import { layoutCapabilitiesAtom, screenshotAssetAtom } from "@/hooks/atoms/derived";
+import { layoutCapabilitiesAtom } from "@/hooks/atoms/derived";
 import { Switch } from "@/components/ui/switch";
 import type { ScreenshotTreatment } from "@/domain/layout/types";
 import { inferFadeDirection } from "@/domain/layout/fade-direction";
+import { track } from "@/lib/analytics";
 
 const DEFAULT_SCREENSHOT_TREATMENT: ScreenshotTreatment = {
   preset: "soft-glass" as const,
@@ -31,6 +32,19 @@ export function EffectsSection() {
   const layoutSpecificFadeDirection =
     config.layoutSpecificSettings?.fadeDirection?.[config.layoutId];
   const currentFadeState = layoutSpecificFadeEnabled ?? false;
+
+  const overlayEnabled = config.overlayEnabled !== false; // defaults to true
+
+  const toggleOverlay = useCallback(() => {
+    setConfig((currentConfig) => {
+      const newValue = currentConfig.overlayEnabled === false;
+      track("effect_toggled", { effect: "overlay", enabled: newValue });
+      return {
+        ...currentConfig,
+        overlayEnabled: newValue,
+      };
+    });
+  }, [setConfig]);
 
   const toggleSoftGlass = useCallback(() => {
     setConfig((currentConfig) => {
@@ -77,20 +91,14 @@ export function EffectsSection() {
     });
   }, [setConfig, layoutSpecificFadeDirection]);
 
-  const showOutlineSection =
-    outlineControls.softGlass ||
-    outlineControls.fade;
-
-  if (!showOutlineSection) {
-    return (
-      <div className="py-4 text-center text-sm text-muted-foreground">
-        This look doesn&apos;t have configurable effects
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col gap-3 pt-2">
+      <EffectToggleRow
+        label="Overlay"
+        checked={overlayEnabled}
+        onToggle={toggleOverlay}
+      />
+
       {outlineControls.softGlass && (
         <EffectToggleRow
           label="Soft Glass"

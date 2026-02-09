@@ -59,6 +59,13 @@
       "foggy bay light",
       "cool glass sheen",
       "soft neutral wash"
+    ],
+    "retro": [
+      "pixel grid glow",
+      "8-bit sunset gradient",
+      "neon pixel blocks",
+      "retro arcade light",
+      "blocky color bands"
     ]
   },
   "orchestration": {

@@ -2,7 +2,7 @@ import { getStyleForPersonality, type PersonalityShadow } from "@/domain/brand/p
 import { hexToRgba } from "@/domain/layout/gradients/utils";
 import type { BrandMode, BrandPersonality } from "@/lib/types/brand";
 
-export type TestimonialTexture = "none" | "grain" | "scanlines";
+export type TestimonialTexture = "none" | "grain" | "scanlines" | "dots";
 export type TestimonialTier = "anonymous" | "default" | "brand";
 
 export interface ResolveTestimonialStyleInput {
@@ -289,6 +289,33 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
           : "0 2px 8px rgba(22, 163, 74, 0.14), 0 1px 3px rgba(22, 101, 52, 0.12)",
         texture: "scanlines",
         textureIntensity: 0.45,
+        showDecorativeBlobs: false,
+      };
+    case "retro":
+      return {
+        ...style,
+        cardRadius: 0,
+        canvasBackground: dark
+          ? `linear-gradient(180deg, #0F0A2A 0%, #1A1040 50%, ${mixHex(accent, "#2D1B69", 0.6)} 100%)`
+          : `linear-gradient(180deg, #F0ECFF 0%, #E8E0FF 50%, ${mixHex(accent, "#C4B5FD", 0.5)} 100%)`,
+        cardBackground: dark ? "rgba(15, 10, 42, 0.92)" : "rgba(255, 255, 255, 0.92)",
+        cardBorder: dark ? hexToRgba(accent, 0.5) : hexToRgba(accent, 0.35),
+        textColor: dark ? "#E0E7FF" : "#1E1B4B",
+        mutedTextColor: dark ? "rgba(224, 231, 255, 0.72)" : "rgba(30, 27, 75, 0.68)",
+        quoteMarkColor: dark ? hexToRgba(accent, 0.35) : hexToRgba(accent, 0.28),
+        avatarRingColor: dark ? hexToRgba(accent, 0.5) : hexToRgba(accent, 0.35),
+        authorPlateBackground: dark
+          ? `linear-gradient(135deg, ${hexToRgba(accent, 0.18)} 0%, rgba(15, 10, 42, 0.88) 100%)`
+          : `linear-gradient(135deg, ${hexToRgba(accent, 0.1)} 0%, rgba(255, 255, 255, 0.95) 100%)`,
+        authorPlateBorder: dark ? hexToRgba(accent, 0.5) : hexToRgba(accent, 0.3),
+        authorPlateShadow: dark
+          ? `4px 4px 0 ${hexToRgba(accent, 0.25)}`
+          : `3px 3px 0 ${hexToRgba(accent, 0.18)}`,
+        cardShadow: dark
+          ? `4px 4px 0 ${hexToRgba(accent, 0.3)}`
+          : `3px 3px 0 ${hexToRgba(accent, 0.2)}`,
+        texture: "dots",
+        textureIntensity: 0.4,
         showDecorativeBlobs: false,
       };
     case "founder":

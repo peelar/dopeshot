@@ -33,8 +33,9 @@ export interface PersonalityStyle {
  * Each personality defines a cohesive visual system:
  * - Hipster: Warm, grainy, handcrafted (Bricolage Grotesque)
  * - Founder: Sharp, clean, precise (Geist Sans)
- * - Hacker: Terminal vibes, functional, no fluff (Geist Pixel Square)
+ * - Hacker: Terminal vibes, functional, no fluff (IBM Plex Mono)
  * - Kawaii: Soft, rounded, Studio Ghibli warmth (Kiwi Maru)
+ * - Retro: 8-bit pixel art, bright primaries, game-inspired (Geist Pixel Square)
  */
 export const personalityStyles: Record<BrandPersonality, PersonalityStyle> = {
   hipster: {
@@ -71,7 +72,7 @@ export const personalityStyles: Record<BrandPersonality, PersonalityStyle> = {
     },
     texture: "scanlines", // stubbed - falls back to grain
     textureIntensity: 0.3,
-    fontStyle: "terminal", // Geist Pixel Square
+    fontStyle: "terminal", // IBM Plex Mono
   },
   kawaii: {
     cornerRadius: 24,
@@ -83,6 +84,18 @@ export const personalityStyles: Record<BrandPersonality, PersonalityStyle> = {
     },
     texture: "none",
     fontStyle: "ghibli", // Kiwi Maru - warm, rounded, Studio Ghibli feel
+  },
+  retro: {
+    cornerRadius: 0,
+    shadow: {
+      blur: 0,
+      spread: 0,
+      offsetY: 4,
+      opacity: 0.6,
+    },
+    texture: "dots",
+    textureIntensity: 0.4,
+    fontStyle: "pixel", // Geist Pixel Square - 8-bit, game-inspired
   },
 };
 

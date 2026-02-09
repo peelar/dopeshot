@@ -131,6 +131,7 @@ export function OnboardingForm({
       founder: "Sharp & modern",
       hacker: "Terminal vibes",
       kawaii: "Warm & rounded",
+      retro: "Pixel & 8-bit",
     }),
     [],
   );
@@ -141,6 +142,7 @@ export function OnboardingForm({
       founder: "font-clean",
       hacker: "font-developer",
       kawaii: "font-ghibli",
+      retro: "font-pixel",
     }),
     [],
   );
@@ -665,7 +667,7 @@ export function OnboardingForm({
             </div>
 
             <div className="mt-4">
-              <div role="radiogroup" aria-label="Which personality fits your brand" className="grid grid-cols-2 gap-2">
+              <div role="radiogroup" aria-label="Which personality fits your brand" className="grid grid-cols-3 gap-2">
                 {personalityOptions.map((option) => {
                   const isActive = personality === option.id;
                   return (

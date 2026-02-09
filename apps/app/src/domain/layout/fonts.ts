@@ -15,13 +15,14 @@ export interface FontStyleDefinition {
 }
 
 /**
- * Font Styles - 4 personality-driven typographic systems
+ * Font Styles - 5 personality-driven typographic systems
  *
  * Each font maps to a brand personality:
  * - Founder (Geist Sans) → Founder personality
  * - Billboard (Bricolage Grotesque) → Hipster personality
- * - Terminal (Geist Pixel Square) → Hacker personality
+ * - Terminal (IBM Plex Mono) → Hacker personality
  * - Ghibli (Kiwi Maru) → Kawaii personality
+ * - Pixel (Geist Pixel Square) → Retro personality
  */
 export const FONT_STYLES: FontStyleDefinition[] = [
   {
@@ -43,10 +44,10 @@ export const FONT_STYLES: FontStyleDefinition[] = [
   {
     id: "terminal",
     name: "Terminal",
-    fontName: "Geist Pixel Square",
-    foundry: "Vercel",
+    fontName: "IBM Plex Mono",
+    foundry: "IBM",
     cssVariable: "--font-developer",
-    description: "Pixelated, technical, retro-digital",
+    description: "Monospace, technical, tool-like",
   },
   {
     id: "ghibli",
@@ -55,6 +56,14 @@ export const FONT_STYLES: FontStyleDefinition[] = [
     foundry: "Hiroki-Chan",
     cssVariable: "--font-ghibli",
     description: "Warm, rounded, Studio Ghibli feel",
+  },
+  {
+    id: "pixel",
+    name: "Pixel",
+    fontName: "Geist Pixel Square",
+    foundry: "Vercel",
+    cssVariable: "--font-pixel",
+    description: "Pixelated, retro-digital, 8-bit",
   },
 ];
 
@@ -181,8 +190,8 @@ export const FONTS: FontDefinition[] = [
   {
     id: "developer",
     alias: "Terminal",
-    fontName: "Geist Pixel Square",
-    foundry: "Vercel",
+    fontName: "IBM Plex Mono",
+    foundry: "IBM",
     cssVariable: "--font-developer",
   },
   {

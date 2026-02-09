@@ -3,6 +3,7 @@ import { GeistSans } from "geist/font/sans";
 import { GeistPixelSquare } from "geist/font/pixel";
 import {
   Inter,
+  IBM_Plex_Mono,
   Bricolage_Grotesque,
   Kiwi_Maru,
 } from "next/font/google";
@@ -29,6 +30,12 @@ const interUi = Inter({
   variable: "--font-ui",
 });
 
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-developer",
+});
+
 const geistPixel = GeistPixelSquare;
 
 const bricolageGrotesque = Bricolage_Grotesque({
@@ -46,6 +53,7 @@ const kiwiMaru = Kiwi_Maru({
 const fontVariables = [
   geistSans.variable, // --font-geist-sans (from package)
   interUi.variable,
+  ibmPlexMono.variable, // --font-developer
   geistPixel.variable, // --font-geist-pixel-square (from package)
   bricolageGrotesque.variable,
   kiwiMaru.variable,
@@ -107,7 +115,7 @@ export default function RootLayout({
         style={
           {
             "--font-clean": "var(--font-geist-sans)",
-            "--font-developer": "var(--font-geist-pixel-square)",
+            "--font-pixel": "var(--font-geist-pixel-square)",
             "--font-sans": "var(--font-ui)",
           } as React.CSSProperties
         }

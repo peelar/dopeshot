@@ -5,6 +5,7 @@ export const brandPersonalityValues = [
   "founder",
   "hacker",
   "kawaii",
+  "retro",
 ] as const;
 
 export type BrandPersonality = (typeof brandPersonalityValues)[number];
@@ -16,6 +17,7 @@ export const brandPersonalityLabels: Record<BrandPersonality, string> = {
   founder: "Founder",
   hacker: "Hacker",
   kawaii: "Kawaii",
+  retro: "Retro",
 };
 
 // Type guard to check if a value is a valid BrandPersonality

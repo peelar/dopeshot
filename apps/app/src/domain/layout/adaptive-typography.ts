@@ -11,6 +11,7 @@ import type { FontStyle } from "./types";
  * - Billboard: Bold, expressive, max 2 lines
  * - Terminal: Compact, technical, max 4 lines
  * - Ghibli: Warm, rounded, Studio Ghibli feel, max 3 lines
+ * - Pixel: Blocky, retro-digital, max 2 lines (display font needs space)
  */
 
 export interface TypographyScalingRules {
@@ -81,6 +82,18 @@ export const FONT_STYLE_SCALING_RULES: Record<FontStyle, TypographyScalingRules>
     subtitleMaxLines: 3,
     titleLetterSpacing: 0,
   },
+  pixel: {
+    titleMinSize: 2.0,
+    titleMaxSize: 4.0,
+    subtitleMinSize: 1.0,
+    subtitleMaxSize: 1.25,
+    titleLineHeight: 1.2,
+    subtitleLineHeight: 1.4,
+    titleMaxLines: 2,
+    subtitleMaxLines: 2,
+    titleLetterSpacing: 0.02,
+    subtitleLetterSpacing: 0.01,
+  },
 };
 
 /**
@@ -115,8 +128,9 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
   const styleClasses: Record<FontStyle, string[]> = {
     founder: ["tracking-tight", "font-bold"],
     billboard: ["tracking-tighter", "font-extrabold"],
-    terminal: ["tracking-tight", "font-bold"],
+    terminal: ["tracking-tight", "font-bold", "font-mono"],
     ghibli: ["tracking-normal", "font-medium"],
+    pixel: ["tracking-wide", "font-bold", "uppercase"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);
@@ -145,8 +159,9 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
   const styleClasses: Record<FontStyle, string[]> = {
     founder: ["tracking-normal"],
     billboard: ["tracking-tight", "font-medium"],
-    terminal: ["tracking-tight"],
+    terminal: ["tracking-tight", "font-mono"],
     ghibli: ["tracking-normal", "font-normal"],
+    pixel: ["tracking-wide"],
   };
 
   baseClasses.push(...styleClasses[fontStyle]);

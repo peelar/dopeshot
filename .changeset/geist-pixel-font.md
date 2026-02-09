@@ -1,9 +1,12 @@
 ---
-"dopeshot-app": patch
+"dopeshot-app": minor
 ---
 
-Replace IBM Plex Mono with Geist Pixel Square for the Hacker personality font.
+Add new "Retro" brand personality with Geist Pixel Square font.
 
+- Add `retro` personality: 8-bit pixel art direction with 0 corner radius, hard drop shadow, dot grid texture
+- Add `pixel` font style using Geist Pixel Square (bitmap-inspired display font from Vercel)
 - Upgrade `geist` package to 1.7.0 for pixel font support
-- Swap Terminal/Hacker font from IBM Plex Mono to Geist Pixel Square (bitmap-inspired display font)
-- Remove `font-mono` Tailwind class from terminal style since Geist Pixel is not a monospace font
+- Create `DotsOverlay` component for pixel dot-grid texture effect
+- Add retro testimonial styling with deep indigo/pastel palette and hard pixel shadows
+- Update onboarding grid from 2x2 to 3-col layout to accommodate 5 personalities
