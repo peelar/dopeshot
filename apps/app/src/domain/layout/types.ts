@@ -33,6 +33,7 @@ export type FrameShape = "rounded" | "rectangular";
 
 export type CanvasMode = "adaptive" | "locked";
 export type TestimonialExportAspect = "3:4" | "4:5" | "9:16" | "16:9";
+export type TwitterExportAspect = "4:5" | "16:9";
 
 export type ScreenshotTreatment = {
   preset: ScreenshotFramePreset;
@@ -139,6 +140,26 @@ export type LayoutConfig = {
       styleAccent?: string; // Testimonial-local accent override (hex)
       styleMode?: BrandMode; // Testimonial-local mode override
       exportAspect?: TestimonialExportAspect;
+    };
+    twitterTestimonial?: {
+      tweetUrl?: string;
+      tweetId?: string;
+      cachedTweet?: {
+        text: string;
+        authorName: string;
+        authorHandle: string; // without @
+        authorAvatarUrl: string;
+        createdAt: string; // ISO date string
+        metrics?: {
+          likes: number;
+          replies: number;
+        };
+      };
+      fetchStatus?: "idle" | "loading" | "success" | "error";
+      fetchError?: string;
+      styleAccent?: string;
+      styleMode?: BrandMode;
+      exportAspect?: TwitterExportAspect;
     };
   };
 };

@@ -54,6 +54,7 @@ type PreviewCard = {
 const FORMAT_TABS: { value: LayoutFormat; label: string }[] = [
   { value: "screenshot", label: "Screenshot" },
   { value: "testimonial", label: "Testimonial" },
+  { value: "tweet", label: "Tweet" },
 ];
 
 export function LayoutSelector({ className }: { className?: string }) {
@@ -218,7 +219,7 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   const handleFormatTabClick = useCallback(
     (format: LayoutFormat) => {
-      if (format === "testimonial" && !isBrandUser) {
+      if ((format === "testimonial" || format === "tweet") && !isBrandUser) {
         setShowLockedTooltip(true);
         track("testimonial_gate_hit", { reason: isLoggedIn ? "free_tier" : "not_logged_in" });
         return;
@@ -268,7 +269,7 @@ export function LayoutSelector({ className }: { className?: string }) {
       <div className="flex gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
-          const isLocked = tab.value === "testimonial" && !isBrandUser;
+          const isLocked = (tab.value === "testimonial" || tab.value === "tweet") && !isBrandUser;
           const tabButton = (
             <button
               type="button"
@@ -286,7 +287,7 @@ export function LayoutSelector({ className }: { className?: string }) {
             >
               {isLocked && <Lock className="h-3 w-3" />}
               {tab.label}
-              {tab.value === "testimonial" && (
+              {tab.value === "tweet" && (
                 <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
               )}
             </button>
@@ -448,6 +449,26 @@ function LayoutSketch({
   }
 
   if (isTestimonialLayout) {
+    const isTwitter = layoutId === "testimonial-twitter";
+
+    if (isTwitter) {
+      // Twitter testimonial: X logo, quote lines, author with handle
+      return (
+        <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-stone-100 p-3 dark:bg-stone-800">
+          {/* X logo */}
+          <div className="h-2.5 w-2.5 rounded-sm bg-stone-500 dark:bg-stone-400" />
+          {/* Quote lines */}
+          <div className="h-1.5 w-20 rounded bg-stone-400 dark:bg-stone-500" />
+          <div className="h-1.5 w-14 rounded bg-stone-400/70 dark:bg-stone-500/70" />
+          {/* Author with avatar dot */}
+          <div className="mt-1 flex items-center gap-1">
+            <div className="h-2.5 w-2.5 rounded-full bg-stone-400 dark:bg-stone-500" />
+            <div className="h-1 w-8 rounded bg-stone-300 dark:bg-stone-600" />
+          </div>
+        </div>
+      );
+    }
+
     // Testimonial: stars, quote lines, author at bottom — all centered
     return (
       <div className="flex h-full w-full flex-col items-center justify-center gap-1.5 bg-stone-100 p-3 dark:bg-stone-800">

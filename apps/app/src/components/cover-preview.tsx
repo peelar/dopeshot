@@ -13,6 +13,14 @@ import { useSession } from "@/lib/auth/auth-client";
 import { useUserTier } from "@/hooks/use-user-tier";
 import { track } from "@/lib/analytics";
 
+function XLogo({ size = 24 }: { size?: number }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-label="X">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+}
+
 interface CoverPreviewProps {
   className?: string;
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
@@ -134,7 +142,6 @@ export function CoverPreview({
                       icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
                       label="Testimonial"
                       description="Social proof graphics from customer quotes"
-                      isNew
                       onClick={() => {
                         setActiveFormat("testimonial");
                         onFormatChosen?.("testimonial");
@@ -149,6 +156,40 @@ export function CoverPreview({
                               icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
                               label="Testimonial"
                               description="Social proof graphics from customer quotes"
+                              isLocked
+                              onClick={() => {
+                                track("testimonial_gate_hit", {
+                                  reason: isLoggedIn ? "free_tier" : "not_logged_in",
+                                });
+                                onLockedTestimonialClick?.();
+                              }}
+                            />
+                          </span>
+                        )}
+                      />
+                      <TooltipContent side="top">Available on Brand plan.</TooltipContent>
+                    </Tooltip>
+                  )}
+                  {isBrandUser ? (
+                    <FormatCard
+                      icon={<XLogo size={24} />}
+                      label="Tweet"
+                      description="Turn tweets into branded cards"
+                      isNew
+                      onClick={() => {
+                        setActiveFormat("tweet");
+                        onFormatChosen?.("tweet");
+                      }}
+                    />
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger
+                        render={(props) => (
+                          <span {...props}>
+                            <FormatCard
+                              icon={<XLogo size={24} />}
+                              label="Tweet"
+                              description="Turn tweets into branded cards"
                               isNew
                               isLocked
                               onClick={() => {

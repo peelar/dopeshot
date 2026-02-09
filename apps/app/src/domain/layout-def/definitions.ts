@@ -18,7 +18,7 @@ const DEFAULT_GRADIENT: { gradient: CustomGradient; textColor: "slate-50" | "sla
   textColor: "slate-50",
 };
 
-export type LayoutFormat = "screenshot" | "testimonial" | "none";
+export type LayoutFormat = "screenshot" | "testimonial" | "tweet" | "none";
 
 export type LayoutTextRequirement = "required" | "optional" | "hidden";
 
@@ -380,17 +380,97 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
     },
   },
+  {
+    id: "testimonial-twitter",
+    name: "Tweet",
+    description: "Turn a tweet into a beautiful testimonial card with brand styling.",
+    format: "tweet",
+    variants: [],
+    createConfig: () => ({
+      layoutId: "testimonial-twitter",
+      variant: "default",
+      text: {
+        title: "",
+        subtitle: "",
+      },
+      colors: {
+        background: "slate-50",
+        text: DEFAULT_GRADIENT.textColor,
+        accent: "violet-400",
+      },
+      background: {
+        type: "gradient",
+        value: "custom",
+        customGradient: DEFAULT_GRADIENT.gradient,
+        grainEnabled: true,
+        patternMode: "auto",
+      },
+      assets: {
+        screenshot: undefined,
+        logo: undefined,
+        background: undefined,
+      },
+      screenshotShadow: "medium",
+      screenshotFrame: {
+        preset: "soft-glass",
+        canvasMode: "locked",
+        lockedAspectRatio: 16 / 9,
+        shadowEnabled: false,
+        shape: "rounded",
+      },
+      layoutSpecificSettings: {
+        twitterTestimonial: {
+          tweetUrl: "https://x.com/gaba6ool/status/1996323575091868087",
+          tweetId: "1996323575091868087",
+          cachedTweet: {
+            text: "I've got tired of opening Figma just to make screenshots look decent so I spent some evenings over the last 2 weeks building this: https://t.co/jtPSGQLw1J slap a screenshot → generate matching gradients → add text → export done",
+            authorName: "Adrian Pilarczyk",
+            authorHandle: "gaba6ool",
+            authorAvatarUrl: "https://pbs.twimg.com/profile_images/2004938742113447936/DShyUSln_normal.jpg",
+            createdAt: "2025-12-03T21:00:04.000Z",
+            metrics: {
+              likes: 4,
+              replies: 2,
+            },
+          },
+          fetchStatus: "success",
+          exportAspect: "4:5",
+        },
+      },
+    }),
+    capabilities: {
+      focusMode: "never",
+      canvasBehavior: "locked",
+      zoomBehavior: "scale-content",
+      text: {
+        headline: "hidden",
+        subtitle: "hidden",
+      },
+      typography: true,
+      outline: {
+        softGlass: false,
+        shadow: false,
+      },
+      logo: "supported",
+      screenshot: "hidden",
+      supportedOrientations: ["mobile", "desktop"],
+    },
+  },
 ];
 
 /**
  * Exported layout definitions with variants flattened.
  * Each layout+variant combination is its own entry.
  *
- * Total: 7 layouts
+ * Total: 8 layouts across 4 formats
+ * Screenshot format (6):
  * - popup-gradient-left, popup-gradient-right, popup-gradient-center (Peak)
  * - hero-center-left, hero-center-right (Spotlight)
  * - adaptive-stage (Backdrop, no variants)
+ * Testimonial format (1):
  * - testimonial (Testimonial, no variants)
+ * Tweet format (1):
+ * - testimonial-twitter (Tweet, no variants)
  */
 export const LAYOUT_DEFINITIONS: LayoutDefinition[] = RAW_LAYOUT_DEFINITIONS.flatMap(expandLayoutVariants);
 

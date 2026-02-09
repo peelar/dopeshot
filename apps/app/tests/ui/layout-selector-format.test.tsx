@@ -56,11 +56,12 @@ describe("LayoutSelector format tabs", () => {
     store.set(activeFormatAtom, "screenshot");
   });
 
-  it("renders Screenshot and Testimonial format tabs", () => {
+  it("renders Screenshot, Testimonial, and Tweet format tabs", () => {
     renderWithStore(store);
 
     expect(screen.getByText("Screenshot")).toBeInTheDocument();
     expect(screen.getByText("Testimonial")).toBeInTheDocument();
+    expect(screen.getByText("Tweet")).toBeInTheDocument();
   });
 
   it("Screenshot tab is active by default", () => {
@@ -90,7 +91,7 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
+    expect(screen.getAllByText("Available on Brand plan.").length).toBeGreaterThan(0);
   });
 
   it("does not switch format when anonymous user clicks Testimonial tab", () => {
@@ -133,7 +134,7 @@ describe("LayoutSelector format tabs", () => {
     const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
     fireEvent.mouseEnter(tab);
 
-    expect(screen.getByText("Available on Brand plan.")).toBeInTheDocument();
+    expect(screen.getAllByText("Available on Brand plan.").length).toBeGreaterThan(0);
   });
 
   it("switches format when brand user clicks Testimonial tab", () => {
