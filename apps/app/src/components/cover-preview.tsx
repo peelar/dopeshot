@@ -154,7 +154,7 @@ export function CoverPreview({
                   <FormatCard
                     icon={<AtSign className="h-6 w-6" strokeWidth={1.5} />}
                     label="Tweet"
-                    description="Turn tweets into branded testimonial cards"
+                    description="Turn tweets into branded cards"
                     isNew
                     onClick={() => {
                       setActiveFormat("tweet");
@@ -169,7 +169,7 @@ export function CoverPreview({
                           <FormatCard
                             icon={<AtSign className="h-6 w-6" strokeWidth={1.5} />}
                             label="Tweet"
-                            description="Turn tweets into branded testimonial cards"
+                            description="Turn tweets into branded cards"
                             isNew
                             isLocked
                             onClick={() => {
