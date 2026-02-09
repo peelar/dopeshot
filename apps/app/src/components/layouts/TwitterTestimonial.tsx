@@ -267,7 +267,7 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
 
       <div className="relative flex h-full w-full flex-col" data-export-element data-element="container">
         {/* Logo */}
-        <div className="absolute left-14 top-8 z-10 flex items-center">
+        <div className="absolute left-1/2 top-8 z-10 flex -translate-x-1/2 items-center">
           {renderLogo()}
         </div>
 
