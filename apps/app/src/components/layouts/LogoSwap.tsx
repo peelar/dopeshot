@@ -6,6 +6,7 @@ import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { LogoBadge } from "@/components/layouts/shared/LogoBadge";
 import { assetsAtom, configAtom } from "@/hooks/atoms";
 import { track } from "@/lib/analytics";
+import { tokenToCssColor } from "@/components/layouts/shared/color-utils";
 
 interface LogoSwapProps {
   className?: string;
@@ -108,7 +109,7 @@ function LogoSwapComponent({
         <img
           src={asset.url}
           alt={`${position === "left" ? "Left" : "Right"} logo`}
-          className="max-h-full max-w-full object-contain"
+          className="max-h-full max-w-full object-contain brightness-0 invert"
           crossOrigin="anonymous"
           onError={(e) => {
             e.currentTarget.style.display = "none";
@@ -131,6 +132,19 @@ function LogoSwapComponent({
     );
   };
 
+  // Generate custom gradient background with irregular blob
+  const accentColor = tokenToCssColor(config.colors.accent);
+  const customBackground = useMemo(() => {
+    return {
+      background: `
+        radial-gradient(ellipse 900px 700px at 45% 48%, ${accentColor}80 0%, transparent 50%),
+        radial-gradient(ellipse 700px 600px at 55% 52%, ${accentColor}60 0%, transparent 60%),
+        radial-gradient(ellipse 1100px 800px at 50% 50%, ${accentColor}40 0%, transparent 50%),
+        linear-gradient(135deg, #f5f0ea 0%, #ebe5dd 100%)
+      `,
+    };
+  }, [accentColor]);
+
   return (
     <LayoutSurface
       className={cn("bg-cover bg-center bg-no-repeat", className)}
@@ -139,6 +153,12 @@ function LogoSwapComponent({
       config={config}
       assetMap={assetMap}
     >
+      {/* Custom gradient background with irregular blob */}
+      <div
+        className="absolute inset-0"
+        style={customBackground}
+      />
+
       <GrainOverlay
         enabled={config.background?.grainEnabled ?? false}
       />
