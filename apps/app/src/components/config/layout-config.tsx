@@ -370,8 +370,8 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {/* Show background section for screenshot and tweet formats (not testimonial) */}
-        {!isMobile && (layoutFormat === "screenshot" || layoutFormat === "tweet") && <BackgroundSection />}
+        {/* Show background section for screenshot format only */}
+        {!isMobile && layoutFormat === "screenshot" && <BackgroundSection />}
 
         {/* Hide screenshot section on mobile and for testimonial format */}
         {!isMobile && showScreenshotSection && (
