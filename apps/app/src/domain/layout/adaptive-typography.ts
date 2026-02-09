@@ -115,7 +115,7 @@ export function getTitleClasses(fontStyle: FontStyle, textLength?: number): stri
   const styleClasses: Record<FontStyle, string[]> = {
     founder: ["tracking-tight", "font-bold"],
     billboard: ["tracking-tighter", "font-extrabold"],
-    terminal: ["tracking-tight", "font-bold", "font-mono"],
+    terminal: ["tracking-tight", "font-bold"],
     ghibli: ["tracking-normal", "font-medium"],
   };
 
@@ -145,7 +145,7 @@ export function getSubtitleClasses(fontStyle: FontStyle, textLength?: number): s
   const styleClasses: Record<FontStyle, string[]> = {
     founder: ["tracking-normal"],
     billboard: ["tracking-tight", "font-medium"],
-    terminal: ["tracking-tight", "font-mono"],
+    terminal: ["tracking-tight"],
     ghibli: ["tracking-normal", "font-normal"],
   };
 
