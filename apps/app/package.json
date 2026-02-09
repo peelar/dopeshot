@@ -30,6 +30,7 @@
     "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-switch": "^1.2.6",
     "@remotion/player": "^4.0.419",
+    "@remotion/web-renderer": "4.0.419",
     "@sentry/nextjs": "^10",
     "@supabase/supabase-js": "^2.88.0",
     "bcryptjs": "^3.0.3",

@@ -26,6 +26,8 @@ import {
   currentExportBlobAtom,
   showExportSheetAtom,
   exportThumbnailAtom,
+  previewModeAtom,
+  type PreviewMode,
 } from "@/hooks/atoms";
 import {
   canvasAtom,
@@ -48,10 +50,12 @@ interface ExportContext {
   setStatusMessage: Setter<string>;
   setIsExporting: Setter<boolean>;
   config: LayoutConfig;
+  assets: Asset[];
   currentLook: LayoutDefinition | undefined;
   canvas: { width: number; height: number };
   screenshotAsset: Asset | undefined;
   orientation: "mobile" | "desktop";
+  previewMode: PreviewMode;
   setHasExported: Setter<boolean>;
   setCurrentExportBlob: Setter<Blob | null>;
   setShowExportSheet: Setter<boolean>;
@@ -78,6 +82,7 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
   const shouldShowAspectLock = useAtomValue(shouldShowAspectLockAtom);
   const isAspectLocked = useAtomValue(isAspectLockedAtom);
   const setStatusMessage = useSetAtom(statusMessageAtom);
+  const previewMode = useAtomValue(previewModeAtom);
   const [hasAppliedRandomPreset, setHasAppliedRandomPreset] = useState(false);
 
   const { isConfigDrawerOpen, setIsConfigDrawerOpen } = useConfigDrawer(isMobile);
@@ -117,10 +122,12 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
     setStatusMessage,
     setIsExporting,
     config,
+    assets,
     currentLook,
     canvas,
     screenshotAsset,
     orientation,
+    previewMode,
     setHasExported,
     setCurrentExportBlob,
     setShowExportSheet,
@@ -239,10 +246,12 @@ function useExportHandler({
   setStatusMessage,
   setIsExporting,
   config,
+  assets,
   currentLook,
   canvas,
   screenshotAsset,
   orientation,
+  previewMode,
   setHasExported,
   setCurrentExportBlob,
   setShowExportSheet,
@@ -256,8 +265,10 @@ function useExportHandler({
     }
 
     const exportType = getLayoutFormat(config.layoutId) === "testimonial" ? "testimonial" : "screenshot";
+    const format = previewMode === "video" ? "mp4" : "png";
 
     track("export_button_clicked", {
+      format,
       look_id: config.layoutId,
       look_name: currentLook?.name ?? "unknown",
       variant: config.variant,
@@ -267,43 +278,32 @@ function useExportHandler({
       export_type: exportType,
     });
     setIsExporting(true);
-    setStatusMessage("Exporting image...");
+
     try {
-      // Use high-resolution export dimensions
-      const exportDims = getExportDimensionsForLayout(config, orientation);
+      if (previewMode === "video") {
+        await exportVideo({
+          config,
+          assets,
+          screenshotAsset,
+          setStatusMessage,
+          setCurrentExportBlob,
+          setHasExported,
+        });
+      } else {
+        await exportImage({
+          config,
+          orientation,
+          screenshotAsset,
+          setStatusMessage,
+          setCurrentExportBlob,
+          setHasExported,
+        });
+      }
 
-      const maxImageScale =
-        screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
-          ? Math.min(
-              screenshotAsset.metadata.width / exportDims.width,
-              screenshotAsset.metadata.height / exportDims.height,
-            )
-          : undefined;
-
-      // Use blob export for memory persistence
-      const { dataUrl, blob } = await exportLayoutAsPngWithBlob("export-container", {
-        width: exportDims.width,
-        height: exportDims.height,
-        maxImageScale,
-      });
-
-      // Trigger download
-      const link = document.createElement("a");
-      link.download = "cover-image.png";
-      link.href = dataUrl;
-      link.click();
-
-      // Store blob for voluntary save and update button state
-      setCurrentExportBlob(blob);
-      setHasExported(true);
-
-      setStatusMessage("Image exported successfully.");
-
-      // Track successful export
       track("export_completed", {
+        format,
         look_id: config.layoutId,
         orientation,
-        format: getLayoutFormat(config.layoutId),
         export_type: exportType,
       });
 
@@ -334,13 +334,13 @@ function useExportHandler({
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
       setStatusMessage(`Export failed: ${msg}`);
 
-      // Show toast notification as fallback since status message may not be visible
       toast.error("Export failed", {
         description: msg,
       });
 
       track("export_failed", {
         error: msg,
+        format,
         look_id: config.layoutId,
         orientation,
       });
@@ -348,18 +348,16 @@ function useExportHandler({
       setIsExporting(false);
     }
   }, [
+    assets,
     canvas.height,
     canvas.width,
-    config.background?.type,
-    config.fontStyle,
-    config.layoutId,
-    config.variant,
+    config,
     currentLook?.name,
     hasScreenshot,
     orientation,
+    previewMode,
     requiresScreenshot,
-    screenshotAsset?.metadata?.height,
-    screenshotAsset?.metadata?.width,
+    screenshotAsset,
     setIsExporting,
     setStatusMessage,
     setHasExported,
@@ -368,6 +366,98 @@ function useExportHandler({
     setExportThumbnail,
     isAuthenticated,
   ]);
+}
+
+async function exportImage({
+  config,
+  orientation,
+  screenshotAsset,
+  setStatusMessage,
+  setCurrentExportBlob,
+  setHasExported,
+}: {
+  config: LayoutConfig;
+  orientation: "mobile" | "desktop";
+  screenshotAsset: Asset | undefined;
+  setStatusMessage: Setter<string>;
+  setCurrentExportBlob: Setter<Blob | null>;
+  setHasExported: Setter<boolean>;
+}) {
+  setStatusMessage("Exporting image...");
+
+  const exportDims = getExportDimensionsForLayout(config, orientation);
+  const maxImageScale =
+    screenshotAsset?.metadata?.width && screenshotAsset?.metadata?.height
+      ? Math.min(
+          screenshotAsset.metadata.width / exportDims.width,
+          screenshotAsset.metadata.height / exportDims.height,
+        )
+      : undefined;
+
+  const { dataUrl, blob } = await exportLayoutAsPngWithBlob("export-container", {
+    width: exportDims.width,
+    height: exportDims.height,
+    maxImageScale,
+  });
+
+  const link = document.createElement("a");
+  link.download = "cover-image.png";
+  link.href = dataUrl;
+  link.click();
+
+  setCurrentExportBlob(blob);
+  setHasExported(true);
+  setStatusMessage("Image exported successfully.");
+}
+
+async function exportVideo({
+  config,
+  assets,
+  screenshotAsset,
+  setStatusMessage,
+  setCurrentExportBlob,
+  setHasExported,
+}: {
+  config: LayoutConfig;
+  assets: Asset[];
+  screenshotAsset: Asset | undefined;
+  setStatusMessage: Setter<string>;
+  setCurrentExportBlob: Setter<Blob | null>;
+  setHasExported: Setter<boolean>;
+}) {
+  setStatusMessage("Rendering video... 0%");
+
+  const { getBackgroundStyle } = await import("@/components/layouts/shared/background-style");
+  const { tokenToCssColor } = await import("@/components/layouts/shared/color-utils");
+  const { getFontStyleCssValue } = await import("@/domain/layout/fonts");
+  const { renderVideoToBlob } = await import("@/remotion/render");
+
+  const assetMap = new Map(assets.map((a) => [a.id, a]));
+
+  const blob = await renderVideoToBlob(
+    {
+      screenshotUrl: screenshotAsset?.url ?? "",
+      title: config.text.title?.trim() ?? "",
+      subtitle: config.text.subtitle?.trim() ?? "",
+      backgroundCss: getBackgroundStyle(config, assetMap),
+      fontFamily: getFontStyleCssValue(config.fontStyle ?? "founder"),
+      textColor: tokenToCssColor(config.colors.text),
+    },
+    (progress) => {
+      setStatusMessage(`Rendering video... ${Math.round(progress * 100)}%`);
+    },
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.download = "cover-video.mp4";
+  link.href = url;
+  link.click();
+  URL.revokeObjectURL(url);
+
+  setCurrentExportBlob(blob);
+  setHasExported(true);
+  setStatusMessage("Video exported successfully.");
 }
 
 function useCanvasModeToggle(setConfig: Setter<LayoutConfig>) {
