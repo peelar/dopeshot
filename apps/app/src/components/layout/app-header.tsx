@@ -52,7 +52,7 @@ export function AppHeader({
   leftSidebarOpen,
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
-  const shouldShowCtaButton = !isLoggedIn || shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
+  const shouldShowCtaButton = !isLoggedIn || shouldShowNewButton || hasCustomScreenshot || isProcessingUpload || !isTestimonialFormat;
   const hasSaveableContent = hasCustomScreenshot || isTestimonialFormat;
   const shouldShowSaveButton = hasSaveableContent && (canSave || isAtSaveLimit);
   const ctaVariant = shouldShowNewButton ? "outline" : "secondary";

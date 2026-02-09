@@ -83,7 +83,7 @@ function PopupGradientComponent({ className, onUploadAsset, isStatic = false }: 
   } = useLayoutPrimitives();
 
   // Use personality-driven corner radius if available, otherwise default
-  const peakCornerRadius = cornerRadius ? `${cornerRadius}px` : PEAK_CORNER_RADIUS;
+  const peakCornerRadius = cornerRadius != null ? `${cornerRadius}px` : PEAK_CORNER_RADIUS;
 
   // Use layout-specific fade state, defaulting to false for Peak layout
   const layoutSpecificFadeEnabled = config.layoutSpecificSettings?.fadeEnabled?.[config.layoutId];

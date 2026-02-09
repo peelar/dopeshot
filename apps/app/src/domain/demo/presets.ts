@@ -26,7 +26,7 @@ const DEMO_PRESETS: DemoPreset[] = DEMO_TEXTS.map((text, index) => ({
   config: {
     layoutId: "popup-gradient-left", // Use flattened layout ID (first in rail)
     variant: "left",
-    fontStyle: "founder",
+    // fontStyle intentionally omitted so personality font is used as default
     text,
     colors: {
       background: "slate-900",
