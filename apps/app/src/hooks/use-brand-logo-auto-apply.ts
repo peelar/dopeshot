@@ -6,6 +6,7 @@ import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import { loadedMemoryItemIdAtom } from "@/hooks/atoms/memory";
 import { useSession } from "@/lib/auth/auth-client";
 import type { Asset } from "@/domain/asset/types";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 
 /**
  * Automatically loads and applies brand logo for NEW designs (not loaded from memory).
@@ -21,6 +22,9 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
   const loadedItemId = useAtomValue(loadedMemoryItemIdAtom);
   const [error, setError] = useState<string | null>(null);
   const hasAppliedRef = useRef(false);
+  const currentFormat = getLayoutFormat(config.layoutId);
+  const canAutoApplyInCurrentFormat =
+    currentFormat === "testimonial" || Boolean(config.assets?.screenshot);
   const prefetchPromiseRef = useRef<Promise<{ logoUrl: string; logoPath: string } | null> | null>(
     null,
   );
@@ -92,7 +96,7 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
     // - Feature is disabled
     // - Already applied this session
     // - Toggle is off
-    // - Screenshot not uploaded yet
+    // - Current format is not ready (screenshot formats require an uploaded screenshot)
     // - Logo already exists
     // - User not logged in
     // - Design was loaded from memory (brand logo handled in useMemory)
@@ -100,7 +104,7 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
       !options.enabled ||
       hasAppliedRef.current ||
       !brandSettings.useLogoOnScreenshots ||
-      !config.assets?.screenshot ||
+      !canAutoApplyInCurrentFormat ||
       config.assets?.logo ||
       !session?.user ||
       loadedItemId // Skip for loaded designs - handled in useMemory
@@ -131,7 +135,7 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
           (asset) => asset.kind === "logo" && asset.url === logoUrl,
         );
 
-        // Apply logo to screenshot
+        // Apply logo to the current canvas
         const brandLogoAsset: Asset = existingBrandLogo ?? {
           id: `brand-logo-${Date.now()}`,
           projectId: "brand",
@@ -167,10 +171,12 @@ export function useBrandLogoAutoApply(options: { enabled: boolean } = { enabled:
     assets,
     session?.user?.id,
     brandSettings.useLogoOnScreenshots,
+    canAutoApplyInCurrentFormat,
     config.assets?.logo,
+    config.assets?.screenshot,
+    config.layoutId,
     options.enabled,
     loadedItemId,
-    setBrandSettings,
     setAssets,
     setConfig,
   ]);

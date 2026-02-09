@@ -52,9 +52,10 @@ export function AppHeader({
   leftSidebarOpen,
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
-  const shouldShowCtaButton = shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
+  const shouldShowCtaButton = !isLoggedIn || shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
   const hasSaveableContent = hasCustomScreenshot || isTestimonialFormat;
   const shouldShowSaveButton = hasSaveableContent && (canSave || isAtSaveLimit);
+  const ctaVariant = shouldShowNewButton ? "outline" : "secondary";
 
   const ctaButtonLabel = shouldShowNewButton
     ? "New"
@@ -92,8 +93,12 @@ export function AppHeader({
           <Button
             type="button"
             size="sm"
-            variant="outline"
-            className="hidden items-center gap-2 border-border/80 bg-muted/40 text-foreground shadow-none hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40 sm:inline-flex"
+            variant={ctaVariant}
+            className={cn(
+              "hidden items-center gap-2 shadow-none sm:inline-flex",
+              shouldShowNewButton &&
+                "border-border/80 bg-muted/40 text-foreground hover:bg-muted/60 hover:text-foreground dark:border-border/50 dark:bg-muted/25 dark:text-foreground dark:hover:bg-muted/40",
+            )}
             onClick={shouldShowNewButton ? onNewClick : onUploadClick}
             disabled={isProcessingUpload}
             aria-label={

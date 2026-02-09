@@ -98,7 +98,6 @@ export function PreviewViewport({
       const scaleX = containerWidth / surfaceWidth;
       const scaleY = containerHeight ? containerHeight / surfaceHeight : Number.POSITIVE_INFINITY;
       const nextScale = Math.min(scaleX, scaleY, 1);
-      
       setScale(nextScale);
       setHasMeasured(true);
       reportMetrics(nextScale, containerWidth, containerHeight);
@@ -120,7 +119,7 @@ export function PreviewViewport({
         ref={containerRef}
         className={cn("flex h-full w-full items-center justify-center", className)}
       >
-        <div className="relative overflow-hidden rounded-lg">
+        <div className="relative h-full w-full overflow-hidden rounded-lg">
           {children}
           {isLoading && <LoadingOverlay text={loadingText} />}
         </div>
