@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { Camera, MessageSquareQuote, Plus, Lock } from "lucide-react";
+import { Camera, MessageSquareQuote, Plus, Lock, AtSign } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { activeFormatAtom } from "@/hooks/atoms";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
@@ -135,6 +135,41 @@ export function CoverPreview({
                             icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
                             label="Testimonial"
                             description="Social proof graphics from customer quotes"
+                            isNew
+                            isLocked
+                            onClick={() => {
+                              track("testimonial_gate_hit", {
+                                reason: isLoggedIn ? "free_tier" : "not_logged_in",
+                              });
+                              onLockedTestimonialClick?.();
+                            }}
+                          />
+                        </span>
+                      )}
+                    />
+                    <TooltipContent side="top">Available on Brand plan.</TooltipContent>
+                  </Tooltip>
+                )}
+                {isBrandUser ? (
+                  <FormatCard
+                    icon={<AtSign className="h-6 w-6" strokeWidth={1.5} />}
+                    label="Tweet"
+                    description="Turn tweets into branded testimonial cards"
+                    isNew
+                    onClick={() => {
+                      setActiveFormat("tweet");
+                      onFormatChosen?.("tweet");
+                    }}
+                  />
+                ) : (
+                  <Tooltip>
+                    <TooltipTrigger
+                      render={(props) => (
+                        <span {...props}>
+                          <FormatCard
+                            icon={<AtSign className="h-6 w-6" strokeWidth={1.5} />}
+                            label="Tweet"
+                            description="Turn tweets into branded testimonial cards"
                             isNew
                             isLocked
                             onClick={() => {
