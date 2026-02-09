@@ -64,10 +64,13 @@ export const LayoutConfigPanel = ({
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
 
   const showLogoSection = lookCapabilities?.logo !== "hidden";
-  const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
-  const isTwitterTestimonial = config.layoutId === "testimonial-twitter";
+  const layoutFormat = getLayoutFormat(config.layoutId);
+  const isTestimonialFormat = layoutFormat === "testimonial";
+  const isTweetFormat = layoutFormat === "tweet";
+  const isTwitterTestimonial = isTweetFormat; // For backwards compatibility with variable name
   const showTestimonialSections = isTestimonialFormat && isBrandUser;
-  const showScreenshotSection = !isTestimonialFormat;
+  const showTweetSections = isTweetFormat && isBrandUser;
+  const showScreenshotSection = layoutFormat === "screenshot";
 
   // Avatar field state for testimonial format
   const testimonialSettings = config.layoutSpecificSettings?.testimonial;
@@ -242,12 +245,12 @@ export const LayoutConfigPanel = ({
     <div className="flex h-full min-h-0 flex-col overflow-y-auto">
       <div className="flex flex-col gap-6 pb-6 pt-6">
         {/* Content section — "what does it say?" */}
-        {showTestimonialSections ? (
+        {showTestimonialSections || showTweetSections ? (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Content</span>
             </div>
-            {isTwitterTestimonial ? (
+            {isTweetFormat ? (
               <TwitterTestimonialContentSection />
             ) : (
               <TestimonialContentSection />
@@ -348,17 +351,17 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {showTestimonialSections && (
+        {(showTestimonialSections || showTweetSections) && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Style</span>
             </div>
-            <TestimonialStyleSection settingsKey={isTwitterTestimonial ? "twitterTestimonial" : "testimonial"} />
+            <TestimonialStyleSection settingsKey={isTweetFormat ? "twitterTestimonial" : "testimonial"} />
           </section>
         )}
 
-        {/* Hide effects and background sections on mobile and for testimonial format */}
-        {!isMobile && !isTestimonialFormat && (
+        {/* Hide effects section on mobile and for testimonial/tweet formats */}
+        {!isMobile && layoutFormat === "screenshot" && (
           <section className="space-y-3 px-4">
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Effects</span>
@@ -367,7 +370,8 @@ export const LayoutConfigPanel = ({
           </section>
         )}
 
-        {!isMobile && !isTestimonialFormat && <BackgroundSection />}
+        {/* Show background section for screenshot and tweet formats (not testimonial) */}
+        {!isMobile && (layoutFormat === "screenshot" || layoutFormat === "tweet") && <BackgroundSection />}
 
         {/* Hide screenshot section on mobile and for testimonial format */}
         {!isMobile && showScreenshotSection && (

@@ -128,7 +128,6 @@ export function CoverPreview({
                     icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
                     label="Testimonial"
                     description="Social proof graphics from customer quotes"
-                    isNew
                     onClick={() => {
                       setActiveFormat("testimonial");
                       onFormatChosen?.("testimonial");
@@ -143,7 +142,6 @@ export function CoverPreview({
                             icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
                             label="Testimonial"
                             description="Social proof graphics from customer quotes"
-                            isNew
                             isLocked
                             onClick={() => {
                               track("testimonial_gate_hit", {

@@ -287,7 +287,7 @@ export function LayoutSelector({ className }: { className?: string }) {
             >
               {isLocked && <Lock className="h-3 w-3" />}
               {tab.label}
-              {tab.value === "testimonial" && (
+              {tab.value === "tweet" && (
                 <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
               )}
             </button>

@@ -26,6 +26,7 @@ import { track } from "@/lib/analytics";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import type { BackgroundSelection, PersonalBackground } from "@/domain/backgrounds/types";
 import type { Asset } from "@/domain/asset/types";
+import { getLayoutFormat } from "@/domain/layout-def/definitions";
 
 interface BackgroundSectionProps {
   variant?: "default" | "inline";
@@ -49,12 +50,16 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
 
   // Pagination math
   const hasScreenshot = Boolean(config.assets?.screenshot);
+  const layoutFormat = getLayoutFormat(config.layoutId);
+  const isTweetFormat = layoutFormat === "tweet";
+  // For tweet format, we always show backgrounds (don't require screenshot)
+  const canShowBrandBackgrounds = hasScreenshot || isTweetFormat;
 
-  const brandPageCount = isBrandUser && hasScreenshot
+  const brandPageCount = isBrandUser && canShowBrandBackgrounds
     ? Math.ceil(backgrounds.length / BACKGROUNDS_PER_PAGE)
     : 0;
   const totalPages = brandPageCount > 0 ? 1 + brandPageCount : 1;
-  const showPagination = isBrandUser && hasScreenshot && totalPages > 1;
+  const showPagination = isBrandUser && canShowBrandBackgrounds && totalPages > 1;
 
   // Reset selection and page on logout
   useEffect(() => {
@@ -94,10 +99,10 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
 
   // Force gradients tab for non-brand users to avoid showing brand pagination
   useEffect(() => {
-    if ((!isBrandUser || !hasScreenshot) && activePage !== 0) {
+    if ((!isBrandUser || !canShowBrandBackgrounds) && activePage !== 0) {
       setActivePage(0);
     }
-  }, [isBrandUser, hasScreenshot, activePage]);
+  }, [isBrandUser, canShowBrandBackgrounds, activePage]);
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
@@ -207,12 +212,15 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   const emptyState = (
     <div className="rounded-lg border border-border/60 bg-muted/30 px-3 py-3">
       <div className="text-xs text-muted-foreground">
-        Upload a screenshot to generate backgrounds.
+        {isTweetFormat
+          ? "Using brand personality gradient."
+          : "Upload a screenshot to generate backgrounds."}
       </div>
     </div>
   );
 
-  if (!hasScreenshot && variant === "inline") {
+  // For tweet format, never show empty state in inline variant (always show gradients)
+  if (!canShowBrandBackgrounds && variant === "inline" && !isTweetFormat) {
     return emptyState;
   }
 
@@ -224,7 +232,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   // Compute brand backgrounds for the active brand page
   const brandPageIndex = activePage - 1; // page 0 = gradients, page 1+ = brand
   const brandPageBackgrounds =
-    brandPageIndex >= 0 && isBrandUser && hasScreenshot
+    brandPageIndex >= 0 && isBrandUser && canShowBrandBackgrounds
       ? backgrounds.slice(
           brandPageIndex * BACKGROUNDS_PER_PAGE,
           (brandPageIndex + 1) * BACKGROUNDS_PER_PAGE,
@@ -249,7 +257,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
         )}
       </div>
 
-      {!hasScreenshot ? (
+      {!canShowBrandBackgrounds ? (
         emptyState
       ) : activePage === 0 ? (
           <GradientPicker onChangeAction={handleGradientChange} />
