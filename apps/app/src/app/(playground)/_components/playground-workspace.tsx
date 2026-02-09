@@ -1,40 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { Monitor, Smartphone } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { useAtom, useAtomValue } from "jotai";
+import { ImageIcon, Sparkles, Video } from "lucide-react";
 import { CoverPreview } from "@/components/cover-preview";
 import { PreviewViewport } from "@/app/(playground)/_components/preview-viewport";
 import { AspectToggle } from "@/components/selectors/aspect-toggle";
 import { VideoPreview } from "@/app/(playground)/_components/video-preview";
 import { ScreenshotZoomSlider } from "@/components/selectors/screenshot-zoom-slider";
-import type { TestimonialExportAspect, TwitterExportAspect } from "@/domain/layout/types";
 import {
   activeFormatAtom,
   screenshotZoomAtom,
   configAtom,
   orientationAtom,
   gradientOptionsAtom,
+  hasCustomScreenshotAtom,
   isAnalyzingColorsAtom,
   previewModeAtom,
-  type Orientation,
+  type PreviewMode,
 } from "@/hooks/atoms";
-import {
-  LAYOUT_DEFINITIONS,
-  getLayoutDefinition,
-  supportsVideo,
-  withLayoutTextDefaults,
-} from "@/domain/layout-def/definitions";
+import { supportsVideo } from "@/domain/layout-def/definitions";
 import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
+import { useUserTier } from "@/hooks/use-user-tier";
 import { track } from "@/lib/analytics";
 
 /**
  * PlaygroundWorkspace
  *
  * Renders the main preview column containing:
- * - Variant toggle controls
+ * - Video mode toggle (Image / Video)
  * - Aspect lock button (conditional)
  * - Preview viewport with cover
  *
@@ -72,47 +69,39 @@ export function PlaygroundWorkspace({
   hasScreenshot,
 }: PlaygroundWorkspaceProps) {
   const [screenshotZoom, setScreenshotZoom] = useAtom(screenshotZoomAtom);
-  const [orientation, setOrientation] = useAtom(orientationAtom);
+  const orientation = useAtomValue(orientationAtom);
   const [previewMode, setPreviewMode] = useAtom(previewModeAtom);
   const config = useAtomValue(configAtom);
-  const setConfig = useSetAtom(configAtom);
   const activeFormat = useAtomValue(activeFormatAtom);
   const gradientOptions = useAtomValue(gradientOptionsAtom);
   const isAnalyzingColors = useAtomValue(isAnalyzingColorsAtom);
+  const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
-  const hasAutoSetOrientation = useRef(false);
-  const showOrientationToggle = activeFormat === "screenshot";
-  const showTestimonialAspectToggle = activeFormat === "testimonial";
-  const showTwitterAspectToggle = activeFormat === "tweet";
-  const testimonialExportAspect = config.layoutSpecificSettings?.testimonial?.exportAspect ?? "3:4";
-  const twitterExportAspect = config.layoutSpecificSettings?.twitterTestimonial?.exportAspect ?? "4:5";
+  const { isBrandUser } = useUserTier();
   const showFullScreenEmptyState = isMobile && showEmptyState && activeFormat === "none";
 
   const isBackdropLayout =
     config.layoutId === "adaptive-stage" || config.layoutId === "full-visual";
   const shouldHoldCanvas = hasScreenshot && (isAnalyzingColors || gradientOptions.length === 0);
 
-  // Auto-reset to image mode when switching to a layout that doesn't support video
+  // Video toggle visibility — only for screenshot format in desktop orientation
+  const isScreenshotFormat = activeFormat === "screenshot";
+  const layoutSupportsVideo = supportsVideo(config.layoutId);
+  const isDesktopOrientation = orientation !== "mobile";
+  const showVideoToggle = isScreenshotFormat && hasCustomScreenshot && isDesktopOrientation;
+  const canUseVideo = layoutSupportsVideo && isBrandUser;
+
+  // Auto-reset to image mode when video isn't available
   useEffect(() => {
-    if (previewMode === "video" && !supportsVideo(config.layoutId)) {
+    if (previewMode === "video" && (!supportsVideo(config.layoutId) || orientation === "mobile")) {
       setPreviewMode("image");
       track("preview_mode_auto_reset", {
         layout_id: config.layoutId,
+        reason: orientation === "mobile" ? "mobile_orientation" : "unsupported_layout",
       });
     }
-  }, [config.layoutId, previewMode, setPreviewMode]);
-
-  // Set mobile as default orientation on mobile devices
-  useEffect(() => {
-    // Only auto-set once, and only if we're on mobile with desktop orientation
-    if (hasAutoSetOrientation.current) return;
-    if (!isMobile) return;
-    if (orientation !== "desktop") return;
-
-    setOrientation("mobile");
-    hasAutoSetOrientation.current = true;
-  }, [isMobile, orientation, setOrientation]);
+  }, [config.layoutId, orientation, previewMode, setPreviewMode]);
 
   const handleViewportMetricsChange = useCallback((metrics: { bottomWhitespace: number }) => {
     const nextValue = Math.round(metrics.bottomWhitespace);
@@ -121,115 +110,36 @@ export function PlaygroundWorkspace({
     );
   }, []);
 
-  const handleOrientationChange = (newOrientation: Orientation) => {
-    // Check if current layout supports new orientation
-    const currentDef = getLayoutDefinition(config.layoutId);
-    const supportedOrientations = currentDef?.capabilities.supportedOrientations ?? [
-      "mobile",
-      "desktop",
-    ];
+  const handlePreviewModeChange = useCallback(
+    (mode: PreviewMode) => {
+      setPreviewMode(mode);
+      track("preview_mode_changed", { mode });
+    },
+    [setPreviewMode],
+  );
 
-    if (!supportedOrientations.includes(newOrientation)) {
-      // Find first compatible layout
-      const compatibleLayout = LAYOUT_DEFINITIONS.find((def) => {
-        const orientations = def.capabilities.supportedOrientations ?? ["mobile", "desktop"];
-        return orientations.includes(newOrientation);
-      });
-
-      if (compatibleLayout) {
-        const nextConfig = compatibleLayout.createConfig();
-        setConfig(
-          withLayoutTextDefaults(
-            {
-              ...nextConfig,
-              text: config.text,
-              assets: config.assets,
-              background: config.background,
-              colors: config.colors,
-              screenshotShadow: config.screenshotShadow,
-              fontId: config.fontId,
-              fontSize: config.fontSize,
-              screenshotFrame: config.screenshotFrame,
-              layoutSpecificSettings: {
-                ...nextConfig.layoutSpecificSettings,
-                ...config.layoutSpecificSettings,
-              },
-            },
-            { preserveEmptyText: true },
-          ),
-        );
-      }
-    }
-
-    setOrientation(newOrientation);
-  };
-
-  const handleTestimonialAspectChange = useCallback((nextAspect: TestimonialExportAspect) => {
-    setConfig((prev) => ({
-      ...prev,
-      layoutSpecificSettings: {
-        ...prev.layoutSpecificSettings,
-        testimonial: {
-          ...prev.layoutSpecificSettings?.testimonial,
-          exportAspect: nextAspect,
-        },
-      },
-    }));
-  }, [setConfig]);
-
-  const handleTwitterAspectChange = useCallback((nextAspect: TwitterExportAspect) => {
-    setConfig((prev) => ({
-      ...prev,
-      layoutSpecificSettings: {
-        ...prev.layoutSpecificSettings,
-        twitterTestimonial: {
-          ...prev.layoutSpecificSettings?.twitterTestimonial,
-          exportAspect: nextAspect,
-        },
-      },
-    }));
-  }, [setConfig]);
-
-  const screenshotAspectOptions = isMobile
-    ? [
-      {
-        id: "mobile",
-        label: <Smartphone className="h-3.5 w-3.5" />,
-        ariaLabel: "Mobile mode (9:16)",
-        iconOnly: true,
-      },
-      {
-        id: "desktop",
-        label: <Monitor className="h-3.5 w-3.5" />,
-        ariaLabel: "Desktop mode (16:9)",
-        iconOnly: true,
-      },
-    ]
-    : [
-      {
-        id: "desktop",
-        label: <Monitor className="h-3.5 w-3.5" />,
-        ariaLabel: "Desktop mode (16:9)",
-        iconOnly: true,
-      },
-      {
-        id: "mobile",
-        label: <Smartphone className="h-3.5 w-3.5" />,
-        ariaLabel: "Mobile mode (9:16)",
-        iconOnly: true,
-      },
-    ];
-
-  const testimonialAspectOptions = [
-    { id: "3:4", label: "3:4", ariaLabel: "Testimonial export ratio 3 by 4" },
-    { id: "4:5", label: "4:5", ariaLabel: "Testimonial export ratio 4 by 5" },
-    { id: "9:16", label: "9:16", ariaLabel: "Testimonial export ratio 9 by 16" },
-    { id: "16:9", label: "16:9", ariaLabel: "Testimonial export ratio 16 by 9" },
-  ];
-
-  const twitterAspectOptions = [
-    { id: "4:5", label: "4:5", ariaLabel: "Tweet export ratio 4 by 5" },
-    { id: "16:9", label: "16:9", ariaLabel: "Tweet export ratio 16 by 9" },
+  const videoModeOptions = [
+    {
+      id: "image" as const,
+      label: (
+        <span className="flex items-center gap-1.5">
+          <ImageIcon className="h-3.5 w-3.5" />
+          Image
+        </span>
+      ),
+      ariaLabel: "Image mode",
+    },
+    {
+      id: "video" as const,
+      label: (
+        <span className="flex items-center gap-1.5">
+          <Video className="h-3.5 w-3.5" />
+          Video
+          <Sparkles className="h-3 w-3 text-amber-500" />
+        </span>
+      ),
+      ariaLabel: "Video mode",
+    },
   ];
 
   return (
@@ -241,27 +151,47 @@ export function PlaygroundWorkspace({
         )}
       >
         <div className="relative z-10 flex shrink-0 items-center justify-center">
-          {/* Orientation toggle — only visible for screenshot format */}
-          {showOrientationToggle ? (
-            <AspectToggle
-              value={orientation}
-              options={screenshotAspectOptions}
-              onChange={(value) => handleOrientationChange(value as Orientation)}
-            />
-          ) : null}
-          {showTestimonialAspectToggle ? (
-            <AspectToggle
-              value={testimonialExportAspect}
-              options={testimonialAspectOptions}
-              onChange={(value) => handleTestimonialAspectChange(value as TestimonialExportAspect)}
-            />
-          ) : null}
-          {showTwitterAspectToggle ? (
-            <AspectToggle
-              value={twitterExportAspect}
-              options={twitterAspectOptions}
-              onChange={(value) => handleTwitterAspectChange(value as TwitterExportAspect)}
-            />
+          {/* Video mode toggle — centered above canvas */}
+          {showVideoToggle ? (
+            canUseVideo ? (
+              <AspectToggle
+                value={previewMode}
+                options={videoModeOptions}
+                onChange={(value) => handlePreviewModeChange(value as PreviewMode)}
+              />
+            ) : (
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <div className="flex gap-1 rounded-md border border-border/20 bg-muted/10 p-0.5 opacity-40">
+                      {videoModeOptions.map((option) => (
+                        <Button
+                          key={option.id}
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          disabled
+                          aria-label={option.ariaLabel}
+                          className={cn(
+                            "h-7 min-w-11 rounded px-2 text-[11px] font-semibold",
+                            option.id === "image"
+                              ? "bg-foreground text-background shadow-sm"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {option.label}
+                        </Button>
+                      ))}
+                    </div>
+                  }
+                />
+                <TooltipContent>
+                  {!layoutSupportsVideo
+                    ? "Video available with Peak layouts"
+                    : "Video available on Brand plan"}
+                </TooltipContent>
+              </Tooltip>
+            )
           ) : null}
 
           {/* Aspect lock positioned absolutely on the right */}
@@ -286,7 +216,12 @@ export function PlaygroundWorkspace({
           ) : null}
         </div>
 
-        <div className="relative flex min-h-0 flex-1 w-full items-center justify-center">
+        <div
+          className={cn(
+            "relative flex w-full items-center justify-center",
+            previewMode === "video" ? "min-h-0 flex-[0_1_auto]" : "min-h-0 flex-1",
+          )}
+        >
           {previewMode === "video" ? (
             <VideoPreview />
           ) : (

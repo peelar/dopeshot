@@ -69,6 +69,7 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
   const isMobile = useMobileDetection();
 
   const [config, setConfig] = useAtom(configAtom);
+  const assets = useAtomValue(assetsAtom);
   const setAssets = useSetAtom(assetsAtom);
   const orientation = useAtomValue(orientationAtom);
   const statusMessage = useAtomValue(statusMessageAtom);
@@ -438,7 +439,7 @@ async function exportVideo({
   const { renderVideoToBlob } = await import("@/remotion/render");
 
   const assetMap = new Map(assets.map((a) => [a.id, a]));
-  const exportDims = EXPORT_ORIENTATION_DIMENSIONS[orientation];
+  const exportDims = getExportDimensionsForLayout(config, orientation);
 
   const variant = (config.variant === "left" || config.variant === "right" || config.variant === "center")
     ? config.variant

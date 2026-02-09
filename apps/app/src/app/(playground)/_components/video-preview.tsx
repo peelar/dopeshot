@@ -1,6 +1,6 @@
 "use client";
 
-import { lazy, Suspense, useMemo, useState, useEffect } from "react";
+import { lazy, Suspense, useMemo, useState, useEffect, useRef } from "react";
 import { useAtomValue } from "jotai";
 import { orientationAtom } from "@/hooks/atoms";
 import { screenshotAssetAtom } from "@/hooks/atoms/derived";
@@ -79,6 +79,24 @@ export function VideoPreview() {
     [text.title, text.subtitle, typingEnabled],
   );
 
+  // Debounce props passed to the Player to avoid re-rendering
+  // the entire Remotion composition on every keystroke.
+  const [debouncedProps, setDebouncedProps] = useState(inputProps);
+  const [debouncedDuration, setDebouncedDuration] = useState(durationInFrames);
+  const isFirstRender = useRef(true);
+
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      setDebouncedProps(inputProps);
+      setDebouncedDuration(durationInFrames);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [inputProps, durationInFrames]);
+
   if (!screenshot?.url) {
     return (
       <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
@@ -97,7 +115,7 @@ export function VideoPreview() {
   const previewDims = ORIENTATION_DIMENSIONS[orientation];
 
   return (
-    <div className="flex h-full w-full items-center justify-center">
+    <div className="flex max-h-full w-full items-center justify-center">
       <div
         className="w-full overflow-hidden rounded-lg shadow-sm"
         style={{
@@ -117,8 +135,8 @@ export function VideoPreview() {
           }
         >
           <LazyPlayerWrapper
-            inputProps={inputProps}
-            durationInFrames={durationInFrames}
+            inputProps={debouncedProps}
+            durationInFrames={debouncedDuration}
             fps={VIDEO_FPS}
             compositionWidth={dims.width}
             compositionHeight={dims.height}

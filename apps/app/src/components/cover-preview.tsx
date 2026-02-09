@@ -128,7 +128,7 @@ export function CoverPreview({
                   <FormatCard
                     icon={<Camera className="h-6 w-6" strokeWidth={1.5} />}
                     label="Screenshot"
-                    description="Polished product screenshots"
+                    description="Polished product screenshots & videos"
                     onClick={() => {
                       if (onFormatChosen) {
                         onFormatChosen("screenshot");

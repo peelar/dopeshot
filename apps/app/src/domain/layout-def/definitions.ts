@@ -378,6 +378,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "hidden",
+      video: false,
       supportedOrientations: ["mobile", "desktop"],
       copyDefaults: {
         title: "dopeshot completely transformed how I ship. Right now, no feature goes unshared.",
@@ -457,6 +458,7 @@ const RAW_LAYOUT_DEFINITIONS: LayoutDefinition[] = [
       },
       logo: "supported",
       screenshot: "hidden",
+      video: false,
       supportedOrientations: ["mobile", "desktop"],
     },
   },

@@ -37,7 +37,8 @@ export default function PlayerWrapper({
   }, [onPlay]);
 
   // Replay from start when design props change.
-  // First mount is handled by autoPlay; subsequent changes seek to 0 and play.
+  // Props are debounced upstream in VideoPreview, so this fires
+  // only after the user stops editing.
   useEffect(() => {
     const serialized = JSON.stringify(inputProps);
     if (isFirstMount.current) {

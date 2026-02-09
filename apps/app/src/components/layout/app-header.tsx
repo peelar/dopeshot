@@ -4,10 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils/cn";
-import { Download, ImageIcon, Loader2, Plus, RefreshCw, Save, PanelLeft, Video } from "lucide-react";
+import { Download, Loader2, Plus, RefreshCw, Save, PanelLeft } from "lucide-react";
 import Link from "next/link";
 import { UserMenu } from "./user-menu";
-import type { PreviewMode } from "@/hooks/atoms";
 
 interface AppHeaderProps {
   isLoggedIn: boolean;
@@ -29,9 +28,6 @@ interface AppHeaderProps {
   onFeedbackClick?: () => void;
   onLeftSidebarToggle?: () => void;
   leftSidebarOpen?: boolean;
-  previewMode: PreviewMode;
-  onPreviewModeChange: (mode: PreviewMode) => void;
-  showVideoToggle: boolean;
 }
 
 export function AppHeader({
@@ -54,9 +50,6 @@ export function AppHeader({
   onFeedbackClick,
   onLeftSidebarToggle,
   leftSidebarOpen,
-  previewMode,
-  onPreviewModeChange,
-  showVideoToggle,
 }: AppHeaderProps) {
   const shouldShowNewButton = isLoggedIn && hasSelectedSavedDesign;
   const shouldShowCtaButton = !isLoggedIn || shouldShowNewButton || hasCustomScreenshot || isProcessingUpload;
@@ -159,62 +152,24 @@ export function AppHeader({
             </Tooltip>
           </TooltipProvider>
         ) : null}
-        {/* Image/Video toggle + Export button */}
+        {/* Export button */}
         {canExport ? (
-          <div className="flex items-center gap-1.5">
-            {showVideoToggle ? (
-              <div className="flex gap-0.5 rounded-md border border-border/40 bg-muted/20 p-0.5">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => onPreviewModeChange("image")}
-                  aria-pressed={previewMode === "image"}
-                  aria-label="Image mode"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    previewMode === "image"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <ImageIcon className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => onPreviewModeChange("video")}
-                  aria-pressed={previewMode === "video"}
-                  aria-label="Video mode"
-                  className={cn(
-                    "h-7 w-7 rounded transition-colors",
-                    previewMode === "video"
-                      ? "bg-foreground text-background shadow-sm"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  <Video className="h-3.5 w-3.5" />
-                </Button>
-              </div>
-            ) : null}
-            <Button
-              size="sm"
-              variant="default"
-              className="flex items-center gap-2 shadow-none"
-              onClick={onExport}
-              disabled={isExporting}
-              aria-busy={isExporting}
-              aria-label={isExporting ? "Exporting" : "Export"}
-            >
-              {isExporting ? (
-                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-              ) : (
-                <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-              )}
-              Export
-            </Button>
-          </div>
+          <Button
+            size="sm"
+            variant="default"
+            className="flex items-center gap-2 shadow-none"
+            onClick={onExport}
+            disabled={isExporting}
+            aria-busy={isExporting}
+            aria-label={isExporting ? "Exporting" : "Export"}
+          >
+            {isExporting ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+            ) : (
+              <Download className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+            )}
+            Export
+          </Button>
         ) : null}
         <UserMenu onFeedbackClick={onFeedbackClick} />
       </div>
