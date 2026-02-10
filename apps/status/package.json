@@ -5,6 +5,10 @@
   "type": "module",
   "scripts": {
     "status": "tsx src/index.ts",
+    "roadmap": "tsx src/roadmap.ts",
+    "roadmap:move": "tsx src/roadmap-write.ts move",
+    "roadmap:create": "tsx src/roadmap-write.ts create",
+    "roadmap:describe": "tsx src/roadmap-write.ts describe",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'No lint configured for status'",
