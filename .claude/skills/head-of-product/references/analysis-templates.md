@@ -1,206 +1,65 @@
-# Analysis Templates
+# Templates
 
-Use these templates for structured product analysis.
+Use these only when writing things down — after a brainstorm lands on a decision. Most conversations don't need a template.
 
 ---
 
-## Feature Decision Template
+## Decision Record
 
-Use when evaluating whether to build a feature.
+Use when a meaningful product decision was made and you want to remember why.
 
 ```markdown
-## Feature: [Name]
+## Decision: [What we decided]
 
-### The Ask
-[One sentence describing what's being requested]
+**Context**: [1-2 sentences on why this came up]
 
-### Jobs-to-be-Done
-When [situation], user wants to [motivation], so they can [outcome].
+**Options considered**:
+- [Option A]: [one line]
+- [Option B]: [one line]
 
-### Scoring (ICE)
-- Impact (1-10): [score] — [why]
-- Confidence (1-10): [score] — [evidence level]
-- Ease (1-10): [score] — [effort estimate]
-- **Total**: [I×C×E]
+**Decision**: [What we're doing and why, 2-3 sentences]
 
-### Risk Assessment
-- **Type**: One-way door / Two-way door
-- **Reversibility**: [How hard to undo?]
-- **Blast radius**: [What breaks if this fails?]
-
-### Alignment Check
-- [ ] Supports primary job-to-be-done
-- [ ] Doesn't slow core flow
-- [ ] User has actually asked for this
-- [ ] Can ship in <1 week
-- [ ] Visible in output (drives sharing)
-
-### Recommendation
-**Build / Don't build / Defer / Needs more info**
-
-[Reasoning in 2-3 sentences]
+**Revisit if**: [What would make us reconsider]
 ```
 
 ---
 
-## Prioritization Template
+## Feature Scope
 
-Use when comparing multiple features.
+Use when a brainstorm produces something worth building and you need to capture the shape.
 
 ```markdown
-## Prioritization: [Sprint/Quarter]
+## [Feature Name]
 
-### Candidates
+**Why**: [1-2 sentences — the job it serves]
 
-| Feature | Impact | Confidence | Ease | Score | Ship in |
-|---------|--------|------------|------|-------|---------|
-| [A]     | [1-10] | [1-10]     | [1-10]| [I×C×E]| [weeks] |
-| [B]     | [1-10] | [1-10]     | [1-10]| [I×C×E]| [weeks] |
-| [C]     | [1-10] | [1-10]     | [1-10]| [I×C×E]| [weeks] |
+**How it works**: [Brief description of the approach]
 
-### Stack Rank
-1. [Feature] — [one-line reason]
-2. [Feature] — [one-line reason]
-3. [Feature] — [one-line reason]
+**V0 (ship this)**: [The smallest useful version]
 
-### Deferred (with reasons)
-- [Feature]: [why not now]
+**V1 (maybe later)**: [What you'd add if V0 validates]
 
-### Dependencies
-- [Feature A] blocks [Feature B]
-- [Feature C] requires [external dependency]
+**What we're NOT building**: [Explicitly scoped out]
+
+**Open questions**: [Things to figure out during implementation]
 ```
 
 ---
 
-## Open Question Template
+## GTM Check
 
-Use when resolving product ambiguity.
-
-```markdown
-## Question: [The specific question]
-
-### Context
-[Why this decision matters now]
-
-### Options
-
-**Option A: [Name]**
-- How it works: [description]
-- Pros: [benefits]
-- Cons: [drawbacks]
-- Effort: [estimate]
-
-**Option B: [Name]**
-- How it works: [description]
-- Pros: [benefits]
-- Cons: [drawbacks]
-- Effort: [estimate]
-
-### Recommendation
-**Go with Option [X]** because [core reasoning].
-
-### Reversibility
-[Can we change this later? How hard?]
-
-### Next Steps
-1. [Action]
-2. [Action]
-```
-
----
-
-## User Feedback Analysis Template
-
-Use when synthesizing user feedback into actionable insights.
+Use when planning a launch, pricing change, or distribution experiment.
 
 ```markdown
-## Feedback Analysis: [Topic/Feature]
+## [What we're doing]
 
-### Raw Feedback
-- "[Quote 1]" — [context]
-- "[Quote 2]" — [context]
-- "[Quote 3]" — [context]
+**Goal**: [One sentence — what success looks like]
 
-### Patterns
-What users are actually saying (underlying need, not surface request):
-1. [Pattern]
-2. [Pattern]
+**Tactic**: [How we're doing it]
 
-### Jobs Affected
-- [Job-to-be-done that's impacted]
+**Audience**: [Who specifically sees this]
 
-### Severity
-- Frequency: [How often mentioned]
-- Impact: [How much it affects core flow]
-- Urgency: [Time-sensitive?]
+**Timeline**: [When it happens]
 
-### Recommended Action
-[Build / Investigate / Defer / Won't do]
-
-[Reasoning]
-```
-
----
-
-## Launch Checklist Template
-
-Use before shipping a feature.
-
-```markdown
-## Launch: [Feature Name]
-
-### Pre-launch
-- [ ] Core flow tested end-to-end
-- [ ] Analytics events added
-- [ ] Error states handled
-- [ ] Mobile responsive (if applicable)
-- [ ] Performance acceptable (<Xms)
-
-### User Experience
-- [ ] No new onboarding required
-- [ ] Discoverable without explanation
-- [ ] Doesn't slow existing flow
-- [ ] Default behavior is sensible
-
-### Rollout Plan
-- [ ] Feature flag ready (if applicable)
-- [ ] Rollback plan documented
-- [ ] Success metrics defined
-
-### Post-launch
-- [ ] Monitor for errors
-- [ ] Track adoption metrics
-- [ ] Collect user feedback
-- [ ] Schedule retrospective
-```
-
----
-
-## Competitive Analysis Template
-
-Use when evaluating competitive landscape.
-
-```markdown
-## Competitor: [Name]
-
-### Overview
-- What they do: [one sentence]
-- Target user: [who]
-- Pricing: [model]
-
-### Strengths
-- [Strength 1]
-- [Strength 2]
-
-### Weaknesses
-- [Weakness 1]
-- [Weakness 2]
-
-### Our Differentiation
-- [How dopeshot is different/better]
-
-### What We Can Learn
-- [Idea to borrow]
-- [Pattern to avoid]
+**How we'll know it worked**: [Specific signal to look for]
 ```

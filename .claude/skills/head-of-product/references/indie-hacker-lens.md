@@ -1,14 +1,5 @@
 # Indie Hacker Product Lens
 
-## Table of Contents
-1. [Core Truths](#core-truths)
-2. [Distribution Over Features](#distribution-over-features)
-3. [Speed as Moat](#speed-as-moat)
-4. [Monetization Timing](#monetization-timing)
-5. [Scope Management](#scope-management)
-
----
-
 ## Core Truths
 
 **Your users are you.** dopeshot users are indie hackers and small builders. They:
@@ -17,6 +8,7 @@
 - Post publicly about their work (Twitter, LinkedIn, Product Hunt)
 - Judge tools in 30 seconds or less
 - Share tools that make them look good
+- Build in public and talk about their tools
 
 **Implications**:
 - No onboarding gates. Ever.
@@ -31,15 +23,17 @@
 **The hierarchy for indie tools**:
 1. Does it spread? (Shareability, virality)
 2. Does it stick? (Retention, habit)
-3. Does it convert? (Free → Paid)
+3. Does it convert? (Free -> Paid)
 4. Does it expand? (More features = more value)
 
 **Before building a feature, ask**:
 - Will users share outputs that show off this feature?
-- Does this make their posts look better than competitors' tools?
+- Does this make their posts look better than what competitors' tools produce?
 - Will this feature appear in the output (visible) or just the process (invisible)?
 
 **Visible features win** because they drive word-of-mouth.
+
+**The tweet test**: Can you describe this feature in a single tweet that would make an indie hacker click the link? If not, it's either too complex or too invisible.
 
 ---
 
@@ -47,7 +41,7 @@
 
 For indie tools, speed is both:
 - **A feature**: Users come because it's fast
-- **A moat**: Competitors with more features but slower lose
+- **A moat**: Competitors with more features but slower UX lose
 
 **dopeshot speed targets**:
 - Time to first result: <3 seconds
@@ -69,10 +63,13 @@ For indie tools, speed is both:
 - Users using it repeatedly (3+ times)
 - Users sharing outputs publicly
 - Users requesting "pro" features
+- Users hacking around limitations (e.g., manually applying brand colors)
 
 **dopeshot monetization path**:
 1. Free: Random beautiful outputs (proves value)
 2. Paid: Brand-consistent outputs (captures value)
+
+**The gate principle**: Gate convenience, not capability. Free tier stays genuinely useful. Paid tier removes friction for repeat users who want consistency.
 
 ---
 
@@ -96,6 +93,24 @@ For indie tools, speed is both:
 - "Users are doing X manually, let's automate it"
 - "Users shared this and got embarrassed because..."
 - "Users are hacking around our limitation by..."
+- "I use this every day and it annoys me every time"
+
+---
+
+## Build in Public as Distribution
+
+Indie hackers have a unique advantage: their audience IS their market. Every build-in-public post is a potential user acquisition channel.
+
+**What to share**:
+- Before/after transformations (the core wow moment)
+- "I built this because I was tired of..." origin stories
+- Speed demos (upload -> export in real time)
+- How the product is evolving (users love following the journey)
+
+**What not to share**:
+- Architecture details nobody cares about
+- Metrics that aren't impressive yet
+- Features that aren't ready
 
 ---
 
@@ -108,3 +123,5 @@ For indie tools, speed is both:
 | Settings before defaults | Every setting is a decision tax | Pick good defaults |
 | Accounts before value | Friction before "aha" | Anonymous-first |
 | B2B before B2C validation | Enterprise sales cycles kill momentum | Prove with individuals |
+| Perfecting before shipping | Users give better feedback than you | Ship the 80% version |
+| Solving complaints that don't exist | Wastes time on imagined problems | Build for real signal |
