@@ -37,5 +37,4 @@ The editor is fully client-side. There are no user accounts, no cloud persistenc
 ## Active Technologies
 
 - TypeScript 5.x, Next.js 16, React 19, Jotai
-- Resend for anonymous feedback email
 - Static catalog backgrounds in `public/backgrounds/catalog/`

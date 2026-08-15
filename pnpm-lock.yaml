@@ -90,9 +90,6 @@ importers:
       remotion:
         specifier: ^4.0.419
         version: 4.0.420(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      resend:
-        specifier: ^6.6.0
-        version: 6.9.1(@react-email/render@1.1.2(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
       shadcn:
         specifier: ^3.6.2
         version: 3.8.4(@types/node@20.19.33)(typescript@5.9.3)
@@ -147,7 +144,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.0.7
-        version: 16.0.7(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.0.7(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       jsdom:
         specifier: ^27.2.0
         version: 27.4.0(@noble/hashes@2.0.1)
@@ -217,7 +214,7 @@ importers:
         version: 9.39.2(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.0.7
-        version: 16.0.7(@typescript-eslint/parser@8.54.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.0.7(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       postcss:
         specifier: ^8.4.49
         version: 8.5.6

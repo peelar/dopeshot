@@ -129,9 +129,6 @@ export const activeFormatAtom = atom<LayoutFormat>("none");
 export type PreviewMode = "image" | "video";
 export const previewModeAtom = atom<PreviewMode>("image");
 
-// Feedback modal
-export const feedbackModalOpenAtom = atom<boolean>(false);
-
 // Export button state tracking
 export const hasExportedAtom = atom<boolean>(false); // True after successful export
 export const currentExportBlobAtom = atom<Blob | null>(null); // Store blob after export

@@ -49,7 +49,6 @@ src/app/
 │   │   └── drag-overlay.tsx
 │   └── page.tsx               # Playground route (main page)
 ├── api/                       # API routes
-│   ├── feedback/
 │   └── tweet/
 ├── layout.tsx                 # Root layout
 ├── globals.css                # Global styles
@@ -77,6 +76,7 @@ src/components/
 │   └── ...
 ├── layout/                    # App chrome & shell
 │   ├── app-header.tsx
+│   ├── theme-toggle.tsx
 │   ├── sidebar-tabs.tsx
 │   └── mobile-actions.tsx
 ├── selectors/                 # Feature selectors
@@ -94,7 +94,6 @@ src/components/
 │   └── layout-config.tsx
 ├── providers/                 # App-wide providers
 │   ├── theme-provider.tsx
-│   ├── theme-toggle.tsx
 │   └── analytics-provider.tsx (removed in favor of inline Simple Analytics script)
 ├── layouts/                   # Screenshot layout components
 │   ├── AdaptiveScreenshot.tsx

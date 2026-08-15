@@ -1,6 +1,6 @@
 /**
  * Unified image compression utilities for dopeshot.
- * Used for design saves and feedback screenshots to stay under Vercel's 4.5MB payload limit.
+ * Compresses images to stay under Vercel's 4.5MB payload limit.
  */
 
 export interface CompressionOptions {

@@ -5,7 +5,7 @@ import { Logo } from "@/components/ui/logo";
 import { cn } from "@/lib/utils/cn";
 import { Download, Loader2, RefreshCw, PanelLeft } from "lucide-react";
 import Link from "next/link";
-import { UserMenu } from "./user-menu";
+import { ThemeToggle } from "./theme-toggle";
 
 interface AppHeaderProps {
   hasCustomScreenshot: boolean;
@@ -14,7 +14,6 @@ interface AppHeaderProps {
   canExport: boolean;
   onExport: () => void;
   isExporting: boolean;
-  onFeedbackClick?: () => void;
   onLeftSidebarToggle?: () => void;
   leftSidebarOpen?: boolean;
 }
@@ -26,7 +25,6 @@ export function AppHeader({
   canExport,
   onExport,
   isExporting,
-  onFeedbackClick,
   onLeftSidebarToggle,
   leftSidebarOpen,
 }: AppHeaderProps) {
@@ -94,7 +92,7 @@ export function AppHeader({
             Export
           </Button>
         ) : null}
-        <UserMenu onFeedbackClick={onFeedbackClick} />
+        <ThemeToggle />
       </div>
     </header>
   );

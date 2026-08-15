@@ -2,8 +2,8 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { AppHeader } from "@/components/layout/app-header";
 
-vi.mock("@/components/layout/user-menu", () => ({
-  UserMenu: () => <div data-testid="user-menu" />,
+vi.mock("@/components/layout/theme-toggle", () => ({
+  ThemeToggle: () => <div data-testid="theme-toggle" />,
 }));
 
 const defaultProps = {
@@ -32,5 +32,13 @@ describe("AppHeader", () => {
     render(<AppHeader {...defaultProps} />);
 
     expect(screen.queryByRole("button", { name: "Change Screenshot" })).not.toBeInTheDocument();
+  });
+
+  it("renders the theme toggle and no feedback or profile controls", () => {
+    render(<AppHeader {...defaultProps} />);
+
+    expect(screen.getByTestId("theme-toggle")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /feedback/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /account|profile|user menu/i })).not.toBeInTheDocument();
   });
 });

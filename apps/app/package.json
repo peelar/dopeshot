@@ -40,7 +40,6 @@
     "react-dom": "19.2.1",
     "react-tweet": "^3.3.0",
     "remotion": "^4.0.419",
-    "resend": "^6.6.0",
     "shadcn": "^3.6.2",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.6.0",

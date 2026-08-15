@@ -1,7 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignore": [
-    "src/components/providers/theme-toggle.tsx",
     "src/components/ui/context-menu.tsx",
     "src/domain/layout/patterns.ts",
     "tests/neon-mesh-gradients.test.ts"

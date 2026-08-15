@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
-import { X, Mail, Calendar, Check, Sparkles, MessageSquare } from "lucide-react";
+import { X, Mail, Calendar, Check, Sparkles } from "lucide-react";
 import type { SVGProps } from "react";
 import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 
@@ -33,7 +33,6 @@ function NoiseTexture() {
 interface ExportSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onFeedback: () => void;
   thumbnailUrl?: string;
 }
 
@@ -130,7 +129,6 @@ const footerVariants = {
 export function ExportSuccessModal({
   isOpen,
   onClose,
-  onFeedback,
   thumbnailUrl,
 }: ExportSuccessModalProps) {
   return (
@@ -231,18 +229,9 @@ export function ExportSuccessModal({
                       <AdrianAvatar size="md" className="shrink-0 ring-2 ring-background" />
                       <div className="flex-1">
                         <p className="text-[13px] leading-relaxed text-muted-foreground">
-                          I'm Adrian — building dopeshot for builders like you. Got ideas or
-                          feedback? Let's chat.
+                          I'm Adrian — building dopeshot for builders like you. Want to chat?
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={onFeedback}
-                            className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Feedback
-                          </button>
                           <CopyEmailButton email="adrian@peelar.dev" />
                           <ContactLink
                             href="https://cal.com/adrian-pilarczyk-cs0y69/30min"

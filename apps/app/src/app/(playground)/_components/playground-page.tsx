@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import dynamic from "next/dynamic";
 import { AppHeader } from "@/components/layout/app-header";
 import { CoverPreview } from "@/components/cover-preview";
 import { DragOverlay } from "@/app/(playground)/_components/drag-overlay";
@@ -27,7 +26,6 @@ import {
   assetsAtom,
   baseConfigAtom,
   configAtom,
-  feedbackModalOpenAtom,
   orientationAtom,
   screenshotZoomAtom,
 } from "@/hooks/atoms";
@@ -35,7 +33,6 @@ import { getDefaultDemoPreset, getRandomDemoPreset } from "@/domain/demo/presets
 import { Provider as JotaiProvider, createStore, useAtom, useAtomValue, useSetAtom } from "jotai";
 import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
-import { captureFeedbackScreenshot } from "@/components/feedback/capture-screenshot";
 import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
 import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
@@ -43,12 +40,6 @@ import { ExportSuccessModal } from "@/components/post-export";
 import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { useExportStateReset } from "@/hooks/use-export-state-reset";
-
-const FeedbackModal = dynamic(
-  () =>
-    import("@/components/feedback/feedback-modal").then((mod) => ({ default: mod.FeedbackModal })),
-  { ssr: false },
-);
 
 function ExportContainer({
   width,
@@ -118,8 +109,6 @@ export function PlaygroundPage() {
 function PlaygroundPageInner() {
   const orientation = useAtomValue(orientationAtom);
   const config = useAtomValue(configAtom);
-  const [feedbackModalOpen, setFeedbackModalOpen] = useAtom(feedbackModalOpenAtom);
-  const [feedbackScreenshot, setFeedbackScreenshot] = useState<string | null>(null);
   const [isPreparingScreenshotPreset, setIsPreparingScreenshotPreset] = useState(false);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
 
@@ -130,12 +119,6 @@ function PlaygroundPageInner() {
   useBrandLogoAutoApply();
   useExportStateReset();
 
-  const handleFeedbackClick = async () => {
-    const screenshot = await captureFeedbackScreenshot();
-    setFeedbackScreenshot(screenshot);
-    setFeedbackModalOpen(true);
-  };
-
   const handleExportSheetClose = useCallback(() => {
     setShowExportSheet(false);
     setExportThumbnail(null);
@@ -143,14 +126,6 @@ function PlaygroundPageInner() {
       dismiss_method: "button",
     });
   }, [setShowExportSheet, setExportThumbnail]);
-
-  const handleExportSheetFeedback = useCallback(() => {
-    track("export_sheet_feedback_clicked");
-    setShowExportSheet(false);
-    setExportThumbnail(null);
-    setFeedbackScreenshot(null);
-    setFeedbackModalOpen(true);
-  }, [setShowExportSheet, setExportThumbnail, setFeedbackModalOpen]);
 
   const setConfig = useSetAtom(baseConfigAtom);
   const setAssets = useSetAtom(assetsAtom);
@@ -272,7 +247,6 @@ function PlaygroundPageInner() {
         canExport={canExport}
         onExport={handleExport}
         isExporting={isExporting}
-        onFeedbackClick={handleFeedbackClick}
         onLeftSidebarToggle={() => setLeftSidebarOpen((prev) => !prev)}
         leftSidebarOpen={leftSidebarOpen}
       />
@@ -317,7 +291,7 @@ function PlaygroundPageInner() {
 
         <SidebarErrorBoundary>
           <div className="hidden h-full min-h-0 w-80 overflow-hidden border-l border-border bg-background sm:flex sm:flex-col">
-            <SidebarTabs onUploadAsset={handleFileProcess} onFeedbackClick={handleFeedbackClick} />
+            <SidebarTabs onUploadAsset={handleFileProcess} />
           </div>
         </SidebarErrorBoundary>
       </div>
@@ -358,16 +332,9 @@ function PlaygroundPageInner() {
         {statusMessage}
       </div>
 
-      <FeedbackModal
-        open={feedbackModalOpen}
-        onOpenChange={setFeedbackModalOpen}
-        screenshotDataUrl={feedbackScreenshot}
-      />
-
       <ExportSuccessModal
         isOpen={showExportSheet}
         onClose={handleExportSheetClose}
-        onFeedback={handleExportSheetFeedback}
         thumbnailUrl={exportThumbnail ?? undefined}
       />
     </main>

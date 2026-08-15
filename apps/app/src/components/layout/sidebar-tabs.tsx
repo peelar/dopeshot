@@ -8,10 +8,9 @@ import { activeFormatAtom } from "@/hooks/atoms";
 
 interface SidebarTabsProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
-  onFeedbackClick?: () => void;
 }
 
-export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
+export function SidebarTabs({ onUploadAsset }: SidebarTabsProps) {
   const activeFormat = useAtomValue(activeFormatAtom);
 
   return (
@@ -28,7 +27,7 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
           <LayoutConfigPanel onUploadAsset={onUploadAsset} />
         )}
       </div>
-      <SidebarFooter onFeedbackClick={onFeedbackClick} />
+      <SidebarFooter />
     </div>
   );
 }
