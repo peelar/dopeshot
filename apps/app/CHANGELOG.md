@@ -1,5 +1,23 @@
 # dopeshot
 
+## 0.11.0
+
+### Minor Changes
+
+- d269b22: Make the editor fully client-side: remove accounts, billing, cloud persistence, in-app feedback, and the product-update banner. Testimonials, tweets, video, Brand settings, and catalog backgrounds are available without login. Brand settings stay in the browser.
+- 1e8a60d: Add video export for Peak layouts with orientation-aware dimensions and layout-specific animations
+- 616f5b6: Add Twitter Testimonial layout: paste a tweet URL to auto-generate a styled testimonial card with brand personality.
+
+### Patch Changes
+
+- ff40b84: Upgrade screenshot/frame shadows to a layered depth model with background-aware tinting.
+
+  - Replace single-layer `low|medium|high` shadows with multi-layer contact + ambient stacks for more realistic elevation
+  - Apply surface-aware tinting so shadows adapt to the active background color instead of always reading as pure black
+  - Update screenshot frame fallback shadows to use the shared layered shadow system
+  - Add focused tests for shadow layering, tint behavior, and zero-shadow personality cases
+  - Add research documentation for findings, performance considerations, and rollout recommendations
+
 ## 0.10.1
 
 ### Patch Changes
