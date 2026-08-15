@@ -3,10 +3,9 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { AdrianAvatar } from "@/components/ui/adrian-avatar";
-import { X, Mail, Calendar, Check, Sparkles, MessageSquare } from "lucide-react";
+import { X, Mail, Calendar, Check, Sparkles } from "lucide-react";
 import type { SVGProps } from "react";
+import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 
 function XTwitterIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -34,8 +33,6 @@ function NoiseTexture() {
 interface ExportSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSignup: () => void;
-  onFeedback: () => void;
   thumbnailUrl?: string;
 }
 
@@ -132,8 +129,6 @@ const footerVariants = {
 export function ExportSuccessModal({
   isOpen,
   onClose,
-  onSignup,
-  onFeedback,
   thumbnailUrl,
 }: ExportSuccessModalProps) {
   return (
@@ -225,17 +220,7 @@ export function ExportSuccessModal({
                     </motion.div>
                   </div>
 
-                  {/* CTA section */}
-                  <motion.div variants={itemVariants} className="mt-6 text-center">
-                    <p className="text-[13px] leading-relaxed text-muted-foreground">
-                      Save your designs and pick up where you left off.
-                    </p>
-                    <Button onClick={onSignup} size="default" className="mt-3">
-                      Create free account
-                    </Button>
-                  </motion.div>
-
-                  {/* Founder section - warmer, separated */}
+                  {/* Founder section */}
                   <motion.div
                     variants={footerVariants}
                     className="-mx-6 -mb-6 mt-6 rounded-b-2xl bg-muted/40 px-6 py-4 dark:bg-muted/20"
@@ -244,18 +229,9 @@ export function ExportSuccessModal({
                       <AdrianAvatar size="md" className="shrink-0 ring-2 ring-background" />
                       <div className="flex-1">
                         <p className="text-[13px] leading-relaxed text-muted-foreground">
-                          I'm Adrian — building dopeshot for builders like you. Got ideas or
-                          feedback? Let's chat.
+                          I'm Adrian — building dopeshot for builders like you. Want to chat?
                         </p>
                         <div className="mt-3 flex flex-wrap gap-2">
-                          <button
-                            type="button"
-                            onClick={onFeedback}
-                            className="inline-flex h-7 cursor-pointer items-center gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 text-xs font-medium text-muted-foreground transition-all hover:border-border hover:bg-background hover:text-foreground  dark:border-border/40 dark:bg-background/50 dark:hover:bg-background"
-                          >
-                            <MessageSquare className="h-3.5 w-3.5" />
-                            Feedback
-                          </button>
                           <CopyEmailButton email="adrian@peelar.dev" />
                           <ContactLink
                             href="https://cal.com/adrian-pilarczyk-cs0y69/30min"

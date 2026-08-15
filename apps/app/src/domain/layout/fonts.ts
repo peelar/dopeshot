@@ -60,10 +60,6 @@ export const FONT_STYLES: FontStyleDefinition[] = [
 
 export const DEFAULT_FONT_STYLE: FontStyle = "founder";
 
-export const FREE_FONTS: FontStyleDefinition[] = FONT_STYLES;
-
-export const BRAND_FONTS: FontStyleDefinition[] = FONT_STYLES;
-
 /**
  * Get font style definition by ID
  */

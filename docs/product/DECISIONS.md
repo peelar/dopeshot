@@ -11,7 +11,7 @@ High-confidence calls that shape the product today.
 - **Because**: Removes decision paralysis and yields an instant first result.
 
 ## No blank canvas (all formats)
-- **Chose**: Demo-first start for Screenshot and Testimonial, including logged-in "new design" sessions.
+- **Chose**: Demo-first start for Screenshot and Testimonial.
 - **Because**: Keeps onboarding behavior coherent, shows capability immediately, and removes empty-state friction.
 
 ## Speed as the feature

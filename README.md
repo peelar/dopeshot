@@ -49,7 +49,7 @@ Sized for Twitter and LinkedIn. High-res PNG, no watermark.
 
 - `apps/app` - product app (deploys to `app.dopeshot.io`)
 - `apps/landing` - marketing site (deploys to `dopeshot.io`)
-- `apps/status` - daily status CLI (Umami, Resend, Supabase)
+- `apps/status` - daily status CLI (Umami, Resend)
 
 ## The Stack
 
@@ -63,12 +63,8 @@ Want to add a look or typography preset? Check out the [authoring guide](./apps/
 
 All PRs should include a Changeset (`pnpm changeset`) describing user-facing changes for the app; see [docs/RELEASE_WORKFLOW.md](./docs/RELEASE_WORKFLOW.md) for the flow.
 
-**Database migrations:** follow [docs/development/migrations.md](./docs/development/migrations.md). Dev: `pnpm db:dev` (creates and applies to staging DB). Prod: `pnpm db:deploy:prod`. `pnpm dev` runs a DB status check and auto-applies migrations by default; set `DEV_AUTO_MIGRATE=0` to disable or `DEV_SKIP_DB_CHECK=1` to skip.
+The editor is client-side only. Brand settings persist in the browser; there is no database to migrate.
 
 ---
 
 Built by indie hackers, for indie hackers. Ship fast, post faster.
-
-## Supabase Foundation
-
-Phase 1 persistence requirements for Supabase (schema, buckets, RLS, and seeds) live in `docs/SUPABASE_PHASE1.md`.

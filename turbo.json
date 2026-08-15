@@ -1,18 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": [
-    "NEXT_PUBLIC_SUPABASE_URL",
-    "SUPABASE_SERVICE_ROLE_KEY",
-    "DATABASE_URL",
-    "BETTER_AUTH_SECRET",
-    "BETTER_AUTH_URL",
     "RESEND_API_KEY",
     "FEEDBACK_EMAIL",
     "UMAMI_API_KEY",
     "UMAMI_WEBSITE_ID",
-    "SENTRY_AUTH_TOKEN",
-    "GOOGLE_CLIENT_ID",
-    "GOOGLE_CLIENT_SECRET"
+    "SENTRY_AUTH_TOKEN"
   ],
   "tasks": {
     "dev": {

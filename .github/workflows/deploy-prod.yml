@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type "deploy" to confirm (bypasses migration check)'
+        description: 'Type "deploy" to confirm'
         required: true
         type: string
 
@@ -13,11 +13,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.inputs.confirm == 'deploy' }}
     steps:
-      - name: Warning about manual deploy
-        run: |
-          echo "::warning::Manual deploy triggered - migrations are NOT automatically applied"
-          echo "::warning::Ensure migrations are applied before deploying if schema changes exist"
-
       - name: Trigger Vercel production deploy
         env:
           VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}

@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { UpgradePrompt } from "@/components/auth/upgrade-prompt";
 import {
   Select,
   SelectContent,
@@ -16,14 +15,12 @@ import {
 } from "@/components/ui/select";
 import { useFileUpload } from "@/hooks/use-file-upload";
 import { useBrandLogoAutoApply } from "@/hooks/use-brand-logo-auto-apply";
-import { useSession } from "@/lib/auth/auth-client";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
 import { cn } from "@/lib/utils/cn";
 import { useAtom, useSetAtom } from "jotai";
 import { brandSettingsAtom, configAtom, assetsAtom } from "@/hooks/atoms";
 import type { Asset } from "@/domain/asset/types";
-import { useUserTier } from "@/hooks/use-user-tier";
 import {
   brandModeValues,
   brandPersonalityLabels,
@@ -31,10 +28,18 @@ import {
   type BrandMode,
   type BrandPersonality,
 } from "@/lib/types/brand";
-import { SHOW_AI_BACKGROUNDS } from "@/lib/feature-flags-client";
 import { RefreshCw, Trash2, Loader2, Moon, Sun } from "lucide-react";
 import { BackgroundsCollection } from "./backgrounds-collection";
 import { AiBackgroundsCollection } from "./ai-backgrounds-collection";
+
+function fileToDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("Failed to read file"));
+    reader.readAsDataURL(file);
+  });
+}
 
 function normalizeHex(input: string): string {
   const trimmed = input.trim();
@@ -49,8 +54,6 @@ function normalizeHex(input: string): string {
 }
 
 export function BrandPanel() {
-  const { data: session } = useSession();
-  const { isBrandUser, isLoading: isTierLoading } = useUserTier();
   const { resolvedTheme } = useTheme();
   const { handleFileProcess, isProcessingUpload } = useFileUpload({});
   const { error: autoApplyError } = useBrandLogoAutoApply();
@@ -64,7 +67,6 @@ export function BrandPanel() {
   const [personality, setPersonality] = useState<BrandPersonality | null>(
     brandSettings.personality ?? null,
   );
-  const [isSaving, setIsSaving] = useState(false);
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const addInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,171 +85,45 @@ export function BrandPanel() {
     setPersonality(brandSettings.personality ?? null);
   }, [brandSettings.accent, brandSettings.mode, brandSettings.personality, fallbackMode]);
 
-  // Fetch brand profile in background on mount
-  useEffect(() => {
-    async function loadBrandProfile() {
-      if (!isBrandUser || !session?.user) return;
-
-      try {
-        const response = await fetch("/api/brand/profile", {
-          credentials: "include",
-        });
-        const payload = await response.json();
-
-        if (!response.ok) {
-          throw new Error(payload?.error ?? "Failed to load brand profile");
-        }
-
-        const palette = payload?.profile?.colorPalette as
-          | { accent?: unknown; mode?: unknown }
-          | null
-          | undefined;
-
-        const nextAccent = typeof palette?.accent === "string" ? palette.accent : null;
-        const nextMode = palette?.mode === "light" || palette?.mode === "dark" ? palette.mode : null;
-        const nextPersonality = brandPersonalityValues.includes(
-          payload?.profile?.personality as BrandPersonality,
-        )
-          ? (payload.profile.personality as BrandPersonality)
-          : null;
-
-        if (
-          payload?.logoUrl ||
-          payload?.profile?.logoPath ||
-          payload?.profile?.logo_path ||
-          nextAccent ||
-          nextMode ||
-          nextPersonality
-        ) {
-          setBrandSettings((prev) => ({
-            ...prev,
-            logoUrl: payload.logoUrl ?? prev.logoUrl,
-            logoPath:
-              payload.profile?.logoPath ??
-              payload.profile?.logo_path ??
-              prev.logoPath,
-            accent: nextAccent ?? prev.accent,
-            mode: nextMode ?? prev.mode,
-            personality: nextPersonality ?? prev.personality,
-          }));
-        }
-      } catch (error) {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("Brand profile not available:", error);
-        }
-      }
-    }
-
-    loadBrandProfile();
-  }, [isBrandUser, session?.user?.id, setBrandSettings]);
-
-  if (isTierLoading) {
-    return (
-      <div className="h-full w-full px-4 py-6 text-sm text-muted-foreground">
-        Loading brand tools…
-      </div>
-    );
-  }
-
-  if (!isBrandUser) {
-    return (
-      <div className="h-full w-full px-4 py-6">
-        <UpgradePrompt
-          title="Brand tools"
-          description="Upload your logo, pick your colors, choose a personality — and every design you make will look like you. Currently in beta, shoot me an email to get access."
-        />
-      </div>
-    );
-  }
-
   const handleUpload = async (file: File) => {
     setErrorMessage(null);
 
     try {
-      // Process file locally first (creates asset but doesn't auto-apply to canvas)
       await handleFileProcess(file, "logo");
-
-      // Upload to backend
-      const formData = new FormData();
-      formData.append("file", file, file.name);
-
-      const response = await fetch("/api/brand/upload-logo", {
-        method: "POST",
-        body: formData,
-        credentials: "include",
-      });
-
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Upload failed");
-      }
-
-      if (payload.logoPath || payload.signedUrl) {
-        setBrandSettings((prev) => ({
-          ...prev,
-          logoUrl: payload.signedUrl ?? prev.logoUrl,
-          logoPath: payload.logoPath ?? prev.logoPath,
-        }));
-      }
-
+      const logoUrl = await fileToDataUrl(file);
+      setBrandSettings((prev) => ({
+        ...prev,
+        logoUrl,
+        logoPath: file.name,
+      }));
       track("brand_logo_updated", { file_size_kb: file.size / 1024 });
     } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Upload failed:", error);
-      }
-      setErrorMessage(
-        "Brand features are not yet configured. Please check back later."
-      );
+      const message = error instanceof Error ? error.message : "Upload failed";
+      setErrorMessage(message);
     }
   };
 
-  const handleRemove = async () => {
-    if (!session?.user || !brandSettings.logoPath) return;
-
+  const handleRemove = () => {
     setErrorMessage(null);
 
-    try {
-      const response = await fetch("/api/brand/update-profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ logo_path: null }),
-        credentials: "include",
-      });
-
-      const payload = await response.json();
-
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Failed to remove logo");
-      }
-
-      // Remove logo from canvas if it was being used
-      if (brandSettings.useLogoOnScreenshots) {
-        setConfig((currentConfig) => ({
-          ...currentConfig,
-          assets: {
-            ...currentConfig.assets,
-            logo: undefined,
-          },
-        }));
-      }
-
-      setBrandSettings((prev) => ({
-        ...prev,
-        logoUrl: null,
-        logoPath: null,
-        useLogoOnScreenshots: false,
+    if (brandSettings.useLogoOnScreenshots) {
+      setConfig((currentConfig) => ({
+        ...currentConfig,
+        assets: {
+          ...currentConfig.assets,
+          logo: undefined,
+        },
       }));
-
-      track("brand_logo_removed");
-    } catch (error) {
-      if (process.env.NODE_ENV === "development") {
-        console.warn("Remove failed:", error);
-      }
-      setErrorMessage(
-        "Brand features are not yet configured. Please check back later."
-      );
     }
+
+    setBrandSettings((prev) => ({
+      ...prev,
+      logoUrl: null,
+      logoPath: null,
+      useLogoOnScreenshots: false,
+    }));
+
+    track("brand_logo_removed");
   };
 
   const handleToggleUse = (checked: boolean) => {
@@ -295,52 +171,25 @@ export function BrandPanel() {
 
   const accentSwatch = /^#[0-9a-fA-F]{6}$/.test(accent) ? accent : "#000000";
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!canSubmit) {
       toast.error("Please check your selections and try again.");
       return;
     }
 
-    setIsSaving(true);
-
     const selectedPersonality = personality as BrandPersonality;
-
-    try {
-      const response = await fetch("/api/brand/update-profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          accent,
-          mode,
-          personality: selectedPersonality,
-        }),
-        credentials: "include",
-      });
-
-      const payload = await response.json();
-      if (!response.ok) {
-        throw new Error(payload?.error ?? "Failed to save brand settings");
-      }
-
-      setBrandSettings((prev) => ({
-        ...prev,
-        accent,
-        mode,
-        personality,
-      }));
-
-      track("brand_profile_saved", {
-        mode,
-        personality: selectedPersonality,
-        has_logo: Boolean(brandSettings.logoPath),
-      });
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save brand settings";
-      toast.error(message);
-    } finally {
-      setIsSaving(false);
-    }
+    setBrandSettings((prev) => ({
+      ...prev,
+      accent,
+      mode,
+      personality: selectedPersonality,
+    }));
+    track("brand_profile_saved", {
+      mode,
+      personality: selectedPersonality,
+      has_logo: Boolean(brandSettings.logoPath),
+    });
+    toast.success("Brand settings saved");
   };
 
   return (
@@ -473,7 +322,7 @@ export function BrandPanel() {
         )}
         </section>
 
-        {SHOW_AI_BACKGROUNDS ? <AiBackgroundsCollection personality={personality} /> : null}
+        <AiBackgroundsCollection personality={personality} />
         <BackgroundsCollection />
 
         <section className="space-y-3">
@@ -488,8 +337,7 @@ export function BrandPanel() {
                 value={accentSwatch}
                 onChange={(e) => setAccent(normalizeHex(e.target.value))}
                 aria-label="Accent color picker"
-                disabled={isSaving}
-                className="h-10 w-10 cursor-pointer appearance-none overflow-hidden rounded-full border border-border/60 bg-transparent p-0 shadow-sm transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:cursor-not-allowed disabled:opacity-60 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
+                className="h-10 w-10 cursor-pointer appearance-none overflow-hidden rounded-full border border-border/60 bg-transparent p-0 shadow-sm transition hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/20 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded-full [&::-webkit-color-swatch]:border-none [&::-moz-color-swatch]:rounded-full [&::-moz-color-swatch]:border-none"
               />
               <Input
                 value={accent}
@@ -497,7 +345,6 @@ export function BrandPanel() {
                 className="h-9 flex-1 border-border/60 bg-muted/10 font-mono text-xs uppercase tracking-[0.08em] shadow-inner focus-visible:ring-1 focus-visible:ring-foreground/30"
                 placeholder="#6366F1"
                 inputMode="text"
-                disabled={isSaving}
               />
             </div>
           </div>
@@ -515,11 +362,9 @@ export function BrandPanel() {
               <button
                 type="button"
                 onClick={() => setMode("light")}
-                disabled={isSaving}
                 className={cn(
                   "relative z-10 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold transition-colors",
                   mode === "light" ? "text-foreground" : "text-muted-foreground",
-                  isSaving && "cursor-not-allowed",
                 )}
               >
                 <Sun className="size-4" />
@@ -528,11 +373,9 @@ export function BrandPanel() {
               <button
                 type="button"
                 onClick={() => setMode("dark")}
-                disabled={isSaving}
                 className={cn(
                   "relative z-10 flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-semibold transition-colors",
                   mode === "dark" ? "text-foreground" : "text-muted-foreground",
-                  isSaving && "cursor-not-allowed",
                 )}
               >
                 <Moon className="size-4" />
@@ -579,11 +422,11 @@ export function BrandPanel() {
           <Button
             type="button"
             onClick={handleSave}
-            disabled={!canSubmit || isSaving}
+            disabled={!canSubmit}
             size="sm"
             variant="secondary"
           >
-            {isSaving ? "Saving…" : "Save brand settings"}
+            Save brand settings
           </Button>
         </div>
       </div>

@@ -6,8 +6,6 @@ export type TestimonialTexture = "none" | "grain" | "scanlines";
 export type TestimonialTier = "anonymous" | "default" | "brand";
 
 export interface ResolveTestimonialStyleInput {
-  isLoggedIn: boolean;
-  isBrandUser: boolean;
   personality?: BrandPersonality | null;
   mode?: BrandMode | null;
   accent?: string | null;
@@ -136,8 +134,9 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
   const personality = input.personality ?? DEFAULT_PERSONALITY;
   const personalityStyle = getStyleForPersonality(personality) ?? getStyleForPersonality(DEFAULT_PERSONALITY);
   const dark = mode === "dark";
+  const hasBrandKit = Boolean(input.personality || input.accent || input.mode);
 
-  if (!input.isLoggedIn) {
+  if (!hasBrandKit) {
     return {
       ...DEFAULT_STYLE,
       tier: "anonymous",
@@ -148,37 +147,6 @@ export function resolveTestimonialStyle(input: ResolveTestimonialStyleInput): Te
       textColor: dark ? DARK_TEXT : LIGHT_TEXT,
       mutedTextColor: dark ? "rgba(248, 250, 252, 0.74)" : "rgba(15, 23, 42, 0.72)",
       avatarRingColor: dark ? "rgba(248, 250, 252, 0.26)" : "rgba(148, 163, 184, 0.34)",
-    };
-  }
-
-  if (!input.isBrandUser) {
-    return {
-      ...DEFAULT_STYLE,
-      tier: "default",
-      mode,
-      personality: DEFAULT_PERSONALITY,
-      accent,
-      canvasBackground: dark
-        ? `linear-gradient(150deg, ${mixHex(accent, "#020617", 0.9)} 0%, #050816 46%, ${mixHex(accent, "#0B1120", 0.8)} 100%)`
-        : `linear-gradient(150deg, ${mixHex(accent, "#FFFFFF", 0.88)} 0%, #F8FAFC 52%, ${mixHex(accent, "#E2E8F0", 0.72)} 100%)`,
-      textColor: dark ? DARK_TEXT : LIGHT_TEXT,
-      mutedTextColor: dark ? "rgba(248, 250, 252, 0.72)" : "rgba(15, 23, 42, 0.70)",
-      quoteMarkColor: dark ? "rgba(248, 250, 252, 0.18)" : "rgba(15, 23, 42, 0.15)",
-      avatarRingColor: dark ? "rgba(248, 250, 252, 0.26)" : "rgba(15, 23, 42, 0.20)",
-      authorPlateBackground: dark
-        ? "linear-gradient(135deg, rgba(30, 41, 59, 0.72) 0%, rgba(15, 23, 42, 0.62) 100%)"
-        : "linear-gradient(135deg, rgba(241, 245, 249, 0.88) 0%, rgba(255, 255, 255, 0.72) 100%)",
-      authorPlateBorder: dark ? "rgba(248, 250, 252, 0.26)" : "rgba(15, 23, 42, 0.20)",
-      authorPlateShadow: dark
-        ? "0 3px 10px rgba(2, 6, 23, 0.28), 0 1px 4px rgba(2, 6, 23, 0.20)"
-        : "0 2px 8px rgba(15, 23, 42, 0.10), 0 1px 3px rgba(15, 23, 42, 0.06)",
-      cardBackground: dark ? "rgba(15, 23, 42, 0.34)" : "rgba(255, 255, 255, 0.50)",
-      cardBorder: dark ? "rgba(248, 250, 252, 0.16)" : "rgba(15, 23, 42, 0.14)",
-      cardRadius: 14,
-      cardShadow: dark ? "0 10px 30px rgba(2, 6, 23, 0.35)" : "0 8px 24px rgba(15, 23, 42, 0.12)",
-      texture: "none",
-      textureIntensity: 0,
-      showDecorativeBlobs: false,
     };
   }
 

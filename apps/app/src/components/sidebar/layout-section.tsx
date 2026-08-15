@@ -11,11 +11,7 @@ import { RichTextEditor } from "@/components/sidebar/rich-text-editor";
 import { brandPersonalityLabels } from "@/lib/types/brand";
 import type { FontStyle, RichTextSegment } from "@/domain/layout/types";
 
-interface LayoutSectionProps {
-  isBrandUser?: boolean;
-}
-
-export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
+export function LayoutSection() {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const orientation = useAtomValue(orientationAtom);
@@ -135,9 +131,8 @@ export function LayoutSection({ isBrandUser = false }: LayoutSectionProps) {
           <FontStyleSelector
             fontStyle={config.fontStyle}
             onFontStyleChange={handleFontStyleChange}
-            isBrandUser={isBrandUser}
-            brandFontStyle={isBrandUser ? personalityStyle?.fontStyle : undefined}
-            brandPersonalityName={isBrandUser ? personalityName : undefined}
+            brandFontStyle={personalityStyle?.fontStyle}
+            brandPersonalityName={personalityName}
           />
         </div>
       )}

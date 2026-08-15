@@ -1,8 +1,5 @@
 import "dotenv/config";
 
-import { readFileSync, writeFileSync, existsSync } from "fs";
-import { resolve } from "path";
-import { Pool } from "pg";
 import { Resend } from "resend";
 import {
   createTimeWindow,
@@ -15,29 +12,9 @@ import { ICONS, formatHeader } from "./lib/display";
 import { 
   getEnhancedUmamiData, 
   getEnhancedFeedbackData, 
-  getEnhancedUserData,
   EnhancedUmamiData,
   EnhancedFeedbackData,
-  EnhancedUserData
 } from "./lib/enhanced-data";
-
-const STATS_FILE = resolve(process.cwd(), "stats.json");
-
-type StatsData = {
-  users: Array<{ id: string; createdAt: string }>;
-};
-
-function loadStats(): StatsData {
-  if (!existsSync(STATS_FILE)) {
-    return { users: [] };
-  }
-  const content = readFileSync(STATS_FILE, "utf-8");
-  return JSON.parse(content) as StatsData;
-}
-
-function saveStats(data: StatsData): void {
-  writeFileSync(STATS_FILE, JSON.stringify(data, null, 2), "utf-8");
-}
 
 type UmamiStatsResponse = {
   pageviews?: number | { value?: number };
@@ -76,10 +53,9 @@ const previousWindow = createTimeWindow(sinceHours * 2, new Date(timeWindow.star
 
 const lastWeekWindow = createTimeWindow(168);
 
-const [umamiData, feedbackData, userData, exportData] = await Promise.all([
+const [umamiData, feedbackData, exportData] = await Promise.all([
   getEnhancedUmamiData(timeWindow, previousWindow, fetchUmamiStats),
   getEnhancedFeedbackDataWithGrowth(timeWindow),
-  getEnhancedUserDataWithGrowth(timeWindow),
   getExportData(lastWeekWindow),
 ]);
 
@@ -88,7 +64,6 @@ const output = formatEnhancedOutput({
   duration: `${sinceHours}h`,
   umamiData,
   feedbackData,
-  userData,
   exportData,
 });
 
@@ -414,82 +389,13 @@ async function getEnhancedFeedbackDataWithGrowth(window: { start: Date }): Promi
   }
 }
 
-async function getEnhancedUserDataWithGrowth(window: { start: Date }): Promise<EnhancedUserData> {
-  const databaseUrl = process.env.DATABASE_URL;
-
-  if (!databaseUrl) {
-    return {
-      newCount: 0,
-      totalCount: 0,
-      growth: "",
-      activeCount: 0,
-      activeGrowth: "",
-      activeRate: "0%"
-    };
-  }
-
-  const pool = new Pool({ connectionString: databaseUrl });
-
-  try {
-    // Count total users
-    const totalResult = await pool.query(
-      'SELECT COUNT(*) as count FROM "user"'
-    );
-    const totalCount = parseInt(totalResult.rows[0]?.count ?? "0", 10);
-
-    // Count new users in current period
-    const newResult = await pool.query(
-      'SELECT COUNT(*) as count FROM "user" WHERE created_at >= $1',
-      [window.start.toISOString()]
-    );
-    const newCount = parseInt(newResult.rows[0]?.count ?? "0", 10);
-
-    // Count new users in previous period for growth comparison
-    const previousStart = new Date(window.start.getTime() - (timeWindow.end.getTime() - timeWindow.start.getTime()));
-    const previousNewResult = await pool.query(
-      'SELECT COUNT(*) as count FROM "user" WHERE created_at >= $1 AND created_at < $2',
-      [previousStart.toISOString(), window.start.toISOString()]
-    );
-    const previousNewCount = parseInt(previousNewResult.rows[0]?.count ?? "0", 10);
-
-    // Count active users (saved at least one design) in current period
-    const activeResult = await pool.query(
-      'SELECT COUNT(DISTINCT "user_id") as count FROM "memory_items" WHERE created_at >= $1',
-      [window.start.toISOString()]
-    );
-    const activeCount = parseInt(activeResult.rows[0]?.count ?? "0", 10);
-
-    // Count active users in previous period for growth comparison
-    const previousActiveResult = await pool.query(
-      'SELECT COUNT(DISTINCT "user_id") as count FROM "memory_items" WHERE created_at >= $1 AND created_at < $2',
-      [previousStart.toISOString(), window.start.toISOString()]
-    );
-    const previousActiveCount = parseInt(previousActiveResult.rows[0]?.count ?? "0", 10);
-
-    return getEnhancedUserData(
-      newCount,
-      totalCount,
-      previousNewCount,
-      activeCount,
-      previousActiveCount
-    );
-  } catch (error) {
-    const newCount = 0;
-    const totalCount = 0;
-    return getEnhancedUserData(newCount, totalCount, 0, 0, 0);
-  } finally {
-    await pool.end();
-  }
-}
-
 function formatEnhancedOutput(data: {
   duration: string;
   umamiData: EnhancedUmamiData;
   feedbackData: EnhancedFeedbackData;
-  userData: EnhancedUserData;
   exportData: ExportData;
 }): string {
-  const { duration, umamiData, feedbackData, userData, exportData } = data;
+  const { duration, umamiData, feedbackData, exportData } = data;
   
   const lines: string[] = [];
   
@@ -514,13 +420,5 @@ function formatEnhancedOutput(data: {
     lines.push(`   ${feedbackData.count} new messages`);
     lines.push(feedbackData.latestDisplay);
   }
-  lines.push("");
-  
-  // Users section
-  lines.push(`${ICONS.users} Users`);
-  lines.push(`   New signups: ${userData.growth || userData.newCount}`);
-  lines.push(`   Total users: ${userData.totalCount}`);
-  lines.push(`   Active users: ${userData.activeGrowth || userData.activeCount} (${userData.activeRate})`);
-  
   return lines.join("\n");
 }

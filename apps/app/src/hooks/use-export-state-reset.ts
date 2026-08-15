@@ -2,24 +2,25 @@
 
 import { useEffect, useRef } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
-import { currentDesignHashAtom } from "@/hooks/atoms/memory";
-import { hasExportedAtom, currentExportBlobAtom } from "@/hooks/atoms";
+import { configAtom, hasExportedAtom, currentExportBlobAtom } from "@/hooks/atoms";
 
-/**
- * Hook to reset export/save button state when design changes
- */
 export function useExportStateReset() {
-  const designHash = useAtomValue(currentDesignHashAtom);
+  const config = useAtomValue(configAtom);
   const setHasExported = useSetAtom(hasExportedAtom);
   const setCurrentBlob = useSetAtom(currentExportBlobAtom);
-  const previousHash = useRef<string>(designHash);
+  const previousSignature = useRef<string | null>(null);
+  const signature = JSON.stringify({
+    layoutId: config.layoutId,
+    background: config.background,
+    assets: config.assets,
+    text: config.text,
+  });
 
   useEffect(() => {
-    // Only reset if hash actually changed (not on mount)
-    if (previousHash.current !== designHash) {
+    if (previousSignature.current && previousSignature.current !== signature) {
       setHasExported(false);
       setCurrentBlob(null);
     }
-    previousHash.current = designHash;
-  }, [designHash, setHasExported, setCurrentBlob]);
+    previousSignature.current = signature;
+  }, [signature, setHasExported, setCurrentBlob]);
 }

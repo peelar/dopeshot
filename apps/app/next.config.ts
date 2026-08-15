@@ -5,15 +5,6 @@ const nextConfig: NextConfig = {
   experimental: {
     useCache: true,
   },
-  images: {
-    remotePatterns: [
-      {
-        protocol: "https",
-        hostname: "kktkeiwdsfxgarhwvosd.supabase.co",
-        pathname: "/storage/v1/object/**",
-      },
-    ],
-  },
 };
 
 export default withSentryConfig(nextConfig, {

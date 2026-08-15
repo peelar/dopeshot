@@ -27,14 +27,12 @@ import { cn } from "@/lib/utils/cn";
 import { AspectToggle } from "@/components/selectors/aspect-toggle";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Lock, Monitor, Smartphone, Sparkles, Video } from "lucide-react";
+import { Monitor, Smartphone, Sparkles, Video } from "lucide-react";
 import { track } from "@/lib/analytics";
-import { useSession } from "@/lib/auth/auth-client";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
-import { useCallback, useMemo, useState, useRef, useEffect } from "react";
+import { useCallback, useMemo, useRef, useEffect } from "react";
 
 // Memoize layout default configs at module level to avoid recreation
 // Since layouts are now pre-flattened, each layout has exactly one variant baked in
@@ -73,15 +71,9 @@ export function LayoutSelector({ className }: { className?: string }) {
   const [activeFormat, setActiveFormat] = useAtom(activeFormatAtom);
   const isFormatUnselected = activeFormat === "none";
   const formatForPreview = isFormatUnselected ? "screenshot" : activeFormat;
-  const { data: session } = useSession();
-  const { isBrandUser } = useUserTier();
   const { processColorAnalysis } = useColorAnalysis();
-  const isLoggedIn = !!session?.user;
   const isMobile = useMobileDetection();
   const hasAutoSetOrientation = useRef(false);
-
-  // Tooltip state for locked testimonial tab
-  const [showLockedTooltip, setShowLockedTooltip] = useState(false);
 
   const showOrientationToggle = activeFormat === "screenshot" || activeFormat === "none";
   const showTestimonialAspectToggle = activeFormat === "testimonial";
@@ -359,12 +351,6 @@ export function LayoutSelector({ className }: { className?: string }) {
 
   const handleFormatTabClick = useCallback(
     (format: LayoutFormat) => {
-      if ((format === "testimonial" || format === "tweet") && !isBrandUser) {
-        setShowLockedTooltip(true);
-        track("testimonial_gate_hit", { reason: isLoggedIn ? "free_tier" : "not_logged_in" });
-        return;
-      }
-
       if (format === activeFormat) return;
 
       const previousFormat = activeFormat;
@@ -393,7 +379,7 @@ export function LayoutSelector({ className }: { className?: string }) {
         setScreenshotZoom(1.0);
       }
     },
-    [activeFormat, isBrandUser, isLoggedIn, processColorAnalysis, setActiveFormat, setAssets],
+    [activeFormat, processColorAnalysis, setActiveFormat, setAssets],
   );
 
   return (
@@ -409,7 +395,6 @@ export function LayoutSelector({ className }: { className?: string }) {
       <div className="flex items-center gap-1 px-1 sm:px-0">
         {FORMAT_TABS.map((tab) => {
           const isActive = activeFormat === tab.value;
-          const isLocked = (tab.value === "testimonial" || tab.value === "tweet") && !isBrandUser;
           const tabButton = (
             <button
               type="button"
@@ -418,31 +403,17 @@ export function LayoutSelector({ className }: { className?: string }) {
                 "relative inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                 isActive
                   ? "bg-primary/10 text-primary"
-                  : isLocked
-                    ? "cursor-not-allowed text-muted-foreground/50"
-                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
+                  : "text-muted-foreground hover:bg-muted/40 hover:text-foreground",
               )}
               aria-pressed={isActive}
-              aria-label={isLocked ? `${tab.label} (Brand tier required)` : `Show ${tab.label} layouts`}
+              aria-label={`Show ${tab.label} layouts`}
             >
-              {isLocked && <Lock className="h-3 w-3" />}
               {tab.label}
               {tab.value === "tweet" && (
                 <Sparkles className="absolute -right-1 -top-1 h-3 w-3 text-amber-500" />
               )}
             </button>
           );
-
-          if (isLocked) {
-            return (
-                <Tooltip key={tab.value} open={showLockedTooltip} onOpenChange={setShowLockedTooltip}>
-                  <TooltipTrigger render={tabButton} />
-                  <TooltipContent side="bottom" align="start">
-                  Available on Brand plan.
-                  </TooltipContent>
-                </Tooltip>
-              );
-          }
 
           return (
             <div key={tab.value} className="relative">

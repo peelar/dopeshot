@@ -5,15 +5,12 @@ import { Paintbrush } from "lucide-react";
 import { LayoutConfigPanel } from "@/components/config/layout-config";
 import { SidebarFooter } from "@/components/layout/sidebar-footer";
 import { activeFormatAtom } from "@/hooks/atoms";
-import { useUserTier } from "@/hooks/use-user-tier";
 
 interface SidebarTabsProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
-  onFeedbackClick?: () => void;
 }
 
-export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps) {
-  const { isBrandUser } = useUserTier();
+export function SidebarTabs({ onUploadAsset }: SidebarTabsProps) {
   const activeFormat = useAtomValue(activeFormatAtom);
 
   return (
@@ -27,10 +24,10 @@ export function SidebarTabs({ onUploadAsset, onFeedbackClick }: SidebarTabsProps
             </p>
           </div>
         ) : (
-          <LayoutConfigPanel onUploadAsset={onUploadAsset} isBrandUser={isBrandUser} />
+          <LayoutConfigPanel onUploadAsset={onUploadAsset} />
         )}
       </div>
-      <SidebarFooter onFeedbackClick={onFeedbackClick} />
+      <SidebarFooter />
     </div>
   );
 }

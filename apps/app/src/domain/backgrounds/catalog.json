@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "items": [
+    {
+      "id": "curated-1-hipster",
+      "personality": "hipster",
+      "fileName": "curated-1.png",
+      "fileSizeKb": 2557,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-2-hipster",
+      "personality": "hipster",
+      "fileName": "curated-2.png",
+      "fileSizeKb": 1663,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-3-hipster",
+      "personality": "hipster",
+      "fileName": "curated-3.png",
+      "fileSizeKb": 2363,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-4-hipster",
+      "personality": "hipster",
+      "fileName": "curated-4.png",
+      "fileSizeKb": 2405,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-1-founder",
+      "personality": "founder",
+      "fileName": "curated-1.png",
+      "fileSizeKb": 2557,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-2-founder",
+      "personality": "founder",
+      "fileName": "curated-2.png",
+      "fileSizeKb": 1663,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-3-founder",
+      "personality": "founder",
+      "fileName": "curated-3.png",
+      "fileSizeKb": 2363,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-4-founder",
+      "personality": "founder",
+      "fileName": "curated-4.png",
+      "fileSizeKb": 2405,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-1-hacker",
+      "personality": "hacker",
+      "fileName": "curated-1.png",
+      "fileSizeKb": 2557,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-2-hacker",
+      "personality": "hacker",
+      "fileName": "curated-2.png",
+      "fileSizeKb": 1663,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-3-hacker",
+      "personality": "hacker",
+      "fileName": "curated-3.png",
+      "fileSizeKb": 2363,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-4-hacker",
+      "personality": "hacker",
+      "fileName": "curated-4.png",
+      "fileSizeKb": 2405,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-1-kawaii",
+      "personality": "kawaii",
+      "fileName": "curated-1.png",
+      "fileSizeKb": 2557,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-2-kawaii",
+      "personality": "kawaii",
+      "fileName": "curated-2.png",
+      "fileSizeKb": 1663,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-3-kawaii",
+      "personality": "kawaii",
+      "fileName": "curated-3.png",
+      "fileSizeKb": 2363,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    },
+    {
+      "id": "curated-4-kawaii",
+      "personality": "kawaii",
+      "fileName": "curated-4.png",
+      "fileSizeKb": 2405,
+      "widthPx": 1927,
+      "heightPx": 1080,
+      "fileFormat": "png"
+    }
+  ]
+}

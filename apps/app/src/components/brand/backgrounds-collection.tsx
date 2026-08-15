@@ -1,14 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useAtom } from "jotai";
 import { Loader2, Plus, Trash2 } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
 import { personalBackgroundsAtom } from "@/hooks/atoms/backgrounds";
-import {
-  listPersonalBackgrounds,
-  deletePersonalBackground,
-} from "@/domain/backgrounds/background-service";
+import { deletePersonalBackground } from "@/domain/backgrounds/background-service";
 import { useBackgroundUpload } from "@/hooks/use-background-upload";
 import { track } from "@/lib/analytics";
 import { toast } from "@/lib/utils/toast";
@@ -18,7 +14,6 @@ import type { PersonalBackground } from "@/domain/backgrounds/types";
 
 export function BackgroundsCollection() {
   const [backgrounds, setBackgrounds] = useAtom(personalBackgroundsAtom);
-  const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -31,27 +26,7 @@ export function BackgroundsCollection() {
     },
   });
 
-  // Load backgrounds on mount
-  useEffect(() => {
-    async function loadBackgrounds() {
-      // Use existing cache if already populated (e.g., from Design tab)
-      if (backgrounds.length > 0) {
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const response = await listPersonalBackgrounds();
-        setBackgrounds(response.items);
-      } catch (error) {
-        console.error("Failed to load backgrounds:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    loadBackgrounds();
-  }, [backgrounds.length, setBackgrounds]);
+  // Backgrounds live in local Jotai state for this session.
 
   const handleUpload = useCallback(
     async (file: File) => {
@@ -120,9 +95,7 @@ export function BackgroundsCollection() {
       />
 
       <div className="grid grid-cols-3 gap-3">
-        {isLoading ? (
-          <Skeleton className="h-12 w-full rounded-md" />
-        ) : backgrounds.length === 0 ? (
+        {backgrounds.length === 0 ? (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}

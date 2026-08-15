@@ -1,20 +1,11 @@
+import { getCatalogBackground, getCatalogBackgrounds } from "./catalog";
 import type { BackgroundSelection, CatalogBackground, PersonalBackground } from "./types";
-
-// Cache personal backgrounds for a short window to avoid repeated fetches
-const PERSONAL_BACKGROUNDS_TTL_MS = 5 * 60 * 1000; // 5 minutes
-let personalBackgroundsCache: { items: PersonalBackground[]; timestamp: number } | null = null;
-let personalBackgroundsPromise: Promise<ListResponse<PersonalBackground>> | null = null;
 
 type ListResponse<T> = {
   items: T[];
 };
 
-type SelectionResponse = BackgroundSelection;
-
-type UploadResponse = PersonalBackground;
-type CatalogListResponse = ListResponse<CatalogBackground>;
-
-export class BackgroundApiError extends Error {
+class BackgroundApiError extends Error {
   status: number;
   payload?: unknown;
 
@@ -25,108 +16,40 @@ export class BackgroundApiError extends Error {
   }
 }
 
-async function parseResponse<T>(response: Response): Promise<T> {
-  const payload = await response.json().catch(() => null);
-  if (!response.ok) {
-    const message =
-      payload && typeof payload === "object" && "error" in payload
-        ? String((payload as { error?: string }).error ?? "Request failed")
-        : "Request failed";
-    throw new BackgroundApiError(message, response.status, payload);
-  }
-  return payload as T;
-}
-
-export async function listPersonalBackgrounds(
-  options: { forceRefresh?: boolean } = {},
-): Promise<ListResponse<PersonalBackground>> {
-  const { forceRefresh = false } = options;
-  const now = Date.now();
-
-  // Return warm cache when fresh
-  if (
-    !forceRefresh &&
-    personalBackgroundsCache &&
-    now - personalBackgroundsCache.timestamp < PERSONAL_BACKGROUNDS_TTL_MS
-  ) {
-    return personalBackgroundsCache;
-  }
-
-  // Deduplicate concurrent requests
-  if (!forceRefresh && personalBackgroundsPromise) {
-    return personalBackgroundsPromise;
-  }
-
-  personalBackgroundsPromise = fetch("/api/backgrounds/personal", {
-    method: "GET",
-  })
-    .then((response) => parseResponse<ListResponse<PersonalBackground>>(response))
-    .then((payload) => {
-      personalBackgroundsCache = { items: payload.items, timestamp: Date.now() };
-      personalBackgroundsPromise = null;
-      return payload;
-    })
-    .catch((error) => {
-      personalBackgroundsPromise = null;
-      throw error;
-    });
-
-  return personalBackgroundsPromise;
-}
-
 export async function listCatalogBackgrounds(options: {
   personality: string;
   limit?: number;
   offset?: number;
-}): Promise<CatalogListResponse> {
-  const params = new URLSearchParams();
-  params.set("personality", options.personality);
-  if (options.limit) params.set("limit", String(options.limit));
-  if (options.offset) params.set("offset", String(options.offset));
-
-  const response = await fetch(`/api/backgrounds/catalog?${params.toString()}`, {
-    method: "GET",
-  });
-  return parseResponse<CatalogListResponse>(response);
+}): Promise<ListResponse<CatalogBackground>> {
+  const all = getCatalogBackgrounds(options.personality);
+  const offset = options.offset ?? 0;
+  const limit = options.limit ?? all.length;
+  return { items: all.slice(offset, offset + limit) };
 }
 
 export async function addCatalogBackground(catalogId: string): Promise<PersonalBackground> {
-  const response = await fetch("/api/backgrounds/catalog/add", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ catalogId }),
-  });
-  return parseResponse<PersonalBackground>(response);
-}
-
-export async function getBackgroundSelection(): Promise<SelectionResponse | null> {
-  const response = await fetch("/api/backgrounds/selection", {
-    method: "GET",
-  });
-  if (response.status === 204) {
-    return null;
+  const catalogItem = getCatalogBackground(catalogId);
+  if (!catalogItem || !catalogItem.previewUrl) {
+    throw new BackgroundApiError("Catalog background not found", 404);
   }
-  return parseResponse<SelectionResponse>(response);
+
+  return {
+    id: `catalog-${catalogItem.id}`,
+    name: catalogItem.personality,
+    previewUrl: catalogItem.previewUrl,
+    fileSizeKb: catalogItem.fileSizeKb,
+    widthPx: catalogItem.widthPx,
+    heightPx: catalogItem.heightPx,
+    fileFormat: catalogItem.fileFormat,
+    sourceType: "catalog",
+    sourceId: catalogItem.id,
+  };
 }
 
 export async function saveBackgroundSelection(
   selection: BackgroundSelection,
-): Promise<SelectionResponse> {
-  const response = await fetch("/api/backgrounds/selection", {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(selection),
-  });
-  return parseResponse<SelectionResponse>(response);
-}
-
-export async function clearBackgroundSelection(): Promise<void> {
-  const response = await fetch("/api/backgrounds/selection", {
-    method: "DELETE",
-  });
-  if (!response.ok && response.status !== 204) {
-    await parseResponse(response);
-  }
+): Promise<BackgroundSelection> {
+  return selection;
 }
 
 export async function uploadPersonalBackground(options: {
@@ -135,46 +58,23 @@ export async function uploadPersonalBackground(options: {
   widthPx?: number;
   heightPx?: number;
   fileFormat?: string;
-}): Promise<UploadResponse> {
-  const formData = new FormData();
-  formData.append("file", options.file);
-  if (options.name) formData.append("name", options.name);
-  if (options.widthPx) formData.append("widthPx", String(options.widthPx));
-  if (options.heightPx) formData.append("heightPx", String(options.heightPx));
-  if (options.fileFormat) formData.append("fileFormat", options.fileFormat);
+}): Promise<PersonalBackground> {
+  const previewUrl = URL.createObjectURL(options.file);
+  const format = options.fileFormat || options.file.name.split(".").pop()?.toLowerCase() || "png";
 
-  const response = await fetch("/api/backgrounds/personal", {
-    method: "POST",
-    body: formData,
-  });
-  const payload = await parseResponse<UploadResponse>(response);
-
-  // Update cache with new item (or invalidate if missing)
-  if (personalBackgroundsCache) {
-    personalBackgroundsCache = {
-      items: [payload, ...personalBackgroundsCache.items],
-      timestamp: Date.now(),
-    };
-  } else {
-    personalBackgroundsCache = { items: [payload], timestamp: Date.now() };
-  }
-
-  return payload;
+  return {
+    id: `upload-${crypto.randomUUID()}`,
+    name: options.name ?? options.file.name.replace(/\.[^/.]+$/, ""),
+    previewUrl,
+    fileSizeKb: Math.max(1, Math.round(options.file.size / 1024)),
+    widthPx: options.widthPx ?? 0,
+    heightPx: options.heightPx ?? 0,
+    fileFormat: format,
+    sourceType: "upload",
+    sourceId: null,
+  };
 }
 
 export async function deletePersonalBackground(backgroundId: string): Promise<void> {
-  const response = await fetch(`/api/backgrounds/personal/${backgroundId}`, {
-    method: "DELETE",
-  });
-  if (!response.ok && response.status !== 204) {
-    await parseResponse(response);
-  }
-
-  // Remove from cache when present
-  if (personalBackgroundsCache) {
-    personalBackgroundsCache = {
-      items: personalBackgroundsCache.items.filter((b) => b.id !== backgroundId),
-      timestamp: Date.now(),
-    };
-  }
+  void backgroundId;
 }
