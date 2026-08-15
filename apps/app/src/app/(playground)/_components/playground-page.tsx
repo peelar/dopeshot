@@ -35,7 +35,6 @@ import { cn } from "@/lib/utils/cn";
 import { track } from "@/lib/analytics";
 import { PlaygroundErrorBoundary } from "@/components/errors/playground-error-boundary";
 import { SidebarErrorBoundary } from "@/components/errors/sidebar-error-boundary";
-import { InAppUpdateBanner } from "@/components/layout/in-app-update-banner";
 import { ExportSuccessModal } from "@/components/post-export";
 import { showExportSheetAtom, exportThumbnailAtom } from "@/hooks/atoms";
 import { useColorAnalysis } from "@/hooks/use-color-analysis";
@@ -237,8 +236,6 @@ function PlaygroundPageInner() {
       onDrop={handleDrop}
     >
       <DragOverlay visible={isDragging} />
-
-      <InAppUpdateBanner />
 
       <AppHeader
         hasCustomScreenshot={hasCustomScreenshot}
