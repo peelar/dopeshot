@@ -19,7 +19,7 @@ type CatalogManifest = {
 
 const manifest = catalog as CatalogManifest;
 
-export function catalogPublicPath(fileName: string): string {
+function catalogPublicPath(fileName: string): string {
   return `/backgrounds/catalog/${fileName}`;
 }
 

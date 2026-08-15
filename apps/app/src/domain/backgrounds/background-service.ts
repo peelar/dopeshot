@@ -5,7 +5,7 @@ type ListResponse<T> = {
   items: T[];
 };
 
-export class BackgroundApiError extends Error {
+class BackgroundApiError extends Error {
   status: number;
   payload?: unknown;
 
@@ -50,10 +50,6 @@ export async function saveBackgroundSelection(
   selection: BackgroundSelection,
 ): Promise<BackgroundSelection> {
   return selection;
-}
-
-export async function clearBackgroundSelection(): Promise<void> {
-  return;
 }
 
 export async function uploadPersonalBackground(options: {

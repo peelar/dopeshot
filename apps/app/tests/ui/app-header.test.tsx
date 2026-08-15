@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import { describe, expect, it, vi, afterEach } from "vitest";
 import { AppHeader } from "@/components/layout/app-header";
 
 vi.mock("@/components/layout/user-menu", () => ({
@@ -16,6 +16,10 @@ const defaultProps = {
 };
 
 describe("AppHeader", () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it("shows Change Screenshot CTA with secondary style and refresh icon", () => {
     render(<AppHeader {...defaultProps} hasCustomScreenshot />);
 

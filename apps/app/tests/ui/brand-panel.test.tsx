@@ -34,7 +34,6 @@ vi.mock("@/domain/backgrounds/background-service", () => ({
   saveBackgroundSelection: vi.fn(),
   listCatalogBackgrounds: vi.fn().mockResolvedValue({ items: [] }),
   addCatalogBackground: vi.fn(),
-  BackgroundApiError: class extends Error {},
 }));
 
 describe("BrandPanel", () => {
