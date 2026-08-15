@@ -76,7 +76,6 @@ describe("MobileActions - Design button visibility", () => {
     onUploadClick: () => {},
     isProcessingUpload: false,
     showUploadButton: false,
-    isBrandUser: false,
     onUploadAsset: () => {},
   };
 

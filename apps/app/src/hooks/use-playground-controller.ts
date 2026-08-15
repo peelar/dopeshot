@@ -12,7 +12,6 @@ import {
 import { getRandomDemoPreset } from "@/domain/demo/presets";
 import { getLayoutFormat, type LayoutDefinition } from "@/domain/layout-def/definitions";
 import { exportLayoutAsPngWithBlob, generateThumbnail } from "@/domain/layout/export";
-import { useSession } from "@/lib/auth/auth-client";
 import type { LayoutConfig } from "@/domain/layout/types";
 import type { Asset } from "@/domain/asset/types";
 import {
@@ -60,7 +59,6 @@ interface ExportContext {
   setCurrentExportBlob: Setter<Blob | null>;
   setShowExportSheet: Setter<boolean>;
   setExportThumbnail: Setter<string | null>;
-  isAuthenticated: boolean;
 }
 
 type Setter<T> = (value: T | ((prev: T) => T)) => void;
@@ -109,9 +107,6 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
   const setShowExportSheet = useSetAtom(showExportSheetAtom);
   const setExportThumbnail = useSetAtom(exportThumbnailAtom);
 
-  // Auth state for conditional sheet display
-  const { data: session } = useSession();
-
   const showFocusHint = useFocusHint(isScreenshotFocusedMode, lookCapabilities?.focusMode);
   const hasScreenshot = Boolean(config.assets.screenshot);
   const requiresScreenshot = lookCapabilities?.screenshot === "supported";
@@ -133,7 +128,6 @@ export function usePlaygroundController({ demoEnabled }: { demoEnabled: boolean 
     setCurrentExportBlob,
     setShowExportSheet,
     setExportThumbnail,
-    isAuthenticated: Boolean(session?.session),
   });
 
   const toggleCanvasMode = useCanvasModeToggle(setConfig);
@@ -257,7 +251,6 @@ function useExportHandler({
   setCurrentExportBlob,
   setShowExportSheet,
   setExportThumbnail,
-  isAuthenticated,
 }: ExportContext) {
   return useCallback(async () => {
     if (requiresScreenshot && !hasScreenshot) {
@@ -309,28 +302,18 @@ function useExportHandler({
         export_type: exportType,
       });
 
-      // DEV FLAG: Force show modal for all users in development
-      const DEV_FORCE_SHOW_MODAL = process.env.NODE_ENV === "development" && false; // Set to true to test modal
-
-      // Show export success sheet for anonymous users (or all users if dev flag enabled)
-      if (!isAuthenticated || DEV_FORCE_SHOW_MODAL) {
-        // Generate thumbnail for the success sheet
-        try {
-          const thumbnail = await generateThumbnail("export-container");
-          setExportThumbnail(thumbnail);
-        } catch (err) {
-          console.warn("Failed to generate thumbnail:", err);
-          // Continue without thumbnail
-        }
-
-        // Show sheet after a short delay to let download complete
-        setTimeout(() => {
-          setShowExportSheet(true);
-          track("export_sheet_shown", {
-            user_type: DEV_FORCE_SHOW_MODAL ? "dev_testing" : "anonymous",
-          });
-        }, 500);
+      // Show export success sheet after download
+      try {
+        const thumbnail = await generateThumbnail("export-container");
+        setExportThumbnail(thumbnail);
+      } catch (err) {
+        console.warn("Failed to generate thumbnail:", err);
       }
+
+      setTimeout(() => {
+        setShowExportSheet(true);
+        track("export_sheet_shown");
+      }, 500);
     } catch (error) {
       console.error("Export Error Handler:", error);
       const msg = error instanceof Error ? error.message : "Unknown error occurred";
@@ -366,7 +349,6 @@ function useExportHandler({
     setCurrentExportBlob,
     setShowExportSheet,
     setExportThumbnail,
-    isAuthenticated,
   ]);
 }
 

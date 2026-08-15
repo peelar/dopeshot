@@ -21,16 +21,7 @@
     "changeset": "changeset",
     "changeset:status": "pnpm changeset status --verbose",
     "changeset:version": "pnpm changeset version && pnpm install --no-frozen-lockfile",
-    "release": "pnpm --filter dopeshot-app release",
-    "db:dev": "pnpm --filter dopeshot-app db:dev",
-    "db:status:staging": "./scripts/migrate.sh staging --dry-run",
-    "db:deploy:staging": "./scripts/migrate.sh staging",
-    "db:status:prod": "./scripts/migrate.sh prod --dry-run",
-    "db:deploy:prod": "PROD_MIGRATE_CONFIRMED=yes ./scripts/migrate.sh prod",
-    "sql:staging": "./scripts/sql/run.sh staging",
-    "sql:prod": "PROD_SQL_CONFIRMED=yes ./scripts/sql/run.sh prod",
-    "sql:local": "./scripts/sql/run.sh local",
-    "sql": "./scripts/sql/run.sh"
+    "release": "pnpm --filter dopeshot-app release"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

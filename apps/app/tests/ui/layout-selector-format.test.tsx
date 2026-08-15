@@ -12,18 +12,6 @@ import {
 } from "@/hooks/atoms";
 import { getLayoutDefinition } from "@/domain/layout-def/definitions";
 
-// Mock auth - anonymous user by default
-let mockSessionData: unknown = null;
-vi.mock("@/lib/auth/auth-client", () => ({
-  useSession: () => ({ data: mockSessionData, isPending: false }),
-}));
-
-// Mock tier - free by default
-let mockIsBrandUser = false;
-vi.mock("@/hooks/use-user-tier", () => ({
-  useUserTier: () => ({ isBrandUser: mockIsBrandUser, isLoading: false }),
-}));
-
 vi.mock("@/lib/analytics", () => ({
   track: vi.fn(),
 }));
@@ -44,8 +32,6 @@ describe("LayoutSelector format tabs", () => {
   });
 
   beforeEach(() => {
-    mockSessionData = null; // Anonymous by default
-    mockIsBrandUser = false; // Free tier by default
     store = createStore();
     const def = getLayoutDefinition("popup-gradient-left");
     store.set(configAtom, def!.createConfig());
@@ -74,73 +60,10 @@ describe("LayoutSelector format tabs", () => {
   it("shows screenshot layout cards in rail when Screenshot tab is active", () => {
     renderWithStore(store);
 
-    // Should see Peak Right (the default layout)
     expect(screen.getByText("Peak Right")).toBeInTheDocument();
   });
 
-  it("shows lock icon on Testimonial tab for anonymous users", () => {
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    expect(tab).toBeInTheDocument();
-  });
-
-  it("shows upgrade tooltip when anonymous user hovers locked Testimonial tab", () => {
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    fireEvent.mouseEnter(tab);
-
-    expect(screen.getAllByText("Available on Brand plan.").length).toBeGreaterThan(0);
-  });
-
-  it("does not switch format when anonymous user clicks Testimonial tab", () => {
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    fireEvent.click(tab);
-
-    expect(store.get(activeFormatAtom)).toBe("screenshot");
-  });
-
-  it("shows lock icon on Testimonial tab for logged-in free user", () => {
-    mockSessionData = { user: { id: "user-1" } };
-    mockIsBrandUser = false;
-
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    expect(tab).toBeInTheDocument();
-  });
-
-  it("does not switch format when free user clicks Testimonial tab", () => {
-    mockSessionData = { user: { id: "user-1" } };
-    mockIsBrandUser = false;
-
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    fireEvent.click(tab);
-
-    expect(store.get(activeFormatAtom)).toBe("screenshot");
-  });
-
-  it("shows upgrade tooltip when logged-in free user hovers locked Testimonial tab", () => {
-    mockSessionData = { user: { id: "user-1" } };
-    mockIsBrandUser = false;
-
-    renderWithStore(store);
-
-    const tab = screen.getByRole("button", { name: "Testimonial (Brand tier required)" });
-    fireEvent.mouseEnter(tab);
-
-    expect(screen.getAllByText("Available on Brand plan.").length).toBeGreaterThan(0);
-  });
-
-  it("switches format when brand user clicks Testimonial tab", () => {
-    mockSessionData = { user: { id: "user-1" } };
-    mockIsBrandUser = true;
-
+  it("switches format when Testimonial tab is clicked", () => {
     renderWithStore(store);
 
     const tab = screen.getByRole("button", { name: "Show Testimonial layouts" });
@@ -150,16 +73,12 @@ describe("LayoutSelector format tabs", () => {
   });
 
   it("shows testimonial layout card when testimonial format is active", () => {
-    mockSessionData = { user: { id: "user-1" } };
-    mockIsBrandUser = true;
-
     store.set(activeFormatAtom, "testimonial");
     const def = getLayoutDefinition("testimonial");
     store.set(configAtom, def!.createConfig());
 
     renderWithStore(store);
 
-    // There should be a layout card with aria-label "Select Testimonial look"
     const layoutCard = screen.getByRole("button", { name: "Select Testimonial look" });
     expect(layoutCard).toBeInTheDocument();
   });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useAtomValue, useSetAtom } from "jotai";
-import { Camera, MessageSquareQuote, Plus, Lock } from "lucide-react";
+import { Camera, MessageSquareQuote, Plus } from "lucide-react";
 import { cn } from "@/lib/utils/cn";
 import { activeFormatAtom } from "@/hooks/atoms";
 import { canvasAtom, currentLayoutAtom } from "@/hooks/atoms/derived";
@@ -9,8 +9,6 @@ import { getLayoutComponent } from "@/components/layouts/registry";
 import { LoadingOverlay } from "@/components/ui/loading-overlay";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { LayoutFormat } from "@/domain/layout-def/definitions";
-import { useSession } from "@/lib/auth/auth-client";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { track } from "@/lib/analytics";
 
 function XLogo({ size = 24 }: { size?: number }) {
@@ -30,7 +28,6 @@ interface CoverPreviewProps {
   fullHeight?: boolean;
   onEmptyStateClick?: () => void;
   onFormatChosen?: (format: LayoutFormat) => void;
-  onLockedTestimonialClick?: () => void;
 }
 
 export function CoverPreview({
@@ -42,15 +39,11 @@ export function CoverPreview({
   fullHeight = false,
   onEmptyStateClick,
   onFormatChosen,
-  onLockedTestimonialClick,
 }: CoverPreviewProps) {
   const layout = useAtomValue(currentLayoutAtom);
   const canvasDimensions = useAtomValue(canvasAtom);
   const activeFormat = useAtomValue(activeFormatAtom);
   const setActiveFormat = useSetAtom(activeFormatAtom);
-  const { data: session } = useSession();
-  const isLoggedIn = Boolean(session?.user);
-  const { isBrandUser } = useUserTier();
   const showFormatChooser = activeFormat === "none" && showEmptyState && !isStatic;
 
   if (!layout) {
@@ -137,74 +130,25 @@ export function CoverPreview({
                       setActiveFormat("screenshot");
                     }}
                   />
-                  {isBrandUser ? (
-                    <FormatCard
-                      icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
-                      label="Testimonial"
-                      description="Social proof graphics from customer quotes"
-                      onClick={() => {
-                        setActiveFormat("testimonial");
-                        onFormatChosen?.("testimonial");
-                      }}
-                    />
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={(props) => (
-                          <span {...props}>
-                            <FormatCard
-                              icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
-                              label="Testimonial"
-                              description="Social proof graphics from customer quotes"
-                              isLocked
-                              onClick={() => {
-                                track("testimonial_gate_hit", {
-                                  reason: isLoggedIn ? "free_tier" : "not_logged_in",
-                                });
-                                onLockedTestimonialClick?.();
-                              }}
-                            />
-                          </span>
-                        )}
-                      />
-                      <TooltipContent side="top">Available on Brand plan.</TooltipContent>
-                    </Tooltip>
-                  )}
-                  {isBrandUser ? (
-                    <FormatCard
-                      icon={<XLogo size={24} />}
-                      label="Tweet"
-                      description="Turn tweets into branded cards"
-                      isNew
-                      onClick={() => {
-                        setActiveFormat("tweet");
-                        onFormatChosen?.("tweet");
-                      }}
-                    />
-                  ) : (
-                    <Tooltip>
-                      <TooltipTrigger
-                        render={(props) => (
-                          <span {...props}>
-                            <FormatCard
-                              icon={<XLogo size={24} />}
-                              label="Tweet"
-                              description="Turn tweets into branded cards"
-                              isNew
-                              isLocked
-                              onClick={() => {
-                                track("testimonial_gate_hit", {
-                                  reason: isLoggedIn ? "free_tier" : "not_logged_in",
-                                });
-                                onLockedTestimonialClick?.();
-                              }}
-                            />
-                          </span>
-                        )}
-                      />
-                      <TooltipContent side="top">Available on Brand plan.</TooltipContent>
-                    </Tooltip>
-                  )}
+                  <FormatCard
+                    icon={<MessageSquareQuote className="h-6 w-6" strokeWidth={1.5} />}
+                    label="Testimonial"
+                    description="Social proof graphics from customer quotes"
+                    onClick={() => {
+                      setActiveFormat("testimonial");
+                      onFormatChosen?.("testimonial");
+                    }}
+                  />
+                  <FormatCard
+                    icon={<XLogo size={24} />}
+                    label="Tweet"
+                    description="Turn tweets into branded cards"
+                    isNew
+                    onClick={() => {
+                      setActiveFormat("tweet");
+                      onFormatChosen?.("tweet");
+                    }}
+                  />
                 </div>
               </TooltipProvider>
             </div>
@@ -244,38 +188,28 @@ function FormatCard({
   label,
   description,
   isNew,
-  isLocked = false,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   description: string;
   isNew?: boolean;
-  isLocked?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-disabled={isLocked}
       className={cn(
         "group relative flex h-40 w-44 flex-col items-center gap-3 rounded-xl p-6",
         "backdrop-blur-sm transition-all duration-200",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        isLocked
-          ? "cursor-pointer border border-foreground/[0.05] bg-background/50 opacity-50"
-          : "cursor-pointer border border-foreground/[0.12] bg-background/90 shadow-md hover:border-foreground/[0.2] hover:bg-background hover:shadow-xl hover:-translate-y-0.5",
+        "cursor-pointer border border-foreground/[0.12] bg-background/90 shadow-md hover:border-foreground/[0.2] hover:bg-background hover:shadow-xl hover:-translate-y-0.5",
       )}
     >
       {isNew && (
         <span className="absolute -right-2 -top-2 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm">
           New
-        </span>
-      )}
-      {isLocked && (
-        <span className="absolute right-2 top-2 text-foreground/50">
-          <Lock className="h-3.5 w-3.5" />
         </span>
       )}
       <span className="text-foreground/50 transition-colors group-hover:text-foreground/80 dark:text-foreground/80 dark:group-hover:text-foreground">

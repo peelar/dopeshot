@@ -1,7 +1,7 @@
 "use client";
 
 import { FontStyle } from "@/domain/layout/types";
-import { BRAND_FONTS, FONT_STYLES, FREE_FONTS } from "@/domain/layout/fonts";
+import { FONT_STYLES } from "@/domain/layout/fonts";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,6 @@ import { Link2 } from "lucide-react";
 interface FontStyleSelectorProps {
   fontStyle?: FontStyle;
   onFontStyleChange: (fontStyle: FontStyle) => void;
-  isBrandUser?: boolean;
   /** The font style from the user's brand personality (if set) */
   brandFontStyle?: FontStyle;
   /** The user's brand personality name for display (e.g., "Tech", "Hipster") */
@@ -24,11 +23,10 @@ interface FontStyleSelectorProps {
 export function FontStyleSelector({
   fontStyle,
   onFontStyleChange,
-  isBrandUser = false,
   brandFontStyle,
   brandPersonalityName,
 }: FontStyleSelectorProps) {
-  const availableStyles = isBrandUser ? BRAND_FONTS : FREE_FONTS;
+  const availableStyles = FONT_STYLES;
   
   // Determine effective font style for display
   // If no explicit fontStyle, use brandFontStyle or default to "founder"

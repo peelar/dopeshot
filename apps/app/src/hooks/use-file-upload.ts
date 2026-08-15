@@ -6,7 +6,6 @@ import { processFileUpload } from "@/domain/asset/upload-orchestrator";
 import { analyzeImageTextContrast } from "@/domain/asset/image-text-contrast";
 import { applyLayoutRecommendation, ASPECT_COPY, getRecommendationForAspectCategory } from "@/domain/layout/recommendations";
 import { AspectCategory } from "@/domain/layout/aspect";
-import { saveBackgroundSelection } from "@/domain/backgrounds/background-service";
 import {
   configAtom,
   assetsAtom,
@@ -87,20 +86,10 @@ export function useFileUpload({
             file_size_kb: Math.round(file.size / 1024),
           });
         } else if (kind === "background") {
-          try {
-            const selection = await saveBackgroundSelection({
-              backgroundType: "personal",
-              backgroundId: asset.id,
-            });
-            setBackgroundSelection({
-              backgroundType: selection.backgroundType,
-              backgroundId: selection.backgroundId,
-            });
-          } catch (error) {
-            setStatusMessage(
-              "Background uploaded, but selection could not be saved. Please reselect it.",
-            );
-          }
+          setBackgroundSelection({
+            backgroundType: "personal",
+            backgroundId: asset.id,
+          });
         } else if (kind === "logo") {
           track("logo_uploaded", {
             file_size_kb: Math.round(file.size / 1024),

@@ -30,7 +30,6 @@ interface MobileActionsProps {
   onUploadClick: () => void;
   isProcessingUpload: boolean;
   showUploadButton: boolean;
-  isBrandUser?: boolean;
   onUploadAsset: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
 }
 
@@ -43,7 +42,6 @@ export function MobileActions({
   onUploadClick,
   isProcessingUpload,
   showUploadButton,
-  isBrandUser = false,
   onUploadAsset,
 }: MobileActionsProps) {
   const config = useAtomValue(configAtom);
@@ -79,7 +77,7 @@ export function MobileActions({
     const hasTypography = lookCapabilities?.typography !== false;
     const showTextSection = hasHeadlineSupport || hasSubtitleSupport || hasTypography;
     const isTestimonialFormat = getLayoutFormat(config.layoutId) === "testimonial";
-    const showTestimonialSections = isTestimonialFormat && isBrandUser;
+    const showTestimonialSections = isTestimonialFormat;
     var showDesignButton = showTextSection || showTestimonialSections;
   }
 
@@ -235,7 +233,6 @@ export function MobileActions({
               <LayoutConfigPanel
                 onUploadAsset={onUploadAsset}
                 isMobile={true}
-                isBrandUser={isBrandUser}
               />
             </div>
           </SheetContent>

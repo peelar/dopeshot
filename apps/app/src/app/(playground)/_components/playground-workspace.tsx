@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils/cn";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMobileDetection } from "@/hooks/use-mobile-detection";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { track } from "@/lib/analytics";
 
 /**
@@ -47,7 +46,6 @@ interface PlaygroundWorkspaceProps {
   showLoadingState: boolean;
   onEmptyStateClick: () => void;
   onFormatChosen?: (format: import("@/domain/layout-def/definitions").LayoutFormat) => void;
-  onLockedTestimonialClick?: () => void;
   canvasWidth: number;
   canvasHeight: number;
   showFocusHint: boolean;
@@ -62,7 +60,6 @@ export function PlaygroundWorkspace({
   showLoadingState,
   onEmptyStateClick,
   onFormatChosen,
-  onLockedTestimonialClick,
   canvasHeight,
   canvasWidth,
   showFocusHint,
@@ -78,7 +75,6 @@ export function PlaygroundWorkspace({
   const hasCustomScreenshot = useAtomValue(hasCustomScreenshotAtom);
   const [bottomWhitespace, setBottomWhitespace] = useState(0);
   const isMobile = useMobileDetection();
-  const { isBrandUser } = useUserTier();
   const showFullScreenEmptyState = isMobile && showEmptyState && activeFormat === "none";
 
   const isBackdropLayout =
@@ -90,7 +86,7 @@ export function PlaygroundWorkspace({
   const layoutSupportsVideo = supportsVideo(config.layoutId);
   const isDesktopOrientation = orientation !== "mobile";
   const showVideoToggle = isScreenshotFormat && hasCustomScreenshot && isDesktopOrientation;
-  const canUseVideo = layoutSupportsVideo && isBrandUser;
+  const canUseVideo = layoutSupportsVideo;
 
   // Auto-reset to image mode when video isn't available
   useEffect(() => {
@@ -186,9 +182,7 @@ export function PlaygroundWorkspace({
                   }
                 />
                 <TooltipContent>
-                  {!layoutSupportsVideo
-                    ? "Video available with Peak layouts"
-                    : "Video available on Brand plan"}
+                  Video available with Peak layouts
                 </TooltipContent>
               </Tooltip>
             )
@@ -247,7 +241,6 @@ export function PlaygroundWorkspace({
                     showLoadingState={showLoadingState}
                     onEmptyStateClick={onEmptyStateClick}
                     onFormatChosen={onFormatChosen}
-                    onLockedTestimonialClick={onLockedTestimonialClick}
                     fullHeight={showFullScreenEmptyState}
                   />
                 </div>

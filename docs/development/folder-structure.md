@@ -27,7 +27,6 @@ dopeshot/
 │   │   ├── src/                   # Application source code
 │   │   ├── public/                # Static assets
 │   │   ├── tests/                 # Test suite
-│   │   └── supabase/              # Database & auth config
 │   └── landing/                   # Marketing site (Next.js)
 ├── docs/                          # Technical documentation
 ├── thoughts/                      # Claude command outputs
@@ -49,12 +48,9 @@ src/app/
 │   │   ├── preview-viewport.tsx
 │   │   └── drag-overlay.tsx
 │   └── page.tsx               # Playground route (main page)
-├── auth/
-│   └── page.tsx               # Auth page
 ├── api/                       # API routes
-│   ├── auth/
-│   ├── brand/
-│   └── generate-gradient/
+│   ├── feedback/
+│   └── tweet/
 ├── layout.tsx                 # Root layout
 ├── globals.css                # Global styles
 ├── global-error.tsx           # Error boundary
@@ -102,12 +98,9 @@ src/components/
 │   └── analytics-provider.tsx (removed in favor of inline Simple Analytics script)
 ├── layouts/                   # Screenshot layout components
 │   ├── AdaptiveScreenshot.tsx
-│   ├── CodeSnippet.tsx
 │   ├── HeroCenter.tsx
 │   └── shared/
-├── auth/                      # Authentication UI
-├── brand/                     # Brand profile UI
-├── onboarding/                # Onboarding flow UI
+├── brand/                     # Brand panel (localStorage)
 └── cover-preview.tsx          # Shared utility component
 ```
 
@@ -118,9 +111,8 @@ Pure business logic, data models, and algorithms. No UI dependencies.
 ```
 src/domain/
 ├── asset/                     # Asset upload & metadata
-├── code/                      # Code language detection
+├── backgrounds/               # Static catalog + session uploads
 ├── demo/                      # Demo presets
-├── gradient-generation/       # Gradient algorithms
 ├── layout/                    # Layout models & config
 │   └── gradients/             # Gradient types & utilities
 └── layout-def/                # Layout definitions & authoring
@@ -139,7 +131,6 @@ React hooks for state management and side effects.
 src/hooks/
 ├── atoms/                     # Jotai atom definitions (nested)
 ├── atoms.ts                   # Main atom exports
-├── use-onboarding-flow.ts
 ├── use-brand-logo-auto-apply.ts
 ├── use-playground-controller.ts
 ├── use-file-upload.ts
@@ -154,17 +145,9 @@ Shared utilities, services, and configurations.
 src/lib/
 ├── utils/                     # Utility functions
 │   └── cn.ts                  # className utility
-├── config/                    # App configuration
-│   ├── instrumentation.ts
-│   ├── instrumentation-client.ts
-│   ├── sentry.server.ts
-│   └── sentry.edge.ts
-├── auth/                      # Auth utilities (better-auth)
+├── types/                     # Shared types (brand personality/mode)
 ├── analytics.ts               # Event tracking
-├── feature-flags.ts           # Feature flag management
-├── sentry.ts                  # Sentry integration
-├── supabase-admin.ts          # Supabase admin client
-└── supabase-db.ts             # Supabase database client
+└── sentry.ts                  # Sentry integration
 ```
 
 ## Where to Put New Code
@@ -193,7 +176,6 @@ Is it a React hook?
 └─ Yes → src/hooks/
 
 Is it a utility or service?
-├─ Auth-related? → src/lib/auth/
 ├─ Utility function? → src/lib/utils/
 └─ Other service → src/lib/
 ```
@@ -222,12 +204,6 @@ src/app/(playground)/_components/
 ```
 src/app/api/export/
 └── route.ts
-```
-
-**Adding authentication helper:**
-```
-src/lib/auth/
-└── session-helper.ts
 ```
 
 ## Import Path Conventions

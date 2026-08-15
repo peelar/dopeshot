@@ -19,15 +19,6 @@ export interface EnhancedFeedbackData {
   latestDisplay: string;
 }
 
-export interface EnhancedUserData {
-  newCount: number;
-  totalCount: number;
-  growth: string;
-  activeCount: number;
-  activeGrowth: string;
-  activeRate: string;
-}
-
 export interface EnhancedSentryData {
   errorCount: number;
   errorCountGrowth: string;
@@ -117,23 +108,6 @@ export function getEnhancedFeedbackData(
   };
 }
 
-export function getEnhancedUserData(
-  currentNewCount: number,
-  totalCount: number,
-  previousNewCount: number,
-  currentActiveCount: number,
-  previousActiveCount: number
-): EnhancedUserData {
-  return {
-    newCount: currentNewCount,
-    totalCount,
-    growth: formatCountWithGrowth(currentNewCount, previousNewCount),
-    activeCount: currentActiveCount,
-    activeGrowth: formatCountWithGrowth(currentActiveCount, previousActiveCount),
-    activeRate: formatPercent(totalCount === 0 ? 0 : currentActiveCount / totalCount),
-  };
-}
-
 export async function getEnhancedSentryData(
   currentWindow: TimeWindow,
   previousWindow: TimeWindow
@@ -196,9 +170,3 @@ function normalizeUmamiValue(value: UmamiStatsResponse[keyof UmamiStatsResponse]
   return 0;
 }
 
-function formatPercent(value: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "percent",
-    maximumFractionDigits: 1,
-  }).format(value);
-}

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { verifySession } from "@/lib/auth/session";
 
 // Initialize Resend
 const resend = process.env.RESEND_API_KEY
@@ -57,20 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Try to get user session (optional - allow anonymous feedback)
-    let userId: string | null = null;
-    let userEmail: string | null = null;
-
-    try {
-      const sessionResult = await verifySession();
-      if (sessionResult.isAuth && sessionResult.userId) {
-        userId = sessionResult.userId;
-        userEmail = sessionResult.session?.user?.email || null;
-      }
-    } catch {
-      // Session verification failed - continue as anonymous
-    }
-
     // Gather context
     const userAgent = request.headers.get("user-agent") || "Unknown";
     const referer = request.headers.get("referer") || "Unknown";
@@ -79,8 +64,6 @@ export async function POST(request: NextRequest) {
     // Build email HTML
     const emailHtml = buildFeedbackEmailHtml({
       message,
-      userId,
-      userEmail,
       replyEmail: email,
       referer,
       timestamp,
@@ -116,7 +99,7 @@ export async function POST(request: NextRequest) {
       subject: `New Feedback: ${message.slice(0, 50)}${message.length > 50 ? "..." : ""}`,
       html: emailHtml,
       attachments: attachments.length > 0 ? attachments : undefined,
-      replyTo: email || userEmail || undefined,
+      replyTo: email || undefined,
     });
 
     if (emailResult.error) {
@@ -145,8 +128,6 @@ export async function POST(request: NextRequest) {
 
 function buildFeedbackEmailHtml(context: {
   message: string;
-  userId: string | null;
-  userEmail: string | null;
   replyEmail?: string;
   referer: string;
   timestamp: string;
@@ -155,8 +136,6 @@ function buildFeedbackEmailHtml(context: {
 }): string {
   const {
     message,
-    userId,
-    userEmail,
     replyEmail,
     referer,
     timestamp,
@@ -267,30 +246,12 @@ function buildFeedbackEmailHtml(context: {
     <h2>Context</h2>
 
     ${
-      userId
-        ? `<div class="context-item">
-      <span class="context-label">User ID:</span>
-      <span class="context-value">${escapeHtml(userId)}</span>
-    </div>`
-        : '<div class="context-item"><span class="context-label">User:</span><span class="context-value">Anonymous</span></div>'
-    }
-
-    ${
-      userEmail
-        ? `<div class="context-item">
-      <span class="context-label">User Email:</span>
-      <span class="context-value"><a href="mailto:${escapeHtml(userEmail)}">${escapeHtml(userEmail)}</a></span>
-    </div>`
-        : ""
-    }
-
-    ${
       replyEmail
         ? `<div class="context-item">
       <span class="context-label">Reply Email:</span>
       <span class="context-value"><a href="mailto:${escapeHtml(replyEmail)}">${escapeHtml(replyEmail)}</a></span>
     </div>`
-        : ""
+        : '<div class="context-item"><span class="context-label">User:</span><span class="context-value">Anonymous</span></div>'
     }
 
     <div class="context-item">

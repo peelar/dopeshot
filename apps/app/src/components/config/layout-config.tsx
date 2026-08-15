@@ -39,13 +39,11 @@ import { track } from "@/lib/analytics";
 interface LayoutConfigProps {
   onUploadAsset?: (file: File, kind: "screenshot" | "logo" | "background" | "avatar") => void;
   isMobile?: boolean;
-  isBrandUser?: boolean;
 }
 
 export const LayoutConfigPanel = ({
   onUploadAsset,
   isMobile = false,
-  isBrandUser = false,
 }: LayoutConfigProps) => {
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
@@ -68,8 +66,8 @@ export const LayoutConfigPanel = ({
   const isTestimonialFormat = layoutFormat === "testimonial";
   const isTweetFormat = layoutFormat === "tweet";
   const isTwitterTestimonial = isTweetFormat; // For backwards compatibility with variable name
-  const showTestimonialSections = isTestimonialFormat && isBrandUser;
-  const showTweetSections = isTweetFormat && isBrandUser;
+  const showTestimonialSections = isTestimonialFormat;
+  const showTweetSections = isTweetFormat;
   const showScreenshotSection = layoutFormat === "screenshot";
 
   // Avatar field state for testimonial format
@@ -84,7 +82,7 @@ export const LayoutConfigPanel = ({
   const isBrandLogoApplied = logoAsset && brandLogoAsset && logoAsset.id === brandLogoAsset.id;
 
   // Check if brand logo is available but not applied (only for brand users)
-  const hasBrandLogoAvailable = isBrandUser && !logoAsset && brandSettings.logoUrl;
+  const hasBrandLogoAvailable = !logoAsset && brandSettings.logoUrl;
 
   // Check if text is actually supported (not just hidden by layout type)
   const isPeakLeftOrRight = config.layoutId === "popup-gradient-left" || config.layoutId === "popup-gradient-right";
@@ -261,7 +259,7 @@ export const LayoutConfigPanel = ({
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Content</span>
             </div>
-            <LayoutSection isBrandUser={isBrandUser} />
+            <LayoutSection />
           </section>
         ) : null}
 
@@ -347,7 +345,7 @@ export const LayoutConfigPanel = ({
             <div className="flex w-full items-center justify-between">
               <span className="text-sm font-semibold">Font</span>
             </div>
-            <LayoutSection isBrandUser={isBrandUser} />
+            <LayoutSection />
           </section>
         )}
 

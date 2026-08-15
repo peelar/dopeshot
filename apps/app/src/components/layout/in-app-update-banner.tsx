@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
-import { User, X } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/cn";
 
 const STORAGE_KEY = "dopeshot:lastDismissedUpdateId";
@@ -13,18 +11,15 @@ type InAppUpdate = {
   id: string;
   title: string;
   description: string;
-  cta?: { label: string; href: string };
 };
 
 const CURRENT_UPDATE: InAppUpdate = {
   id: "2026-02-testimonials-format",
   title: "Testimonials",
   description: "turn customer quotes into polished social proof graphics.",
-  cta: { label: "Sign up to try", href: "/auth" },
 };
 
 export function InAppUpdateBanner({ className }: { className?: string }) {
-  const { isAuthenticated } = useAuth();
   const [ready, setReady] = useState(false);
   const [lastDismissedId, setLastDismissedId] = useState<string | null>(null);
   const [isClosing, setIsClosing] = useState(false);
@@ -69,19 +64,6 @@ export function InAppUpdateBanner({ className }: { className?: string }) {
           </div>
 
           <div className="flex items-center gap-1">
-            {update.cta && !isAuthenticated ? (
-              <Link
-                href={update.cta.href}
-                className={cn(
-                  buttonVariants({ variant: "default", size: "xs" }),
-                  "shadow-none"
-                )}
-              >
-                <User className="mr-1 h-3.5 w-3.5" aria-hidden="true" />
-                {update.cta.label}
-              </Link>
-            ) : null}
-
             <Button
               type="button"
               variant="ghost"

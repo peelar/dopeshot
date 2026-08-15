@@ -95,8 +95,7 @@ export function getExportDimensions(orientation: Orientation) {
  * @param fileName - The name of the file to download.
  */
 /**
- * Export layout and return both the data URL and blob
- * Used for memory persistence
+ * Export layout and return both the data URL and blob.
  */
 export async function exportLayoutAsPngWithBlob(
   elementId: string,

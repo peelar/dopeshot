@@ -30,7 +30,6 @@ vi.mock("@/remotion/player-wrapper", () => ({
   ),
 }));
 
-// Mock remotion to avoid import issues
 vi.mock("remotion", () => ({
   AbsoluteFill: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   Img: ({ src }: { src: string }) => <img src={src} alt="" />,
@@ -38,22 +37,6 @@ vi.mock("remotion", () => ({
   useVideoConfig: () => ({ fps: 30, width: 1920, height: 1080, durationInFrames: 150, id: "test" }),
   spring: () => 0,
   interpolate: () => 0,
-}));
-
-// Mock auth hooks used by BrandOnly
-vi.mock("@/lib/auth/auth-client", () => ({
-  useSession: () => ({
-    data: { session: { userId: "test-user" } },
-    isPending: false,
-  }),
-}));
-
-vi.mock("@/hooks/use-user-tier", () => ({
-  useUserTier: () => ({
-    tier: "brand" as const,
-    isLoading: false,
-    isBrandUser: true,
-  }),
 }));
 
 import { VideoPreview } from "@/app/(playground)/_components/video-preview";

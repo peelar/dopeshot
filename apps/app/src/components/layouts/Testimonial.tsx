@@ -8,8 +8,6 @@ import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { ScanlinesOverlay } from "@/components/layouts/shared/ScanlinesOverlay";
 import { orientationAtom, assetsAtom, brandSettingsAtom } from "@/hooks/atoms";
 import { AdrianAvatar } from "@/components/ui/adrian-avatar";
-import { useSession } from "@/lib/auth/auth-client";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { resolveTestimonialStyle } from "@/domain/layout/testimonial-style";
 import type { BrandMode } from "@/lib/types/brand";
 import { track } from "@/lib/analytics";
@@ -51,8 +49,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   const orientation = useAtomValue(orientationAtom);
   const allAssets = useAtomValue(assetsAtom);
   const brandSettings = useAtomValue(brandSettingsAtom);
-  const { data: session } = useSession();
-  const { isBrandUser } = useUserTier();
   const { resolvedTheme } = useTheme();
   const trackedBrandStyleRef = useRef<string | null>(null);
   const {
@@ -66,7 +62,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
 
   const isMobile = orientation === "mobile";
   const fallbackMode: BrandMode = resolvedTheme === "dark" ? "dark" : "light";
-  const isLoggedIn = Boolean(session?.user);
 
   const testimonialSettings = config.layoutSpecificSettings?.testimonial;
   const authorName = testimonialSettings?.authorName || "";
@@ -93,8 +88,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
   const testimonialStyle = useMemo(
     () =>
       resolveTestimonialStyle({
-        isLoggedIn,
-        isBrandUser,
         personality: brandSettings.personality,
         mode: styleModeOverride ?? brandSettings.mode,
         accent: styleAccentOverride ?? brandSettings.accent,
@@ -106,8 +99,6 @@ function TestimonialComponent({ className, onUploadAsset, isStatic = false }: Te
       brandSettings.mode,
       brandSettings.personality,
       fallbackMode,
-      isBrandUser,
-      isLoggedIn,
       styleAccentOverride,
       styleModeOverride,
       brandSettings.accent,

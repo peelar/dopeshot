@@ -7,8 +7,6 @@ import { LayoutSurface, useLayoutPrimitives } from "@/components/layouts/shared/
 import { GrainOverlay } from "@/components/layouts/shared/GrainOverlay";
 import { ScanlinesOverlay } from "@/components/layouts/shared/ScanlinesOverlay";
 import { orientationAtom, brandSettingsAtom } from "@/hooks/atoms";
-import { useSession } from "@/lib/auth/auth-client";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { resolveTestimonialStyle } from "@/domain/layout/testimonial-style";
 import { formatTweetDate, formatMetric } from "@/domain/layout/twitter-utils";
 import type { BrandMode } from "@/lib/types/brand";
@@ -31,8 +29,6 @@ function XLogo({ size = 18, color }: { size?: number; color: string }) {
 function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = false }: TwitterTestimonialProps) {
   const orientation = useAtomValue(orientationAtom);
   const brandSettings = useAtomValue(brandSettingsAtom);
-  const { data: session } = useSession();
-  const { isBrandUser } = useUserTier();
   const { resolvedTheme } = useTheme();
   const trackedBrandStyleRef = useRef<string | null>(null);
   const {
@@ -46,7 +42,6 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
 
   const isMobile = orientation === "mobile";
   const fallbackMode: BrandMode = resolvedTheme === "dark" ? "dark" : "light";
-  const isLoggedIn = Boolean(session?.user);
 
   const twitterSettings = config.layoutSpecificSettings?.twitterTestimonial;
   const cachedTweet = twitterSettings?.cachedTweet;
@@ -57,8 +52,6 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
   const testimonialStyle = useMemo(
     () =>
       resolveTestimonialStyle({
-        isLoggedIn,
-        isBrandUser,
         personality: brandSettings.personality,
         mode: styleModeOverride ?? brandSettings.mode,
         accent: styleAccentOverride ?? brandSettings.accent,
@@ -70,8 +63,6 @@ function TwitterTestimonialComponent({ className, onUploadAsset, isStatic = fals
       brandSettings.mode,
       brandSettings.personality,
       fallbackMode,
-      isBrandUser,
-      isLoggedIn,
       styleAccentOverride,
       styleModeOverride,
       brandSettings.accent,

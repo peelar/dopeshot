@@ -2,8 +2,6 @@
 
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { useCallback, useEffect, useState } from "react";
-import { useSession } from "@/lib/auth/auth-client";
-import { useUserTier } from "@/hooks/use-user-tier";
 import { configAtom, screenshotGradientAtom, assetsAtom } from "@/hooks/atoms";
 import {
   personalBackgroundsAtom,
@@ -13,15 +11,8 @@ import { GradientPicker } from "@/components/selectors/gradient-picker";
 import { BackgroundSwatch } from "@/components/selectors/background-swatch";
 import { BackgroundPageNav } from "@/components/selectors/background-page-nav";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  clearBackgroundSelection,
-  listPersonalBackgrounds,
-  saveBackgroundSelection,
-} from "@/domain/backgrounds/background-service";
-import {
-  BACKGROUNDS_PER_PAGE,
-  MAX_BRAND_BACKGROUNDS,
-} from "@/domain/backgrounds/constants";
+import { saveBackgroundSelection } from "@/domain/backgrounds/background-service";
+import { BACKGROUNDS_PER_PAGE } from "@/domain/backgrounds/constants";
 import { track } from "@/lib/analytics";
 import type { BackgroundConfig, ColorToken } from "@/domain/layout/types";
 import type { BackgroundSelection, PersonalBackground } from "@/domain/backgrounds/types";
@@ -33,76 +24,32 @@ interface BackgroundSectionProps {
 }
 
 export function BackgroundSection({ variant = "default" }: BackgroundSectionProps = {}) {
-  const { data: session } = useSession();
-  const { isBrandUser } = useUserTier();
   const config = useAtomValue(configAtom);
   const setConfig = useSetAtom(configAtom);
   const setScreenshotGradient = useSetAtom(screenshotGradientAtom);
   const setAssets = useSetAtom(assetsAtom);
-  const [backgrounds, setBackgrounds] = useAtom(personalBackgroundsAtom);
+  const [backgrounds] = useAtom(personalBackgroundsAtom);
   const [selection, setSelection] = useAtom(backgroundSelectionAtom);
 
   const [activePage, setActivePage] = useState(0);
-  const [isLoadingBackgrounds, setIsLoadingBackgrounds] = useState(false);
-  const [hasLoadedBackgrounds, setHasLoadedBackgrounds] = useState(false);
 
-  const isAuthenticated = Boolean(session?.user);
-
-  // Pagination math
   const hasScreenshot = Boolean(config.assets?.screenshot);
   const layoutFormat = getLayoutFormat(config.layoutId);
   const isTweetFormat = layoutFormat === "tweet";
-  // For tweet format, we always show backgrounds (don't require screenshot)
   const canShowBrandBackgrounds = hasScreenshot || isTweetFormat;
 
-  const brandPageCount = isBrandUser && canShowBrandBackgrounds
+  const brandPageCount = canShowBrandBackgrounds
     ? Math.ceil(backgrounds.length / BACKGROUNDS_PER_PAGE)
     : 0;
   const totalPages = brandPageCount > 0 ? 1 + brandPageCount : 1;
-  const showPagination = isBrandUser && canShowBrandBackgrounds && totalPages > 1;
+  const showPagination = canShowBrandBackgrounds && totalPages > 1;
 
-  // Reset selection and page on logout
-  useEffect(() => {
-    if (!isAuthenticated) {
-      setSelection(null);
-      setActivePage(0);
-    }
-  }, [isAuthenticated, setSelection]);
-
-  // Load brand backgrounds once when available
-  useEffect(() => {
-    if (hasLoadedBackgrounds || !isAuthenticated || !isBrandUser) return;
-
-    async function loadBackgrounds() {
-      setIsLoadingBackgrounds(true);
-      try {
-        const response = await listPersonalBackgrounds();
-        setBackgrounds(response.items);
-        setHasLoadedBackgrounds(true);
-      } catch (error) {
-        console.error("Failed to load personal backgrounds:", error);
-      } finally {
-        setIsLoadingBackgrounds(false);
-      }
-    }
-
-    loadBackgrounds();
-  }, [hasLoadedBackgrounds, backgrounds.length, isAuthenticated, isBrandUser, setBackgrounds]);
-
-  // Clamp page when backgrounds are deleted externally (e.g. from Brand panel)
   useEffect(() => {
     const maxPage = totalPages - 1;
     if (activePage > maxPage) {
       setActivePage(Math.max(0, maxPage));
     }
   }, [activePage, totalPages]);
-
-  // Force gradients tab for non-brand users to avoid showing brand pagination
-  useEffect(() => {
-    if ((!isBrandUser || !canShowBrandBackgrounds) && activePage !== 0) {
-      setActivePage(0);
-    }
-  }, [isBrandUser, canShowBrandBackgrounds, activePage]);
 
   const handleGradientChange = useCallback(
     (background: BackgroundConfig, textColor: ColorToken) => {
@@ -136,7 +83,6 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
       // Clear personal background selection when gradient is chosen
       if (selection) {
         setSelection(null);
-        void clearBackgroundSelection().catch(() => null);
       }
 
       // Jump back to gradients page
@@ -153,7 +99,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
       const backgroundAsset: Asset = {
         id: `personal-bg-${background.id}`,
         projectId: "personal",
-        userId: session?.user?.id ?? "unknown",
+        userId: "local",
         url: background.previewUrl,
         name: background.name || "Custom background",
         kind: "background",
@@ -195,7 +141,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
         console.error("Failed to save background selection:", error);
       }
     },
-    [session?.user?.id, setAssets, setConfig, setSelection],
+    [setAssets, setConfig, setSelection],
   );
 
   const handlePageChange = useCallback(
@@ -232,7 +178,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
   // Compute brand backgrounds for the active brand page
   const brandPageIndex = activePage - 1; // page 0 = gradients, page 1+ = brand
   const brandPageBackgrounds =
-    brandPageIndex >= 0 && isBrandUser && canShowBrandBackgrounds
+    brandPageIndex >= 0 && canShowBrandBackgrounds
       ? backgrounds.slice(
           brandPageIndex * BACKGROUNDS_PER_PAGE,
           (brandPageIndex + 1) * BACKGROUNDS_PER_PAGE,
@@ -266,7 +212,7 @@ export function BackgroundSection({ variant = "default" }: BackgroundSectionProp
             backgrounds={brandPageBackgrounds}
             selection={selection}
             onSelect={handleBrandBackgroundSelect}
-            isLoading={isLoadingBackgrounds}
+            isLoading={false}
           />
         )}
     </section>

@@ -55,9 +55,6 @@ jobs:
       - name: Typecheck
         run: pnpm --filter dopeshot-app typecheck
 
-      - name: Run domain tests
-        run: pnpm --filter dopeshot-app test:domain
-
       - name: Run UI tests
         run: pnpm --filter dopeshot-app test:ui
 

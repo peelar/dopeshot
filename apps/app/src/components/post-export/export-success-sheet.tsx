@@ -3,10 +3,9 @@
 import * as React from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 import { X, Mail, Calendar, Check, Sparkles, MessageSquare } from "lucide-react";
 import type { SVGProps } from "react";
+import { AdrianAvatar } from "@/components/ui/adrian-avatar";
 
 function XTwitterIcon(props: SVGProps<SVGSVGElement>) {
   return (
@@ -34,7 +33,6 @@ function NoiseTexture() {
 interface ExportSuccessModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSignup: () => void;
   onFeedback: () => void;
   thumbnailUrl?: string;
 }
@@ -132,7 +130,6 @@ const footerVariants = {
 export function ExportSuccessModal({
   isOpen,
   onClose,
-  onSignup,
   onFeedback,
   thumbnailUrl,
 }: ExportSuccessModalProps) {
@@ -225,17 +222,7 @@ export function ExportSuccessModal({
                     </motion.div>
                   </div>
 
-                  {/* CTA section */}
-                  <motion.div variants={itemVariants} className="mt-6 text-center">
-                    <p className="text-[13px] leading-relaxed text-muted-foreground">
-                      Save your designs and pick up where you left off.
-                    </p>
-                    <Button onClick={onSignup} size="default" className="mt-3">
-                      Create free account
-                    </Button>
-                  </motion.div>
-
-                  {/* Founder section - warmer, separated */}
+                  {/* Founder section */}
                   <motion.div
                     variants={footerVariants}
                     className="-mx-6 -mb-6 mt-6 rounded-b-2xl bg-muted/40 px-6 py-4 dark:bg-muted/20"
